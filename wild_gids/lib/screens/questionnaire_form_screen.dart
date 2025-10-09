@@ -1,4 +1,7 @@
+// lib/screens/questionnaire_form_screen.dart
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class QuestionnaireFormScreen extends StatefulWidget {
   const QuestionnaireFormScreen({Key? key}) : super(key: key);
@@ -11,11 +14,68 @@ class _QuestionnaireFormScreenState extends State<QuestionnaireFormScreen> {
   final TextEditingController damageController = TextEditingController();
   final TextEditingController causeController = TextEditingController();
 
+  bool _isLoading = false;
+  String _errorMessage = '';
+
+  // 🔥 Replace with your actual API endpoint
+final String _apiUrl = 'https://jsonplaceholder.typicode.com/posts';
+
   @override
   void dispose() {
     damageController.dispose();
     causeController.dispose();
     super.dispose();
+  }
+
+  // ✅ Function to send data to backend
+  Future<void> _submitForm() async {
+    if (damageController.text.isEmpty || causeController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Vul beide velden in.")),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse(_apiUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'damage': damageController.text.trim(),
+          'cause': causeController.text.trim(),
+        }),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // ✅ Success: Navigate to thank you screen
+        Navigator.pushReplacementNamed(context, '/bedankt');
+      } else {
+        // ❌ Backend error
+        setState(() {
+          _errorMessage = 'Fout: ${response.statusCode}';
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Fout bij verzenden: ${response.statusCode}")),
+        );
+      }
+    } catch (e) {
+      // ❌ Network or server error
+      setState(() {
+        _errorMessage = 'Netwerkfout';
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Kan geen verbinding maken met de server.")),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -74,6 +134,12 @@ class _QuestionnaireFormScreenState extends State<QuestionnaireFormScreen> {
                         ),
                       ),
                       const Flexible(child: SizedBox(height: 24)),
+                      if (_errorMessage.isNotEmpty)
+                        Text(
+                          _errorMessage,
+                          style: const TextStyle(color: Colors.red),
+                          textAlign: TextAlign.center,
+                        ),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF234F1E),
@@ -82,11 +148,13 @@ class _QuestionnaireFormScreenState extends State<QuestionnaireFormScreen> {
                           ),
                           minimumSize: const Size(double.infinity, 56),
                         ),
-                        onPressed: () => Navigator.pushReplacementNamed(context, '/bedankt'),
-                        child: const Text(
-                          "Indienen",
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-                        ),
+                        onPressed: _isLoading ? null : _submitForm,
+                        child: _isLoading
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : const Text(
+                                "Indienen",
+                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                              ),
                       ),
                       const SizedBox(height: 16),
                     ],
