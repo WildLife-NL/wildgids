@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:widgets/constants/app_text_theme.dart';
-import 'home_widgets.dart';
-import 'lib/constants/app_text_theme.dart'; 
+import 'screens/questionnaire_intro_screen.dart';
+import 'screens/questionnaire_form_screen.dart';
+import 'screens/thank_you_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,12 +14,12 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green[800]!),
-        primaryColor: Colors.green[800],
-        textTheme: AppTextTheme.textTheme,
-      ),
-      home: const HomeWidgets(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const QuestionnaireIntroScreen(),
+        '/vragenlijst': (context) => const QuestionnaireFormScreen(),
+        '/bedankt': (context) => const ThankYouScreen(),
+      },
     );
   }
 }

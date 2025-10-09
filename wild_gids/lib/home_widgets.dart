@@ -11,7 +11,7 @@ import 'widgets/text_box.dart';
 import 'widgets/input_field.dart';
 import 'widgets/table.dart';
 import 'widgets/time_date.dart';
-import 'deer_animation.dart';
+import 'widgets/deer_animation.dart';
 
 class HomeWidgets extends StatelessWidget {
   const HomeWidgets({Key? key}) : super(key: key);
