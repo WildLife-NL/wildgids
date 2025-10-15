@@ -72,7 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
               TextFormField(
                 controller: otpController,
                 decoration: const InputDecoration(
-                  hintText: "OTP",
+                  hintText: "Enter code",
                   border: OutlineInputBorder(),
                 ),
               ),

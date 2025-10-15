@@ -1,4 +1,3 @@
-// lib/screens/questionnaire_form_screen.dart
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -18,7 +17,7 @@ class _QuestionnaireFormScreenState extends State<QuestionnaireFormScreen> {
   String _errorMessage = '';
 
   // 🔥 Replace with your actual API endpoint
-final String _apiUrl = 'https://jsonplaceholder.typicode.com/posts';
+  final String _apiUrl = 'https://jsonplaceholder.typicode.com/posts';
 
   @override
   void dispose() {
@@ -31,7 +30,7 @@ final String _apiUrl = 'https://jsonplaceholder.typicode.com/posts';
   Future<void> _submitForm() async {
     if (damageController.text.isEmpty || causeController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Vul beide velden in.")),
+        const SnackBar(content: Text("Vul beide velden in. / Please fill in both fields.")),
       );
       return;
     }
@@ -52,7 +51,10 @@ final String _apiUrl = 'https://jsonplaceholder.typicode.com/posts';
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        // ✅ Success: Navigate to thank you screen
+        // ✅ Success
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Succesvol verzonden! / Sent successfully!")),
+        );
         Navigator.pushReplacementNamed(context, '/bedankt');
       } else {
         // ❌ Backend error
@@ -60,16 +62,16 @@ final String _apiUrl = 'https://jsonplaceholder.typicode.com/posts';
           _errorMessage = 'Fout: ${response.statusCode}';
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Fout bij verzenden: ${response.statusCode}")),
+          SnackBar(content: Text("Fout bij verzenden (${response.statusCode}) / Error sending data.")),
         );
       }
     } catch (e) {
       // ❌ Network or server error
       setState(() {
-        _errorMessage = 'Netwerkfout';
+        _errorMessage = 'Netwerkfout / Network error';
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Kan geen verbinding maken met de server.")),
+        const SnackBar(content: Text("Kan geen verbinding maken met de server. / Cannot connect to the server.")),
       );
     } finally {
       setState(() {
@@ -152,7 +154,7 @@ final String _apiUrl = 'https://jsonplaceholder.typicode.com/posts';
                         child: _isLoading
                             ? const CircularProgressIndicator(color: Colors.white)
                             : const Text(
-                                "Indienen",
+                                "Indienen / Submit",
                                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
                               ),
                       ),
