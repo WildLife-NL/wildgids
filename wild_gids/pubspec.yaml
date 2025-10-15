@@ -11,6 +11,7 @@ dependencies:
     sdk: flutter
   intl: ^0.18.0
   http: ^1.2.0
+  email_otp_auth: ^1.1.0
 
 dev_dependencies:
   flutter_test:

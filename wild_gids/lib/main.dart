@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'screens/login_screen.dart';
 import 'screens/questionnaire_intro_screen.dart';
 import 'screens/questionnaire_form_screen.dart';
 import 'screens/thank_you_screen.dart';
@@ -16,7 +17,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
       routes: {
-        '/': (context) => const QuestionnaireIntroScreen(),
+        '/': (context) => const LoginScreen(),
+        '/intro': (context) => const QuestionnaireIntroScreen(),
         '/vragenlijst': (context) => const QuestionnaireFormScreen(),
         '/bedankt': (context) => const ThankYouScreen(),
       },
