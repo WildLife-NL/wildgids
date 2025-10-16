@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:email_otp_auth/email_otp_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -14,8 +15,37 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool otpSent = false;
   bool loggingIn = false;
+  bool acceptedTerms = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAcceptedTerms();
+  }
+
+  Future<void> _loadAcceptedTerms() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      acceptedTerms = prefs.getBool('acceptedTerms') ?? false;
+    });
+  }
+
+  Future<void> _setAcceptedTerms(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('acceptedTerms', value);
+    setState(() {
+      acceptedTerms = value;
+    });
+  }
 
   Future<void> sendOtp() async {
+    if (!acceptedTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You must accept the Terms and Conditions to proceed')),
+      );
+      return;
+    }
+
     setState(() => loggingIn = true);
     var res = await EmailOtpAuth.sendOTP(email: emailController.text);
     setState(() => loggingIn = false);
@@ -36,6 +66,30 @@ class _LoginScreenState extends State<LoginScreen> {
     } else if (res['data'] == 'OTP Expired') {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('OTP expired')));
     }
+  }
+
+  void _openTermsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Terms and Conditions'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: Text(
+              'Insert your full terms and conditions text here...',
+              textAlign: TextAlign.justify,
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -63,9 +117,40 @@ class _LoginScreenState extends State<LoginScreen> {
               enabled: !otpSent,
             ),
             const SizedBox(height: 16),
+            Row(
+              children: [
+                Checkbox(
+                  value: acceptedTerms,
+                  onChanged: (bool? value) {
+                    if (value != null) {
+                      _setAcceptedTerms(value);
+                    }
+                  },
+                ),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: _openTermsDialog,
+                    child: const Text.rich(
+                      TextSpan(
+                        text: 'I accept the ',
+                        children: [
+                          TextSpan(
+                            text: 'Terms and Conditions',
+                            style: TextStyle(
+                              decoration: TextDecoration.underline,
+                              color: Colors.blue,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
             if (!otpSent)
               ElevatedButton(
-                onPressed: loggingIn ? null : sendOtp,
+                onPressed: (loggingIn || !acceptedTerms) ? null : sendOtp,
                 child: const Text('Send code'),
               ),
             if (otpSent) ...[
