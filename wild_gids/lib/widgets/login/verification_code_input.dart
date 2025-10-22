@@ -13,16 +13,19 @@ import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import 'package:widgets/interfaces/data_apis/profile_api_interface.dart';
+import 'package:widgets/screens/terms/terms_screen.dart';
+
+
 
 class VerificationCodeInput extends StatefulWidget {
   final VoidCallback onBack;
   final String email;
 
   const VerificationCodeInput({
-    Key? key,
+    super.key,
     required this.onBack,
     required this.email,
-  }) : super(key: key);
+  });
 
   @override
   State<VerificationCodeInput> createState() => _VerificationCodeInputState();
@@ -35,7 +38,10 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
     (index) => TextEditingController(),
   );
   final List<FocusNode> focusNodes = List.generate(6, (index) => FocusNode());
-  late final LoginInterface loginManager;
+  final LoginInterface loginManager = LoginManager(
+    AuthApi(AppConfig.shared.apiClient),
+    ProfileApi(AppConfig.shared.apiClient),
+  );
   late final AnimationController _animationController;
   bool isLoading = false;
   bool isError = false;
@@ -44,14 +50,12 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
   @override
   void initState() {
     super.initState();
-    loginManager = LoginManager(
-      AuthApi(AppConfig.shared.apiClient),
-      ProfileApi(AppConfig.shared.apiClient),
-    );
     _animationController = AnimationController(vsync: this);
   }
 
-  Future<void> _routeAfterLogin() async {
+Future<void> _routeAfterLogin() async {
+  try {
+    // Try Provider first, fall back to a local instance so we don’t crash
     ProfileApiInterface profileApi;
     try {
       profileApi = context.read<ProfileApiInterface>();
@@ -59,18 +63,41 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
       profileApi = ProfileApi(AppConfig.shared.apiClient);
     }
 
-    try {
-      await profileApi.fetchMyProfile();
-    } catch (e) {
-      debugPrint("Error fetching profile: $e");
-    }
-
+    final profile = await profileApi.fetchMyProfile(); // Cache profile data
     if (!mounted) return;
-    // Navigate to home or next screen after successful login
-    // TODO: Add proper navigation when home screen is ready
-  }
 
-  Future<void> _verifyCode() async {
+    debugPrint("Profile fetched - reportAppTerms: ${profile.reportAppTerms}");
+    
+    // Check if user has NOT accepted terms (null or false) - first login
+    if (profile.reportAppTerms != true) {
+      debugPrint("First login detected - navigating to TermsScreen");
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const TermsScreen()),
+        (_) => false,
+      );
+    } else {
+      // Terms already accepted - user has logged in before
+      debugPrint("User has already accepted terms - login successful");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Login successful! Welcome back.')),
+        );
+      }
+    }
+  } catch (e) {
+    // If anything goes wrong, show terms screen to be safe
+    debugPrint("Error after login: $e");
+    if (mounted) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const TermsScreen()),
+        (_) => false,
+      );
+    }
+  }
+}
+
+
+Future<void> _verifyCode() async {
   FocusScope.of(context).unfocus();
   final code = controllers.map((c) => c.text).join();
 
@@ -85,6 +112,7 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
     final response = await loginManager.verifyCode(widget.email, code);
     verifiedUser = response;
 
+    // let the animation play once
     await Future.delayed(const Duration(milliseconds: 1500));
 
     if (mounted && verifiedUser != null) {
@@ -92,6 +120,7 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
       navigated = true;
     }
   } catch (e) {
+    // token-saved-despite-error fallback
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('bearer_token');
 
@@ -109,11 +138,13 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
       }
     }
   } finally {
+    // if we didn’t navigate, stop the loader
     if (mounted && !navigated) {
       setState(() => isLoading = false);
     }
   }
 }
+
 
   Widget _buildTextField(int index) {
     return Container(
@@ -139,11 +170,13 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
         ],
       ),
       child: KeyboardListener(
-        focusNode: FocusNode(),
+        focusNode: FocusNode(), // Unique FocusNode for each listener
         onKeyEvent: (KeyEvent event) {
           if (event is! KeyDownEvent) return;
           if (event.logicalKey == LogicalKeyboardKey.backspace) {
+            // If current field is empty and not the first field
             if (controllers[index].text.isEmpty && index > 0) {
+              // Move focus to previous field and clear it
               focusNodes[index - 1].requestFocus();
               controllers[index - 1].clear();
             }
@@ -170,40 +203,23 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
               setState(() => isError = false);
             }
             if (value.isNotEmpty) {
+              // Move to next field if not the last one
               if (index < 5) {
                 focusNodes[index + 1].requestFocus();
               } else if (index == 5) {
+                // Verify code if all fields are filled
                 if (controllers.every((c) => c.text.isNotEmpty)) {
                   _verifyCode();
                 }
               }
             } else if (value.isEmpty && index > 0) {
+              // Move to previous field when backspace clears the current field
               focusNodes[index - 1].requestFocus();
             }
           },
         ),
       ),
     );
-  }
-
-  Future<void> _resendCode() async {
-    try {
-      await loginManager.resendCode(widget.email);
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Verificatiecode opnieuw verzonden')),
-      );
-    } catch (e) {
-      debugPrint("Error resending code: $e");
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Kon code niet verzenden. Probeer het later opnieuw.'),
-        ),
-      );
-    }
   }
 
   @override
@@ -236,6 +252,7 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
           children: [
             IconButton(
               onPressed: () {
+                // Unfocus all text fields before going back
                 FocusScope.of(context).unfocus();
                 widget.onBack();
               },
@@ -322,4 +339,25 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
     }
     super.dispose();
   }
+
+  Future<void> _resendCode() async {
+    try {
+      await loginManager.resendCode(widget.email);
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Verificatiecode opnieuw verzonden')),
+      );
+    } catch (e) {
+      debugPrint("Error resending code: $e");
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Kon code niet verzenden. Probeer het later opnieuw.'),
+        ),
+      );
+    }
+  }
 }
+
