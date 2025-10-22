@@ -214,7 +214,7 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
           width: 200,
           height: 200,
           child: Lottie.asset(
-            'assets/loaders/loading_paw.json',
+            'assets/icons/loaders/loading_paw.json',
             fit: BoxFit.contain,
             repeat: true,
             animate: true,
