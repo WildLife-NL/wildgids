@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'screens/login/login_screen_new.dart';
-import 'screens/questionnaire_intro_screen.dart';
-import 'screens/questionnaire_form_screen.dart';
-import 'screens/thank_you_screen.dart';
 import 'managers/other/login_manager.dart';
 import 'interfaces/other/login_interface.dart';
 import 'data_managers/auth_api.dart';
@@ -31,9 +28,6 @@ class MyApp extends StatelessWidget {
         initialRoute: '/',
         routes: {
           '/': (context) => LoginScreen(),
-          '/intro': (context) => const QuestionnaireIntroScreen(),
-          '/vragenlijst': (context) => const QuestionnaireFormScreen(),
-          '/bedankt': (context) => const ThankYouScreen(),
         },
       ),
     );

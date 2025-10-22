@@ -6,7 +6,6 @@ import 'package:widgets/config/app_config.dart';
 import 'package:widgets/constants/app_colors.dart';
 import 'package:widgets/constants/app_text_theme.dart';
 import 'package:widgets/interfaces/other/login_interface.dart';
-import 'package:widgets/screens/questionnaire_intro_screen.dart';
 import 'package:widgets/managers/other/login_manager.dart';
 import 'package:widgets/widgets/shared_ui_widgets/brown_button.dart';
 import 'package:widgets/models/api_models/user.dart';
@@ -52,8 +51,7 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
     _animationController = AnimationController(vsync: this);
   }
 
-Future<void> _routeAfterLogin() async {
-  try {
+  Future<void> _routeAfterLogin() async {
     ProfileApiInterface profileApi;
     try {
       profileApi = context.read<ProfileApiInterface>();
@@ -61,24 +59,18 @@ Future<void> _routeAfterLogin() async {
       profileApi = ProfileApi(AppConfig.shared.apiClient);
     }
 
-    final profile = await profileApi.fetchMyProfile();
-    if (!mounted) return;
+    try {
+      await profileApi.fetchMyProfile();
+    } catch (e) {
+      debugPrint("Error fetching profile: $e");
+    }
 
-    // Navigate to questionnaire intro screen
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const QuestionnaireIntroScreen()),
-      (_) => false,
-    );
-  } catch (e) {
     if (!mounted) return;
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const QuestionnaireIntroScreen()),
-      (_) => false,
-    );
+    // Navigate to home or next screen after successful login
+    // TODO: Add proper navigation when home screen is ready
   }
-}
 
-Future<void> _verifyCode() async {
+  Future<void> _verifyCode() async {
   FocusScope.of(context).unfocus();
   final code = controllers.map((c) => c.text).join();
 
@@ -192,6 +184,26 @@ Future<void> _verifyCode() async {
         ),
       ),
     );
+  }
+
+  Future<void> _resendCode() async {
+    try {
+      await loginManager.resendCode(widget.email);
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Verificatiecode opnieuw verzonden')),
+      );
+    } catch (e) {
+      debugPrint("Error resending code: $e");
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Kon code niet verzenden. Probeer het later opnieuw.'),
+        ),
+      );
+    }
   }
 
   @override
@@ -309,25 +321,5 @@ Future<void> _verifyCode() async {
       node.dispose();
     }
     super.dispose();
-  }
-
-  Future<void> _resendCode() async {
-    try {
-      await loginManager.resendCode(widget.email);
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Verificatiecode opnieuw verzonden')),
-      );
-    } catch (e) {
-      debugPrint("Error resending code: $e");
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Kon code niet verzenden. Probeer het later opnieuw.'),
-        ),
-      );
-    }
   }
 }

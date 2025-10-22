@@ -99,7 +99,6 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     debugPrint('Building LoginScreen, showVerification: $showVerification');
-    final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
       body: Column(
