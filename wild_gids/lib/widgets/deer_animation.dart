@@ -1,4 +1,4 @@
-// lib/widgets/deer_animation.dart
+﻿// lib/widgets/deer_animation.dart
 import 'package:flutter/material.dart';
 
 class DeerAnimationPage extends StatefulWidget {
@@ -55,7 +55,7 @@ class _DeerAnimationPageState extends State<DeerAnimationPage>
 Widget build(BuildContext context) {
   final size = MediaQuery.of(context).size;
   final deerSize = size.width * 0.3;
-  final baseBottom = size.height * 0.6; // Lowered from 0.7 → 0.6 (higher number = higher up, so smaller = lower)
+  final baseBottom = size.height * 0.6; // Lowered from 0.7 â†’ 0.6 (higher number = higher up, so smaller = lower)
 
   return SizedBox.expand(
     child: Stack(

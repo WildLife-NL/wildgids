@@ -1,0 +1,4 @@
+enum LocationSource {
+  system,
+  manual,
+}

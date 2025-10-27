@@ -1,4 +1,4 @@
-import 'package:widgets/models/api_models/user.dart';
+﻿import 'package:widgets/models/api_models/user.dart';
 
 abstract class AuthApiInterface {
   Future<Map<String, dynamic>> authenticate(

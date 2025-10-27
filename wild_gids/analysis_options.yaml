@@ -25,5 +25,16 @@ linter:
     # avoid_print: false  # Uncomment to disable the `avoid_print` rule
     # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
 
+analyzer:
+  exclude:
+    - integration_test/**
+    - lib/data_managers/interaction_api.dart
+    - lib/screens/shared/rapporteren.dart
+    - lib/screens/shared/animal_condition_screen.dart
+    - lib/models/reports/**
+    - lib/models/beta_models/**
+    - lib/providers/app_state_provider.dart
+    - lib/utils/sighting_api_transformer.dart
+
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options

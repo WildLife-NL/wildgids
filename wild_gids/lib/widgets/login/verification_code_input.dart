@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:widgets/data_managers/auth_api.dart';
 import 'package:widgets/data_managers/profile_api.dart';
@@ -7,14 +7,13 @@ import 'package:widgets/constants/app_colors.dart';
 import 'package:widgets/constants/app_text_theme.dart';
 import 'package:widgets/interfaces/other/login_interface.dart';
 import 'package:widgets/managers/other/login_manager.dart';
-import 'package:widgets/widgets/shared_ui_widgets/brown_button.dart';
 import 'package:widgets/models/api_models/user.dart';
 import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import 'package:widgets/interfaces/data_apis/profile_api_interface.dart';
-import 'package:widgets/screens/terms/terms_screen.dart';
-
+import 'package:widgets/screens/shared/report_selection_screen.dart';
+import 'package:widgets/widgets/shared_ui_widgets/brown_button.dart';
 
 
 class VerificationCodeInput extends StatefulWidget {
@@ -55,7 +54,7 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
 
 Future<void> _routeAfterLogin() async {
   try {
-    // Try Provider first, fall back to a local instance so we don’t crash
+    // Try Provider first, fall back to a local instance so we donâ€™t crash
     ProfileApiInterface profileApi;
     try {
       profileApi = context.read<ProfileApiInterface>();
@@ -63,33 +62,20 @@ Future<void> _routeAfterLogin() async {
       profileApi = ProfileApi(AppConfig.shared.apiClient);
     }
 
-    final profile = await profileApi.fetchMyProfile(); // Cache profile data
+  await profileApi.fetchMyProfile(); // Cache profile data
     if (!mounted) return;
 
-    debugPrint("Profile fetched - reportAppTerms: ${profile.reportAppTerms}");
-    
-    // Check if user has NOT accepted terms (null or false) - first login
-    if (profile.reportAppTerms != true) {
-      debugPrint("First login detected - navigating to TermsScreen");
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const TermsScreen()),
-        (_) => false,
-      );
-    } else {
-      // Terms already accepted - user has logged in before
-      debugPrint("User has already accepted terms - login successful");
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Login successful! Welcome back.')),
-        );
-      }
-    }
+    debugPrint("Profile fetched - navigating to ReportSelectionScreen after login");
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const ReportSelectionScreen()),
+      (_) => false,
+    );
   } catch (e) {
-    // If anything goes wrong, show terms screen to be safe
+    // On error, still send user into the selection screen to avoid blocking
     debugPrint("Error after login: $e");
     if (mounted) {
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const TermsScreen()),
+        MaterialPageRoute(builder: (_) => const ReportSelectionScreen()),
         (_) => false,
       );
     }
@@ -138,7 +124,7 @@ Future<void> _verifyCode() async {
       }
     }
   } finally {
-    // if we didn’t navigate, stop the loader
+    // if we didnâ€™t navigate, stop the loader
     if (mounted && !navigated) {
       setState(() => isLoading = false);
     }
@@ -304,7 +290,7 @@ Future<void> _verifyCode() async {
         ),
         const Spacer(),
         BrownButton(
-          model: LoginManager.createButtonModel(text: 'Verifiëren'),
+          model: LoginManager.createButtonModel(text: 'VerifiÃ«ren'),
           onPressed: _verifyCode,
         ),
         const SizedBox(height: 15),

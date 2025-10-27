@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:widgets/interfaces/data_apis/profile_api_interface.dart';
@@ -30,16 +30,8 @@ class _TermsScreenState extends State<TermsScreen> {
 
       if (!mounted) return;
 
-      // 3) Show success message - terms accepted
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Terms accepted successfully! You are now logged in.'),
-          duration: Duration(seconds: 3),
-        ),
-      );
-      
-      // Stay on terms screen or close it
-      // User can navigate manually from here if needed
+      // 3) Navigate to waarneming flow (CategoryScreen)
+      Navigator.of(context).pushNamedAndRemoveUntil('/category', (_) => false);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

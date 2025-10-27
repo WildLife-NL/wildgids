@@ -1,4 +1,4 @@
-class Profile {
+﻿class Profile {
   String userID;
   String email;
   String? gender;

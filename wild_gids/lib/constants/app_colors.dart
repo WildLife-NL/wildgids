@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class AppColors {
   // Private constructor to prevent instantiation
@@ -9,6 +9,7 @@ class AppColors {
   static const Color brown = Color(0xFF683615);
   static const Color brown300 = Color(0xFFEBC4A6);
   static const Color lightMintGreen = Color(0xFFF1F5F2);
+  static const Color lightGreen = Color(0xFFDFF2E1);
   static const Color offWhite = Color(0xFFFFFFFF);
   static const Color dark = Color.fromARGB(255, 0, 0, 0); 
 }

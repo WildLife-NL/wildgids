@@ -1,4 +1,4 @@
-import 'package:shared_preferences/shared_preferences.dart';
+﻿import 'package:shared_preferences/shared_preferences.dart';
 
 /// Bump this suffix when text changes and you want users to re-accept.
 const String _termsKey = 'termsAccepted_v1';

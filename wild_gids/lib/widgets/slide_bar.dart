@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class IntensitySlider extends StatefulWidget {
   final double value;

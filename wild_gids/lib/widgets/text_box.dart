@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class InfoBox extends StatelessWidget {
   const InfoBox({Key? key}) : super(key: key);
