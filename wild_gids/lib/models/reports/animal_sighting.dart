@@ -1,4 +1,5 @@
-﻿
+import 'package:wildrapport/models/reports/base_report.dart';
+
 class WaarnemingReport extends BaseReport {
   WaarnemingReport() : super('Waarnemingen');
 

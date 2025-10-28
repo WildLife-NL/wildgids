@@ -5,8 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:wildrapport/data_managers/api_client.dart';
 import 'package:wildrapport/data_managers/profile_api.dart';
-import 'flows/belonging_damage_flow.dart' as belonging_damage_flow;
-import 'flows/waarneming_flow.dart' as waarneming_flow_flow;
+import './flows/belonging_damage_flow.dart' as belonging_damage_flow;
+import './flows/waarneming_flow.dart' as waarneming_flow_flow;
 import 'package:flutter/foundation.dart';
 
 void main() {

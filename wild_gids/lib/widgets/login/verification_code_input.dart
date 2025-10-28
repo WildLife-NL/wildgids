@@ -1,19 +1,21 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:widgets/data_managers/auth_api.dart';
-import 'package:widgets/data_managers/profile_api.dart';
-import 'package:widgets/config/app_config.dart';
-import 'package:widgets/constants/app_colors.dart';
-import 'package:widgets/constants/app_text_theme.dart';
-import 'package:widgets/interfaces/other/login_interface.dart';
-import 'package:widgets/managers/other/login_manager.dart';
-import 'package:widgets/models/api_models/user.dart';
+import 'package:wildrapport/data_managers/auth_api.dart';
+import 'package:wildrapport/data_managers/profile_api.dart';
+import 'package:wildrapport/config/app_config.dart';
+import 'package:wildrapport/constants/app_colors.dart';
+import 'package:wildrapport/constants/app_text_theme.dart';
+import 'package:wildrapport/interfaces/other/login_interface.dart';
+import 'package:wildrapport/screens/shared/overzicht_screen.dart';
+import 'package:wildrapport/managers/other/login_manager.dart';
+import 'package:wildrapport/widgets/shared_ui_widgets/brown_button.dart';
+import 'package:wildrapport/models/api_models/user.dart';
 import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
-import 'package:widgets/interfaces/data_apis/profile_api_interface.dart';
-import 'package:widgets/screens/shared/report_selection_screen.dart';
-import 'package:widgets/widgets/shared_ui_widgets/brown_button.dart';
+import 'package:wildrapport/interfaces/data_apis/profile_api_interface.dart';
+import 'package:wildrapport/screens/terms/terms_screen.dart';
+
 
 
 class VerificationCodeInput extends StatefulWidget {
@@ -54,7 +56,7 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
 
 Future<void> _routeAfterLogin() async {
   try {
-    // Try Provider first, fall back to a local instance so we donâ€™t crash
+    // Try Provider first, fall back to a local instance so we don’t crash
     ProfileApiInterface profileApi;
     try {
       profileApi = context.read<ProfileApiInterface>();
@@ -62,23 +64,27 @@ Future<void> _routeAfterLogin() async {
       profileApi = ProfileApi(AppConfig.shared.apiClient);
     }
 
-  await profileApi.fetchMyProfile(); // Cache profile data
+    final profile = await profileApi.fetchMyProfile(); // also caches
     if (!mounted) return;
 
-    debugPrint("Profile fetched - navigating to ReportSelectionScreen after login");
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const ReportSelectionScreen()),
-      (_) => false,
-    );
-  } catch (e) {
-    // On error, still send user into the selection screen to avoid blocking
-    debugPrint("Error after login: $e");
-    if (mounted) {
+    if (profile.reportAppTerms == true) {
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const ReportSelectionScreen()),
+        MaterialPageRoute(builder: (_) => const OverzichtScreen()),
+        (_) => false,
+      );
+    } else {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const TermsScreen()),
         (_) => false,
       );
     }
+  } catch (e) {
+    // If anything goes wrong, keep the OLD behavior: go to Overzicht
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const OverzichtScreen()),
+      (_) => false,
+    );
   }
 }
 
@@ -124,7 +130,7 @@ Future<void> _verifyCode() async {
       }
     }
   } finally {
-    // if we didnâ€™t navigate, stop the loader
+    // if we didn’t navigate, stop the loader
     if (mounted && !navigated) {
       setState(() => isLoading = false);
     }
@@ -216,7 +222,7 @@ Future<void> _verifyCode() async {
           width: 200,
           height: 200,
           child: Lottie.asset(
-            'assets/icons/loaders/loading_paw.json',
+            'assets/loaders/loading_paw.json',
             fit: BoxFit.contain,
             repeat: true,
             animate: true,
@@ -290,7 +296,7 @@ Future<void> _verifyCode() async {
         ),
         const Spacer(),
         BrownButton(
-          model: LoginManager.createButtonModel(text: 'VerifiÃ«ren'),
+          model: LoginManager.createButtonModel(text: 'Verifiëren'),
           onPressed: _verifyCode,
         ),
         const SizedBox(height: 15),

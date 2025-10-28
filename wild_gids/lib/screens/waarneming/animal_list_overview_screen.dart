@@ -1,12 +1,14 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:widgets/constants/app_colors.dart';
-import 'package:widgets/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
-import 'package:widgets/screens/waarneming/animal_counting_screen.dart';
-import 'package:widgets/screens/location/location_screen.dart';
-import 'package:widgets/widgets/shared_ui_widgets/app_bar.dart';
-import 'package:widgets/widgets/shared_ui_widgets/bottom_app_bar.dart';
-import 'package:widgets/widgets/animals/animal_list_table.dart';
+import 'package:wildrapport/constants/app_colors.dart';
+import 'package:wildrapport/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
+import 'package:wildrapport/interfaces/other/permission_interface.dart';
+import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
+import 'package:wildrapport/screens/waarneming/animal_counting_screen.dart';
+import 'package:wildrapport/screens/location/location_screen.dart';
+import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
+import 'package:wildrapport/widgets/shared_ui_widgets/bottom_app_bar.dart';
+import 'package:wildrapport/widgets/animals/animal_list_table.dart';
 
 class AnimalListOverviewScreen extends StatelessWidget {
   AnimalListOverviewScreen({super.key});
@@ -28,10 +30,11 @@ class AnimalListOverviewScreen extends StatelessWidget {
               centerText: 'Waarneming',
               rightIcon: Icons.menu,
               onLeftIconPressed: () {
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(
-                    builder: (context) => const AnimalCountingScreen(),
-                  ),
+                final navigationManager =
+                    context.read<NavigationStateInterface>();
+                navigationManager.pushAndRemoveUntil(
+                  context,
+                  const AnimalCountingScreen(),
                 );
               },
               onRightIconPressed: () {
@@ -70,16 +73,18 @@ class AnimalListOverviewScreen extends StatelessWidget {
       ),
       bottomNavigationBar: CustomBottomAppBar(
         onBackPressed: () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (context) => const AnimalCountingScreen(),
-            ),
+          final navigationManager = context.read<NavigationStateInterface>();
+          navigationManager.pushAndRemoveUntil(
+            context,
+            const AnimalCountingScreen(),
           );
         },
         onNextPressed: () async {
           // Save any pending changes before navigation
           _animalListTableKey.currentState?.saveChanges();
 
+          final permissionManager = context.read<PermissionInterface>();
+          final navigationManager = context.read<NavigationStateInterface>();
           final animalSightingManager =
               context.read<AnimalSightingReportingInterface>();
 
@@ -94,15 +99,21 @@ class AnimalListOverviewScreen extends StatelessWidget {
             '[AnimalListOverviewScreen] Current animal sighting state: ${currentSighting?.toJson()}',
           );
 
-          // Navigate to location screen
+          final hasPermission = await permissionManager.isPermissionGranted(
+            PermissionType.location,
+          );
+          debugPrint(
+            '[AnimalListOverviewScreen] Location permission status: $hasPermission',
+          );
+
           if (context.mounted) {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => const LocationScreen(),
-              ),
+            navigationManager.pushReplacementForward(
+              context,
+              const LocationScreen(),
             );
           }
         },
+        showBackButton: true,
         showNextButton: true,
       ),
     );

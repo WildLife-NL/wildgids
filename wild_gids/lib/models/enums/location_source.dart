@@ -1,4 +1,1 @@
-enum LocationSource {
-  system,
-  manual,
-}
+enum LocationSource { manual, system, unknown }

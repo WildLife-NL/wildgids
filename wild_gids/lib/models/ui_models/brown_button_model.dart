@@ -1,4 +1,4 @@
-﻿import 'dart:ui';
+import 'dart:ui';
 
 class BrownButtonModel {
   static const double defaultButtonHeight = 48.0;

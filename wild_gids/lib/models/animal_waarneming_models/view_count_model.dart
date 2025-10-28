@@ -1,4 +1,4 @@
-﻿import 'package:widgets/models/enums/animal_age.dart';
+import 'package:wildrapport/models/enums/animal_age.dart';
 
 class ViewCountModel {
   int pasGeborenAmount;

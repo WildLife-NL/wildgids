@@ -1,15 +1,17 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:widgets/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
-import 'package:widgets/models/animal_waarneming_models/animal_gender_view_count_model.dart';
-import 'package:widgets/models/animal_waarneming_models/animal_model.dart';
-import 'package:widgets/models/animal_waarneming_models/view_count_model.dart';
-import 'package:widgets/widgets/animals/counter_widget.dart';
-import 'package:widgets/widgets/overlay/error_overlay.dart';
-import 'package:widgets/widgets/shared_ui_widgets/white_bulk_button.dart';
-import 'package:widgets/constants/app_colors.dart';
-import 'package:widgets/models/enums/animal_age.dart';
-import 'package:widgets/models/enums/animal_gender.dart';
+import 'package:wildrapport/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
+import 'package:wildrapport/models/animal_waarneming_models/animal_gender_view_count_model.dart';
+import 'package:wildrapport/models/animal_waarneming_models/animal_model.dart';
+import 'package:wildrapport/models/enums/animal_age.dart';
+import 'package:wildrapport/models/enums/animal_age_extensions.dart';
+import 'package:wildrapport/models/enums/animal_gender.dart';
+import 'package:wildrapport/models/animal_waarneming_models/view_count_model.dart';
+import 'package:wildrapport/widgets/animals/counter_widget.dart';
+import 'package:wildrapport/widgets/overlay/error_overlay.dart';
+import 'package:wildrapport/widgets/toasts/snack_bar_with_progress.dart';
+import 'package:wildrapport/widgets/shared_ui_widgets/white_bulk_button.dart';
+import 'package:wildrapport/constants/app_colors.dart';
 
 class AnimalCounting extends StatefulWidget {
   final Function(String)? onAgeSelected;
@@ -31,25 +33,15 @@ class _AnimalCountingState extends State<AnimalCounting> {
       GlobalKey<AnimalCounterState>();
 
   AnimalAge _convertStringToAnimalAge(String ageString) {
-    switch (ageString) {
-      case "<6 maanden":
-        return AnimalAge.pasGeboren;
-      case "Onvolwassen":
-        return AnimalAge.onvolwassen;
-      case "Volwassen":
-        return AnimalAge.volwassen;
-      case "Onbekend":
-      default:
-        return AnimalAge.onbekend;
-    }
+    return AnimalAgeExtensions.fromApiString(ageString);
   }
 
   AnimalGender _convertStringToAnimalGender(String genderString) {
     switch (genderString) {
       case "Mannelijk":
-        return AnimalGender.male;
+        return AnimalGender.mannelijk;
       case "Vrouwelijk":
-        return AnimalGender.female;
+        return AnimalGender.vrouwelijk;
       case "Onbekend":
       default:
         return AnimalGender.onbekend;
@@ -189,8 +181,9 @@ class _AnimalCountingState extends State<AnimalCounting> {
     });
 
     // Show success snackbar
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Dier toegevoegd aan de lijst')),
+    SnackBarWithProgress.show(
+      context: context,
+      message: 'Dier toegevoegd aan de lijst',
     );
   }
 
@@ -412,10 +405,6 @@ class _AnimalCountingState extends State<AnimalCounting> {
         case AnimalAge.pasGeboren:
           hasCount = (genderVC.viewCount.pasGeborenAmount > 0);
           break;
-        case AnimalAge.jong:
-          // Treat 'jong' same as 'onvolwassen' for legacy compatibility
-          hasCount = (genderVC.viewCount.onvolwassenAmount > 0);
-          break;
         case AnimalAge.onvolwassen:
           hasCount = (genderVC.viewCount.onvolwassenAmount > 0);
           break;
@@ -465,7 +454,12 @@ class _AnimalCountingState extends State<AnimalCounting> {
 
   List<Widget> _buildAgeButtonsWithSpacing() {
     final List<Widget> result = [];
-    final ageOptions = ["<6 maanden", "Onvolwassen", "Volwassen", "Onbekend"];
+    final ageOptions = [
+      AnimalAge.pasGeboren.label,
+      AnimalAge.onvolwassen.label,
+      AnimalAge.volwassen.label,
+      AnimalAge.onbekend.label,
+    ];
 
     // Count visible and hidden buttons
     int visibleCount = 0;

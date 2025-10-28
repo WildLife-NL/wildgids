@@ -1,13 +1,11 @@
 enum FilterType {
-  alphabetical,
-  mostViewed;
+  none('Filteren', 'circle_icon:filter_list'),
+  alphabetical('Alfabetisch', 'circle_icon:sort_by_alpha'),
+  mostViewed('Meest bekeken', 'circle_icon:visibility'),
+  search('Zoeken', 'circle_icon:search');
 
-  String get displayText {
-    switch (this) {
-      case FilterType.alphabetical:
-        return 'Alfabetisch';
-      case FilterType.mostViewed:
-        return 'Meest Bekeken';
-    }
-  }
+  final String displayText;
+  final String iconPath;
+
+  const FilterType(this.displayText, this.iconPath);
 }

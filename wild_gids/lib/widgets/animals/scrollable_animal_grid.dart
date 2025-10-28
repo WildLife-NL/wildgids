@@ -1,7 +1,7 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'package:widgets/models/animal_waarneming_models/animal_model.dart';
-import 'package:widgets/widgets/animals/animal_grid.dart';
+import 'package:wildrapport/models/animal_waarneming_models/animal_model.dart';
+import 'package:wildrapport/widgets/animals/animal_grid.dart';
 
 class ScrollableAnimalGrid extends StatelessWidget {
   final List<AnimalModel>? animals;

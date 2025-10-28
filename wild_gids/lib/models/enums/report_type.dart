@@ -1,4 +1,4 @@
-﻿enum ReportType {
+enum ReportType {
   waarneming,
   gewasschade,
   verkeersongeval;

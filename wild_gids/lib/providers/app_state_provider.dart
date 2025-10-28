@@ -1,15 +1,15 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:widgets/managers/map/location_map_manager.dart';
-import 'package:widgets/models/beta_models/accident_report_model.dart';
-import 'package:widgets/models/beta_models/belonging_damage_report_model.dart';
-import 'package:widgets/models/beta_models/possesion_model.dart';
-import 'package:widgets/models/beta_models/sighting_report_model.dart';
-import 'package:widgets/models/enums/report_type.dart';
+import 'package:wildrapport/managers/map/location_map_manager.dart';
+import 'package:wildrapport/models/beta_models/accident_report_model.dart';
+import 'package:wildrapport/models/beta_models/belonging_damage_report_model.dart';
+import 'package:wildrapport/models/beta_models/possesion_model.dart';
+import 'package:wildrapport/models/beta_models/sighting_report_model.dart';
+import 'package:wildrapport/models/enums/report_type.dart';
 import 'package:geolocator/geolocator.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:widgets/screens/login/login_screen.dart';
+import 'package:wildrapport/screens/login/login_screen.dart';
 
 class AppStateProvider with ChangeNotifier {
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -80,7 +80,7 @@ class AppStateProvider with ChangeNotifier {
   }
 
   void initializeReport(ReportType reportType) {
-    debugPrint('\x1B[36m[AppStateProvider] ðŸ”· Initializing report with type: $reportType\x1B[0m');
+    debugPrint('\x1B[36m[AppStateProvider] 🔷 Initializing report with type: $reportType\x1B[0m');
     _currentReportType = reportType;
     final report = switch (reportType) {
       ReportType.waarneming => SightingReport(
@@ -104,7 +104,7 @@ class AppStateProvider with ChangeNotifier {
     };
 
     _activeReports['currentReport'] = report;
-    debugPrint('\x1B[36m[AppStateProvider] ðŸ”· Report initialized. Current type: $_currentReportType\x1B[0m');
+    debugPrint('\x1B[36m[AppStateProvider] 🔷 Report initialized. Current type: $_currentReportType\x1B[0m');
     notifyListeners();
   }
 
@@ -166,15 +166,15 @@ class AppStateProvider with ChangeNotifier {
   }
 
   Future<void> logout() async {
-    // 1) Remove persisted auth/session
+    // Remove persisted auth/session
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('bearer_token'); // stored by AuthApi.authorize(...)
+      await prefs.remove('bearer_token');
     } catch (e, st) {
       debugPrint('[AppStateProvider] logout(): failed to clear token: $e\n$st');
     }
 
-    // 2) Reset in-memory app state
+    // Reset in-memory app state
     _screenStates.clear();
     _activeReports.clear();
     _currentReportType = null;
@@ -183,8 +183,7 @@ class AppStateProvider with ChangeNotifier {
     _lastLocationUpdate = null;
     notifyListeners();
 
-    // 3) Navigate to LoginScreen & clear back stack
-    // (Use navigatorKey directly; no named routes needed)
+    // Navigate to LoginScreen & clear back stack
     navigatorKey.currentState?.pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const LoginScreen()),
       (route) => false,

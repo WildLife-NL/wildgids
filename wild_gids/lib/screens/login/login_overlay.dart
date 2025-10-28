@@ -1,9 +1,9 @@
-﻿import 'package:flutter/material.dart';
-import 'package:widgets/constants/app_colors.dart';
-import 'package:widgets/constants/app_text_theme.dart';
+import 'package:flutter/material.dart';
+import 'package:wildrapport/constants/app_colors.dart';
+import 'package:wildrapport/constants/app_text_theme.dart';
 
 class LoginOverlay extends StatelessWidget {
-  const LoginOverlay({Key? key}) : super(key: key);
+  const LoginOverlay({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +13,8 @@ class LoginOverlay extends StatelessWidget {
         color: AppColors.lightMintGreen.withValues(alpha: 0.5),
         child: Center(
           child: GestureDetector(
-            onTap: () {},
+            onTap:
+                () {}, // Prevents taps on the container from closing the overlay
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: 20),
               constraints: const BoxConstraints(maxWidth: 500),

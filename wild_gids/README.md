@@ -1,16 +1,31 @@
-# wild_gids
+# Flutter/Dart specific
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
 
-A new Flutter project.
+# iOS/Android specific
+ios/Flutter/.last_build_id
+ios/Pods/
+ios/Podfile.lock
+ios/Runner.xcworkspace/
+android/.gradle/
+android/app/build/
+android/gradle/
+android/gradle-wrapper.jar
+android/local.properties
 
-## Getting Started
+# VS Code settings
+.vscode/
 
-This project is a starting point for a Flutter application.
+# IntelliJ/Android Studio settings
+.idea/
 
-A few resources to get you started if this is your first Flutter project:
+# macOS specific
+.DS_Store
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+# Windows specific
+Thumbs.db

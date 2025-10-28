@@ -1,6 +1,6 @@
-﻿import 'package:flutter/material.dart';
-import 'package:widgets/constants/app_colors.dart';
-import 'package:widgets/constants/app_text_theme.dart';
+import 'package:flutter/material.dart';
+import 'package:wildrapport/constants/app_colors.dart';
+import 'package:wildrapport/constants/app_text_theme.dart';
 
 class ErrorOverlay extends StatelessWidget {
   final List<String> messages;
@@ -15,7 +15,8 @@ class ErrorOverlay extends StatelessWidget {
         color: Colors.black.withValues(alpha: 0.5),
         child: Center(
           child: GestureDetector(
-            onTap: () {},
+            onTap:
+                () {}, // Prevents taps on the container from closing the overlay
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: 20),
               constraints: const BoxConstraints(maxWidth: 500),

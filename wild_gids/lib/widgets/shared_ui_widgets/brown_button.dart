@@ -1,7 +1,7 @@
-﻿import 'package:flutter/material.dart';
-import 'package:widgets/constants/app_colors.dart';
-import 'package:widgets/models/ui_models/brown_button_model.dart';
-import 'package:widgets/widgets/shared_ui_widgets/circle_icon_container.dart';
+import 'package:flutter/material.dart';
+import 'package:wildrapport/constants/app_colors.dart';
+import 'package:wildrapport/models/ui_models/brown_button_model.dart';
+import 'package:wildrapport/widgets/shared_ui_widgets/circle_icon_container.dart';
 
 class BrownButton extends StatelessWidget {
   final BrownButtonModel? model;
@@ -63,7 +63,7 @@ class BrownButton extends StatelessWidget {
     if (model?.leftIconPath?.startsWith('circle_icon:') ?? false) {
       final iconName = model!.leftIconPath!.split(':')[1];
       return Transform.translate(
-        offset: const Offset(0, 0),
+        offset: const Offset(0, 0), // Changed from -3 to 3 to move right
         child: CircleIconContainer(
           icon: _getIconData(iconName),
           iconColor: AppColors.brown,
@@ -83,12 +83,14 @@ class BrownButton extends StatelessWidget {
     if (model?.rightIconPath?.startsWith('circle_icon:') ?? false) {
       final iconName = model!.rightIconPath!.split(':')[1];
       return Transform.translate(
-        offset: const Offset(3, 0),
+        offset: const Offset(3, 0), // Move 3px to the right
         child: CircleIconContainer(
           icon: _getIconData(iconName),
           iconColor: AppColors.brown,
           size: model!.rightIconSize,
-          iconSize: (model!.rightIconSize) * 0.75,
+          iconSize:
+              (model!.rightIconSize) *
+              0.75, // Increased from 0.6 to 0.75 for bigger arrows
         ),
       );
     }

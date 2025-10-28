@@ -1,11 +1,11 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:widgets/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
-import 'package:widgets/screens/waarneming/animal_list_overview_screen.dart';
-import 'package:widgets/screens/waarneming/animals_screen.dart';
-import 'package:widgets/widgets/shared_ui_widgets/app_bar.dart';
-import 'package:widgets/widgets/shared_ui_widgets/bottom_app_bar.dart';
-import 'package:widgets/widgets/animals/animal_counting.dart';
+import 'package:wildrapport/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
+import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
+import 'package:wildrapport/screens/waarneming/animal_list_overview_screen.dart';
+import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
+import 'package:wildrapport/widgets/shared_ui_widgets/bottom_app_bar.dart';
+import 'package:wildrapport/widgets/animals/animal_counting.dart';
 
 class AnimalCountingScreen extends StatefulWidget {
   const AnimalCountingScreen({super.key});
@@ -47,55 +47,8 @@ class _AnimalCountingScreenState extends State<AnimalCountingScreen> {
   }
 
   void _handleBackNavigation(BuildContext context) {
-    if (_hasAddedItems) {
-      // Show confirmation dialog if items have been added
-      showDialog(
-        context: context,
-        builder:
-            (context) => AlertDialog(
-              title: const Text('Waarschuwing'),
-              content: const Text(
-                'Teruggaan zal de toegevoegde dieren verwijderen. Weet je zeker dat je terug wilt gaan?',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context); // Close dialog
-                  },
-                  child: const Text('Annuleren'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context); // Close dialog
-
-                    // Reset the animal counting data
-                    final animalSightingManager =
-                        context.read<AnimalSightingReportingInterface>();
-
-                    // Create a new animal sighting with empty animals list
-                    animalSightingManager.createanimalSighting();
-
-                    // Navigate back to the animal screen by popping until we reach it
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(
-                        builder:
-                            (context) => const AnimalsScreen(
-                              appBarTitle: 'Selecteer Dier',
-                            ),
-                      ),
-                      (route) => false,
-                    );
-                  },
-                  child: const Text('Ja, ga terug'),
-                ),
-              ],
-            ),
-      );
-    } else {
-      // If no items added, just go back without confirmation
-      Navigator.pop(context);
-    }
+    // Simply go back without popup, keeping all added animals
+    Navigator.pop(context);
   }
 
   @override
@@ -129,10 +82,10 @@ class _AnimalCountingScreenState extends State<AnimalCountingScreen> {
       bottomNavigationBar: CustomBottomAppBar(
         onBackPressed: () => _handleBackNavigation(context),
         onNextPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => AnimalListOverviewScreen(),
-            ),
+          final navigationManager = context.read<NavigationStateInterface>();
+          navigationManager.pushReplacementForward(
+            context,
+            AnimalListOverviewScreen(),
           );
         },
         showNextButton: _hasAddedItems,

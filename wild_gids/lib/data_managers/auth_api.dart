@@ -1,12 +1,12 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
-import 'package:widgets/data_managers/api_client.dart';
-import 'package:widgets/interfaces/data_apis/auth_api_interface.dart';
-import 'package:widgets/models/api_models/user.dart';
+import 'package:wildrapport/data_managers/api_client.dart';
+import 'package:wildrapport/interfaces/data_apis/auth_api_interface.dart';
+import 'package:wildrapport/models/api_models/user.dart';
 
 class AuthApi implements AuthApiInterface {
   final ApiClient client;
@@ -17,22 +17,17 @@ class AuthApi implements AuthApiInterface {
     String displayNameApp,
     String email,
   ) async {
-    final payload = {
-      "displayNameApp": "WildlifeNL", // Always use correct app name
+    http.Response response = await client.post('auth/', {
+      "displayNameApp": displayNameApp,
       "email": email,
-    };
-    debugPrint('POST /auth/ payload: ' + payload.toString());
-    http.Response response = await client.post('auth/', payload, authenticated: false);
-    debugPrint('Response status: ${response.statusCode}');
-    debugPrint('Response body: ${response.body}');
+    }, authenticated: false);
 
     Map<String, dynamic>? json;
     try {
       json = response.body.isNotEmpty ? jsonDecode(response.body) : null;
       debugPrint('Auth api: $json');
-    } catch (e) {
-      debugPrint('JSON decode error: $e');
-    }
+    } catch (_) {}
+    debugPrint("statusCode: ${response.statusCode}");
     if (response.statusCode == HttpStatus.ok) {
       return json ?? {};
     } else {

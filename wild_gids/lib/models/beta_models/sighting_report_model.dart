@@ -1,7 +1,7 @@
-﻿import 'package:widgets/interfaces/reporting/reportable.dart';
-import 'package:widgets/interfaces/reporting/common_report_fields.dart';
-import 'package:widgets/models/reports/report_location.dart';
-import 'package:widgets/models/reports/sighted_animal.dart';
+import 'package:wildrapport/interfaces/reporting/common_report_fields.dart';
+import 'package:wildrapport/interfaces/reporting/reportable_interface.dart';
+import 'package:wildrapport/models/beta_models/report_location_model.dart';
+import 'package:wildrapport/models/beta_models/sighted_animal_model.dart';
 
 class SightingReport implements Reportable, CommonReportFields {
   final List<SightedAnimal> animals;
@@ -16,6 +16,7 @@ class SightingReport implements Reportable, CommonReportFields {
   final ReportLocation? systemLocation;
   @override
   final DateTime? userSelectedDateTime;
+  @override
   final DateTime systemDateTime;
 
   SightingReport({

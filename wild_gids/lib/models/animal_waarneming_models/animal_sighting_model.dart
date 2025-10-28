@@ -1,10 +1,10 @@
-﻿import 'package:widgets/models/animal_waarneming_models/animal_model.dart';
-import 'package:widgets/models/animal_waarneming_models/animal_gender_view_count_model.dart';
-import 'package:widgets/models/enums/animal_category.dart';
-import 'package:widgets/models/enums/animal_condition.dart';
-import 'package:widgets/models/location_model.dart';
-import 'package:widgets/models/date_time_model.dart';
-import 'package:widgets/models/image_list_model.dart';
+import 'package:wildrapport/models/enums/animal_condition.dart';
+import 'package:wildrapport/models/enums/animal_category.dart';
+import 'package:wildrapport/models/beta_models/location_model.dart';
+import 'package:wildrapport/models/ui_models/image_list_model.dart';
+import 'package:wildrapport/models/ui_models/date_time_model.dart';
+import 'package:wildrapport/models/animal_waarneming_models/animal_model.dart';
+import 'package:wildrapport/models/animal_waarneming_models/animal_gender_view_count_model.dart';
   
 class AnimalSightingModel {
   final List<AnimalModel>? animals;

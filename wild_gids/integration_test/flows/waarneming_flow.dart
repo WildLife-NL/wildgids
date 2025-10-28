@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:wildrapport/screens/shared/overzicht_screen.dart';
+import '../tests/questionnaire_flow.dart' as questionnaire_flow;
+import 'package:wildrapport/main.dart' as app;
 
 void runTests() {
   group('End-to-end tests for Gewasschade reporting flow', () {
@@ -15,7 +17,7 @@ void runTests() {
       final token = prefs.getString('bearer_token');
       expect(token, isNotNull, reason: 'Bearer token must be set for API authentication');
       
-    
+      app.main();
 
       // Wait for the app to settle (main.dart has run)
       await tester.pumpAndSettle(const Duration(seconds: 5));
@@ -23,7 +25,9 @@ void runTests() {
       // Debug widget tree
       debugPrint(tester.allWidgets.map((w) => w.toString()).toList().join('\n'));
       
-     
+      // Verify OverzichtScreen is displayed
+      expect(find.byType(OverzichtScreen), findsOneWidget, reason: 'OverzichtScreen should be displayed after login or app start');
+
       // Step 1: Verify and tap 'Rapporteren'
       expect(find.byKey(const Key('rapporteren_button')), findsOneWidget, reason: 'Rapporteren button should be visible');
       await tester.tap(find.byKey(const Key('rapporteren_button')));
@@ -100,7 +104,8 @@ void runTests() {
       await tester.tap(find.text('Volgende'));
       await tester.pumpAndSettle(const Duration(seconds: 3));
 
-    
+      // Step 17: Test questionnaire flow
+      await questionnaire_flow.runQuestionnaireSteps(tester);
       
       // Step 18: Test completed
       expect(true, isTrue, reason: 'Test completed successfully despite overflow');

@@ -1,7 +1,7 @@
-﻿import 'package:widgets/models/animal_waarneming_models/view_count_model.dart';
-import 'package:widgets/models/animal_waarneming_models/animal_gender_view_count_model.dart';
-import 'package:widgets/models/enums/animal_gender.dart';
-import 'package:widgets/models/enums/animal_condition.dart';
+import 'package:wildrapport/models/enums/animal_gender.dart';
+import 'package:wildrapport/models/animal_waarneming_models/view_count_model.dart';
+import 'package:wildrapport/models/enums/animal_condition.dart';
+import 'package:wildrapport/models/animal_waarneming_models/animal_gender_view_count_model.dart'; // <-- Import the new file!
 
 class AnimalModel {
   final String? animalId;

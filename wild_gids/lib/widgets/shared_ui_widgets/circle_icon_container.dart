@@ -1,5 +1,5 @@
-﻿import 'package:flutter/material.dart';
-import 'package:widgets/constants/app_colors.dart';
+import 'package:flutter/material.dart';
+import 'package:wildrapport/constants/app_colors.dart';
 
 class CircleIconContainer extends StatelessWidget {
   final double? size;

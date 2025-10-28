@@ -1,91 +1,123 @@
 import 'package:flutter/material.dart';
-
-typedef SelectionButton = ({
-  String text,
-  IconData? icon,
-  String? imagePath,
-});
+import 'package:wildrapport/constants/app_colors.dart';
+import 'package:wildrapport/widgets/shared_ui_widgets/white_bulk_button.dart';
+import 'package:wildrapport/widgets/shared_ui_widgets/circle_icon_container.dart';
 
 class SelectionButtonGroup extends StatelessWidget {
-  final List<SelectionButton> buttons;
   final Function(String) onStatusSelected;
-  final String? title;
+  final String title;
+  final List<({String text, IconData? icon, String? imagePath})> buttons;
 
   const SelectionButtonGroup({
-    Key? key,
-    required this.buttons,
+    super.key,
     required this.onStatusSelected,
-    this.title,
-  }) : super(key: key);
+    required this.buttons,
+    this.title = 'Title', // Default value
+  });
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+
+    // Calculate responsive text size
+    final double fontSize = screenSize.width * 0.06;
+    final double minFontSize = 20.0;
+    final double maxFontSize = 28.0;
+    final double finalFontSize = fontSize.clamp(minFontSize, maxFontSize);
+
+    // Calculate responsive icon sizes
+    final double circleSize = screenSize.width * 0.15;
+    final double minCircleSize = 64.0;
+    final double maxCircleSize = 80.0;
+    final double finalCircleSize = circleSize.clamp(
+      minCircleSize,
+      maxCircleSize,
+    );
+
     return Expanded(
-      child: Column(
-        children: [
-          if (title != null)
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                title!,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: screenSize.width * 0.05,
+          vertical: screenSize.height * 0.02,
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                color: AppColors.brown,
+                fontSize: finalFontSize,
+                fontWeight: FontWeight.bold,
+                shadows: [
+                  Shadow(
+                    color: Colors.black.withValues(alpha: 0.25),
+                    offset: const Offset(0, 2),
+                    blurRadius: 4,
+                  ),
+                ],
               ),
             ),
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: buttons.length,
-              itemBuilder: (context, index) {
-                final button = buttons[index];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 16.0),
-                  child: ElevatedButton(
-                    onPressed: () => onStatusSelected(button.text),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.all(20),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(color: Colors.grey[300]!),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        if (button.imagePath != null)
-                          Image.asset(
-                            button.imagePath!,
-                            width: 50,
-                            height: 50,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const Icon(Icons.image_not_supported, size: 50),
-                          )
-                        else if (button.icon != null)
-                          Icon(button.icon, size: 50)
-                        else
-                          const SizedBox(width: 50),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Text(
-                            button.text,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
+            ...buttons.reversed.map(
+              (button) => _buildButton(
+                text: button.text,
+                icon: button.icon,
+                imagePath: button.imagePath,
+                circleSize: finalCircleSize,
+                arrowSize: finalCircleSize * 0.3,
+              ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildButton({
+    required String text,
+    IconData? icon,
+    String? imagePath,
+    required double circleSize,
+    required double arrowSize,
+  }) {
+    Widget? leftWidget;
+
+    if (icon != null) {
+      leftWidget =
+          text == 'Andere'
+              ? CircleIconContainer(
+                size: circleSize,
+                icon: icon,
+                iconColor: AppColors.brown,
+                backgroundColor: AppColors.offWhite,
+                iconSize: circleSize * 0.5,
+              )
+              : Icon(icon, color: AppColors.brown, size: circleSize * 0.8);
+    } else if (imagePath != null) {
+      leftWidget = Image.asset(
+        imagePath,
+        width: circleSize * 1.2,
+        height: circleSize * 1.2,
+        fit: BoxFit.contain,
+      );
+    }
+
+    return WhiteBulkButton(
+      text: text,
+      leftWidget: leftWidget,
+      rightWidget: Icon(
+        Icons.arrow_forward_ios,
+        color: AppColors.brown,
+        size: arrowSize * 1.4,
+        shadows: [
+          Shadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            offset: const Offset(0, 2),
+            blurRadius: 4,
           ),
         ],
       ),
+      onPressed: () => onStatusSelected(text),
     );
   }
 }

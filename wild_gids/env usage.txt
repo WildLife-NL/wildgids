@@ -1,0 +1,46 @@
+// import 'package:flutter/material.dart';
+// import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+// void main() async {
+//   await dotenv.load();  // Load the .env file
+//   runApp(MyApp());
+// }
+
+// class MyApp extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     // Retrieve the environment variable
+//     String baseUrl = dotenv.env['PROD_BASE_URL'] ?? 'default_url';
+    
+//     return MaterialApp(
+//       title: 'Flutter Environment Example',
+//       home: Scaffold(
+//         appBar: AppBar(
+//           title: Text('Flutter Environment Variables'),
+//         ),
+//         body: Center(
+//           child: Text('Base URL: $baseUrl'),
+//         ),
+//       ),
+//     );
+//   }
+// }
+// Step 4: Access Environment Variables
+// In any part of your Flutter code, you can access your environment variables using:
+
+// dart
+// Copy
+// Edit
+// String prodBaseUrl = dotenv.env['PROD_BASE_URL'] ?? 'default_url';
+// String devBaseUrl = dotenv.env['DEV_BASE_URL'] ?? 'default_url';
+// You can then use these variables to make network requests or configure the app depending on whether it's in the development or production environment.
+
+// Step 5: Use Different .env Files for Different Environments (Optional)
+// If you want to handle multiple environments (e.g., production, development), you can create different .env files, like .env.production and .env.dev. Then, you can load the appropriate file based on the build mode:
+
+// dart
+// Copy
+// Edit
+// await dotenv.load(fileName: ".env.dev"); // for development
+// // or
+// await dotenv.load(fileName: ".env.production"); // for production

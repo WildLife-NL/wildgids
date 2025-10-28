@@ -1,10 +1,10 @@
-﻿import 'package:flutter/foundation.dart';
-import 'package:widgets/interfaces/waarneming_flow/animal_interface.dart';
-import 'package:widgets/models/animal_waarneming_models/animal_model.dart';
-import 'package:widgets/interfaces/data_apis/species_api_interface.dart';
-import 'package:widgets/interfaces/other/filter_interface.dart';
-import 'package:widgets/models/enums/animal_category.dart';
-import 'package:widgets/models/enums/filter_type.dart';
+import 'package:flutter/foundation.dart';
+import 'package:wildrapport/interfaces/waarneming_flow/animal_interface.dart';
+import 'package:wildrapport/models/animal_waarneming_models/animal_model.dart';
+import 'package:wildrapport/interfaces/data_apis/species_api_interface.dart';
+import 'package:wildrapport/interfaces/filters/filter_interface.dart';
+import 'package:wildrapport/models/enums/filter_type.dart';
+import 'package:wildrapport/models/enums/animal_category.dart';
 
 
 

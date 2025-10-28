@@ -1,7 +1,8 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:widgets/interfaces/data_apis/profile_api_interface.dart';
+import 'package:wildrapport/interfaces/data_apis/profile_api_interface.dart';
+import 'package:wildrapport/screens/shared/overzicht_screen.dart';
 
 class TermsScreen extends StatefulWidget {
   const TermsScreen({super.key});
@@ -30,8 +31,11 @@ class _TermsScreenState extends State<TermsScreen> {
 
       if (!mounted) return;
 
-      // 3) Navigate to waarneming flow (CategoryScreen)
-      Navigator.of(context).pushNamedAndRemoveUntil('/category', (_) => false);
+      // 3) Navigate to the home screen (no local flags involved)
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const OverzichtScreen()),
+        (_) => false,
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

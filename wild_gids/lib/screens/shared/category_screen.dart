@@ -1,10 +1,13 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:widgets/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
-import 'package:widgets/widgets/shared_ui_widgets/app_bar.dart';
-import 'package:widgets/widgets/shared_ui_widgets/bottom_app_bar.dart';
-import 'package:widgets/widgets/location/selection_button_group.dart';
-import 'package:widgets/screens/waarneming/animals_screen.dart';
+import 'package:wildrapport/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
+import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
+import 'package:wildrapport/providers/app_state_provider.dart';
+import 'package:wildrapport/screens/shared/rapporteren.dart';
+import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
+import 'package:wildrapport/widgets/shared_ui_widgets/bottom_app_bar.dart';
+import 'package:wildrapport/widgets/location/selection_button_group.dart';
+import 'package:wildrapport/screens/waarneming/animals_screen.dart';
 
 class CategoryScreen extends StatefulWidget {
   const CategoryScreen({super.key});
@@ -15,6 +18,7 @@ class CategoryScreen extends StatefulWidget {
 
 class _CategoryScreenState extends State<CategoryScreen> {
   late final AnimalSightingReportingInterface _animalSightingManager;
+  late final NavigationStateInterface _navigationManager;
   bool _isLoading = false;
   final purpleLog = '\x1B[35m';
   final resetLog = '\x1B[0m';
@@ -24,16 +28,11 @@ class _CategoryScreenState extends State<CategoryScreen> {
     super.initState();
     debugPrint('$purpleLog[CategoryScreen] Initializing screen$resetLog');
     _animalSightingManager = context.read<AnimalSightingReportingInterface>();
+    _navigationManager = context.read<NavigationStateInterface>();
 
-    var currentState = _animalSightingManager.getCurrentanimalSighting();
-    if (currentState == null) {
-      debugPrint(
-        '$purpleLog[CategoryScreen] No existing sighting, creating a new one$resetLog',
-      );
-      currentState = _animalSightingManager.createanimalSighting();
-    }
+    final currentState = _animalSightingManager.getCurrentanimalSighting();
     debugPrint(
-      '$purpleLog[CategoryScreen] Initial animal sighting state: ${currentState.toJson()}$resetLog',
+      '$purpleLog[CategoryScreen] Initial animal sighting state: ${currentState?.toJson()}$resetLog',
     );
   }
 
@@ -43,8 +42,18 @@ class _CategoryScreenState extends State<CategoryScreen> {
     // Clear the animal sighting data
     _animalSightingManager.clearCurrentanimalSighting();
 
-    // Navigate back to login/home
-    Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+    // Get the app state provider and clear the current report
+    final appStateProvider = Provider.of<AppStateProvider>(
+      context,
+      listen: false,
+    );
+    appStateProvider.resetApplicationState(context);
+
+    // Use the navigation manager's clearApplicationState method which should handle all cleanup
+    _navigationManager.clearApplicationState(context);
+
+    // Remove all screens and navigate to Rapporteren
+    _navigationManager.pushAndRemoveUntil(context, const Rapporteren());
   }
 
   void _handleStatusSelection(BuildContext context, String status) {
@@ -58,11 +67,10 @@ class _CategoryScreenState extends State<CategoryScreen> {
       _animalSightingManager.updateCategory(selectedCategory);
 
       if (mounted) {
-        // Navigate to AnimalsScreen
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => const AnimalsScreen(appBarTitle: 'Selecteer Dier'),
-          ),
+        _navigationManager.dispose(); // Clean up resources
+        _navigationManager.pushReplacementForward(
+          context,
+          const AnimalsScreen(appBarTitle: 'Selecteer Dier'),
         );
       }
     } catch (e) {

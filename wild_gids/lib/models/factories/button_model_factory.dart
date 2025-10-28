@@ -1,4 +1,4 @@
-﻿import 'package:widgets/models/ui_models/brown_button_model.dart';
+import 'package:wildrapport/models/ui_models/brown_button_model.dart';
 
 class ButtonModelFactory {
   static BrownButtonModel createLoginButton({

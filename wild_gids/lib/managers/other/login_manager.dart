@@ -1,10 +1,10 @@
-﻿import 'package:flutter/material.dart';
-import 'package:widgets/interfaces/data_apis/auth_api_interface.dart';
-import 'package:widgets/interfaces/data_apis/profile_api_interface.dart';
-import 'package:widgets/interfaces/other/login_interface.dart';
-import 'package:widgets/models/ui_models/brown_button_model.dart';
-import 'package:widgets/models/api_models/user.dart';
-import 'package:widgets/exceptions/validation_exception.dart';
+import 'package:flutter/material.dart';
+import 'package:wildrapport/interfaces/data_apis/auth_api_interface.dart';
+import 'package:wildrapport/interfaces/data_apis/profile_api_interface.dart';
+import 'package:wildrapport/interfaces/other/login_interface.dart';
+import 'package:wildrapport/models/ui_models/brown_button_model.dart';
+import 'package:wildrapport/models/api_models/user.dart';
+import 'package:wildrapport/exceptions/validation_exception.dart';
 
 class LoginManager implements LoginInterface {
   final AuthApiInterface authApi;
@@ -71,7 +71,7 @@ class LoginManager implements LoginInterface {
     }
 
     try {
-      await authApi.authenticate("Wild Gids", email.trim());
+      await authApi.authenticate("Wild Rapport", email.trim());
       return true;
     } catch (e) {
       throw Exception("Login failed: $e");
@@ -113,7 +113,7 @@ class LoginManager implements LoginInterface {
     }
 
     try {
-      await authApi.authenticate("Wild Gids", email.trim());
+      await authApi.authenticate("Wild Rapport", email.trim());
       return true;
     } catch (e) {
       throw Exception("Resend code failed: $e");

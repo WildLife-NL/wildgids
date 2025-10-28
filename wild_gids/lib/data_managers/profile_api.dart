@@ -1,11 +1,11 @@
-﻿  import 'dart:convert';
+  import 'dart:convert';
   import 'dart:io';
   import 'package:http/http.dart' as http;
   import 'package:shared_preferences/shared_preferences.dart';
 
-  import 'package:widgets/data_managers/api_client.dart';
-  import 'package:widgets/interfaces/data_apis/profile_api_interface.dart';
-  import 'package:widgets/models/beta_models/profile_model.dart';
+  import 'package:wildrapport/data_managers/api_client.dart';
+  import 'package:wildrapport/interfaces/data_apis/profile_api_interface.dart';
+  import 'package:wildrapport/models/beta_models/profile_model.dart';
 
   class ProfileApi implements ProfileApiInterface {
     final ApiClient client;

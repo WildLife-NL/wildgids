@@ -1,17 +1,17 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:widgets/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
-import 'package:widgets/interfaces/state/navigation_state_interface.dart';
-import 'package:widgets/models/enums/report_type.dart';
-import 'package:widgets/providers/app_state_provider.dart';
-import 'package:widgets/providers/map_provider.dart';
-import 'package:widgets/screens/waarneming/animals_screen.dart';
-import 'package:widgets/screens/shared/category_screen.dart';
-import 'package:widgets/screens/shared/overzicht_screen.dart';
-import 'package:widgets/screens/belonging/belonging_damages_screen.dart';
-import 'package:widgets/widgets/shared_ui_widgets/app_bar.dart';
-import 'package:widgets/widgets/location/invisible_map_preloader.dart';
-import 'package:widgets/widgets/questionnaire/report_button.dart';
+import 'package:wildrapport/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
+import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
+import 'package:wildrapport/models/enums/report_type.dart';
+import 'package:wildrapport/providers/app_state_provider.dart';
+import 'package:wildrapport/providers/map_provider.dart';
+import 'package:wildrapport/screens/waarneming/animals_screen.dart';
+import 'package:wildrapport/screens/shared/category_screen.dart';
+import 'package:wildrapport/screens/shared/overzicht_screen.dart';
+import 'package:wildrapport/screens/belonging/belonging_damages_screen.dart';
+import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
+import 'package:wildrapport/widgets/location/invisible_map_preloader.dart';
+import 'package:wildrapport/widgets/questionnaire/report_button.dart';
 
 class Rapporteren extends StatefulWidget {
   const Rapporteren({super.key});

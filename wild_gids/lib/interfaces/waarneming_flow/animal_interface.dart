@@ -1,5 +1,5 @@
-﻿import 'package:widgets/models/animal_waarneming_models/animal_model.dart';
-import 'package:widgets/models/enums/animal_category.dart';
+import 'package:wildrapport/models/animal_waarneming_models/animal_model.dart';
+import 'package:wildrapport/models/enums/animal_category.dart';
 
 abstract class AnimalRepositoryInterface {
   Future<List<AnimalModel>> getAnimals();

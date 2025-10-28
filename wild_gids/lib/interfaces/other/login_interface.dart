@@ -1,5 +1,5 @@
-﻿import 'package:flutter/material.dart';
-import 'package:widgets/models/api_models/user.dart';
+import 'package:flutter/material.dart';
+import 'package:wildrapport/models/api_models/user.dart';
 
 abstract class LoginInterface {
   /// Validates email format and returns error message if invalid, null if valid

@@ -1,20 +1,22 @@
-﻿import 'package:flutter/material.dart';
-import 'package:widgets/interfaces/waarneming_flow/animal_interface.dart';
-import 'package:widgets/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
-import 'package:widgets/models/animal_waarneming_models/animal_gender_view_count_model.dart';
-import 'package:widgets/models/animal_waarneming_models/animal_sighting_model.dart';
-import 'package:widgets/models/animal_waarneming_models/animal_model.dart';
-import 'package:widgets/models/animal_waarneming_models/view_count_model.dart';
-import 'package:widgets/models/enums/animal_category.dart';
-import 'package:widgets/models/enums/animal_gender.dart';
-import 'package:widgets/models/enums/animal_age.dart';
-import 'package:widgets/models/enums/animal_condition.dart';
-import 'package:widgets/models/location_model.dart';
-import 'package:widgets/models/date_time_model.dart';
+import 'package:flutter/material.dart';
+import 'package:wildrapport/interfaces/waarneming_flow/animal_interface.dart';
+import 'package:wildrapport/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
+import 'package:wildrapport/models/animal_waarneming_models/animal_gender_view_count_model.dart';
+import 'package:wildrapport/models/animal_waarneming_models/animal_sighting_model.dart';
+import 'package:wildrapport/models/animal_waarneming_models/observed_animal_entry.dart';
+import 'package:wildrapport/models/ui_models/date_time_model.dart';
+import 'package:wildrapport/models/enums/animal_category.dart';
+import 'package:wildrapport/models/animal_waarneming_models/animal_model.dart';
+import 'package:wildrapport/models/enums/animal_condition.dart';
+import 'package:wildrapport/models/enums/animal_gender.dart';
+import 'package:wildrapport/models/enums/animal_age.dart';
+import 'package:wildrapport/models/beta_models/location_model.dart';
+import 'package:wildrapport/models/animal_waarneming_models/view_count_model.dart';
 
 class AnimalSightingReportingManager implements AnimalSightingReportingInterface {
   final List<VoidCallback> _listeners = [];
   AnimalSightingModel? _currentanimalSighting;
+  final List<ObservedAnimalEntry> _observedAnimals = [];
 
   // Core update method
   AnimalSightingModel _updateSighting({
@@ -86,21 +88,25 @@ class AnimalSightingReportingManager implements AnimalSightingReportingInterface
     }
   }
 
-  // Interface implementations
-  @override
-  AnimalSightingModel createanimalSighting() {
-    _currentanimalSighting = AnimalSightingModel(
-      animals: [],
-      animalSelected: null,
-      category: null,
-      description: null,
-      locations: [],
-      dateTime: null,
-      images: null,
-    );
-    _notifyListeners();
-    return _currentanimalSighting!;
-  }
+@override
+AnimalSightingModel createanimalSighting() {
+  _currentanimalSighting = AnimalSightingModel(
+    animals: [],
+    animalSelected: null,
+    category: null,
+    description: null,
+    locations: [],
+    dateTime: null,
+    images: null,
+  );
+
+  // NEW: reset the counted animal batches when starting a new sighting
+  _observedAnimals.clear();
+
+  _notifyListeners();
+  return _currentanimalSighting!;
+}
+
 
   @override
   AnimalSightingModel updateSelectedAnimal(AnimalModel selectedAnimal) {
@@ -355,10 +361,7 @@ class AnimalSightingReportingManager implements AnimalSightingReportingInterface
     List<LocationModel> updatedLocations = List.from(
       _currentanimalSighting?.locations ?? [],
     );
-    updatedLocations.removeWhere((loc) => 
-      loc.latitude == location.latitude && 
-      loc.longitude == location.longitude
-    );
+    updatedLocations.removeWhere((loc) => loc.source == location.source);
     return _updateSighting(locations: updatedLocations);
   }
 
@@ -374,7 +377,7 @@ class AnimalSightingReportingManager implements AnimalSightingReportingInterface
   @override
   AnimalSightingModel updateDateTime(DateTime dateTime) {
     return updateDateTimeModel(
-      DateTimeModel(dateTime: dateTime),
+      DateTimeModel(dateTime: dateTime, isUnknown: false),
     );
   }
 
@@ -396,4 +399,17 @@ class AnimalSightingReportingManager implements AnimalSightingReportingInterface
         return AnimalCategory.andere;
     }
   }
+
+@override
+void addObservedAnimal(ObservedAnimalEntry entry) {
+  _observedAnimals.add(entry);
+  _notifyListeners(); // trigger rebuilds for listeners (tables etc.)
+}
+
+@override
+List<ObservedAnimalEntry> getObservedAnimals() {
+  return List.unmodifiable(_observedAnimals);
+}
+
+
 }
