@@ -5,10 +5,8 @@ import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
 import 'package:wildrapport/models/enums/report_type.dart';
 import 'package:wildrapport/providers/app_state_provider.dart';
 import 'package:wildrapport/providers/map_provider.dart';
-import 'package:wildrapport/screens/waarneming/animals_screen.dart';
 import 'package:wildrapport/screens/shared/category_screen.dart';
 import 'package:wildrapport/screens/shared/overzicht_screen.dart';
-import 'package:wildrapport/screens/belonging/belonging_damages_screen.dart';
 import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
 import 'package:wildrapport/widgets/location/invisible_map_preloader.dart';
 import 'package:wildrapport/widgets/questionnaire/report_button.dart';
@@ -40,29 +38,6 @@ class _RapporterenState extends State<Rapporteren> {
         animalSightingManager.createanimalSighting();
         // Skip condition screen and go directly to category screen
         nextScreen = const CategoryScreen();
-        _initializeMapInBackground();
-        break;
-      case 'Gewasschade':
-        debugPrint('[Rapporteren] Gewasschade selected, initializing map');
-        selectedReportType = ReportType.gewasschade;
-        nextScreen = BelongingDamagesScreen();
-        _initializeMapInBackground();
-        break;
-      case 'Verkeersongeval':
-        debugPrint('[Rapporteren] Verkeersongeval selected, initializing map');
-        selectedReportType = ReportType.verkeersongeval;
-        // Create animal sighting report and save it in provider
-        final animalSightingManagerVerkeer =
-            context.read<AnimalSightingReportingInterface>();
-        animalSightingManagerVerkeer.createanimalSighting();
-        // Skip condition screen and go directly to category screen
-        nextScreen = const CategoryScreen();
-        _initializeMapInBackground();
-        break;
-      case 'Diergezondheid':
-        debugPrint('[Rapporteren] Diergezondheid selected, initializing map');
-        selectedReportType = ReportType.verkeersongeval;
-        nextScreen = AnimalsScreen(appBarTitle: reportType);
         _initializeMapInBackground();
         break;
       default:
@@ -142,65 +117,17 @@ class _RapporterenState extends State<Rapporteren> {
                   horizontal: horizontalPadding,
                   vertical: verticalPadding,
                 ),
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: ReportButton(
-                              image: 'assets/icons/rapporteren/crop_icon.png',
-                              text: 'Gewasschade',
-                              onPressed:
-                                  () =>
-                                      _handleReportTypeSelection('Gewasschade'),
-                            ),
-                          ),
-                          SizedBox(width: screenSize.width * 0.02),
-                          Expanded(
-                            child: ReportButton(
-                              image: 'assets/icons/rapporteren/health_icon.png',
-                              text: 'Diergezondheid',
-                              onPressed:
-                                  () => _handleReportTypeSelection(
-                                    'Diergezondheid',
-                                  ),
-                            ),
-                          ),
-                        ],
-                      ),
+                child: Center(
+                  child: SizedBox(
+                    width: 260,
+                    height: 150,
+                    child: ReportButton(
+                      image: 'assets/icons/rapporteren/sighting_icon.png',
+                      text: 'Waarnemingen',
+                      onPressed: () =>
+                          _handleReportTypeSelection('animalSightingen'),
                     ),
-                    SizedBox(height: screenSize.height * 0.02),
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: ReportButton(
-                              image:
-                                  'assets/icons/rapporteren/sighting_icon.png',
-                              text: 'Waarnemingen',
-                              onPressed:
-                                  () => _handleReportTypeSelection(
-                                    'animalSightingen',
-                                  ),
-                            ),
-                          ),
-                          SizedBox(width: screenSize.width * 0.02),
-                          Expanded(
-                            child: ReportButton(
-                              image:
-                                  'assets/icons/rapporteren/accident_icon.png',
-                              text: 'Verkeersongeval',
-                              onPressed:
-                                  () => _handleReportTypeSelection(
-                                    'Verkeersongeval',
-                                  ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
