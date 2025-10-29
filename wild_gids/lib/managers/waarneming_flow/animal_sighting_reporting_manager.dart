@@ -411,5 +411,57 @@ List<ObservedAnimalEntry> getObservedAnimals() {
   return List.unmodifiable(_observedAnimals);
 }
 
+  @override
+  void syncObservedAnimalsToSighting() {
+    // We need a sighting to sync into
+    if (_currentanimalSighting == null) return;
+
+    // We also need to know which species was selected
+    final baseAnimal = _currentanimalSighting!.animalSelected;
+    if (baseAnimal == null) return;
+
+    // Build a legacy-style `animals` list that SightingApiTransformer understands
+    final List<AnimalModel> converted = [];
+
+    for (final entry in _observedAnimals) {
+      // Create a ViewCountModel where only the matching age bucket is filled
+      final vc = ViewCountModel(
+        pasGeborenAmount:
+            entry.age == AnimalAge.pasGeboren ? entry.count : 0,
+        onvolwassenAmount:
+            entry.age == AnimalAge.onvolwassen ? entry.count : 0,
+        volwassenAmount:
+            entry.age == AnimalAge.volwassen ? entry.count : 0,
+        unknownAmount:
+            entry.age == AnimalAge.onbekend ? entry.count : 0,
+      );
+
+      // Attach gender + the age bucket counts
+      final gvc = AnimalGenderViewCount(
+        gender: entry.gender,
+        viewCount: vc,
+      );
+
+      // Build one AnimalModel for this batch
+      final batchModel = AnimalModel(
+        animalId: baseAnimal.animalId,
+        animalImagePath: baseAnimal.animalImagePath,
+        animalName: baseAnimal.animalName,
+        condition: entry.condition,
+        genderViewCounts: [gvc],
+      );
+
+      converted.add(batchModel);
+    }
+
+    // Write that into the active sighting
+    _currentanimalSighting = _currentanimalSighting!.copyWith(
+      animals: converted,
+    );
+
+    _notifyListeners();
+  }
+
+
 
 }

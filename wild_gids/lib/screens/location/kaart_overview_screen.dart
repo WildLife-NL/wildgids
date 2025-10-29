@@ -379,7 +379,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                 16,
               );
 
-              // 🔴 Send tracking ping when user recenters (R2)
+              // Send tracking ping when user recenters (R2)
       context.read<MapProvider>().sendTrackingPingFromPosition(fresh);
               _queueFetch();
             }

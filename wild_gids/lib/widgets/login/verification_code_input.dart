@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:wildrapport/data_managers/auth_api.dart';
-import 'package:wildrapport/data_managers/profile_api.dart';
 import 'package:wildrapport/config/app_config.dart';
 import 'package:wildrapport/constants/app_colors.dart';
 import 'package:wildrapport/constants/app_text_theme.dart';
+import 'package:wildrapport/data_managers/profile_api.dart';
 import 'package:wildrapport/interfaces/other/login_interface.dart';
 import 'package:wildrapport/screens/shared/overzicht_screen.dart';
 import 'package:wildrapport/managers/other/login_manager.dart';
@@ -39,10 +38,7 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
     (index) => TextEditingController(),
   );
   final List<FocusNode> focusNodes = List.generate(6, (index) => FocusNode());
-  final LoginInterface loginManager = LoginManager(
-    AuthApi(AppConfig.shared.apiClient),
-    ProfileApi(AppConfig.shared.apiClient),
-  );
+  late final LoginInterface loginManager;
   late final AnimationController _animationController;
   bool isLoading = false;
   bool isError = false;
@@ -52,6 +48,7 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
   void initState() {
     super.initState();
     _animationController = AnimationController(vsync: this);
+    loginManager = context.read<LoginInterface>();
   }
 
 Future<void> _routeAfterLogin() async {

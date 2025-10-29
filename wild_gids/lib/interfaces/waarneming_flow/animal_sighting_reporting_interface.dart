@@ -86,4 +86,8 @@ abstract class AnimalSightingReportingInterface {
 
   /// e.g. we will expand count into repeated items with sex/lifeStage/condition.
   List<ObservedAnimalEntry> getObservedAnimals();
+  
+  /// Sync the new observed-animal list into the legacy `animals`
+  /// field on AnimalSightingModel, so the API transformer can send it.
+  void syncObservedAnimalsToSighting();
 }

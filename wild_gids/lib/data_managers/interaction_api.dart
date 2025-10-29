@@ -44,10 +44,11 @@ class InteractionApi implements InteractionApiInterface {
           }
           break;
         case InteractionType.gewasschade:
+          debugPrint("$yellowLog========================================");
           debugPrint("$yellowLog[InteractionAPI]: Report is gewasschade");
           if (interaction.report is PossesionReportFields) {
             final report = interaction.report as PossesionReportFields;
-            response = await client.post('interaction/', {
+            final payload = {
               "description": report.description ?? '',
               "location": {
                 "latitude": report.systemLocation?.latitude,
@@ -67,7 +68,11 @@ class InteractionApi implements InteractionApiInterface {
               },
               "speciesID": report.suspectedSpeciesID,
               "typeID": 2,
-            }, authenticated: true);
+            };
+            debugPrint("$yellowLog[InteractionAPI]: GEWASSCHADE Payload:");
+            debugPrint("$yellowLog${jsonEncode(payload)}");
+            debugPrint("$yellowLog========================================");
+            response = await client.post('interaction/', payload, authenticated: true);
           } else {
             throw Exception(
               "Invalid report type for gewasschade: ${interaction.report.runtimeType}",
@@ -112,10 +117,23 @@ class InteractionApi implements InteractionApiInterface {
           throw Exception("Empty response received from server");
         }
 
+        debugPrint("$yellowLog========================================");
+        debugPrint("$yellowLog[InteractionAPI]: CHECKING FOR QUESTIONNAIRE");
         final questionnaireJson = json['questionnaire'];
         final String interactionID = json['ID'];
+        
+        debugPrint("$yellowLog[InteractionAPI]: InteractionID from backend: $interactionID");
+        debugPrint("$yellowLog[InteractionAPI]: Questionnaire in response: ${questionnaireJson != null ? 'YES' : 'NO'}");
+        
+        if (questionnaireJson != null) {
+          debugPrint("$yellowLog[InteractionAPI]: Questionnaire data:");
+          debugPrint("$yellowLog${jsonEncode(questionnaireJson)}");
+        }
+        debugPrint("$yellowLog========================================");
+        
         if (questionnaireJson == null) {
-          debugPrint("$redLog[InteractionAPI]: No questionnaire data in response");
+          debugPrint("$redLog[InteractionAPI]: ✗ No questionnaire data in response");
+          debugPrint("$redLog[InteractionAPI]: This means the backend did not return a questionnaire for this interaction type");
           throw Exception("No questionnaire provided by backend");
         }
 

@@ -10,8 +10,6 @@ import 'package:wildrapport/screens/shared/rapporteren.dart';
 import 'package:wildrapport/providers/app_state_provider.dart';
 import 'package:wildrapport/screens/location/kaart_overview_screen.dart';
 
-
-
 class OverzichtScreen extends StatefulWidget {
   const OverzichtScreen({super.key});
 
@@ -60,110 +58,117 @@ class _OverzichtScreenState extends State<OverzichtScreen>
       },
       child: Scaffold(
         body: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TopContainer(
-                    userName: userName,
-                    height: topContainerHeight,
-                    welcomeFontSize: welcomeFontSize,
-                    usernameFontSize: usernameFontSize,
-                  ),
-                  SafeArea(
-                    top: false,
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        vertical: spacing / 2,
-                        horizontal: spacing,
-                      ),
-                      child: IntrinsicHeight(
-                        child: Column(
-                          children: [
-                            SizedBox(height: spacing),
-                            ActionButtons(
-                              buttons: [
-(
-  text: 'Kaart',
-  icon: Icons.map,
-  imagePath: null,
-  key: Key('rapporten_kaart_button'),
-onPressed: () {
-  context.read<NavigationStateInterface>()
-    .pushReplacementForward(context, const KaartOverviewScreen());
-}
-),
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TopContainer(
+                      userName: userName,
+                      height: topContainerHeight,
+                      welcomeFontSize: welcomeFontSize,
+                      usernameFontSize: usernameFontSize,
+                    ),
+                    SafeArea(
+                      top: false,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          vertical: spacing / 2,
+                          horizontal: spacing,
+                        ),
+                        child: IntrinsicHeight(
+                          child: Column(
+                            children: [
+                              SizedBox(height: spacing),
+                              ActionButtons(
+                                buttons: [
+                                  (
+                                    text: 'Kaart',
+                                    icon: Icons.map,
+                                    imagePath: null,
+                                    key: Key('rapporten_kaart_button'),
+                                    onPressed: () {
+                                      context
+                                          .read<NavigationStateInterface>()
+                                          .pushReplacementForward(
+                                            context,
+                                            const KaartOverviewScreen(),
+                                          );
+                                    },
+                                  ),
 
-                                (
-                                  text: 'Rapporteren',
-                                  icon: Icons.edit_note,
-                                  imagePath: null,
-                                  key: Key('rapporteren_button'),
-                                  onPressed: () {
-                                    try {
-                                      navigationManager.pushReplacementForward(
-                                        context,
-                                        const Rapporteren(),
-                                      );
-                                    } catch (e) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Er is een fout opgetreden bij het navigeren',
+                                  (
+                                    text: 'Rapporteren',
+                                    icon: Icons.edit_note,
+                                    imagePath: null,
+                                    key: Key('rapporteren_button'),
+                                    onPressed: () {
+                                      try {
+                                        navigationManager
+                                            .pushReplacementForward(
+                                              context,
+                                              const Rapporteren(),
+                                            );
+                                      } catch (e) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              'Er is een fout opgetreden bij het navigeren',
+                                            ),
+                                            duration: const Duration(
+                                              seconds: 3,
+                                            ),
                                           ),
-                                          duration: const Duration(seconds: 3),
-                                        ),
+                                        );
+                                      }
+                                    },
+                                  ),
+                                  (
+                                    text: 'Mijn Rapporten',
+                                    icon: Icons.description,
+                                    imagePath: null,
+                                    key: Key('mijn_rapporten_button'),
+                                    onPressed: () {
+                                      ToastNotificationHandler.sendToastNotification(
+                                        context,
+                                        "Deze functie is nog niet toegevoegd",
+                                        2,
                                       );
-                                    }
-                                  },
-                                ),
-                                (
-                                  text: 'Mijn Rapporten',
-                                  icon: Icons.description,
-                                  imagePath: null,
-                                  key: Key('mijn_rapporten_button'),
-                                  onPressed: () {
-                                    ToastNotificationHandler.sendToastNotification(
-                                      context,
-                                      "Deze functie is nog niet toegevoegd",
-                                      2,
-                                    );
-                                  },
-                                ),
+                                    },
+                                  ),
 
-                                (
-                                  text: 'Uitloggen',
-                                  icon: Icons.logout,
-                                  imagePath: null,
-                                  key: Key('uitloggen_button'),
-                                  onPressed: () {
-                                    context.read<AppStateProvider>().logout();
-                                  },
-                                ),
-                              ],
-                              iconSize: iconSize,
-                              verticalPadding: spacing / 2,
-                              horizontalPadding: spacing,
-                              buttonSpacing: spacing / 2,
-                              buttonHeight: buttonHeight,
-                              buttonFontSize: buttonFontSize,
-                            ),
-                          ],
+                                  (
+                                    text: 'Uitloggen',
+                                    icon: Icons.logout,
+                                    imagePath: null,
+                                    key: Key('uitloggen_button'),
+                                    onPressed: () {
+                                      context.read<AppStateProvider>().logout();
+                                    },
+                                  ),
+                                ],
+                                iconSize: iconSize,
+                                verticalPadding: spacing / 2,
+                                horizontalPadding: spacing,
+                                buttonSpacing: spacing / 2,
+                                buttonHeight: buttonHeight,
+                                buttonFontSize: buttonFontSize,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          );
-        },
-      ),
+            );
+          },
+        ),
       ), // Close WillPopScope
     );
   }

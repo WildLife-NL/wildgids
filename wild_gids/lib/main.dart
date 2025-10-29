@@ -58,13 +58,11 @@ import 'package:wildrapport/managers/api_managers/interaction_query_manager.dart
 import 'package:wildrapport/managers/api_managers/animal_pins_manager.dart';
 import 'package:wildrapport/managers/api_managers/detection_pins_manager.dart';
 
+import 'package:wildrapport/utils/token_validator.dart';
+
 Future<Widget> getHomepageBasedOnLoginStatus() async {
-  String? token = await _getToken();
-  if (token != null) {
-    return const OverzichtScreen();
-  } else {
-    return const LoginScreen();
-  }
+  final hasValidToken = await TokenValidator.hasValidToken();
+  return hasValidToken ? const OverzichtScreen() : const LoginScreen();
 }
 
 void main() async {
@@ -136,11 +134,12 @@ mapProvider.setTrackingApi(trackingApi);
 
   final locationScreenManager = LocationScreenManager();
 
-  final String? token = prefs.getString('bearer_token');
   prefs.setStringList('interaction_cache', []);
-
-  final Widget initialScreen =
-      token != null ? const OverzichtScreen() : const LoginScreen();
+  
+  final bool hasValidToken = await TokenValidator.hasValidToken();
+  final Widget initialScreen = hasValidToken 
+      ? const OverzichtScreen() 
+      : const LoginScreen();
 
   runApp(
     MultiProvider(
@@ -186,11 +185,6 @@ mapProvider.setTrackingApi(trackingApi);
 }
 
 class UserService {}
-
-Future<String?> _getToken() async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  return prefs.getString('bearer_token');
-}
 
 class MyApp extends StatelessWidget {
   final Widget initialScreen;

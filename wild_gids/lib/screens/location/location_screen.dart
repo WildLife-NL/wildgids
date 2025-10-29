@@ -120,94 +120,129 @@ class _LocationScreenState extends State<LocationScreen> {
               );
             });
           },
-          onNextPressed: () async {
-            final animalSightingManager = context.read<AnimalSightingReportingInterface>();
-            final locationManager = context.read<LocationScreenInterface>();
-            final interactionManager = context.read<InteractionInterface>();
-            final mapProvider = context.read<MapProvider>();
-            try {
-              debugPrint('\x1B[35m[LocationScreen] Starting location update process\x1B[0m');
-              final locationInfo = await locationManager.getLocationAndDateTime(context);
-              debugPrint('\x1B[35m[LocationScreen] LocationInfo: $locationInfo\x1B[0m');
+onNextPressed: () async {
+  final animalSightingManager = context.read<AnimalSightingReportingInterface>();
+  final locationManager = context.read<LocationScreenInterface>();
+  final interactionManager = context.read<InteractionInterface>();
+  final mapProvider = context.read<MapProvider>();
 
-              if (locationInfo['selectedLocation'] == null) {
-                _pendingSnackBarMessage = 'Selecteer eerst een locatie';
-                WidgetsBinding.instance.addPostFrameCallback((_) => _handlePendingActions());
-                return;
-              }
+  try {
+    debugPrint('\x1B[35m[LocationScreen] Starting location update process\x1B[0m');
 
-              final currentSighting = animalSightingManager.getCurrentanimalSighting();
-              if (currentSighting == null) {
-                throw StateError('No active animal sighting found');
-              }
+    final locationInfo = await locationManager.getLocationAndDateTime(context);
+    debugPrint('\x1B[35m[LocationScreen] LocationInfo: $locationInfo\x1B[0m');
 
-              if (locationInfo['currentGpsLocation'] != null) {
-                final systemLocation = LocationModel(
-                  latitude: locationInfo['currentGpsLocation']['latitude'],
-                  longitude: locationInfo['currentGpsLocation']['longitude'],
-                  source: LocationSource.system,
-                );
-                animalSightingManager.updateLocation(systemLocation);
-                debugPrint('\x1B[35m[LocationScreen] Updated system location: ${systemLocation.latitude}, ${systemLocation.longitude}\x1B[0m');
-              }
+    // 1. must have a chosen place
+    if (locationInfo['selectedLocation'] == null) {
+      _pendingSnackBarMessage = 'Selecteer eerst een locatie';
+      WidgetsBinding.instance.addPostFrameCallback((_) => _handlePendingActions());
+      return;
+    }
 
-              if (locationInfo['selectedLocation'] != null) {
-                final userLocation = LocationModel(
-                  latitude: locationInfo['selectedLocation']['latitude'],
-                  longitude: locationInfo['selectedLocation']['longitude'],
-                  source: LocationSource.manual,
-                );
-                animalSightingManager.updateLocation(userLocation);
-                debugPrint('\x1B[35m[LocationScreen] Updated user location: ${userLocation.latitude}, ${userLocation.longitude}\x1B[0m');
-              }
+    final currentSighting = animalSightingManager.getCurrentanimalSighting();
+    if (currentSighting == null) {
+      throw StateError('No active animal sighting found');
+    }
 
-              if (locationInfo['dateTime'] == null || locationInfo['dateTime']['dateTime'] == null) {
-                _pendingSnackBarMessage = 'Selecteer een datum en tijd';
-                WidgetsBinding.instance.addPostFrameCallback((_) => _handlePendingActions());
-                return;
-              }
+    // 2. update locations in the sighting
+    if (locationInfo['currentGpsLocation'] != null) {
+      final systemLocation = LocationModel(
+        latitude: locationInfo['currentGpsLocation']['latitude'],
+        longitude: locationInfo['currentGpsLocation']['longitude'],
+        source: LocationSource.system,
+      );
+      animalSightingManager.updateLocation(systemLocation);
+      debugPrint('\x1B[35m[LocationScreen] Updated system location: ${systemLocation.latitude}, ${systemLocation.longitude}\x1B[0m');
+    }
 
-              final dateTimeStr = locationInfo['dateTime']['dateTime'];
-              final dateTime = DateTime.parse(dateTimeStr);
-              animalSightingManager.updateDateTime(dateTime);
-              debugPrint('\x1B[35m[LocationScreen] Updated datetime: $dateTime\x1B[0m');
-              mapProvider.resetState();
+    if (locationInfo['selectedLocation'] != null) {
+      final userLocation = LocationModel(
+        latitude: locationInfo['selectedLocation']['latitude'],
+        longitude: locationInfo['selectedLocation']['longitude'],
+        source: LocationSource.manual,
+      );
+      animalSightingManager.updateLocation(userLocation);
+      debugPrint('\x1B[35m[LocationScreen] Updated user location: ${userLocation.latitude}, ${userLocation.longitude}\x1B[0m');
+    }
 
-              final updatedSighting = animalSightingManager.getCurrentanimalSighting();
-              if (updatedSighting!.dateTime == null || updatedSighting.dateTime!.dateTime == null) {
-                _pendingSnackBarMessage = 'Datum en tijd zijn verplicht';
-                WidgetsBinding.instance.addPostFrameCallback((_) => _handlePendingActions());
-                return;
-              }
+    // 3. update datetime in the sighting
+    if (locationInfo['dateTime'] == null || locationInfo['dateTime']['dateTime'] == null) {
+      _pendingSnackBarMessage = 'Selecteer een datum en tijd';
+      WidgetsBinding.instance.addPostFrameCallback((_) => _handlePendingActions());
+      return;
+    }
 
-              final apiFormat = SightingApiTransformer.transformForApi(updatedSighting);
-              debugPrint('\x1B[35m[LocationScreen] Final API format (detailed):\x1B[0m');
-              debugPrint(const JsonEncoder.withIndent('  ').convert(apiFormat));
+    final dateTimeStr = locationInfo['dateTime']['dateTime'];
+    final dateTime = DateTime.parse(dateTimeStr);
+    animalSightingManager.updateDateTime(dateTime);
+    debugPrint('\x1B[35m[LocationScreen] Updated datetime: $dateTime\x1B[0m');
 
-              final responseModel = await submitReport(animalSightingManager, interactionManager, context);
-              if (responseModel != null) {
-                if (responseModel.questionnaire.questions == null || responseModel.questionnaire.questions!.isEmpty) {
-                  debugPrint('\x1B[31m[LocationScreen] Received empty questionnaire\x1B[0m');
-                  _pendingSnackBarMessage = 'Geen vragen beschikbaar voor deze melding';
-                  _pendingNavigationScreen = const Rapporteren();
-                  _pendingRemoveUntil = true;
-                } else {
-                  debugPrint('\x1B[34m[LocationScreen] Received valid questionnaire: ${responseModel.questionnaire.name}\x1B[0m');
-                  _pendingNavigationScreen = QuestionnaireScreen(
-                    questionnaire: responseModel.questionnaire,
-                    interactionID: responseModel.interactionID,
-                  );
-                  _pendingRemoveUntil = true; // Clear all previous screens before showing questionnaire
-                }
-                WidgetsBinding.instance.addPostFrameCallback((_) => _handlePendingActions());
-              }
-            } catch (e, stackTrace) {
-              debugPrint('\x1B[31m[LocationScreen] Error: $e\x1B[0m');
-              debugPrint('\x1B[31m[LocationScreen] Stack trace: $stackTrace\x1B[0m');
-              _pendingSnackBarMessage = 'Er is een fout opgetreden: $e';
-              WidgetsBinding.instance.addPostFrameCallback((_) => _handlePendingActions());
-            }
-          },
+    // reset map provider state for next run
+    mapProvider.resetState();
+
+    // 🔴 4. CRUCIAL STEP FOR R4:
+    // Make sure the grouped animal batches from AnimalCounting
+    // are copied into currentSighting.animals so the API transformer
+    // can build reportOfSighting.involvedAnimals.
+    animalSightingManager.syncObservedAnimalsToSighting();
+    debugPrint('\x1B[35m[LocationScreen] Synced observed animals into sighting.animals\x1B[0m');
+
+    // 5. re-read the sighting AFTER sync
+    final updatedSighting = animalSightingManager.getCurrentanimalSighting();
+
+    // sanity check: we require datetime and at least one animal
+    if (updatedSighting!.dateTime == null ||
+        updatedSighting.dateTime!.dateTime == null) {
+      _pendingSnackBarMessage = 'Datum en tijd zijn verplicht';
+      WidgetsBinding.instance.addPostFrameCallback((_) => _handlePendingActions());
+      return;
+    }
+
+    if (updatedSighting.animals == null || updatedSighting.animals!.isEmpty) {
+      _pendingSnackBarMessage = 'Voeg eerst een dier toe aan de lijst';
+      WidgetsBinding.instance.addPostFrameCallback((_) => _handlePendingActions());
+      return;
+    }
+
+    // 6. build the payload we are about to send
+    final apiFormat = SightingApiTransformer.transformForApi(updatedSighting);
+    debugPrint('\x1B[35m[LocationScreen] Final API format (detailed):\x1B[0m');
+    debugPrint(const JsonEncoder.withIndent('  ').convert(apiFormat));
+
+    // 7. send to backend
+    final responseModel = await submitReport(
+      animalSightingManager,
+      interactionManager,
+      context,
+    );
+
+    // 8. handle backend result
+    if (responseModel != null) {
+      if (responseModel.questionnaire.questions == null ||
+          responseModel.questionnaire.questions!.isEmpty) {
+        debugPrint('\x1B[31m[LocationScreen] Received empty questionnaire\x1B[0m');
+        _pendingSnackBarMessage = 'Geen vragen beschikbaar voor deze melding';
+        _pendingNavigationScreen = const Rapporteren();
+        _pendingRemoveUntil = true;
+      } else {
+        debugPrint('\x1B[34m[LocationScreen] Received valid questionnaire: ${responseModel.questionnaire.name}\x1B[0m');
+        _pendingNavigationScreen = QuestionnaireScreen(
+          questionnaire: responseModel.questionnaire,
+          interactionID: responseModel.interactionID,
+        );
+        _pendingRemoveUntil = true;
+      }
+
+      WidgetsBinding.instance.addPostFrameCallback((_) => _handlePendingActions());
+    }
+  } catch (e, stackTrace) {
+    debugPrint('\x1B[31m[LocationScreen] Error: $e\x1B[0m');
+    debugPrint('\x1B[31m[LocationScreen] Stack trace: $stackTrace\x1B[0m');
+    _pendingSnackBarMessage = 'Er is een fout opgetreden: $e';
+    WidgetsBinding.instance.addPostFrameCallback((_) => _handlePendingActions());
+  }
+},
+
           showNextButton: true,
           showBackButton: true,
         ),

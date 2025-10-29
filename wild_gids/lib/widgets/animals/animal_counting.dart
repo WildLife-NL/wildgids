@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wildrapport/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
 import 'package:wildrapport/models/animal_waarneming_models/animal_gender_view_count_model.dart';
-import 'package:wildrapport/models/animal_waarneming_models/animal_model.dart';
 import 'package:wildrapport/models/enums/animal_age.dart';
 import 'package:wildrapport/models/enums/animal_age_extensions.dart';
 import 'package:wildrapport/models/enums/animal_gender.dart';
@@ -12,6 +11,9 @@ import 'package:wildrapport/widgets/overlay/error_overlay.dart';
 import 'package:wildrapport/widgets/toasts/snack_bar_with_progress.dart';
 import 'package:wildrapport/widgets/shared_ui_widgets/white_bulk_button.dart';
 import 'package:wildrapport/constants/app_colors.dart';
+import 'package:wildrapport/models/animal_waarneming_models/observed_animal_entry.dart';
+import 'package:wildrapport/models/enums/animal_condition.dart';
+
 
 class AnimalCounting extends StatefulWidget {
   final Function(String)? onAgeSelected;
@@ -59,133 +61,91 @@ class _AnimalCountingState extends State<AnimalCounting> {
     });
   }
 
-  void _validateAndAddToList(BuildContext context) {
-    List<String> errors = [];
+void _validateAndAddToList(BuildContext context) {
+  // 1. Validate input first
+  List<String> errors = [];
 
-    if (selectedAge == null) {
-      errors.add('Selecteer een leeftijd');
-    }
-
-    if (selectedGender == null) {
-      errors.add('Selecteer een geslacht');
-    }
-
-    if (currentCount <= 0) {
-      errors.add('Voer een aantal groter dan 0 in');
-    }
-
-    if (errors.isNotEmpty) {
-      showDialog(
-        context: context,
-        builder: (context) => ErrorOverlay(messages: errors),
-      );
-      return;
-    }
-
-    final animalSightingManager =
-        context.read<AnimalSightingReportingInterface>();
-    final currentSighting = animalSightingManager.getCurrentanimalSighting();
-    final currentAnimal = currentSighting?.animalSelected;
-
-    if (currentAnimal == null) return;
-
-    final selectedAnimalGender = _convertStringToAnimalGender(selectedGender!);
-    final selectedAnimalAge = _convertStringToAnimalAge(selectedAge!);
-
-    // Save the current gender before resetting
-    final String? genderToRestore = selectedGender;
-
-    List<AnimalGenderViewCount> updatedGenderViewCounts = List.from(
-      currentAnimal.genderViewCounts,
-    );
-
-    final genderIndex = updatedGenderViewCounts.indexWhere(
-      (gvc) => gvc.gender == selectedAnimalGender,
-    );
-
-    if (genderIndex != -1) {
-      // Existing gender found - preserve other age values
-      final existingGVC = updatedGenderViewCounts[genderIndex];
-      final viewCount = existingGVC.viewCount;
-
-      // Create updated view count preserving other age values
-      final updatedViewCount = ViewCountModel(
-        pasGeborenAmount:
-            selectedAnimalAge == AnimalAge.pasGeboren
-                ? currentCount
-                : viewCount.pasGeborenAmount,
-        onvolwassenAmount:
-            selectedAnimalAge == AnimalAge.onvolwassen
-                ? currentCount
-                : viewCount.onvolwassenAmount,
-        volwassenAmount:
-            selectedAnimalAge == AnimalAge.volwassen
-                ? currentCount
-                : viewCount.volwassenAmount,
-        unknownAmount:
-            selectedAnimalAge == AnimalAge.onbekend
-                ? currentCount
-                : viewCount.unknownAmount,
-      );
-
-      updatedGenderViewCounts[genderIndex] = AnimalGenderViewCount(
-        gender: selectedAnimalGender,
-        viewCount: updatedViewCount,
-      );
-    } else {
-      // New gender - create new entry
-      final newViewCount = ViewCountModel(
-        pasGeborenAmount:
-            selectedAnimalAge == AnimalAge.pasGeboren ? currentCount : 0,
-        onvolwassenAmount:
-            selectedAnimalAge == AnimalAge.onvolwassen ? currentCount : 0,
-        volwassenAmount:
-            selectedAnimalAge == AnimalAge.volwassen ? currentCount : 0,
-        unknownAmount:
-            selectedAnimalAge == AnimalAge.onbekend ? currentCount : 0,
-      );
-
-      updatedGenderViewCounts.add(
-        AnimalGenderViewCount(
-          gender: selectedAnimalGender,
-          viewCount: newViewCount,
-        ),
-      );
-    }
-
-    // Reset selections after adding and force rebuild
-    setState(() {
-      selectedAge = null;
-      selectedGender = null;
-    });
-
-    final updatedAnimal = AnimalModel(
-      animalId: currentAnimal.animalId,
-      animalImagePath: currentAnimal.animalImagePath,
-      animalName: currentAnimal.animalName,
-      genderViewCounts: updatedGenderViewCounts,
-      condition: currentAnimal.condition,
-    );
-
-    animalSightingManager.updateAnimal(updatedAnimal);
-    (_counterKey.currentState as AnimalCounterState).reset();
-
-    widget.onAddToList?.call();
-
-    // Force a rebuild to update the UI
-    setState(() {
-      selectedAge = null;
-      selectedGender = genderToRestore; // Restore the gender
-      // Force rebuild by setting a dummy variable
-      _forceRebuild = !_forceRebuild;
-    });
-
-    // Show success snackbar
-    SnackBarWithProgress.show(
-      context: context,
-      message: 'Dier toegevoegd aan de lijst',
-    );
+  if (selectedAge == null) {
+    errors.add('Selecteer een leeftijd');
   }
+
+  if (selectedGender == null) {
+    errors.add('Selecteer een geslacht');
+  }
+
+  if (currentCount <= 0) {
+    errors.add('Voer een aantal groter dan 0 in');
+  }
+
+  if (errors.isNotEmpty) {
+    showDialog(
+      context: context,
+      builder: (context) => ErrorOverlay(messages: errors),
+    );
+    return;
+  }
+
+  // 2. Get the manager + current sighting
+  final mgr = context.read<AnimalSightingReportingInterface>();
+  final sighting = mgr.getCurrentanimalSighting();
+  final currentAnimal = sighting?.animalSelected;
+
+  if (currentAnimal == null) {
+    // nothing selected? just bail
+    return;
+  }
+
+  // 3. Convert UI strings -> enums
+  final AnimalAge ageEnum = _convertStringToAnimalAge(selectedAge!);
+  final AnimalGender genderEnum = _convertStringToAnimalGender(selectedGender!);
+
+  // We don't let the user pick condition yet in this screen,
+  // so fallback to whatever is on the selected animal,
+  // or just "other".
+  final AnimalCondition conditionEnum =
+      currentAnimal.condition ?? AnimalCondition.andere;
+
+  // 4. Build one batch entry for the chosen combo
+  final entry = ObservedAnimalEntry(
+    age: ageEnum,
+    gender: genderEnum,
+    condition: conditionEnum,
+    count: currentCount,
+  );
+
+  // 5. Save it in the manager
+  mgr.addObservedAnimal(entry);
+
+  // 6. Sync into the legacy AnimalSightingModel.animals
+  // so later screens + API transformer can still read it
+  mgr.syncObservedAnimalsToSighting();
+
+  // 7. Reset local UI so user can add another batch
+  setState(() {
+    // Remember last gender if you still want that UX
+    lastSelectedGender = selectedGender;
+
+    selectedAge = null;
+    selectedGender = null;
+    currentCount = 0;
+
+    // force rebuild trick stays if you still need it
+    _forceRebuild = !_forceRebuild;
+  });
+
+  // reset the counter widget visually
+  (_counterKey.currentState as AnimalCounterState).reset();
+
+  // 8. Tell parent screen "we added something"
+  widget.onAddToList?.call();
+
+  // 9. Show success toast/snack
+  SnackBarWithProgress.show(
+    context: context,
+    message: 'Dier toegevoegd aan de lijst',
+  );
+}
+
 
   void _handleAgeSelection(String age) {
     setState(() {
