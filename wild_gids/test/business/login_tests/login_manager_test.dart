@@ -45,7 +45,7 @@ void main() {
       
       final result = await loginManager.sendLoginCode('test@example.com');
       
-      verify(mockAuthApi.authenticate('Wild Rapport', 'test@example.com')).called(1);
+  verify(mockAuthApi.authenticate('Wild Gids', 'test@example.com')).called(1);
       expect(result, true);
     });
 
@@ -66,7 +66,7 @@ void main() {
         throwsA(isA<Exception>()),
       );
       
-      verify(mockAuthApi.authenticate('Wild Rapport', 'test@example.com')).called(1);
+  verify(mockAuthApi.authenticate('Wild Gids', 'test@example.com')).called(1);
     });
   });
 
@@ -105,7 +105,7 @@ void main() {
       
       final result = await loginManager.resendCode('test@example.com');
       
-      verify(mockAuthApi.authenticate('Wild Rapport', 'test@example.com')).called(1);
+  verify(mockAuthApi.authenticate('Wild Gids', 'test@example.com')).called(1);
       expect(result, true);
     });
 
@@ -117,7 +117,7 @@ void main() {
         throwsA(isA<Exception>()),
       );
       
-      verify(mockAuthApi.authenticate('Wild Rapport', 'test@example.com')).called(1);
+  verify(mockAuthApi.authenticate('Wild Gids', 'test@example.com')).called(1);
     });
   });
 

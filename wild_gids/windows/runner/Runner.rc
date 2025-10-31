@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "Wild Rapport" "\0"
+            VALUE "FileDescription", "Wild Gids" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "wildrapport" "\0"
+            VALUE "InternalName", "wildgids" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2025 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "wildrapport.exe" "\0"
-            VALUE "ProductName", "Wild Rapport" "\0"
+            VALUE "OriginalFilename", "wildgids.exe" "\0"
+            VALUE "ProductName", "Wild Gids" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

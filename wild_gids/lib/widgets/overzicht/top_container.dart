@@ -44,7 +44,7 @@ class TopContainer extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Welkom Bij Wild Rapport',
+                  'Welkom Bij Wild Gids',
                   style: TextStyle(
                     color: AppColors.offWhite,
                     fontSize: welcomeFontSize,
