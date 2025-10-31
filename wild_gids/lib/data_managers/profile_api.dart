@@ -2,6 +2,7 @@
   import 'dart:io';
   import 'package:http/http.dart' as http;
   import 'package:shared_preferences/shared_preferences.dart';
+  import 'package:flutter/foundation.dart';
 
   import 'package:wildrapport/data_managers/api_client.dart';
   import 'package:wildrapport/interfaces/data_apis/profile_api_interface.dart';
@@ -89,15 +90,26 @@
     }
   }
 
-  /// Usage: await updateReportAppTerms(true);
 @override
 Future<Profile> updateReportAppTerms(bool accepted) async {
-  final current = await fetchMyProfile();
+  // Send a minimal request to update only the terms flag. Using a minimal
+  // payload avoids schema/validation issues that can occur when PUT-ing the
+  // entire profile object (which may contain server-managed or null fields).
+  final body = {'reportAppTerms': accepted};
 
-  final body = current.toJson()
-    ..['reportAppTerms'] = accepted;
+  debugPrint('[ProfileApi] PATCH /profile/me/ body: ${jsonEncode(body)}');
 
-  final response = await client.put('/profile/me/', body, authenticated: true);
+  // Use PATCH for partial update; if server doesn't accept PATCH, fall back to PUT.
+  http.Response response;
+  try {
+    response = await client.patch('/profile/me/', body, authenticated: true);
+  } catch (e) {
+    debugPrint('[ProfileApi] PATCH failed, falling back to PUT: $e');
+    // fallback: try PUT with minimal body
+    response = await client.put('/profile/me/', body, authenticated: true);
+  }
+
+  debugPrint('[ProfileApi] Response (${response.statusCode}): ${response.body}');
 
   if (response.statusCode == HttpStatus.ok) {
     final Map<String, dynamic> json = jsonDecode(response.body);
@@ -105,6 +117,30 @@ Future<Profile> updateReportAppTerms(bool accepted) async {
     await _cacheProfile(updated);
     return updated;
   } else {
+    // If the server explicitly rejects PATCH/PUT for partial body (405), try
+    // the safer approach: fetch the current full profile, update the flag and
+    // PUT the complete resource. Some servers require the full resource on PUT.
+    if (response.statusCode == HttpStatus.methodNotAllowed) {
+      debugPrint('[ProfileApi] Server returned 405; attempting full-profile PUT');
+      try {
+        final current = await fetchMyProfile();
+        final fullBody = current.toJson()..['reportAppTerms'] = accepted;
+        debugPrint('[ProfileApi] PUT /profile/me/ fullBody: ${jsonEncode(fullBody)}');
+        final putResponse = await client.put('/profile/me/', fullBody, authenticated: true);
+        debugPrint('[ProfileApi] PUT Response (${putResponse.statusCode}): ${putResponse.body}');
+        if (putResponse.statusCode == HttpStatus.ok) {
+          final Map<String, dynamic> json = jsonDecode(putResponse.body);
+          final updated = Profile.fromJson(json);
+          await _cacheProfile(updated);
+          return updated;
+        } else {
+          throw Exception('Failed to update reportAppTerms via full PUT (${putResponse.statusCode}): ${putResponse.body}');
+        }
+      } catch (e) {
+        throw Exception('Failed to update reportAppTerms (after 405 fallback): $e');
+      }
+    }
+
     throw Exception(
       "Failed to update reportAppTerms (${response.statusCode}): ${response.body}",
     );
