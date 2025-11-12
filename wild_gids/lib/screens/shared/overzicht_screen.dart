@@ -8,6 +8,7 @@ import 'package:wildrapport/constants/app_colors.dart';
 import 'package:wildrapport/widgets/overzicht/top_container.dart';
 import 'package:wildrapport/widgets/overzicht/action_buttons.dart';
 import 'package:wildrapport/screens/shared/rapporteren.dart';
+import 'package:wildrapport/screens/species/species_list_screen.dart';
 import 'package:wildrapport/providers/app_state_provider.dart';
 import 'package:wildrapport/screens/location/kaart_overview_screen.dart';
 
@@ -101,6 +102,20 @@ class _OverzichtScreenState extends State<OverzichtScreen>
                                   },
                                 ),
 
+                                  (
+                                    text: 'Dieren Species',
+                                    icon: Icons.pets,
+                                    imagePath: null,
+                                    key: Key('soorten_button'),
+                                    onPressed: () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) => const SpeciesListScreen(),
+                                        ),
+                                      );
+                                    },
+                                  ),
+
                                 (
                                   text: 'Rapporteren',
                                   icon: Icons.edit_note,
@@ -149,9 +164,10 @@ class _OverzichtScreenState extends State<OverzichtScreen>
                                 ),
                               ],
                               iconSize: iconSize,
-                              verticalPadding: spacing / 2,
+                              // Reduce vertical padding and spacing between buttons
+                              verticalPadding: spacing / 3,
                               horizontalPadding: spacing,
-                              buttonSpacing: spacing * 3,
+                              buttonSpacing: spacing * 1.4,
                               buttonHeight: buttonHeight,
                               buttonFontSize: buttonFontSize,
                             ),

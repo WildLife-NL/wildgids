@@ -213,6 +213,14 @@ class MyApp extends StatelessWidget {
           ),
           textTheme: AppTextTheme.textTheme,
           fontFamily: 'Roboto',
+          appBarTheme: AppBarTheme(
+            centerTitle: true,
+            titleTextStyle: AppTextTheme.textTheme.titleLarge,
+            iconTheme: const IconThemeData(color: Colors.black),
+            backgroundColor: AppColors.lightMintGreen,
+            foregroundColor: Colors.black,
+            elevation: 0,
+          ),
           snackBarTheme: const SnackBarThemeData(
             backgroundColor: AppColors.brown300,
             behavior: SnackBarBehavior.floating,

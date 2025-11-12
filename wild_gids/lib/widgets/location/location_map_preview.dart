@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:wildrapport/models/enums/location_type.dart';
 import 'package:wildrapport/providers/map_provider.dart';
 import 'package:lottie/lottie.dart';
+import 'package:wildrapport/constants/app_colors.dart';
 
 class LocationMapPreview extends StatelessWidget {
   const LocationMapPreview({super.key});
@@ -51,15 +52,18 @@ class LocationMapPreview extends StatelessWidget {
               ),
             ),
             child: Center(
-              child: SizedBox(
+                child: SizedBox(
                 width: 100,
                 height: 100,
-                child: Lottie.asset(
-                  'assets/loaders/loading_paw.json',
-                  fit: BoxFit.contain,
-                  repeat: true,
-                  animate: true,
-                  frameRate: FrameRate(60),
+                child: ColorFiltered(
+                  colorFilter: ColorFilter.mode(AppColors.darkGreen, BlendMode.srcIn),
+                  child: Lottie.asset(
+                    'assets/loaders/loading_paw.json',
+                    fit: BoxFit.contain,
+                    repeat: true,
+                    animate: true,
+                    frameRate: FrameRate(60),
+                  ),
                 ),
               ),
             ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:wildrapport/models/enums/location_type.dart';
+import 'package:wildrapport/constants/app_colors.dart';
 
 class LocationDisplay extends StatefulWidget {
   final VoidCallback onLocationIconTap;
@@ -66,18 +67,21 @@ class _LocationDisplayState extends State<LocationDisplay>
                 ? Center(
                   child: SizedBox(
                     height: 36,
-                    child: Lottie.asset(
-                      'assets/loaders/loading_paw.json',
-                      fit: BoxFit.contain,
-                      repeat: true,
-                      animate: true,
-                      frameRate: FrameRate(60),
-                      controller: _animationController,
-                      onLoaded: (composition) {
-                        _animationController.duration =
-                            composition.duration ~/ 2;
-                        _animationController.repeat();
-                      },
+                    child: ColorFiltered(
+                      colorFilter: ColorFilter.mode(AppColors.darkGreen, BlendMode.srcIn),
+                      child: Lottie.asset(
+                        'assets/loaders/loading_paw.json',
+                        fit: BoxFit.contain,
+                        repeat: true,
+                        animate: true,
+                        frameRate: FrameRate(60),
+                        controller: _animationController,
+                        onLoaded: (composition) {
+                          _animationController.duration =
+                              composition.duration ~/ 2;
+                          _animationController.repeat();
+                        },
+                      ),
                     ),
                   ),
                 )
