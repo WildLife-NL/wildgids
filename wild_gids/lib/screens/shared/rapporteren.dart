@@ -155,37 +155,16 @@ class _RapporterenState extends State<Rapporteren> {
                           mainAxisSize: MainAxisSize.min,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            SizedBox(
-                              width: screenSize.width * 0.9,
-                              height: screenSize.height * 0.22,
-                              child: ReportButton(
-                                image: 'assets/icons/agriculture.png',
-                                text: 'Gewasschade',
-                                onPressed: () =>
-                                    _handleReportTypeSelection('Gewasschade'),
-                              ),
-                            ),
-                            SizedBox(height: screenSize.height * 0.03),
-                            SizedBox(
-                              width: screenSize.width * 0.9,
-                              height: screenSize.height * 0.22,
-                              child: ReportButton(
-                                image: 'assets/icons/binoculars.png',
-                                text: 'Waarnemingen',
-                                onPressed: () => _handleReportTypeSelection(
-                                  'animalSightingen',
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: screenSize.height * 0.03),
-                            SizedBox(
-                              width: screenSize.width * 0.9,
-                              height: screenSize.height * 0.22,
-                              child: ReportButton(
-                                image: 'assets/icons/accident.png',
-                                text: 'Verkeersongeval',
-                                onPressed: () => _handleReportTypeSelection(
-                                  'Verkeersongeval',
+                            Center(
+                              child: SizedBox(
+                                width: 260,
+                                height: 200,
+                                child: ReportButton(
+                                  image: 'assets/icons/binoculars.png',
+                                  text: 'Waarnemingen',
+                                  onPressed: () => _handleReportTypeSelection(
+                                    'animalSightingen',
+                                  ),
                                 ),
                               ),
                             ),

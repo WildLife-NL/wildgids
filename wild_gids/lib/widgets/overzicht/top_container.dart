@@ -38,7 +38,7 @@ class TopContainer extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Welkom Bij Wild Rapport',
+                    'Welkom Bij Wild Gids',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: AppColors.offWhite,
