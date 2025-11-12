@@ -4,6 +4,7 @@ import 'package:wildrapport/models/beta_models/location_model.dart';
 import 'package:wildrapport/models/ui_models/image_list_model.dart';
 import 'package:wildrapport/models/ui_models/date_time_model.dart';
 import 'package:wildrapport/models/animal_waarneming_models/animal_model.dart';
+import 'package:wildrapport/models/enums/animal_age.dart';
 import 'package:wildrapport/models/animal_waarneming_models/animal_gender_view_count_model.dart';
   
 class AnimalSightingModel {
@@ -54,8 +55,9 @@ class AnimalSightingModel {
                   'animalId': animal.animalId,
                   'animalImagePath': animal.animalImagePath,
                   'animalName': animal.animalName,
-                  'condition': animal.condition?.toString(),
-                  'genderViewCounts':
+          'condition': animal.condition?.toString(),
+          'age': animal.age?.toString(),
+          'genderViewCounts':
                       animal.genderViewCounts
                           .map((gvc) => gvc.toJson())
                           .toList(),
@@ -88,6 +90,12 @@ class AnimalSightingModel {
                             orElse: () => AnimalCondition.andere,
                           )
                           : null,
+                  age: x['age'] != null
+                      ? AnimalAge.values.firstWhere(
+                          (e) => e.toString() == x['age'],
+                          orElse: () => AnimalAge.onbekend,
+                        )
+                      : null,
                   genderViewCounts:
                       x['genderViewCounts'] != null
                           ? List<AnimalGenderViewCount>.from(
@@ -114,6 +122,12 @@ class AnimalSightingModel {
                         orElse: () => AnimalCondition.andere,
                       )
                       : null,
+              age: json['animalSelected']['age'] != null
+                  ? AnimalAge.values.firstWhere(
+                      (e) => e.toString() == json['animalSelected']['age'],
+                      orElse: () => AnimalAge.onbekend,
+                    )
+                  : null,
               genderViewCounts:
                   json['animalSelected']['genderViewCounts'] != null
                       ? List<AnimalGenderViewCount>.from(
