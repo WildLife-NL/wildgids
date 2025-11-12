@@ -191,40 +191,41 @@ class AnimalListTableState extends State<AnimalListTable> {
       return 0;
     }
 
-    // Get the first animal since all animals in the list should have the same counts
-    final animal = currentSighting.animals![0];
+    // Sum up counts from ALL animals in the list (not just the first one)
+    int totalCount = 0;
+    
+    for (final animal in currentSighting.animals!) {
+      // Find the gender view count for the specified gender
+      final genderViewCount = animal.genderViewCounts.firstWhere(
+        (gvc) => gvc.gender == gender,
+        orElse:
+            () => AnimalGenderViewCount(
+              gender: gender,
+              viewCount: ViewCountModel(),
+            ),
+      );
 
-    // Find the gender view count for the specified gender
-    final genderViewCount = animal.genderViewCounts.firstWhere(
-      (gvc) => gvc.gender == gender,
-      orElse:
-          () => AnimalGenderViewCount(
-            gender: gender,
-            viewCount: ViewCountModel(),
-          ),
-    );
-
-    // Return the count for the specified age
-    int count = 0;
-    switch (age) {
-      case AnimalAge.pasGeboren:
-        count = genderViewCount.viewCount.pasGeborenAmount;
-        break;
-      case AnimalAge.onvolwassen:
-        count = genderViewCount.viewCount.onvolwassenAmount;
-        break;
-      case AnimalAge.volwassen:
-        count = genderViewCount.viewCount.volwassenAmount;
-        break;
-      case AnimalAge.onbekend:
-        count = genderViewCount.viewCount.unknownAmount;
-        break;
+      // Add the count for the specified age
+      switch (age) {
+        case AnimalAge.pasGeboren:
+          totalCount += genderViewCount.viewCount.pasGeborenAmount;
+          break;
+        case AnimalAge.onvolwassen:
+          totalCount += genderViewCount.viewCount.onvolwassenAmount;
+          break;
+        case AnimalAge.volwassen:
+          totalCount += genderViewCount.viewCount.volwassenAmount;
+          break;
+        case AnimalAge.onbekend:
+          totalCount += genderViewCount.viewCount.unknownAmount;
+          break;
+      }
     }
 
     debugPrint(
-      '_getCountForAgeAndGender: ${animal.animalName}, Age: ${age.name}, Gender: ${gender.name}, Count: $count',
+      '_getCountForAgeAndGender: Total count for Age: ${age.name}, Gender: ${gender.name} = $totalCount (from ${currentSighting.animals!.length} animals)',
     );
-    return count;
+    return totalCount;
   }
 
   // Get or create controller for a specific cell

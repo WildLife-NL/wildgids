@@ -19,6 +19,7 @@ class CustomAppBar extends StatelessWidget {
   final bool showUserIcon;
   final VoidCallback? onUserIconPressed;
   final bool preserveState;
+  final bool useFixedText;
 
   const CustomAppBar({
     super.key,
@@ -36,6 +37,7 @@ class CustomAppBar extends StatelessWidget {
     this.iconScale = 1.0,
     this.userIconScale = 1.15,
     this.topPaddingFraction = 0.03,
+    this.useFixedText = false,
   });
 
   @override
@@ -43,9 +45,10 @@ class CustomAppBar extends StatelessWidget {
     final screenSize = MediaQuery.of(context).size;
     final appStateProvider = context.watch<AppStateProvider>();
 
-    // Use the report type's display text if available, otherwise use provided centerText
-    final displayText =
-        appStateProvider.currentReportType?.displayText ?? centerText ?? '';
+    // Use fixed centerText if useFixedText is true, otherwise use report type's display text
+    final displayText = useFixedText
+        ? (centerText ?? '')
+        : (appStateProvider.currentReportType?.displayText ?? centerText ?? '');
 
     // Calculate responsive dimensions
     final double barHeight = screenSize.height * 0.05; // 5% of screen height
@@ -146,7 +149,7 @@ class CustomAppBar extends StatelessWidget {
                   Padding(
                     padding: EdgeInsets.only(
                       right: screenSize.width * 0.08, // 4% of screen width
-                      top: screenSize.height * 0.006, // nudge slightly downward
+                      bottom: screenSize.height * 0.008, // nudge slightly upward
                     ),
                     child: GestureDetector(
                       onTap: onUserIconPressed ?? () {

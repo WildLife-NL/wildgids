@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:wildrapport/widgets/overlay/error_overlay.dart';
 import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
 import 'package:wildrapport/managers/permission/permission_checker.dart';
 import 'package:wildrapport/utils/toast_notification_handler.dart';
@@ -114,13 +113,11 @@ class _OverzichtScreenState extends State<OverzichtScreen>
                                         const Rapporteren(),
                                       );
                                     } catch (e) {
-                                      showDialog(
-                                        context: context,
-                                        builder: (_) => const ErrorOverlay(
-                                          messages: [
-                                            'Navigatie mislukt',
-                                            'Kon de rapportage pagina niet openen. Probeer het opnieuw.',
-                                          ],
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Er is een fout opgetreden bij het navigeren',
+                                          ),
                                         ),
                                       );
                                     }

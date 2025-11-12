@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:wildrapport/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
 import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
 import 'package:wildrapport/screens/waarneming/animal_list_overview_screen.dart';
+import 'package:wildrapport/screens/waarneming/animals_screen.dart';
 import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
 import 'package:wildrapport/widgets/shared_ui_widgets/bottom_app_bar.dart';
 import 'package:wildrapport/widgets/animals/animal_counting.dart';
@@ -47,8 +48,9 @@ class _AnimalCountingScreenState extends State<AnimalCountingScreen> {
   }
 
   void _handleBackNavigation(BuildContext context) {
-    // Simply go back without popup, keeping all added animals
-    Navigator.pop(context);
+    // Go back to animals screen, keeping all added animals
+    final navigationManager = context.read<NavigationStateInterface>();
+    navigationManager.pushReplacementBack(context, const AnimalsScreen(appBarTitle: 'Selecteer Dier'));
   }
 
   @override

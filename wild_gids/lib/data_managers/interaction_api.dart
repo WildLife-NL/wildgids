@@ -132,9 +132,9 @@ class InteractionApi implements InteractionApiInterface {
         debugPrint("$yellowLog========================================");
         
         if (questionnaireJson == null) {
-          debugPrint("$redLog[InteractionAPI]: ✗ No questionnaire data in response");
-          debugPrint("$redLog[InteractionAPI]: This means the backend did not return a questionnaire for this interaction type");
-          throw Exception("No questionnaire provided by backend");
+          // Graceful handling: not all interactions yield questionnaires.
+          debugPrint("$yellowLog[InteractionAPI]: ▶ No questionnaire returned. Proceeding without questionnaire.");
+          return InteractionResponse.empty(interactionID: interactionID);
         }
 
         try {
@@ -144,7 +144,8 @@ class InteractionApi implements InteractionApiInterface {
           );
         } catch (e) {
           debugPrint("$redLog Error parsing questionnaire: $e");
-          throw Exception("Invalid questionnaire format: $e");
+          // Fallback: return an empty questionnaire response instead of failing whole interaction
+          return InteractionResponse.empty(interactionID: interactionID);
         }
       } else {
         final errorBody = jsonDecode(response.body);

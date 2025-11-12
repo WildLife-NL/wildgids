@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:wildrapport/interfaces/data_apis/profile_api_interface.dart';
 import 'package:wildrapport/constants/app_colors.dart';
 import 'package:wildrapport/screens/shared/overzicht_screen.dart';
-import 'package:wildrapport/widgets/overlay/error_overlay.dart';
 
 class TermsScreen extends StatefulWidget {
   const TermsScreen({super.key});
@@ -40,14 +39,8 @@ class _TermsScreenState extends State<TermsScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      showDialog(
-        context: context,
-        builder: (_) => const ErrorOverlay(
-          messages: [
-            'Kan voorwaarden niet accepteren',
-            'Controleer je internetverbinding en probeer het opnieuw.',
-          ],
-        ),
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to accept terms: $e')),
       );
     } finally {
       if (mounted) setState(() => _submitting = false);

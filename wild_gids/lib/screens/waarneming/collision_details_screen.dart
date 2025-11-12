@@ -4,6 +4,7 @@ import 'package:wildrapport/interfaces/other/permission_interface.dart';
 import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
 import 'package:wildrapport/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
 import 'package:wildrapport/screens/location/location_screen.dart';
+import 'package:wildrapport/screens/waarneming/animal_list_overview_screen.dart';
 import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
 import 'package:wildrapport/widgets/shared_ui_widgets/bottom_app_bar.dart';
 import 'package:wildrapport/constants/app_colors.dart';
@@ -39,7 +40,11 @@ class _CollisionDetailsScreenState extends State<CollisionDetailsScreen> {
               rightIcon: null,
               showUserIcon: true,
               onLeftIconPressed: () {
-                Navigator.of(context).pop();
+                final navigationManager = context.read<NavigationStateInterface>();
+                navigationManager.pushReplacementBack(
+                  context,
+                  AnimalListOverviewScreen(),
+                );
               },
               // Match the other screens: black icons/text and slightly larger font/icon scales
               iconColor: Colors.black,

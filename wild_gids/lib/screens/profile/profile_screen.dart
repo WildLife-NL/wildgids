@@ -11,11 +11,11 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  bool notificationsOn = true;
-
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
+    final appStateProvider = context.watch<AppStateProvider>();
+    final locationTrackingEnabled = appStateProvider.isLocationTrackingEnabled;
 
     return Scaffold(
       backgroundColor: AppColors.darkGreen,
@@ -83,10 +83,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
               const SizedBox(height: 48),
 
-              // Notifications label
+              // Location Tracking label
               Center(
                 child: Text(
-                  'Notifications',
+                  'Location Tracking',
                   style: TextStyle(
                     color: AppColors.offWhite,
                     fontSize: 16,
@@ -109,20 +109,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       GestureDetector(
-                        onTap: () => setState(() => notificationsOn = true),
+                        onTap: () async {
+                          await appStateProvider.setLocationTrackingEnabled(true);
+                        },
                         child: Container(
                           width: 100,
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(20),
-                            color: notificationsOn ? AppColors.offWhite : Colors.transparent,
+                            color: locationTrackingEnabled ? AppColors.offWhite : Colors.transparent,
                             border: Border.all(color: AppColors.offWhite),
                           ),
                           child: Center(
                             child: Text(
                               'On',
                               style: TextStyle(
-                                color: notificationsOn ? AppColors.darkGreen : AppColors.offWhite,
+                                color: locationTrackingEnabled ? AppColors.darkGreen : AppColors.offWhite,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -131,20 +133,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       const SizedBox(width: 8),
                       GestureDetector(
-                        onTap: () => setState(() => notificationsOn = false),
+                        onTap: () async {
+                          await appStateProvider.setLocationTrackingEnabled(false);
+                        },
                         child: Container(
                           width: 100,
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(20),
-                            color: !notificationsOn ? AppColors.offWhite : Colors.transparent,
+                            color: !locationTrackingEnabled ? AppColors.offWhite : Colors.transparent,
                             border: Border.all(color: AppColors.offWhite),
                           ),
                           child: Center(
                             child: Text(
                               'Off',
                               style: TextStyle(
-                                color: !notificationsOn ? AppColors.darkGreen : AppColors.offWhite,
+                                color: !locationTrackingEnabled ? AppColors.darkGreen : AppColors.offWhite,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),

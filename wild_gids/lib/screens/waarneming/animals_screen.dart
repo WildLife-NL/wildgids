@@ -11,7 +11,6 @@ import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
 import 'package:wildrapport/constants/app_colors.dart';
 import 'package:wildrapport/models/enums/filter_type.dart';
 import 'package:wildrapport/widgets/animals/scrollable_animal_grid.dart';
-import 'package:wildrapport/widgets/overlay/error_overlay.dart';
 
 class AnimalsScreen extends StatefulWidget {
   final String appBarTitle;
@@ -51,20 +50,14 @@ class _AnimalsScreenState extends State<AnimalsScreen>
 
   void _validateAndLoad() {
     if (!_animalSightingManager.validateActiveAnimalSighting()) {
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        // Show error dialog first, then navigate back after dismissal
-        if (!mounted) return;
-        await showDialog(
-          context: context,
-          builder: (_) => const ErrorOverlay(
-            messages: [
-              'Geen actieve waarneming gevonden',
-              'Ga terug en start een nieuwe waarneming voordat je een dier kiest.'
-            ],
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Geen actieve animalSighting gevonden'),
+            backgroundColor: Colors.red,
           ),
         );
-        if (!mounted) return;
-        Navigator.pop(context);
       });
       return;
     }

@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
 import 'package:wildrapport/interfaces/reporting/belonging_damage_report_interface.dart';
 import 'package:wildrapport/providers/belonging_damage_report_provider.dart';
-import 'package:wildrapport/screens/shared/overzicht_screen.dart';
+import 'package:wildrapport/screens/shared/rapporteren.dart';
 import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
 import 'package:wildrapport/widgets/shared_ui_widgets/bottom_app_bar.dart';
 import 'package:wildrapport/widgets/location/invisible_map_preloader.dart';
@@ -150,7 +150,7 @@ class _PossesionDamageScreenState extends State<BelongingDamagesScreen> {
       provider.resetErrors();
       navigationManager.pushReplacementForward(
         context,
-        OverzichtScreen(),
+        const Rapporteren(),
       );
 
     }

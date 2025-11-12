@@ -63,17 +63,15 @@ import 'package:wildrapport/data_managers/conveyance_api.dart';
 
 import 'package:wildrapport/utils/token_validator.dart';
 
-Future<Widget> getHomepageBasedOnLoginStatus() async {
-  final hasValidToken = await TokenValidator.hasValidToken();
-  return hasValidToken ? const OverzichtScreen() : const LoginScreen();
-}
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final appStateProvider = AppStateProvider();
   final prefs = await SharedPreferences.getInstance();
   final permissionManager = PermissionManager();
+  
+  // Load location tracking preference
+  await appStateProvider.loadLocationTrackingPreference();
 
   await dotenv.load(fileName: ".env");
 
@@ -103,8 +101,8 @@ void main() async {
   final mapProvider = MapProvider();
   final responseProvider = ResponseProvider();
 
-    final conveyanceApi = ConveyanceApi(apiClient);
-    final conveyanceProvider = ConveyanceProvider(conveyanceApi);
+  final conveyanceApi = ConveyanceApi(apiClient);
+  final conveyanceProvider = ConveyanceProvider(conveyanceApi);
 
   final interactionQueryApi = InteractionQueryApi(geoApiClient);
   final interactionQueryManager = InteractionQueryManager(interactionQueryApi);
@@ -113,8 +111,7 @@ void main() async {
   mapProvider.setAnimalPinsManager(animalPinsManager);
 
   final trackingApi = TrackingApi(apiClient);
-mapProvider.setTrackingApi(trackingApi);
-
+  mapProvider.setTrackingApi(trackingApi);
 
   final interactionManager = InteractionManager(interactionAPI: interactionApi);
   interactionManager.init();
@@ -141,12 +138,11 @@ mapProvider.setTrackingApi(trackingApi);
   final locationScreenManager = LocationScreenManager();
 
   prefs.setStringList('interaction_cache', []);
-  
+
   final bool hasValidToken = await TokenValidator.hasValidToken();
-  final Widget initialScreen = hasValidToken 
-      ? const OverzichtScreen() 
-      : const LoginScreen();
-  
+  final Widget initialScreen =
+      hasValidToken ? const OverzichtScreen() : const LoginScreen();
+
   mapProvider.setTrackingApi(TrackingApi(apiClient));
 
   runApp(
@@ -158,7 +154,9 @@ mapProvider.setTrackingApi(trackingApi);
         ),
         ChangeNotifierProvider<MapProvider>.value(value: mapProvider),
         ChangeNotifierProvider<ResponseProvider>.value(value: responseProvider),
-        ChangeNotifierProvider<ConveyanceProvider>.value(value: conveyanceProvider),
+        ChangeNotifierProvider<ConveyanceProvider>.value(
+          value: conveyanceProvider,
+        ),
         Provider<AppConfig>.value(value: appConfig),
         Provider<ApiClient>.value(value: apiClient),
         Provider<AuthApiInterface>.value(value: authApi),
@@ -234,22 +232,7 @@ class MyApp extends StatelessWidget {
             child: child!,
           );
         },
-        home: FutureBuilder<Widget>(
-          future: getHomepageBasedOnLoginStatus(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Scaffold(
-                body: Center(child: CircularProgressIndicator()),
-              );
-            } else if (snapshot.hasError) {
-              return const Scaffold(
-                body: Center(child: Text('Something went wrong')),
-              );
-            } else {
-              return snapshot.data!;
-            }
-          },
-        ),
+        home: initialScreen,
       ),
     );
   }

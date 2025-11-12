@@ -30,7 +30,6 @@ class QuestionnaireHomeButtons extends StatelessWidget {
           children: [
             _buildButton(
               text: "Overslaan",
-              image: Image.asset("assets/icons/questionnaire/arrow.png"),
               height: screenSize.height * 0.08, // Responsive height
               width: buttonWidth * 0.6, // 60% of the buttonWidth
               onPressed: onOverslaanPressed,
@@ -38,7 +37,6 @@ class QuestionnaireHomeButtons extends StatelessWidget {
             SizedBox(height: buttonSpacing),
             _buildButton(
               text: "Bewaar voor later",
-              image: Image.asset("assets/icons/questionnaire/save.png"),
               height: screenSize.height * 0.08,
               width: buttonWidth * 0.8, // 80% of the buttonWidth
               onPressed: onBewaarVoorLaterPressed,
@@ -46,9 +44,6 @@ class QuestionnaireHomeButtons extends StatelessWidget {
             SizedBox(height: buttonSpacing),
             _buildButton(
               text: "Vragenlijst Openen",
-              image: Image.asset(
-                "assets/icons/questionnaire/arrow_forward.png",
-              ),
               height: screenSize.height * 0.09,
               width: buttonWidth, // Full buttonWidth
               onPressed: onVragenlijnstOpenenPressed,
@@ -61,7 +56,6 @@ class QuestionnaireHomeButtons extends StatelessWidget {
 
   Widget _buildButton({
     required String text,
-    required Image image,
     required double height,
     required double width,
     required Function() onPressed,
@@ -70,10 +64,6 @@ class QuestionnaireHomeButtons extends StatelessWidget {
       text: text,
       height: height,
       width: width,
-      rightWidget: SizedBox(
-        height: height * 0.4, // Reduced from 0.5 to make icons smaller
-        child: image,
-      ),
       onPressed: onPressed,
     );
   }

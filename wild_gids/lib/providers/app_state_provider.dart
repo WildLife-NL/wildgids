@@ -20,6 +20,10 @@ class AppStateProvider with ChangeNotifier {
   String? _cachedAddress;
   DateTime? _lastLocationUpdate;
   static const Duration locationCacheTimeout = Duration(minutes: 15);
+  
+  // Location tracking preference
+  bool _isLocationTrackingEnabled = true;
+  bool get isLocationTrackingEnabled => _isLocationTrackingEnabled;
 
   ReportType? get currentReportType => _currentReportType;
   Position? get cachedPosition => _cachedPosition;
@@ -163,6 +167,32 @@ class AppStateProvider with ChangeNotifier {
 
   void startLocationUpdates() {
     Timer.periodic(locationCacheTimeout, (_) => updateLocationCache());
+  }
+
+  /// Load location tracking preference from SharedPreferences
+  Future<void> loadLocationTrackingPreference() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _isLocationTrackingEnabled = prefs.getBool('location_tracking_enabled') ?? true;
+      debugPrint('[AppStateProvider] Loaded location tracking preference: $_isLocationTrackingEnabled');
+      notifyListeners();
+    } catch (e) {
+      debugPrint('[AppStateProvider] Failed to load location tracking preference: $e');
+      _isLocationTrackingEnabled = true; // Default to enabled
+    }
+  }
+
+  /// Toggle location tracking on/off
+  Future<void> setLocationTrackingEnabled(bool enabled) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('location_tracking_enabled', enabled);
+      _isLocationTrackingEnabled = enabled;
+      debugPrint('[AppStateProvider] Location tracking ${enabled ? "enabled" : "disabled"}');
+      notifyListeners();
+    } catch (e) {
+      debugPrint('[AppStateProvider] Failed to save location tracking preference: $e');
+    }
   }
 
   Future<void> logout() async {

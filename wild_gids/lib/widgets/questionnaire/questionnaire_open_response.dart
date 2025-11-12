@@ -36,24 +36,42 @@ class QuestionnaireOpenResponse extends StatefulWidget {
 
 class _QuestionnaireOpenResponseState extends State<QuestionnaireOpenResponse> {
   Response? existingResponse;  
-  TextEditingController _responseController = TextEditingController();
+  late TextEditingController _responseController;
   late final ResponseProvider responseProvider;
   String? _validationError;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      responseProvider = context.read<ResponseProvider>();
-      responseProvider.setInteractionID(widget.interactionID);
-      responseProvider.setQuestionID(widget.question.id);
-      existingResponse = responseProvider.responses.firstWhereOrNull(
+    responseProvider = context.read<ResponseProvider>();
+    _initializeController();
+  }
+
+  @override
+  void didUpdateWidget(QuestionnaireOpenResponse oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // If the question changed, reinitialize the controller
+    if (oldWidget.question.id != widget.question.id) {
+      _initializeController();
+    }
+  }
+
+  void _initializeController() {
+    responseProvider.setInteractionID(widget.interactionID);
+    responseProvider.setQuestionID(widget.question.id);
+    existingResponse = responseProvider.responses.firstWhereOrNull(
       (response) => response.questionID == widget.question.id,
-      );
-      _responseController = TextEditingController(
-        text: existingResponse?.text ?? '',
-      );
-    });
+    );
+    _responseController = TextEditingController(
+      text: existingResponse?.text ?? '',
+    );
+    _validationError = null;
+  }
+
+  @override
+  void dispose() {
+    _responseController.dispose();
+    super.dispose();
   }
 
   String? _validateText(String text) {
@@ -96,7 +114,8 @@ class _QuestionnaireOpenResponseState extends State<QuestionnaireOpenResponse> {
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.brown,
+                    fontFamily: 'Roboto',
+                    color: Colors.black,
                   ),
                 ),
               ),
@@ -108,7 +127,8 @@ class _QuestionnaireOpenResponseState extends State<QuestionnaireOpenResponse> {
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.brown,
+                    fontFamily: 'Roboto',
+                    color: Colors.black,
                   ),
                 ),
               ),
@@ -119,7 +139,11 @@ class _QuestionnaireOpenResponseState extends State<QuestionnaireOpenResponse> {
                   child: Text(
                     widget.question.description,
                     textAlign: TextAlign.left,
-                    style: const TextStyle(fontSize: 18, color: AppColors.brown),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontFamily: 'Roboto',
+                      color: Colors.black,
+                    ),
                   ),
                 ),
               const SizedBox(height: 32),
@@ -152,18 +176,31 @@ class _QuestionnaireOpenResponseState extends State<QuestionnaireOpenResponse> {
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12.0),
                           borderSide: BorderSide(
-                            color: _validationError != null ? Colors.red : Colors.grey,
+                            color: _validationError != null ? Colors.red : AppColors.darkGreen,
+                            width: 2,
                           ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12.0),
                           borderSide: BorderSide(
-                            color: _validationError != null ? Colors.red : Colors.grey,
+                            color: _validationError != null ? Colors.red : AppColors.darkGreen,
+                            width: 2,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                          borderSide: const BorderSide(
+                            color: AppColors.darkGreen,
+                            width: 2,
                           ),
                         ),
                         errorText: _validationError,
                       ),
-                      style: const TextStyle(fontSize: 18, color: AppColors.brown),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontFamily: 'Roboto',
+                        color: Colors.black,
+                      ),
                     ),
                     if (_validationError != null)
                       Padding(
@@ -188,6 +225,7 @@ class _QuestionnaireOpenResponseState extends State<QuestionnaireOpenResponse> {
       bottomNavigationBar: CustomBottomAppBar(
         onNextPressed: widget.onNextPressed,
         onBackPressed: widget.onBackPressed,
+        showBackButton: false,
       ),
     );
   }

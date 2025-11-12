@@ -9,7 +9,6 @@ import 'package:wildrapport/screens/shared/overzicht_screen.dart';
 import 'package:wildrapport/managers/other/login_manager.dart';
 import 'package:wildrapport/widgets/shared_ui_widgets/brown_button.dart';
 import 'package:wildrapport/models/api_models/user.dart';
-import 'package:wildrapport/widgets/overlay/error_overlay.dart';
 import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
@@ -342,13 +341,9 @@ Future<void> _verifyCode() async {
       debugPrint("Error resending code: $e");
       if (!mounted) return;
 
-      showDialog(
-        context: context,
-        builder: (_) => const ErrorOverlay(
-          messages: [
-            'Code verzenden mislukt',
-            'Controleer je internetverbinding en probeer het later opnieuw.',
-          ],
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Kon code niet verzenden. Probeer het later opnieuw.'),
         ),
       );
     }

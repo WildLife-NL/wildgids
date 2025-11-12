@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/constants/app_text_theme.dart';
 
 class ValidationOverlay extends StatelessWidget {
   final List<String> messages;
@@ -15,22 +14,17 @@ class ValidationOverlay extends StatelessWidget {
         color: AppColors.lightMintGreen.withValues(alpha: 0.5),
         child: Center(
           child: GestureDetector(
-            onTap:
-                () {}, // Prevents taps on the container from closing the overlay
+            onTap: () {}, // Prevents taps on the container from closing the overlay
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: 20),
               constraints: const BoxConstraints(maxWidth: 500),
               decoration: BoxDecoration(
                 color: AppColors.offWhite,
                 borderRadius: BorderRadius.circular(25),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.25),
-                    spreadRadius: 0,
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+                border: Border.all(
+                  color: Colors.red,
+                  width: 2,
+                ),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -38,29 +32,10 @@ class ValidationOverlay extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(top: 12),
                     child: IconButton(
-                      icon: ShaderMask(
-                        shaderCallback: (Rect bounds) {
-                          return LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.black,
-                              Colors.black.withValues(alpha: 0.8),
-                            ],
-                          ).createShader(bounds);
-                        },
-                        child: Icon(
-                          Icons.warning_amber_rounded,
-                          size: 32,
-                          color: Colors.black,
-                          shadows: [
-                            Shadow(
-                              color: Colors.black.withValues(alpha: 0.25),
-                              offset: const Offset(0, 2),
-                              blurRadius: 4,
-                            ),
-                          ],
-                        ),
+                      icon: const Icon(
+                        Icons.warning_amber_rounded,
+                        size: 50,
+                        color: Colors.red,
                       ),
                       onPressed: () => Navigator.of(context).pop(),
                       iconSize: 50,
@@ -72,32 +47,23 @@ class ValidationOverlay extends StatelessWidget {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
+                          const Text(
                             'Let op',
-                            style: AppTextTheme.textTheme.titleLarge?.copyWith(
+                            style: TextStyle(
+                              fontFamily: 'Roboto',
                               fontWeight: FontWeight.bold,
                               fontSize: 24,
-                              shadows: [
-                                Shadow(
-                                  color: Colors.black.withValues(alpha: 0.25),
-                                  offset: const Offset(0, 2),
-                                  blurRadius: 4,
-                                ),
-                              ],
+                              color: Colors.black,
                             ),
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 20),
                           Text(
                             messages.join('\n'),
-                            style: AppTextTheme.textTheme.bodyMedium?.copyWith(
-                              shadows: [
-                                Shadow(
-                                  color: Colors.black.withValues(alpha: 0.25),
-                                  offset: const Offset(0, 2),
-                                  blurRadius: 4,
-                                ),
-                              ],
+                            style: const TextStyle(
+                              fontFamily: 'Roboto',
+                              fontSize: 16,
+                              color: Colors.black,
                             ),
                             textAlign: TextAlign.center,
                           ),

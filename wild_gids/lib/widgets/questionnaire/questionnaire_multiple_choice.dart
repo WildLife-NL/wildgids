@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:collection/collection.dart';
-import 'package:wildrapport/constants/app_colors.dart';
 import 'package:wildrapport/models/api_models/question.dart';
 import 'package:wildrapport/models/api_models/questionaire.dart';
 import 'package:wildrapport/models/beta_models/response_model.dart';
@@ -68,8 +67,9 @@ class _QuestionnaireMultipleChoiceState extends State<QuestionnaireMultipleChoic
               'Vraag ${widget.index + 1} van ${widget.questionnaire.questions?.length}',
               style: const TextStyle(
                 fontSize: 16,
+                fontFamily: 'Roboto',
                 fontWeight: FontWeight.bold,
-                color: AppColors.brown,
+                color: Colors.black,
               ),
             ),
           ),
@@ -81,7 +81,8 @@ class _QuestionnaireMultipleChoiceState extends State<QuestionnaireMultipleChoic
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: AppColors.brown,
+                fontFamily: 'Roboto',
+                color: Colors.black,
               ),
             ),
           ),
@@ -91,7 +92,11 @@ class _QuestionnaireMultipleChoiceState extends State<QuestionnaireMultipleChoic
               padding: const EdgeInsets.only(left: 12.0),
               child: Text(
                 widget.question.description,
-                style: const TextStyle(fontSize: 18, color: AppColors.brown),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontFamily: 'Roboto',
+                  color: Colors.black,
+                ),
               ),
             ),
           const SizedBox(height: 24),
@@ -100,7 +105,14 @@ class _QuestionnaireMultipleChoiceState extends State<QuestionnaireMultipleChoic
               return widget.question.allowMultipleResponse
                   ? CheckboxListTile(
                     value: selectedAnswerIDs.contains(answer.id),
-                    title: Text(answer.text),
+                    title: Text(
+                      answer.text,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontFamily: 'Roboto',
+                        color: Colors.black,
+                      ),
+                    ),
                     onChanged: (checked) {
                       setState(() {
                         if (checked == true) {
@@ -134,7 +146,8 @@ class _QuestionnaireMultipleChoiceState extends State<QuestionnaireMultipleChoic
                       answer.text,
                       style: const TextStyle(
                         fontSize: 18,
-                        color: AppColors.brown,
+                        fontFamily: 'Roboto',
+                        color: Colors.black,
                       ),
                     ),
                     value: answer.id,
@@ -166,6 +179,7 @@ class _QuestionnaireMultipleChoiceState extends State<QuestionnaireMultipleChoic
           CustomBottomAppBar(
             onNextPressed: widget.onNextPressed,
             onBackPressed: widget.onBackPressed,
+            showBackButton: false,
           ),
         ],
         ),

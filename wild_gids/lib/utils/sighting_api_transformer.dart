@@ -104,7 +104,7 @@ class SightingApiTransformer {
         return 'male';
       case 'onbekend':
       default:
-        return 'other';
+        return 'unknown';
     }
   }
 

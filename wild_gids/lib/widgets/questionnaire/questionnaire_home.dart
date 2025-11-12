@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:wildrapport/constants/app_colors.dart';
 import 'package:wildrapport/constants/app_text_theme.dart';
 import 'package:wildrapport/screens/shared/overzicht_screen.dart';
 import 'package:wildrapport/widgets/questionnaire/questionnaire_home_buttons.dart';
@@ -27,13 +26,8 @@ class QuestionnaireHome extends StatelessWidget {
             textAlign: TextAlign.center,
             style: AppTextTheme.textTheme.titleLarge?.copyWith(
               fontSize: screenSize.width * 0.055, // Responsive font size
-              shadows: [
-                Shadow(
-                  color: Colors.black.withValues(alpha: 0.25),
-                  offset: const Offset(0, 2),
-                  blurRadius: 4,
-                ),
-              ],
+              color: Colors.black,
+              fontFamily: 'Roboto',
             ),
           ),
         ),
@@ -42,33 +36,19 @@ class QuestionnaireHome extends StatelessWidget {
             Text(
               "Totaal",
               style: TextStyle(
-                color: AppColors.darkGreen,
+                color: Colors.black,
+                fontFamily: 'Roboto',
                 fontWeight: FontWeight.bold,
                 fontSize: screenSize.width * 0.07, // Responsive font size
-              ).copyWith(
-                shadows: [
-                  Shadow(
-                    color: Colors.black.withValues(alpha: 0.25),
-                    offset: const Offset(0, 2),
-                    blurRadius: 4,
-                  ),
-                ],
               ),
             ),
             Text(
               "$amountOfQuestions",
               style: TextStyle(
-                color: AppColors.darkGreen,
+                color: Colors.black,
+                fontFamily: 'Roboto',
                 fontWeight: FontWeight.bold,
                 fontSize: screenSize.width * 0.07, // Responsive font size
-              ).copyWith(
-                shadows: [
-                  Shadow(
-                    color: Colors.black.withValues(alpha: 0.25),
-                    offset: const Offset(0, 2),
-                    blurRadius: 4,
-                  ),
-                ],
               ),
             ),
           ],

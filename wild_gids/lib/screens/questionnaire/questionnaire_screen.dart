@@ -5,7 +5,7 @@ import 'package:wildrapport/interfaces/reporting/questionnaire_interface.dart';
 import 'package:wildrapport/interfaces/reporting/response_interface.dart';
 import 'package:wildrapport/models/api_models/questionaire.dart';
 import 'package:wildrapport/providers/response_provider.dart';
-import 'package:wildrapport/screens/shared/overzicht_screen.dart';
+import 'package:wildrapport/screens/questionnaire/questionnaire_completion_screen.dart';
 import 'package:wildrapport/utils/toast_notification_handler.dart';
 import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
 
@@ -138,7 +138,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
         if (mounted) {
           context.read<NavigationStateInterface>().pushAndRemoveUntil(
             context,
-            OverzichtScreen(),
+            const QuestionnaireCompletionScreen(),
           );
         }
       });
@@ -156,18 +156,16 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
           child: Column(
             children: [
               CustomAppBar(
-                leftIcon: Icons.arrow_back_ios,
+                leftIcon: null,
                 centerText: "Vragenlijst",
-                rightIcon: Icons.menu,
-                onLeftIconPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const OverzichtScreen(),
-                  ),
-                ),
-                onRightIconPressed: () {
-                  /* Handle menu */
-                },
+                rightIcon: null,
+                showUserIcon: true,
+                useFixedText: true,
+                iconColor: Colors.black,
+                textColor: Colors.black,
+                fontScale: 1.15,
+                iconScale: 1.15,
+                userIconScale: 1.15,
               ),
               Expanded(
                 child: questionnaireScreensList[currentQuestionnaireIndex],

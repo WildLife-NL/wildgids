@@ -6,6 +6,9 @@ import 'package:wildrapport/interfaces/reporting/interaction_interface.dart';
 import 'package:wildrapport/interfaces/location/location_screen_interface.dart';
 import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
 import 'package:wildrapport/models/beta_models/animal_sighting_report_wrapper.dart';
+import 'package:wildrapport/models/beta_models/accident_report_model.dart';
+import 'package:wildrapport/models/beta_models/report_location_model.dart';
+import 'package:wildrapport/models/beta_models/sighted_animal_model.dart';
 import 'package:wildrapport/models/beta_models/interaction_response_model.dart';
 import 'package:wildrapport/models/enums/interaction_type.dart';
 import 'package:wildrapport/models/enums/report_type.dart';
@@ -14,13 +17,13 @@ import 'package:wildrapport/models/beta_models/location_model.dart';
 import 'package:wildrapport/providers/app_state_provider.dart';
 import 'package:wildrapport/providers/map_provider.dart';
 import 'package:wildrapport/screens/waarneming/animal_list_overview_screen.dart';
+import 'package:wildrapport/screens/waarneming/collision_details_screen.dart';
 import 'package:wildrapport/screens/questionnaire/questionnaire_screen.dart';
 import 'package:wildrapport/screens/shared/rapporteren.dart';
 import 'package:wildrapport/utils/sighting_api_transformer.dart';
 import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
 import 'package:wildrapport/widgets/shared_ui_widgets/bottom_app_bar.dart';
 import 'package:wildrapport/widgets/location/location_screen_ui_widget.dart';
-import 'package:wildrapport/widgets/overlay/error_overlay.dart';
 
 class LocationScreen extends StatefulWidget {
   const LocationScreen({super.key});
@@ -36,16 +39,11 @@ class _LocationScreenState extends State<LocationScreen> {
 
   void _handlePendingActions() {
     if (_pendingSnackBarMessage != null) {
-      // Replace error SnackBar with ErrorOverlay
-      showDialog(
-        context: context,
-        builder: (_) => ErrorOverlay(
-          messages: [
-            _pendingSnackBarMessage!,
-            _pendingSnackBarMessage!.contains('Selecteer')
-                ? 'Kies eerst een geldige optie en probeer opnieuw.'
-                : 'Corrigeer het probleem en probeer opnieuw.'
-          ],
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_pendingSnackBarMessage!),
+          backgroundColor: _pendingSnackBarMessage!.contains('fout') ? Colors.red : Colors.orange,
+          behavior: SnackBarBehavior.fixed,
         ),
       );
     }
@@ -196,9 +194,19 @@ class _LocationScreenState extends State<LocationScreen> {
               centerText: 'Locatie',
               rightIcon: null,
               showUserIcon: true,
-              onLeftIconPressed: () => context
-                  .read<NavigationStateInterface>()
-                  .pushReplacementBack(context, AnimalListOverviewScreen()),
+              onLeftIconPressed: () {
+                final navigationManager = context.read<NavigationStateInterface>();
+                final appStateProvider = context.read<AppStateProvider>();
+                final reportType = appStateProvider.currentReportType;
+                
+                // For collision flow, go back to collision details screen
+                if (reportType == ReportType.verkeersongeval) {
+                  navigationManager.pushReplacementBack(context, const CollisionDetailsScreen());
+                } else {
+                  // For other flows, go back to animal list overview
+                  navigationManager.pushReplacementBack(context, AnimalListOverviewScreen());
+                }
+              },
               iconColor: Colors.black,
               textColor: Colors.black,
               fontScale: 1.15,
@@ -210,9 +218,19 @@ class _LocationScreenState extends State<LocationScreen> {
         ),
       ),
       bottomNavigationBar: CustomBottomAppBar(
-        onBackPressed: () => context
-            .read<NavigationStateInterface>()
-            .pushReplacementBack(context, AnimalListOverviewScreen()),
+        onBackPressed: () {
+          final navigationManager = context.read<NavigationStateInterface>();
+          final appStateProvider = context.read<AppStateProvider>();
+          final reportType = appStateProvider.currentReportType;
+          
+          // For collision flow, go back to collision details screen
+          if (reportType == ReportType.verkeersongeval) {
+            navigationManager.pushReplacementBack(context, const CollisionDetailsScreen());
+          } else {
+            // For other flows, go back to animal list overview
+            navigationManager.pushReplacementBack(context, AnimalListOverviewScreen());
+          }
+        },
         onNextPressed: _handleNextPressed,
         showNextButton: true,
         showBackButton: false,
@@ -246,8 +264,20 @@ Future<InteractionResponse?> submitReport(
     
     debugPrint('\x1B[36m[LocationScreen] Using report type: $reportType -> interaction type: $interactionType\x1B[0m');
     
+    // Build the appropriate report wrapper based on report type
+    final dynamic reportWrapper;
+    if (interactionType == InteractionType.verkeersongeval) {
+      // For vehicle collision, we need to build an AccidentReport
+      reportWrapper = _buildAccidentReportFromSighting(currentSighting);
+      debugPrint('\x1B[36m[LocationScreen] Built AccidentReport for verkeersongeval\x1B[0m');
+    } else {
+      // For waarneming (sighting), use the existing wrapper
+      reportWrapper = AnimalSightingReportWrapper(currentSighting);
+      debugPrint('\x1B[36m[LocationScreen] Built AnimalSightingReportWrapper for waarneming\x1B[0m');
+    }
+    
     final InteractionResponse? response = await interactionManager.postInteraction(
-      AnimalSightingReportWrapper(currentSighting),
+      reportWrapper,
       interactionType,
     );
     if (response != null) {
@@ -260,5 +290,111 @@ Future<InteractionResponse?> submitReport(
     return response;
   } catch (e) {
     rethrow;
+  }
+}
+
+AccidentReport _buildAccidentReportFromSighting(dynamic sighting) {
+  // Extract locations
+  final systemLocation = sighting.locations!.firstWhere(
+    (loc) => loc.source == LocationSource.system,
+    orElse: () => throw StateError('System location is required'),
+  );
+  final manualLocation = sighting.locations!.firstWhere(
+    (loc) => loc.source == LocationSource.manual,
+    orElse: () => throw StateError('Manual location is required'),
+  );
+
+  // Convert locations to ReportLocation format
+  final systemReportLocation = ReportLocation(
+    latitude: systemLocation.latitude,
+    longtitude: systemLocation.longitude,
+  );
+  final manualReportLocation = ReportLocation(
+    latitude: manualLocation.latitude,
+    longtitude: manualLocation.longitude,
+  );
+
+  // Transform animals to SightedAnimal format (same logic as SightingApiTransformer)
+  final List<SightedAnimal> sightedAnimals = [];
+  for (final animal in sighting.animals!) {
+    final condition = animal.condition?.toString().split('.').last ?? 'other';
+    final mappedCondition = _mapCondition(condition);
+
+    for (final genderView in animal.genderViewCounts) {
+      final genderString = genderView.gender.toString().split('.').last;
+      final sex = _mapSex(genderString);
+
+      void addEntries(int amount, String ageKey) {
+        if (amount > 0) {
+          final lifeStage = _mapLifeStage(ageKey);
+          for (int i = 0; i < amount; i++) {
+            sightedAnimals.add(
+              SightedAnimal(
+                condition: mappedCondition,
+                lifeStage: lifeStage,
+                sex: sex,
+              ),
+            );
+          }
+        }
+      }
+
+      addEntries(genderView.viewCount.pasGeborenAmount, 'pasGeborenAmount');
+      addEntries(genderView.viewCount.onvolwassenAmount, 'onvolwassenAmount');
+      addEntries(genderView.viewCount.volwassenAmount, 'volwassenAmount');
+      addEntries(genderView.viewCount.unknownAmount, 'unknownAmount');
+    }
+  }
+
+  return AccidentReport(
+    description: sighting.description ?? '',
+    damages: '0', // Default damage value - will be converted to 0 (number) in toJson()
+    animals: sightedAnimals,
+    suspectedSpeciesID: sighting.animalSelected?.animalId,
+    userSelectedLocation: manualReportLocation,
+    systemLocation: systemReportLocation,
+    userSelectedDateTime: sighting.dateTime?.dateTime,
+    systemDateTime: sighting.dateTime?.dateTime ?? DateTime.now(),
+    intensity: 'medium', // Default to medium intensity
+    urgency: 'medium', // Default to medium urgency
+  );
+}
+
+String _mapCondition(String condition) {
+  switch (condition.toLowerCase()) {
+    case 'gezond':
+      return 'healthy';
+    case 'ziek':
+      return 'impaired';
+    case 'dood':
+      return 'dead';
+    default:
+      return 'other';
+  }
+}
+
+String _mapSex(String genderEnum) {
+  switch (genderEnum.toLowerCase()) {
+    case 'vrouwelijk':
+      return 'female';
+    case 'mannelijk':
+      return 'male';
+    case 'onbekend':
+    default:
+      return 'unknown';
+  }
+}
+
+String _mapLifeStage(String ageKey) {
+  switch (ageKey) {
+    case 'pasGeborenAmount':
+      return 'infant';
+    case 'onvolwassenAmount':
+      return 'adolescent';
+    case 'volwassenAmount':
+      return 'adult';
+    case 'unknownAmount':
+    default:
+      return 'unknown';
   }
 }

@@ -9,7 +9,7 @@ import 'package:wildrapport/providers/map_provider.dart';
 import 'package:wildrapport/providers/belonging_damage_report_provider.dart';
 import 'package:wildrapport/screens/shared/overzicht_screen.dart';
 import 'package:wildrapport/screens/questionnaire/questionnaire_screen.dart';
-import 'package:wildrapport/screens/shared/rapporteren.dart';
+import 'package:wildrapport/screens/belonging/belonging_animal_screen.dart';
 import 'package:wildrapport/utils/toast_notification_handler.dart';
 import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
 import 'package:wildrapport/widgets/shared_ui_widgets/bottom_app_bar.dart';
@@ -188,17 +188,19 @@ class _BelongingLocationScreenState extends State<BelongingLocationScreen> {
               CustomAppBar(
                 leftIcon: Icons.arrow_back_ios,
                 centerText: 'Locatie',
-                rightIcon: Icons.menu,
+                rightIcon: null,
+                showUserIcon: true,
                 onLeftIconPressed: () {
-                  belongingProvider.clearStateOfValues();
-                  navigationManager.pushReplacementForward(
+                  navigationManager.pushReplacementBack(
                     context,
-                    const Rapporteren(),
+                    const BelongingAnimalScreen(appBarTitle: 'Kies Dier'),
                   );
                 },
-                onRightIconPressed: () {
-                  /* Handle menu */
-                },
+                iconColor: Colors.black,
+                textColor: Colors.black,
+                fontScale: 1.15,
+                iconScale: 1.15,
+                userIconScale: 1.15,
               ),
               Expanded(
                 child: _isInitialized
@@ -210,10 +212,9 @@ class _BelongingLocationScreenState extends State<BelongingLocationScreen> {
         ),
         bottomNavigationBar: CustomBottomAppBar(
           onBackPressed: () {
-            belongingProvider.clearStateOfValues();
-            navigationManager.pushReplacementForward(
+            navigationManager.pushReplacementBack(
               context,
-              const Rapporteren(),
+              const BelongingAnimalScreen(appBarTitle: 'Kies Dier'),
             );
           },
           onNextPressed: _handleNextPressed,

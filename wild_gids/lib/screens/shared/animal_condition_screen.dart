@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:wildrapport/widgets/overlay/error_overlay.dart';
 import 'package:provider/provider.dart';
 import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
 import 'package:wildrapport/screens/shared/category_screen.dart';
@@ -47,13 +46,10 @@ class _AnimalConditionScreenState extends State<AnimalConditionScreen> {
       debugPrint(
         '$greenLog[AnimalConditionScreen] Error during navigation: $e$resetLog',
       );
-      showDialog(
-        context: context,
-        builder: (_) => const ErrorOverlay(
-          messages: [
-            'Navigatie mislukt',
-            'Er ging iets mis bij het openen van de volgende stap. Probeer het opnieuw.',
-          ],
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Er is een fout opgetreden bij het navigeren'),
+          backgroundColor: Colors.red,
         ),
       );
     }
