@@ -215,46 +215,51 @@ class _TimeSelectionRowState extends State<TimeSelectionRow> {
     final isSelected = _selectedOption == label;
 
     return Expanded(
-      child: GestureDetector(
-        // Add GestureDetector here
-        onTap: () => _handleSelection(label),
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 2),
-          decoration: _buildCheckboxDecoration(isSelected),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: Checkbox(
-                    value: isSelected,
-                    onChanged: (_) => _handleSelection(label),
-                    activeColor: AppColors.brown,
-                    checkColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 2),
+        decoration: _buildCheckboxDecoration(isSelected),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => _handleSelection(label),
+            borderRadius: BorderRadius.circular(15),
+            hoverColor: AppColors.darkGreen.withOpacity(0.1),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: Checkbox(
+                      value: isSelected,
+                      onChanged: (_) => _handleSelection(label),
+                      activeColor: Colors.black,
+                      checkColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      side: BorderSide(color: Colors.black, width: 2),
                     ),
-                    side: BorderSide(color: AppColors.brown, width: 2),
                   ),
-                ),
-                const SizedBox(width: 4),
-                Flexible(
-                  child: Text(
-                    label,
-                    style: TextStyle(
-                      color: AppColors.brown,
-                      fontSize: 14,
-                      fontWeight:
-                          isSelected ? FontWeight.w500 : FontWeight.normal,
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontFamily: 'Roboto',
+                        fontSize: 14,
+                        fontWeight:
+                            isSelected ? FontWeight.w500 : FontWeight.normal,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -302,8 +307,8 @@ class _TimeSelectionRowState extends State<TimeSelectionRow> {
             border: Border.all(
               color:
                   enabled
-                      ? AppColors.brown.withValues(alpha: 0.15)
-                      : AppColors.brown.withValues(alpha: 0.05),
+                      ? Colors.black.withValues(alpha: 0.15)
+                      : Colors.black.withValues(alpha: 0.05),
               width: 1.5,
             ),
             boxShadow: [
@@ -330,7 +335,8 @@ class _TimeSelectionRowState extends State<TimeSelectionRow> {
                       Text(
                         label,
                         style: TextStyle(
-                          color: AppColors.brown.withValues(alpha: 0.6),
+                          color: Colors.black.withValues(alpha: 0.6),
+                          fontFamily: 'Roboto',
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                           letterSpacing: 0.3,
@@ -342,8 +348,9 @@ class _TimeSelectionRowState extends State<TimeSelectionRow> {
                         style: TextStyle(
                           color:
                               enabled
-                                  ? AppColors.brown
-                                  : AppColors.brown.withValues(alpha: 0.7),
+                                  ? Colors.black
+                                  : Colors.black.withValues(alpha: 0.7),
+                          fontFamily: 'Roboto',
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.5,
@@ -359,8 +366,8 @@ class _TimeSelectionRowState extends State<TimeSelectionRow> {
                   icon,
                   color:
                       enabled
-                          ? AppColors.brown.withValues(alpha: 0.7)
-                          : AppColors.brown.withValues(alpha: 0.4),
+                          ? Colors.black.withValues(alpha: 0.7)
+                          : Colors.black.withValues(alpha: 0.4),
                   size: 22,
                 ),
               ),

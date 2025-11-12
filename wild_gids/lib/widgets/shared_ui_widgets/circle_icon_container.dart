@@ -8,6 +8,7 @@ class CircleIconContainer extends StatelessWidget {
   final String? imagePath;
   final Color? iconColor;
   final double? iconSize;
+  final bool showShadow;
 
   const CircleIconContainer({
     super.key,
@@ -17,6 +18,7 @@ class CircleIconContainer extends StatelessWidget {
     this.imagePath,
     this.iconColor,
     this.iconSize,
+    this.showShadow = true,
   });
 
   @override
@@ -27,14 +29,16 @@ class CircleIconContainer extends StatelessWidget {
       decoration: BoxDecoration(
         color: backgroundColor ?? AppColors.offWhite,
         shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.25),
-            spreadRadius: 0,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: showShadow
+            ? [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.25),
+                  spreadRadius: 0,
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : null,
       ),
       child: Center(child: _buildContent()),
     );

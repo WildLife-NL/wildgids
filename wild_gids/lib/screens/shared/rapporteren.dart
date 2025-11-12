@@ -5,8 +5,10 @@ import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
 import 'package:wildrapport/models/enums/report_type.dart';
 import 'package:wildrapport/providers/app_state_provider.dart';
 import 'package:wildrapport/providers/map_provider.dart';
+import 'package:wildrapport/screens/waarneming/animals_screen.dart';
 import 'package:wildrapport/screens/shared/category_screen.dart';
 import 'package:wildrapport/screens/shared/overzicht_screen.dart';
+import 'package:wildrapport/screens/belonging/belonging_damages_screen.dart';
 import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
 import 'package:wildrapport/widgets/location/invisible_map_preloader.dart';
 import 'package:wildrapport/widgets/questionnaire/report_button.dart';
@@ -38,6 +40,29 @@ class _RapporterenState extends State<Rapporteren> {
         animalSightingManager.createanimalSighting();
         // Skip condition screen and go directly to category screen
         nextScreen = const CategoryScreen();
+        _initializeMapInBackground();
+        break;
+      case 'Gewasschade':
+        debugPrint('[Rapporteren] Gewasschade selected, initializing map');
+        selectedReportType = ReportType.gewasschade;
+        nextScreen = BelongingDamagesScreen();
+        _initializeMapInBackground();
+        break;
+      case 'Verkeersongeval':
+        debugPrint('[Rapporteren] Verkeersongeval selected, initializing map');
+        selectedReportType = ReportType.verkeersongeval;
+        // Create animal sighting report and save it in provider
+        final animalSightingManagerVerkeer =
+            context.read<AnimalSightingReportingInterface>();
+        animalSightingManagerVerkeer.createanimalSighting();
+        // Skip condition screen and go directly to category screen
+        nextScreen = const CategoryScreen();
+        _initializeMapInBackground();
+        break;
+      case 'Diergezondheid':
+        debugPrint('[Rapporteren] Diergezondheid selected, initializing map');
+        selectedReportType = ReportType.verkeersongeval;
+        nextScreen = AnimalsScreen(appBarTitle: reportType);
         _initializeMapInBackground();
         break;
       default:
@@ -104,9 +129,14 @@ class _RapporterenState extends State<Rapporteren> {
             child: CustomAppBar(
               leftIcon: Icons.arrow_back_ios,
               centerText: 'Rapporteren',
-              rightIcon: Icons.menu,
+              rightIcon: null,
               onLeftIconPressed: () => _handleBackNavigation(context),
               onRightIconPressed: () {},
+              // make title and arrow black and slightly larger for this screen
+              iconColor: Colors.black,
+              textColor: Colors.black,
+              fontScale: 1.15,
+              iconScale: 1.15,
             ),
           ),
           Expanded(
@@ -117,17 +147,53 @@ class _RapporterenState extends State<Rapporteren> {
                   horizontal: horizontalPadding,
                   vertical: verticalPadding,
                 ),
-                child: Center(
-                  child: SizedBox(
-                    width: 260,
-                    height: 150,
-                    child: ReportButton(
-                      image: 'assets/icons/rapporteren/sighting_icon.png',
-                      text: 'Waarnemingen',
-                      onPressed: () =>
-                          _handleReportTypeSelection('animalSightingen'),
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: screenSize.width * 0.9,
+                              height: screenSize.height * 0.22,
+                              child: ReportButton(
+                                image: 'assets/icons/agriculture.png',
+                                text: 'Gewasschade',
+                                onPressed: () =>
+                                    _handleReportTypeSelection('Gewasschade'),
+                              ),
+                            ),
+                            SizedBox(height: screenSize.height * 0.03),
+                            SizedBox(
+                              width: screenSize.width * 0.9,
+                              height: screenSize.height * 0.22,
+                              child: ReportButton(
+                                image: 'assets/icons/binoculars.png',
+                                text: 'Waarnemingen',
+                                onPressed: () => _handleReportTypeSelection(
+                                  'animalSightingen',
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: screenSize.height * 0.03),
+                            SizedBox(
+                              width: screenSize.width * 0.9,
+                              height: screenSize.height * 0.22,
+                              child: ReportButton(
+                                image: 'assets/icons/accident.png',
+                                text: 'Verkeersongeval',
+                                onPressed: () => _handleReportTypeSelection(
+                                  'Verkeersongeval',
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ),
             ),

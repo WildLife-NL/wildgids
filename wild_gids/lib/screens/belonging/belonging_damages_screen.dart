@@ -172,13 +172,16 @@ class _PossesionDamageScreenState extends State<BelongingDamagesScreen> {
             CustomAppBar(
               leftIcon: Icons.arrow_back_ios,
               centerText: "Gewasschade",
-              rightIcon: Icons.menu,
+              rightIcon: null,
+              showUserIcon: true,
               onLeftIconPressed: () {
                 previousScreen();
               },
-              onRightIconPressed: () {
-                // Handle menu
-              },
+              iconColor: Colors.black,
+              textColor: Colors.black,
+              fontScale: 1.15,
+              iconScale: 1.15,
+              userIconScale: 1.15,
             ),
             Expanded(child: belongingDamagesWidgetList[currentIndex]),
             CustomBottomAppBar(

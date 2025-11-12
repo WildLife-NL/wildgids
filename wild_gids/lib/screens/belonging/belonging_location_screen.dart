@@ -85,7 +85,7 @@ class _BelongingLocationScreenState extends State<BelongingLocationScreen> {
     _pendingNavigationScreen = null;
   }
 
-  void _handleNextPressed() async {
+  Future<void> _handleNextPressed() async {
     debugPrint("$yellowLog[BelongingLocationScreen] 🔄 Next button pressed\x1B[0m");
 
     // Cache providers before async calls
@@ -209,13 +209,16 @@ class _BelongingLocationScreenState extends State<BelongingLocationScreen> {
           ),
         ),
         bottomNavigationBar: CustomBottomAppBar(
-          onBackPressed: () => navigationManager.pushReplacementBack(
-            context,
-            const Rapporteren(),
-          ),
+          onBackPressed: () {
+            belongingProvider.clearStateOfValues();
+            navigationManager.pushReplacementForward(
+              context,
+              const Rapporteren(),
+            );
+          },
           onNextPressed: _handleNextPressed,
           showNextButton: true,
-          showBackButton: true,
+          showBackButton: false,
         ),
       ),
     );

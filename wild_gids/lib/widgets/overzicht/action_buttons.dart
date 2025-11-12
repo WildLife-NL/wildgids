@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/white_bulk_button.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/circle_icon_container.dart';
+// white_bulk_button isn't used here anymore; keep import removed
+import 'package:wildrapport/widgets/overzicht/simple_hover_button.dart';
+// circle icons are not used in this overview variant
 import 'package:wildrapport/constants/app_colors.dart';
 
 class ActionButtons extends StatelessWidget {
@@ -72,48 +73,40 @@ class ActionButtons extends StatelessWidget {
     VoidCallback? onPressed,
     Key? key, // Add key parameter
   }) {
-    Widget? leftWidget;
+  // we don't use the buttonIndex for per-button variations here; all buttons share the same simple style
+    // We intentionally don't render icons for the overview buttons (clean look)
 
-    final int buttonIndex = buttons.indexWhere((b) => b.text == text);
-    final Color iconColor = customIconColors[buttonIndex] ?? AppColors.brown;
-    final bool useCircle = useCircleIconsForIndices.contains(buttonIndex);
+  // Default styles for overview buttons: same as scaffold background (light mint), dark green border, black text
+  Color background = AppColors.lightMintGreen;
+  Color? border = AppColors.darkGreen;
+  TextStyle textStyle = TextStyle(color: Colors.black, fontSize: buttonFontSize ?? 16, fontWeight: FontWeight.w500);
 
-    if (icon != null) {
-      leftWidget = useCircle
-          ? CircleIconContainer(
-              icon: icon,
-              iconColor: iconColor,
-              size: iconSize,
-            )
-          : Icon(icon, color: iconColor, size: iconSize);
-    } else if (imagePath != null) {
-      leftWidget = Image.asset(
-        imagePath,
-        width: iconSize,
-        height: iconSize,
-        fit: BoxFit.contain,
+    // Use a slim, icon-less hover button for the overview screen
+    final button = SimpleHoverButton(
+      key: key,
+      text: text,
+      onPressed: onPressed,
+      height: buttonHeight.clamp(40.0, 64.0),
+      textStyle: textStyle,
+      backgroundColor: background,
+      borderColor: border,
+      width: double.infinity,
+    );
+
+    // Hide the 'Uitloggen' (logout) button visually but keep its code
+    // and state intact. We use Visibility with maintainState so we don't
+    // remove the widget from the tree, only hide it from view.
+    if (text == 'Uitloggen' || text.toLowerCase().contains('uitlog')) {
+      return Visibility(
+        visible: false,
+        maintainState: true,
+        maintainAnimation: true,
+        maintainSemantics: true,
+        maintainSize: true,
+        child: button,
       );
     }
 
-    return WhiteBulkButton(
-      key: key, // Apply key to WhiteBulkButton
-      text: text,
-      leftWidget: leftWidget,
-      rightWidget: Icon(
-        Icons.arrow_forward_ios,
-        color: AppColors.brown,
-        size: 24,
-        shadows: [
-          Shadow(
-            color: Colors.black.withValues(alpha: 0.25),
-            offset: const Offset(0, 2),
-            blurRadius: 4,
-          ),
-        ],
-      ),
-      onPressed: onPressed,
-      height: buttonHeight,
-      fontSize: buttonFontSize,
-    );
+    return button;
   }
 }

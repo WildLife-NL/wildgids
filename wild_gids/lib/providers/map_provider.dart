@@ -13,10 +13,14 @@ import 'package:wildrapport/models/api_models/detection_pin.dart';
 import 'package:wildrapport/managers/api_managers/animal_pins_manager.dart';
 import 'package:wildrapport/managers/api_managers/detection_pins_manager.dart';
 
-import 'package:wildrapport/interfaces/data_apis/tracking_api_interface.dart';
+import 'package:wildrapport/interfaces/data_apis/tracking_api_interface.dart'
+    show TrackingApiInterface, TrackingNotice;
+import 'dart:async';
+
 
 
 class MapProvider extends ChangeNotifier {
+  TrackingApiInterface? _trackingApi;
   // ===== Location state =====
   Position? selectedPosition;
   String selectedAddress = '';
@@ -26,8 +30,20 @@ class MapProvider extends ChangeNotifier {
   bool _isLoading = false;
   final bool _isDisposed = false;
 
+  Timer? _trackingTimer;
+bool _isTracking = false;
+Duration _trackingInterval = const Duration(minutes: 5);
+
+bool get isTracking => _isTracking;
+Duration get trackingInterval => _trackingInterval;
+
+
   bool get isLoading => _isLoading;
   bool get isInitialized => _mapController != null;
+
+TrackingNotice? _lastTrackingNotice;
+TrackingNotice? get lastTrackingNotice => _lastTrackingNotice;
+
   MapController get mapController {
     if (_mapController == null) {
       debugPrint(
@@ -38,28 +54,39 @@ class MapProvider extends ChangeNotifier {
     return _mapController!;
   }
 
-  TrackingApiInterface? _trackingApi;
-
 void setTrackingApi(TrackingApiInterface api) {
   _trackingApi = api;
 }
 
 /// Call this to send the user's current GPS location to the backend.
-Future<void> sendTrackingPingFromPosition(Position pos) async {
+Future<TrackingNotice?> sendTrackingPingFromPosition(Position pos) async {
   if (_trackingApi == null) {
-    debugPrint('[MapProvider] TrackingApi not set');
-    return;
+    debugPrint('[MapProvider] ⚠️ TrackingApi not set - cannot send tracking ping');
+    return null;
   }
 
+  debugPrint('[MapProvider] 📍 Sending tracking ping for position: ${pos.latitude}, ${pos.longitude}');
+
   try {
-    await _trackingApi!.addTrackingReading(
+    final notice = await _trackingApi!.addTrackingReading(
       lat: pos.latitude,
       lon: pos.longitude,
       timestampUtc: DateTime.now().toUtc(),
     );
-    debugPrint('[MapProvider] tracking-reading sent OK');
+
+    if (notice != null) {
+      _lastTrackingNotice = notice;
+      debugPrint('[MapProvider] 🔔 Got tracking notice, calling notifyListeners()');
+      notifyListeners(); // if any UI wants to react to changes
+      debugPrint('[MapProvider] ✓ tracking-reading OK; notice="${notice.text}"'
+          ' sev=${notice.severity ?? '-'}');
+    } else {
+      debugPrint('[MapProvider] ✓ tracking-reading OK; no notice from backend');
+    }
+    return notice;
   } catch (e) {
-    debugPrint('[MapProvider] tracking-reading failed: $e');
+    debugPrint('[MapProvider] ❌ tracking-reading failed: $e');
+    return null;
   }
 }
 
@@ -417,4 +444,60 @@ Future<void> sendTrackingPingFromPosition(Position pos) async {
       ),
     ]);
   }
+      /// Sends one tracking ping using the freshest position we have.
+/// Falls back to getting a new fix if needed.
+Future<void> _sendTrackingNow() async {
+  try {
+    final pos = currentPosition ??
+        await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.medium,
+            timeLimit: Duration(seconds: 7),
+          ),
+        );
+    await sendTrackingPingFromPosition(pos);
+  } catch (e) {
+    debugPrint('[MapProvider] tracking ping skipped: $e');
+  }
+}
+
+
+/// Starts periodic pings. Fires one immediately, then repeats.
+void startTracking({Duration? interval}) {
+  if (_trackingApi == null) {
+    debugPrint('[MapProvider] Cannot start tracking: TrackingApi not set');
+    return;
+  }
+  _trackingTimer?.cancel();
+  _trackingInterval = interval ?? _trackingInterval;
+
+  _isTracking = true;
+  notifyListeners();
+
+  // fire now, then periodically
+  _sendTrackingNow();
+  _trackingTimer = Timer.periodic(_trackingInterval, (_) => _sendTrackingNow());
+
+  debugPrint(
+    '[MapProvider] tracking STARTED every ${_trackingInterval.inSeconds}s',
+  );
+}
+
+/// Stops periodic pings.
+void stopTracking() {
+  _trackingTimer?.cancel();
+  _trackingTimer = null;
+  if (_isTracking) {
+    _isTracking = false;
+    // Don't call notifyListeners during dispose - it causes setState during widget tree lock
+    // notifyListeners();
+  }
+  debugPrint('[MapProvider] tracking STOPPED');
+}
+
+@override
+void dispose() {
+  _trackingTimer?.cancel();
+  super.dispose();
+}
 }

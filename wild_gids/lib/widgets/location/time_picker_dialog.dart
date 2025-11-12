@@ -187,7 +187,7 @@ class _CustomTimePickerDialogState extends State<CustomTimePickerDialog> {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: AppColors.brown,
+                color: AppColors.darkGreen,
               ),
             ),
             const SizedBox(height: 20),
@@ -216,7 +216,7 @@ class _CustomTimePickerDialogState extends State<CustomTimePickerDialog> {
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
             decoration: BoxDecoration(
-              color: AppColors.brown.withValues(alpha: 0.1),
+              color: AppColors.darkGreen.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
               border:
                   _errorMessage != null
@@ -235,7 +235,7 @@ class _CustomTimePickerDialogState extends State<CustomTimePickerDialog> {
                         color:
                             _errorMessage != null
                                 ? Colors.red
-                                : AppColors.brown,
+                                : AppColors.darkGreen,
                       ),
                       decoration: const InputDecoration(
                         border: InputBorder.none,
@@ -266,7 +266,7 @@ class _CustomTimePickerDialogState extends State<CustomTimePickerDialog> {
                         color:
                             _errorMessage != null
                                 ? Colors.red
-                                : AppColors.brown,
+                                : AppColors.darkGreen,
                       ),
                     ),
           ),
@@ -289,7 +289,7 @@ class _CustomTimePickerDialogState extends State<CustomTimePickerDialog> {
       decoration: BoxDecoration(
         color: AppColors.offWhite,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.brown.withValues(alpha: 0.1)),
+        border: Border.all(color: AppColors.darkGreen.withValues(alpha: 0.1)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -325,7 +325,7 @@ class _CustomTimePickerDialogState extends State<CustomTimePickerDialog> {
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: AppColors.brown,
+                color: AppColors.darkGreen,
               ),
             ),
           ),
@@ -400,8 +400,8 @@ class _CustomTimePickerDialogState extends State<CustomTimePickerDialog> {
                           isSelected ? FontWeight.bold : FontWeight.normal,
                       color:
                           isSelected
-                              ? AppColors.brown
-                              : AppColors.brown.withValues(alpha: 0.5),
+                              ? AppColors.darkGreen
+                              : AppColors.darkGreen.withValues(alpha: 0.5),
                     ),
                     child: Text(number.toString().padLeft(2, '0')),
                   ),
@@ -414,7 +414,7 @@ class _CustomTimePickerDialogState extends State<CustomTimePickerDialog> {
           label,
           style: TextStyle(
             fontSize: 12,
-            color: AppColors.brown.withValues(alpha: 0.6),
+            color: AppColors.darkGreen.withValues(alpha: 0.6),
           ),
         ),
       ],
@@ -427,7 +427,7 @@ class _CustomTimePickerDialogState extends State<CustomTimePickerDialog> {
       children: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text('Annuleren', style: TextStyle(color: AppColors.brown)),
+          child: Text('Annuleren', style: TextStyle(color: AppColors.darkGreen)),
         ),
         const SizedBox(width: 8),
         ElevatedButton(
@@ -436,7 +436,7 @@ class _CustomTimePickerDialogState extends State<CustomTimePickerDialog> {
                 context,
               ).pop(TimeOfDay(hour: _selectedHour, minute: _selectedMinute)),
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.brown,
+            backgroundColor: AppColors.darkGreen,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
             ),

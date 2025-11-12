@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wildrapport/widgets/overlay/error_overlay.dart';
 import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
 import 'package:wildrapport/managers/permission/permission_checker.dart';
 import 'package:wildrapport/utils/toast_notification_handler.dart';
+import 'package:wildrapport/constants/app_colors.dart';
 import 'package:wildrapport/widgets/overzicht/top_container.dart';
 import 'package:wildrapport/widgets/overzicht/action_buttons.dart';
 import 'package:wildrapport/screens/shared/rapporteren.dart';
@@ -46,7 +48,7 @@ class _OverzichtScreenState extends State<OverzichtScreen>
     );
     final double welcomeFontSize = (screenSize.width * 0.045).clamp(14.0, 24.0);
     final double usernameFontSize = (screenSize.width * 0.06).clamp(18.0, 28.0);
-    final double buttonHeight = (screenSize.height * 0.18).clamp(100.0, 160.0);
+    final double buttonHeight = (screenSize.height * 0.08).clamp(48.0, 64.0);
     final double spacing = (screenSize.height * 0.02).clamp(8.0, 24.0);
     final double iconSize = (screenSize.width * 0.14).clamp(28.0, 56.0);
     final double buttonFontSize = (screenSize.width * 0.045).clamp(14.0, 22.0);
@@ -57,6 +59,7 @@ class _OverzichtScreenState extends State<OverzichtScreen>
         return false;
       },
       child: Scaffold(
+        backgroundColor: AppColors.lightMintGreen,
         body: LayoutBuilder(
           builder: (context, constraints) {
             return SingleChildScrollView(
@@ -78,88 +81,85 @@ class _OverzichtScreenState extends State<OverzichtScreen>
                           vertical: spacing / 2,
                           horizontal: spacing,
                         ),
-                        child: IntrinsicHeight(
-                          child: Column(
-                            children: [
-                              SizedBox(height: spacing),
-                              ActionButtons(
-                                buttons: [
-                                  (
-                                    text: 'Kaart',
-                                    icon: Icons.map,
-                                    imagePath: null,
-                                    key: Key('rapporten_kaart_button'),
-                                    onPressed: () {
-                                      context
-                                          .read<NavigationStateInterface>()
-                                          .pushReplacementForward(
-                                            context,
-                                            const KaartOverviewScreen(),
-                                          );
-                                    },
-                                  ),
-
-                                  (
-                                    text: 'Rapporteren',
-                                    icon: Icons.edit_note,
-                                    imagePath: null,
-                                    key: Key('rapporteren_button'),
-                                    onPressed: () {
-                                      try {
-                                        navigationManager
-                                            .pushReplacementForward(
-                                              context,
-                                              const Rapporteren(),
-                                            );
-                                      } catch (e) {
-                                        ScaffoldMessenger.of(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(height: spacing * 3.8),
+                            ActionButtons(
+                              buttons: [
+                                (
+                                  text: 'Kaart',
+                                  icon: Icons.map,
+                                  imagePath: null,
+                                  key: Key('rapporten_kaart_button'),
+                                  onPressed: () {
+                                    context
+                                        .read<NavigationStateInterface>()
+                                        .pushReplacementForward(
                                           context,
-                                        ).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              'Er is een fout opgetreden bij het navigeren',
-                                            ),
-                                            duration: const Duration(
-                                              seconds: 3,
-                                            ),
-                                          ),
+                                          const KaartOverviewScreen(),
                                         );
-                                      }
-                                    },
-                                  ),
-                                  (
-                                    text: 'Mijn Rapporten',
-                                    icon: Icons.description,
-                                    imagePath: null,
-                                    key: Key('mijn_rapporten_button'),
-                                    onPressed: () {
-                                      ToastNotificationHandler.sendToastNotification(
-                                        context,
-                                        "Deze functie is nog niet toegevoegd",
-                                        2,
-                                      );
-                                    },
-                                  ),
+                                  },
+                                ),
 
-                                  (
-                                    text: 'Uitloggen',
-                                    icon: Icons.logout,
-                                    imagePath: null,
-                                    key: Key('uitloggen_button'),
-                                    onPressed: () {
-                                      context.read<AppStateProvider>().logout();
-                                    },
-                                  ),
-                                ],
-                                iconSize: iconSize,
-                                verticalPadding: spacing / 2,
-                                horizontalPadding: spacing,
-                                buttonSpacing: spacing / 2,
-                                buttonHeight: buttonHeight,
-                                buttonFontSize: buttonFontSize,
-                              ),
-                            ],
-                          ),
+                                (
+                                  text: 'Rapporteren',
+                                  icon: Icons.edit_note,
+                                  imagePath: null,
+                                  key: Key('rapporteren_button'),
+                                  onPressed: () {
+                                    try {
+                                      navigationManager.pushReplacementForward(
+                                        context,
+                                        const Rapporteren(),
+                                      );
+                                    } catch (e) {
+                                      showDialog(
+                                        context: context,
+                                        builder: (_) => const ErrorOverlay(
+                                          messages: [
+                                            'Navigatie mislukt',
+                                            'Kon de rapportage pagina niet openen. Probeer het opnieuw.',
+                                          ],
+                                        ),
+                                      );
+                                    }
+                                  },
+                                ),
+
+                                (
+                                  text: 'Logboek',
+                                  icon: Icons.description,
+                                  imagePath: null,
+                                  key: Key('logboek_button'),
+                                  onPressed: () {
+                                    ToastNotificationHandler.sendToastNotification(
+                                      context,
+                                      "Deze functie is nog niet toegevoegd",
+                                      2,
+                                    );
+                                  },
+                                ),
+
+                                (
+                                  text: 'Uitloggen',
+                                  icon: Icons.logout,
+                                  imagePath: null,
+                                  key: Key('uitloggen_button'),
+                                  onPressed: () {
+                                    context.read<AppStateProvider>().logout();
+                                  },
+                                ),
+                              ],
+                              iconSize: iconSize,
+                              verticalPadding: spacing / 2,
+                              horizontalPadding: spacing,
+                              buttonSpacing: spacing * 3,
+                              buttonHeight: buttonHeight,
+                              buttonFontSize: buttonFontSize,
+                            ),
+                            SizedBox(height: spacing * 1.5),
+                          ],
                         ),
                       ),
                     ),
@@ -169,7 +169,7 @@ class _OverzichtScreenState extends State<OverzichtScreen>
             );
           },
         ),
-      ), // Close WillPopScope
+      ),
     );
   }
 }

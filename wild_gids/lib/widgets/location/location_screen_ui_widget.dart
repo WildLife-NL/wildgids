@@ -22,7 +22,9 @@ import 'package:latlong2/latlong.dart';
 import 'dart:async';
 
 class LocationScreenUIWidget extends StatefulWidget {
-  const LocationScreenUIWidget({super.key});
+  const LocationScreenUIWidget({
+    super.key,
+  });
 
   @override
   State<LocationScreenUIWidget> createState() => _LocationScreenUIWidgetState();
@@ -304,7 +306,8 @@ class _LocationScreenUIWidgetState extends State<LocationScreenUIWidget> {
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.brown,
+                      color: Colors.black,
+                      fontFamily: 'Roboto',
                       letterSpacing: 0.5,
                     ),
                   ),
@@ -334,13 +337,6 @@ class _LocationScreenUIWidgetState extends State<LocationScreenUIWidget> {
               decoration: BoxDecoration(
                 color: AppColors.offWhite,
                 borderRadius: BorderRadius.circular(15),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    offset: const Offset(0, 2),
-                    blurRadius: 4,
-                  ),
-                ],
               ),
               child: Column(
                 children: [
@@ -369,7 +365,8 @@ class _LocationScreenUIWidgetState extends State<LocationScreenUIWidget> {
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.brown,
+                      color: Colors.black,
+                      fontFamily: 'Roboto',
                       letterSpacing: 0.5,
                     ),
                   ),
@@ -416,7 +413,6 @@ class _LocationScreenUIWidgetState extends State<LocationScreenUIWidget> {
                 }
               },
             ),
-            const SizedBox(height: 20),
           ],
         ),
       ),

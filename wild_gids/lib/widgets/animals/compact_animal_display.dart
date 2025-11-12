@@ -49,7 +49,8 @@ class CompactAnimalDisplay extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(finalPadding),
+            // Use a smaller, consistent radius for images so corners are less rounded
+            borderRadius: BorderRadius.circular(6),
             child:
                 animal.animalImagePath != null
                     ? SizedBox(
@@ -60,13 +61,13 @@ class CompactAnimalDisplay extends StatelessWidget {
                       ),
                     )
                     : SizedBox(
-                      height: finalHeight - (finalPadding * 2),
-                      child: Icon(
-                        Icons.help_outline,
-                        color: AppColors.brown,
-                        size: (finalHeight - (finalPadding * 2)) * 0.3,
-                      ),
-                    ),
+                          height: finalHeight - (finalPadding * 2),
+                          child: Icon(
+                            Icons.help_outline,
+                            color: AppColors.brown,
+                            size: (finalHeight - (finalPadding * 2)) * 0.3,
+                          ),
+                        ),
           ),
           Padding(
             padding: EdgeInsets.only(top: finalPadding * 0.75),

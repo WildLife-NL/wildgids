@@ -23,7 +23,7 @@ class BrownButton extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(25),
           ),
-          elevation: 4,
+          elevation: model?.elevation ?? 4,
         ),
         child: Stack(
           alignment: Alignment.center,

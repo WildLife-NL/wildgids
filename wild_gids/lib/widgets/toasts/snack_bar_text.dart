@@ -29,7 +29,7 @@ class SnackBarText extends StatelessWidget {
                 style: const TextStyle(
                   color: Colors.black,
                   fontWeight: FontWeight.w500,
-                  fontFamily: 'Arimo',
+                  fontFamily: 'Roboto',
                 ),
               ),
             ),

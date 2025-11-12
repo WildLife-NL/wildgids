@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import 'package:wildrapport/constants/app_colors.dart';
 import 'package:wildrapport/interfaces/reporting/belonging_damage_report_interface.dart';
 import 'package:wildrapport/providers/belonging_damage_report_provider.dart';
@@ -14,8 +13,10 @@ class BelongingCropsDetails extends StatefulWidget {
 }
 
 class _BelongingCropsDetailsState extends State<BelongingCropsDetails> {
-  final TextEditingController _impactValueController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
+  late final TextEditingController _impactValueController;
+  late final TextEditingController _descriptionController;
+  late final TextEditingController _currentDamageController;
+  late final TextEditingController _expectedDamageController;
   late final BelongingDamageReportInterface _belongingDamageReportManager;
   final greenLog = '\x1B[32m';
   final redLog = '\x1B[31m';
@@ -27,12 +28,39 @@ class _BelongingCropsDetailsState extends State<BelongingCropsDetails> {
     _belongingDamageReportManager =
         context.read<BelongingDamageReportInterface>();
 
-    // Initialize the controller with the value from the provider
-    _impactValueController.text = formatImpactAreaString();
-    
     final belongingDamageReportProvider =
       Provider.of<BelongingDamageReportProvider>(context, listen: false);
-    _descriptionController.text = belongingDamageReportProvider.description;
+    
+    // Initialize controllers with proper text values
+    final impactAreaString = formatImpactAreaString();
+    final initialImpact = (impactAreaString.isNotEmpty && impactAreaString != "0" && impactAreaString != "0.0") 
+        ? impactAreaString 
+        : '';
+    _impactValueController = TextEditingController(text: initialImpact);
+    
+    final initialDescription = belongingDamageReportProvider.description.isNotEmpty 
+        ? belongingDamageReportProvider.description 
+        : '';
+    _descriptionController = TextEditingController(text: initialDescription);
+    
+    final initialCurrentDamage = belongingDamageReportProvider.currentDamage > 0 
+        ? belongingDamageReportProvider.currentDamage.round().toString() 
+        : '';
+    _currentDamageController = TextEditingController(text: initialCurrentDamage);
+    
+    final initialExpectedDamage = belongingDamageReportProvider.expectedDamage > 0 
+        ? belongingDamageReportProvider.expectedDamage.round().toString() 
+        : '';
+    _expectedDamageController = TextEditingController(text: initialExpectedDamage);
+  }
+  
+  @override
+  void dispose() {
+    _impactValueController.dispose();
+    _descriptionController.dispose();
+    _currentDamageController.dispose();
+    _expectedDamageController.dispose();
+    super.dispose();
   }
 
   String capitalize(String s) {
@@ -93,11 +121,6 @@ class _BelongingCropsDetailsState extends State<BelongingCropsDetails> {
 
   @override
   Widget build(BuildContext context) {
-    final euroFormat = NumberFormat.currency(
-      locale: 'nl_NL',
-      symbol: '€',
-      decimalDigits: 0,
-    );
     final belongingDamageReportProvider =
         Provider.of<BelongingDamageReportProvider>(context);
 
@@ -234,6 +257,8 @@ class _BelongingCropsDetailsState extends State<BelongingCropsDetails> {
                     {'text': 'ha', 'value': 'hectare'},
                     {'text': 'm2', 'value': 'vierkante meters'},
                   ],
+                  containerHeight: 40,
+                  containerWidth: 150,
                   startingValue: "vierkante meters",
                   defaultValue: "Type",
                   hasDropdownSideDescription: true,
@@ -250,20 +275,23 @@ class _BelongingCropsDetailsState extends State<BelongingCropsDetails> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        decoration: BoxDecoration(
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.25),
-                              offset: const Offset(0, 2),
-                              blurRadius: 4,
-                            ),
-                          ],
-                        ),
+                        decoration: const BoxDecoration(),
                         child: TextField(
                           key: const Key('area-value'),
                           controller: _impactValueController,
                           onChanged: (value) {
                             debugPrint(value);
+                            
+                            // Handle empty input
+                            if (value.isEmpty) {
+                              setState(() {
+                                belongingDamageReportProvider.resetImpactedArea();
+                                belongingDamageReportProvider.updateInputErrorImpactArea('This field is required');
+                                belongingDamageReportProvider.setHasErrorImpactedArea(true);
+                              });
+                              return;
+                            }
+                            
                             final areaType =
                                 belongingDamageReportProvider.impactedAreaType;
                             String cleanedValue = value.replaceAll(',', '.');
@@ -356,7 +384,10 @@ class _BelongingCropsDetailsState extends State<BelongingCropsDetails> {
                                         color: Colors.red,
                                         width: 2.0,
                                       )
-                                      : BorderSide.none,
+                                      : const BorderSide(
+                                        color: AppColors.darkGreen,
+                                        width: 2.0,
+                                      ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12.0),
@@ -370,7 +401,10 @@ class _BelongingCropsDetailsState extends State<BelongingCropsDetails> {
                                         color: Colors.red,
                                         width: 2.0,
                                       )
-                                      : BorderSide.none,
+                                      : const BorderSide(
+                                        color: AppColors.darkGreen,
+                                        width: 2.0,
+                                      ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12.0),
@@ -384,12 +418,16 @@ class _BelongingCropsDetailsState extends State<BelongingCropsDetails> {
                                         color: Colors.red,
                                         width: 2.0,
                                       )
-                                      : BorderSide.none,
+                                      : const BorderSide(
+                                        color: AppColors.darkGreen,
+                                        width: 2.0,
+                                      ),
                             ),
                           ),
                           style: const TextStyle(
                             fontSize: 18,
                             color: AppColors.brown,
+                            fontFamily: 'Roboto',
                           ),
                         ),
                       ),
@@ -399,7 +437,7 @@ class _BelongingCropsDetailsState extends State<BelongingCropsDetails> {
                             belongingDamageReportProvider
                                     .inputErrorImpactArea ??
                                 'This field is required',
-                            style: TextStyle(color: Colors.red, fontSize: 12),
+                            style: const TextStyle(color: Colors.red, fontSize: 12, fontFamily: 'Roboto'),
                           )
                           : const SizedBox.shrink(), // invisible when no error
                     ],
@@ -408,94 +446,136 @@ class _BelongingCropsDetailsState extends State<BelongingCropsDetails> {
                 const SizedBox(height: 20),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                  child: Text(
-                    "Geschatte huidige schade: ${euroFormat.format(belongingDamageReportProvider.currentDamage)}",
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.25),
-                          offset: Offset(0, 2),
-                          blurRadius: 4,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Geschatte huidige schade",
+                        style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Roboto', fontSize: 16),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        decoration: const BoxDecoration(),
+                        child: TextField(
+                          key: const Key('estimated-damage'),
+                          controller: _currentDamageController,
+                          onChanged: (value) {
+                            if (value.isEmpty) {
+                              _belongingDamageReportManager.updateCurrentDamage(0);
+                            } else {
+                              final parsed = double.tryParse(value);
+                              if (parsed != null) {
+                                _belongingDamageReportManager.updateCurrentDamage(parsed);
+                              }
+                            }
+                          },
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            hintText: 'Bedrag in €',
+                            prefixText: '€ ',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12.0),
+                              borderSide: const BorderSide(
+                                color: AppColors.darkGreen,
+                                width: 2.0,
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12.0),
+                              borderSide: const BorderSide(
+                                color: AppColors.darkGreen,
+                                width: 2.0,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12.0),
+                              borderSide: const BorderSide(
+                                color: AppColors.darkGreen,
+                                width: 2.0,
+                              ),
+                            ),
+                          ),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            color: AppColors.brown,
+                            fontFamily: 'Roboto',
+                          ),
                         ),
-                      ],
-                    ),
-                    child: Slider(
-                      key: const Key('estimated-damage'),
-                      value: belongingDamageReportProvider.currentDamage,
-                      onChanged:
-                          (value) => _belongingDamageReportManager
-                              .updateCurrentDamage(value),
-                      min: 0,
-                      max: 10000,
-                      divisions: 1000, // so each step is €10
-                      label:
-                          belongingDamageReportProvider.currentDamage
-                              .round()
-                              .toString(),
-                      activeColor: AppColors.brown,
-                    ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 20),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                  child: Text(
-                    "Verwachte toekomstige schade: ${euroFormat.format(belongingDamageReportProvider.expectedDamage)}",
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.25),
-                          offset: Offset(0, 2),
-                          blurRadius: 4,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Verwachte toekomstige schade",
+                        style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Roboto', fontSize: 16),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        decoration: const BoxDecoration(),
+                        child: TextField(
+                          key: const Key('estimated-future-damage'),
+                          controller: _expectedDamageController,
+                          onChanged: (value) {
+                            if (value.isEmpty) {
+                              _belongingDamageReportManager.updateExpectedDamage(0);
+                            } else {
+                              final parsed = double.tryParse(value);
+                              if (parsed != null) {
+                                _belongingDamageReportManager.updateExpectedDamage(parsed);
+                              }
+                            }
+                          },
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            hintText: 'Bedrag in €',
+                            prefixText: '€ ',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12.0),
+                              borderSide: const BorderSide(
+                                color: AppColors.darkGreen,
+                                width: 2.0,
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12.0),
+                              borderSide: const BorderSide(
+                                color: AppColors.darkGreen,
+                                width: 2.0,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12.0),
+                              borderSide: const BorderSide(
+                                color: AppColors.darkGreen,
+                                width: 2.0,
+                              ),
+                            ),
+                          ),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            color: AppColors.brown,
+                            fontFamily: 'Roboto',
+                          ),
                         ),
-                      ],
-                    ),
-                    child: Slider(
-                      key: const Key('estimated-future-damage'),
-                      value: belongingDamageReportProvider.expectedDamage,
-                      onChanged:
-                          (value) => _belongingDamageReportManager
-                              .updateExpectedDamage(value),
-                      min: 0,
-                      max: 10000,
-                      divisions: 1000, // so each step is €10
-                      label:
-                          belongingDamageReportProvider.expectedDamage
-                              .round()
-                              .toString(),
-                      activeColor: AppColors.brown,
-                    ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 30),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20.0),
                   child: Container(
-                    decoration: BoxDecoration(
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.25),
-                          offset: const Offset(0, 2),
-                          blurRadius: 4,
-                        ),
-                      ],
-                    ),
+                    decoration: const BoxDecoration(),
                     child: TextField(
                       key: const Key('description'),
                       controller: _descriptionController,
@@ -509,11 +589,30 @@ class _BelongingCropsDetailsState extends State<BelongingCropsDetails> {
                         hintText: 'opmerkingen...',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12.0),
+                          borderSide: const BorderSide(
+                            color: AppColors.darkGreen,
+                            width: 2.0,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                          borderSide: const BorderSide(
+                            color: AppColors.darkGreen,
+                            width: 2.0,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                          borderSide: const BorderSide(
+                            color: AppColors.darkGreen,
+                            width: 2.0,
+                          ),
                         ),
                       ),
                       style: const TextStyle(
                         fontSize: 18,
                         color: AppColors.brown,
+                        fontFamily: 'Roboto',
                       ),
                     ),
                   ),

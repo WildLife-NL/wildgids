@@ -58,6 +58,9 @@ import 'package:wildrapport/managers/api_managers/interaction_query_manager.dart
 import 'package:wildrapport/managers/api_managers/animal_pins_manager.dart';
 import 'package:wildrapport/managers/api_managers/detection_pins_manager.dart';
 
+import 'package:wildrapport/providers/conveyance_provider.dart';
+import 'package:wildrapport/data_managers/conveyance_api.dart';
+
 import 'package:wildrapport/utils/token_validator.dart';
 
 Future<Widget> getHomepageBasedOnLoginStatus() async {
@@ -100,6 +103,9 @@ void main() async {
   final mapProvider = MapProvider();
   final responseProvider = ResponseProvider();
 
+    final conveyanceApi = ConveyanceApi(apiClient);
+    final conveyanceProvider = ConveyanceProvider(conveyanceApi);
+
   final interactionQueryApi = InteractionQueryApi(geoApiClient);
   final interactionQueryManager = InteractionQueryManager(interactionQueryApi);
   mapProvider.setInteractionsManager(interactionQueryManager);
@@ -140,6 +146,8 @@ mapProvider.setTrackingApi(trackingApi);
   final Widget initialScreen = hasValidToken 
       ? const OverzichtScreen() 
       : const LoginScreen();
+  
+  mapProvider.setTrackingApi(TrackingApi(apiClient));
 
   runApp(
     MultiProvider(
@@ -150,6 +158,7 @@ mapProvider.setTrackingApi(trackingApi);
         ),
         ChangeNotifierProvider<MapProvider>.value(value: mapProvider),
         ChangeNotifierProvider<ResponseProvider>.value(value: responseProvider),
+        ChangeNotifierProvider<ConveyanceProvider>.value(value: conveyanceProvider),
         Provider<AppConfig>.value(value: appConfig),
         Provider<ApiClient>.value(value: apiClient),
         Provider<AuthApiInterface>.value(value: authApi),
@@ -195,8 +204,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return _MediaQueryWrapper(
       child: MaterialApp(
+        debugShowCheckedModeBanner: false,
         navigatorKey: context.read<AppStateProvider>().navigatorKey,
-  title: 'Wild Gids',
+        title: 'Wild Rapport',
         theme: ThemeData(
           scaffoldBackgroundColor: AppColors.lightMintGreen,
           colorScheme: ColorScheme.fromSeed(
@@ -204,13 +214,13 @@ class MyApp extends StatelessWidget {
             surface: AppColors.lightMintGreen,
           ),
           textTheme: AppTextTheme.textTheme,
-          fontFamily: 'Arimo',
+          fontFamily: 'Roboto',
           snackBarTheme: const SnackBarThemeData(
             backgroundColor: AppColors.brown300,
             behavior: SnackBarBehavior.floating,
             contentTextStyle: TextStyle(
               color: Colors.black,
-              fontFamily: 'Arimo',
+              fontFamily: 'Roboto',
             ),
           ),
         ),

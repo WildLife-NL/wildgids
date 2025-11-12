@@ -5,9 +5,11 @@ import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
 import 'package:wildrapport/providers/app_state_provider.dart';
 import 'package:wildrapport/screens/shared/rapporteren.dart';
 import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
+import 'package:wildrapport/constants/app_colors.dart';
 import 'package:wildrapport/widgets/shared_ui_widgets/bottom_app_bar.dart';
 import 'package:wildrapport/widgets/location/selection_button_group.dart';
 import 'package:wildrapport/screens/waarneming/animals_screen.dart';
+import 'package:wildrapport/widgets/overlay/error_overlay.dart';
 
 class CategoryScreen extends StatefulWidget {
   const CategoryScreen({super.key});
@@ -64,7 +66,9 @@ class _CategoryScreenState extends State<CategoryScreen> {
       final selectedCategory = _animalSightingManager.convertStringToCategory(
         status,
       );
-      _animalSightingManager.updateCategory(selectedCategory);
+  _animalSightingManager.updateCategory(selectedCategory);
+  debugPrint('[CategoryScreen] Selected category: $selectedCategory');
+      debugPrint('[CategoryScreen] Current sighting after update: ${_animalSightingManager.getCurrentanimalSighting()?.toJson()}');
 
       if (mounted) {
         _navigationManager.dispose(); // Clean up resources
@@ -78,13 +82,14 @@ class _CategoryScreenState extends State<CategoryScreen> {
         '$purpleLog[CategoryScreen] Error updating category: $e$resetLog',
       );
       if (mounted) {
-        // Check if still mounted before showing snackbar
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Er is een fout opgetreden bij het bijwerken van de categorie',
-            ),
-            backgroundColor: Colors.red,
+        // Replace error SnackBar with ErrorOverlay
+        showDialog(
+          context: context,
+          builder: (_) => const ErrorOverlay(
+            messages: [
+              'Er is een fout opgetreden',
+              'Het bijwerken van de categorie is mislukt. Probeer het later opnieuw.',
+            ],
           ),
         );
       }
@@ -98,6 +103,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.lightMintGreen,
       body: Stack(
         children: [
           SafeArea(
@@ -106,13 +112,21 @@ class _CategoryScreenState extends State<CategoryScreen> {
                 CustomAppBar(
                   leftIcon: Icons.arrow_back_ios,
                   centerText: 'animalSightingen',
-                  rightIcon: Icons.menu,
+                  // remove rightIcon so the user/profile icon is shown like Rapporteren
+                  rightIcon: null,
+                  showUserIcon: true,
                   onLeftIconPressed: _handleBackNavigation,
                   onRightIconPressed: () {
                     debugPrint(
                       '$purpleLog[CategoryScreen] Menu button pressed$resetLog',
                     );
                   },
+                  // match Rapporteren app bar styling
+                  iconColor: Colors.black,
+                  textColor: Colors.black,
+                  fontScale: 1.25,
+                  iconScale: 1.15,
+                  userIconScale: 1.15,
                 ),
                 SelectionButtonGroup(
                   buttons: const [
@@ -147,6 +161,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
         onBackPressed: _handleBackNavigation,
         onNextPressed: () {},
         showNextButton: false,
+        showBackButton: false,
       ),
     );
   }

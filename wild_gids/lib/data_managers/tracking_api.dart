@@ -1,58 +1,92 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:wildrapport/data_managers/api_client.dart';
 import 'package:wildrapport/interfaces/data_apis/tracking_api_interface.dart';
 
-class TrackingApi implements TrackingApiInterface {
+class TrackingApi implements TrackingApiInterface { 
   final ApiClient client;
   TrackingApi(this.client);
 
   @override
-  Future<void> addTrackingReading({
-    required double lat,
+  Future<TrackingNotice?> addTrackingReading({
+    required double lat,      
     required double lon,
     required DateTime timestampUtc,
   }) async {
+    debugPrint('[TrackingApi] Sending location: $lat, $lon at ${timestampUtc.toIso8601String()}');
+    
     // Build request body EXACTLY like the /tracking-reading/ docs:
     // {
     //   "location": { "latitude": ..., "longitude": ... },
     //   "timestamp": "2025-10-22T12:00:00Z"
     // }
     final body = {
-      "location": {
-        "latitude": lat,
-        "longitude": lon,
-      },
+      "location": {"latitude": lat, "longitude": lon},
       "timestamp": timestampUtc.toUtc().toIso8601String(),
     };
 
     // Your ApiClient.post works like ApiClient.put in ProfileApi:
     // path, bodyMap, authenticated: true
-    final res = await client.post(
-      '/tracking-reading/',
-      body,
-      authenticated: true,
-    );
+    final res = await client.post('/tracking-reading/', body, authenticated: true);
 
-    // We expect 2xx = success
+    debugPrint('[TrackingApi] Response status: ${res.statusCode}');
+
     if (res.statusCode < 200 || res.statusCode >= 300) {
-      throw Exception(
-        '[TrackingApi] Failed (${res.statusCode}): ${res.body}',
-      );
+      debugPrint('[TrackingApi] ERROR - Status ${res.statusCode}: ${res.body}');
+      throw Exception('[TrackingApi] Failed (${res.statusCode}): ${res.body}');
     }
 
-    // Optional: backend might include a message/advice in the response:
-    // We don't surface it in UI yet, but we can log it.
-    if (res.body.isNotEmpty) {
-      try {
-        final decoded = jsonDecode(res.body);
-        final msg = decoded['message']?.toString();
-        if (msg != null && msg.isNotEmpty) {
-          // ignore: avoid_print
-          print('[TrackingApi] server message: $msg');
-        }
-      } catch (_) {
-        // Response wasn't JSON or didn't have message -> ignore
+    // Debug: see exactly what backend returns (truncate if too long)
+    final responsePreview = res.body.length > 500 
+        ? '${res.body.substring(0, 500)}...[truncated]'
+        : res.body;
+    debugPrint('[TrackingApi] Response body: $responsePreview');
+
+    // Try to extract an optional message from the response
+    try {
+      final Map<String, dynamic> decoded = jsonDecode(res.body);
+      debugPrint('[TrackingApi] Parsed JSON successfully');
+
+      // Preferred shape: conveyance.message.text (+ optional severity)
+      final conv = decoded['conveyance'];
+      debugPrint('[TrackingApi] conveyance present: ${conv != null}');
+      
+      final msgObj = conv?['message'];
+      debugPrint('[TrackingApi] message object present: ${msgObj != null}');
+      
+      if (msgObj != null && msgObj is Map) {
+        debugPrint('[TrackingApi] message keys: ${msgObj.keys.toList()}');
       }
+      
+      final msgText1 = (msgObj is Map ? msgObj['text'] : null)?.toString();
+      final sev1 = msgObj is Map && msgObj['severity'] is num
+          ? (msgObj['severity'] as num).toInt()
+          : null;
+      
+      if (msgText1 != null && msgText1.isNotEmpty) {
+        debugPrint('[TrackingApi] ✓ Found message: "$msgText1" (severity: $sev1)');
+        return TrackingNotice(msgText1, severity: sev1);
+      }
+
+      // Fallbacks: { "message": "..." } or { "message": { "text": "..." } }
+      final message = decoded['message'];
+      if (message is String && message.isNotEmpty) {
+        debugPrint('[TrackingApi] ✓ Found message (string): "$message"');
+        return TrackingNotice(message);
+      }
+      if (message is Map && (message['text']?.toString().isNotEmpty ?? false)) {
+        final sev2 =
+            message['severity'] is num ? (message['severity'] as num).toInt() : null;
+        debugPrint('[TrackingApi] ✓ Found message (map): "${message['text']}" (severity: $sev2)');
+        return TrackingNotice(message['text'].toString(), severity: sev2);
+      }
+      
+      debugPrint('[TrackingApi] No message found in response');
+    } catch (e) {
+      debugPrint('[TrackingApi] Error parsing message: $e');
+      // Non-JSON or unexpected shape → no notice
     }
+
+    return null; // success, but no message to show
   }
 }

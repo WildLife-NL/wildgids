@@ -30,13 +30,14 @@ class AnimalManager
         return _getFilteredAnimals(_cachedAnimals!);
       }
 
-      final species = await _speciesApi.getAllSpecies();
+  final species = await _speciesApi.getAllSpecies();
+  debugPrint('[AnimalManager] species fetched: ${species.length}');
       _cachedAnimals =
           species
               .map(
                 (s) => AnimalModel(
                   animalId: s.id, // Added animalId from species
-                  animalImagePath: 'assets/wolf.png',
+                  animalImagePath: _assetForCommonName(s.commonName),
                   animalName: s.commonName,
                   genderViewCounts: [], // Initialize with empty list
                 ),
@@ -58,6 +59,47 @@ class AnimalManager
       debugPrint('[AnimalManager] Error fetching animals: $e');
       return [];
     }
+  }
+
+  // Map a species common name to an asset path when available.
+  // Returns null when no matching asset is known.
+  String? _assetForCommonName(String? commonName) {
+    if (commonName == null || commonName.isEmpty) return null;
+    final name = commonName.toLowerCase();
+
+    if (name.contains('wolf')) return 'assets/wolf.png';
+    if (name.contains('vos')) return 'assets/vos.png';
+    if (name.contains('ree')) return 'assets/ree.png';
+    if (name.contains('damhert')) return 'assets/Damhert app.png';
+    if (name.contains('edelhert')) return 'assets/Edelhert.png';
+    if (name.contains('hert')) return 'assets/deer.png';
+    if (name.contains('zwijn') || name.contains('wild zwijn')) return 'assets/Wild Zwijn.png';
+    if (name.contains('bever')) return 'assets/Bever.png';
+    if (name.contains('eekhoorn')) return 'assets/eekhoorn.png';
+    if (name.contains('konijn') || name.contains('konijn')) return 'assets/konijn.png';
+    if (name.contains('haas')) return 'assets/haas.png';
+    if (name.contains('otter')) return 'assets/otter.png';
+    if (name.contains('das')) return 'assets/Das.png';
+    if (name.contains('marter') || name.contains('steenmarter') || name.contains('marten')) return 'assets/steenmarter.png';
+    if (name.contains('bunzing') || name.contains('wezel') || name.contains('wezel')) return 'assets/Bunzing.png';
+    if (name.contains('wolfkat') || name.contains('wilde kat') || name.contains('wilde')) return 'assets/wilde kat.png';
+    if (name.contains('tiger') || name.contains('tijger')) return 'assets/tiger.png';
+    if (name.contains('beer')) return 'assets/beer.png';
+    if (name.contains('otter')) return 'assets/otter.png';
+    if (name.contains('konik') || name.contains('konikpaard')) return 'assets/Konikpaard.png';
+    if (name.contains('pony') || name.contains('shetland')) return 'assets/Shetland pony.png';
+    if (name.contains('galloway')) return 'assets/Galloway.png';
+    if (name.contains('wisent') || name.contains('wisent')) return 'assets/Wisent App.png';
+    if (name.contains('tauros')) return 'assets/Tauros app.png';
+
+    // Fallbacks for common small mammals
+    if (name.contains('egel')) return 'assets/egel.png';
+    if (name.contains('wezel')) return 'assets/wezel.png';
+    if (name.contains('hermelijn')) return 'assets/Hermelijn.png';
+    if (name.contains('otter')) return 'assets/otter.png';
+
+    // No known matching asset
+    return null;
   }
 
   List<AnimalModel> _getFilteredAnimals(List<AnimalModel> animals) {
@@ -116,6 +158,7 @@ class AnimalManager
 @override
 Future<List<AnimalModel>> getAnimalsByCategory({AnimalCategory? category}) async {
   final animals = await getAnimals();
+  debugPrint('[AnimalManager] getAnimalsByCategory called with category: $category; total animals fetched: ${animals.length}');
   if (category == null) return animals;
 
   return animals.where((a) {

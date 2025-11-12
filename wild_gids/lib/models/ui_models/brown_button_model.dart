@@ -5,6 +5,7 @@ class BrownButtonModel {
   static const double defaultArrowIconSize = 24.0;
   static const double defaultRegularIconSize = 38.0;
   static const double defaultLeftIconPadding = 0.0;
+  static const double defaultElevation = 4.0;
 
   final String? text;
   final String? rightIconPath;
@@ -15,6 +16,7 @@ class BrownButtonModel {
   final double? width;
   final double? fontSize;
   final double leftIconPadding;
+  final double elevation;
   final Color? backgroundColor;
 
   BrownButtonModel({
@@ -27,6 +29,7 @@ class BrownButtonModel {
     this.width,
     this.fontSize,
     double? leftIconPadding,
+    double? elevation,
     this.backgroundColor,
   }) : rightIconSize =
            rightIconSize ??
@@ -35,7 +38,8 @@ class BrownButtonModel {
                : defaultRegularIconSize),
        leftIconSize = leftIconSize ?? defaultRegularIconSize,
        height = height ?? defaultButtonHeight,
-       leftIconPadding = leftIconPadding ?? defaultLeftIconPadding;
+       leftIconPadding = leftIconPadding ?? defaultLeftIconPadding,
+       elevation = elevation ?? defaultElevation;
 
   Map<String, dynamic> toMap() => {
     'text': text,
@@ -47,6 +51,7 @@ class BrownButtonModel {
     'width': width,
     'fontSize': fontSize,
     'leftIconPadding': leftIconPadding,
+    'elevation': elevation,
     'backgroundColor': backgroundColor,
   };
 
@@ -61,6 +66,7 @@ class BrownButtonModel {
       width: map['width'],
       fontSize: map['fontSize'],
       leftIconPadding: map['leftIconPadding'],
+      elevation: map['elevation'],
       backgroundColor: map['backgroundColor'],
     );
   }

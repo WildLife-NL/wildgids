@@ -2,14 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wildrapport/interfaces/waarneming_flow/animal_interface.dart';
 import 'package:wildrapport/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
-import 'package:wildrapport/interfaces/filters/dropdown_interface.dart';
 import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
 import 'package:wildrapport/models/animal_waarneming_models/animal_model.dart';
-import 'package:wildrapport/models/enums/dropdown_type.dart';
+
 import 'package:wildrapport/screens/waarneming/animal_counting_screen.dart';
 import 'package:wildrapport/screens/shared/category_screen.dart';
 import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
+import 'package:wildrapport/constants/app_colors.dart';
+import 'package:wildrapport/models/enums/filter_type.dart';
 import 'package:wildrapport/widgets/animals/scrollable_animal_grid.dart';
+import 'package:wildrapport/widgets/overlay/error_overlay.dart';
 
 class AnimalsScreen extends StatefulWidget {
   final String appBarTitle;
@@ -30,7 +32,7 @@ class _AnimalsScreenState extends State<AnimalsScreen>
   List<AnimalModel>? _animals;
   String? _error;
   bool _isLoading = true;
-  bool _isExpanded = false;
+  // dropdown expansion state no longer used (custom UI)
 
   @override
   void initState() {
@@ -49,14 +51,20 @@ class _AnimalsScreenState extends State<AnimalsScreen>
 
   void _validateAndLoad() {
     if (!_animalSightingManager.validateActiveAnimalSighting()) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Geen actieve animalSighting gevonden'),
-            backgroundColor: Colors.red,
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        // Show error dialog first, then navigate back after dismissal
+        if (!mounted) return;
+        await showDialog(
+          context: context,
+          builder: (_) => const ErrorOverlay(
+            messages: [
+              'Geen actieve waarneming gevonden',
+              'Ga terug en start een nieuwe waarneming voordat je een dier kiest.'
+            ],
           ),
         );
+        if (!mounted) return;
+        Navigator.pop(context);
       });
       return;
     }
@@ -71,12 +79,12 @@ class _AnimalsScreenState extends State<AnimalsScreen>
         _error = null;
       });
 
-      final selectedCategory =
-    _animalSightingManager.getCurrentanimalSighting()?.category;
+      final selectedCategory = _animalSightingManager.getCurrentanimalSighting()?.category;
+      debugPrint('[AnimalsScreen] Selected category used for query: $selectedCategory');
 
-final animals = await _animalManager.getAnimalsByCategory(
-  category: selectedCategory,
-);
+      final animals = await _animalManager.getAnimalsByCategory(
+        category: selectedCategory,
+      );
 
 
       debugPrint(
@@ -118,14 +126,7 @@ final animals = await _animalManager.getAnimalsByCategory(
     }
   }
 
-  void _toggleExpanded() {
-    debugPrint(
-      '[AnimalsScreen] Toggling expanded state from $_isExpanded to ${!_isExpanded}',
-    );
-    setState(() {
-      _isExpanded = !_isExpanded;
-    });
-  }
+  // _toggleExpanded removed — dropdown replaced by custom filter UI
 
   void _handleAnimalSelection(AnimalModel selectedAnimal) {
     _animalSightingManager.processAnimalSelection(
@@ -138,36 +139,136 @@ final animals = await _animalManager.getAnimalsByCategory(
 
   void _handleBackNavigation() {
     debugPrint('[AnimalsScreen] Back button pressed');
-    _navigationManager.dispose(); // Call dispose first to clean up resources
+    // Do not dispose the navigation manager here — keep shared state alive for previous flow
     _navigationManager.pushReplacementBack(context, const CategoryScreen());
   }
 
   @override
   Widget build(BuildContext context) {
-    final dropdownInterface = context.read<DropdownInterface>();
+  // dropdownInterface removed - using custom search/filter UI instead
 
     return Scaffold(
+      backgroundColor: AppColors.lightMintGreen,
       body: SafeArea(
         child: Column(
           children: [
             CustomAppBar(
               leftIcon: Icons.arrow_back_ios,
               centerText: widget.appBarTitle,
-              rightIcon: Icons.menu,
+              // no right icon here so the user/profile icon is shown like Rapporteren
+              rightIcon: null,
+              showUserIcon: true,
               onLeftIconPressed: _handleBackNavigation,
-              onRightIconPressed: () {
-                /* Handle menu */
-              },
+              // match Rapporteren app bar styling exactly
+              iconColor: Colors.black,
+              textColor: Colors.black,
+              fontScale: 1.15,
+              iconScale: 1.15,
+              userIconScale: 1.15,
             ),
             Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: dropdownInterface.buildDropdown(
-                type: DropdownType.filter,
-                selectedValue: _animalManager.getSelectedFilter(),
-                isExpanded: _isExpanded,
-                onExpandChanged: (_) => _toggleExpanded(),
-                onOptionSelected: _animalManager.updateFilter,
-                context: context,
+              // increase vertical padding to move elements slightly down
+              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
+              child: Column(
+                children: [
+                  // Search box (larger) — use same mint background as page, no shadow
+                  Container(
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: AppColors.lightMintGreen,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppColors.darkGreen, width: 1.5),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.search, color: AppColors.darkGreen),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextField(
+                            style: const TextStyle(fontSize: 16),
+                            decoration: const InputDecoration(
+                              hintText: 'zoeken',
+                              border: InputBorder.none,
+                              isCollapsed: true,
+                              contentPadding: EdgeInsets.symmetric(vertical: 14),
+                            ),
+                            onChanged: (val) {
+                              _animalManager.updateSearchTerm(val);
+                              // trigger immediate UI refresh
+                              setState(() {});
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  // Filter pills (moved down, slightly larger)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            _animalManager.updateFilter(FilterType.mostViewed.displayText);
+                            setState(() {});
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: _animalManager.getSelectedFilter() == FilterType.mostViewed.displayText
+                                  ? AppColors.darkGreen
+                                  : AppColors.lightMintGreen,
+                              borderRadius: BorderRadius.circular(25),
+                              border: Border.all(color: AppColors.darkGreen, width: 1.5),
+                            ),
+                            child: Center(
+                              child: Text(
+                                'Meest gezien',
+                                style: TextStyle(
+                                  color: _animalManager.getSelectedFilter() == FilterType.mostViewed.displayText
+                                      ? Colors.white
+                                      : AppColors.darkGreen,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            _animalManager.updateFilter(FilterType.alphabetical.displayText);
+                            setState(() {});
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: _animalManager.getSelectedFilter() == FilterType.alphabetical.displayText
+                                  ? AppColors.darkGreen
+                                  : AppColors.lightMintGreen,
+                              borderRadius: BorderRadius.circular(25),
+                              border: Border.all(color: AppColors.darkGreen, width: 1.5),
+                            ),
+                            child: Center(
+                              child: Text(
+                                'A-Z',
+                                style: TextStyle(
+                                  color: _animalManager.getSelectedFilter() == FilterType.alphabetical.displayText
+                                      ? Colors.white
+                                      : AppColors.darkGreen,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
             ScrollableAnimalGrid(

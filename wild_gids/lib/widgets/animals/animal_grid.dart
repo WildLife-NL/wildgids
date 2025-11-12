@@ -14,6 +14,11 @@ class AnimalGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Calculate the width for each column to make containers square
+    final screenWidth = MediaQuery.of(context).size.width;
+    final containerWidth = (screenWidth - 40 - 12) / 2; // 40 for horizontal padding, 12 for gap
+    final containerHeight = containerWidth + 50; // Add space for text label
+    
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -23,7 +28,7 @@ class AnimalGrid extends StatelessWidget {
             children: List.generate(
               (animals.length + 1) ~/ 2,
               (index) => SizedBox(
-                height: MediaQuery.of(context).size.height * 0.4,
+                height: containerHeight,
                 child: AnimalTile(
                   animal: animals[index * 2],
                   onTap: () => onAnimalSelected(animals[index * 2]),
@@ -39,7 +44,7 @@ class AnimalGrid extends StatelessWidget {
             children: List.generate(
               animals.length ~/ 2,
               (index) => SizedBox(
-                height: MediaQuery.of(context).size.height * 0.4,
+                height: containerHeight,
                 child: AnimalTile(
                   animal: animals[index * 2 + 1],
                   onTap: () => onAnimalSelected(animals[index * 2 + 1]),

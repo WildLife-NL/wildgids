@@ -6,7 +6,6 @@ import 'package:wildrapport/models/enums/animal_age.dart';
 import 'package:wildrapport/models/enums/animal_age_extensions.dart';
 import 'package:wildrapport/models/enums/animal_gender.dart';
 import 'package:wildrapport/models/animal_waarneming_models/view_count_model.dart';
-import 'package:wildrapport/widgets/animals/counter_widget.dart';
 import 'package:wildrapport/widgets/overlay/error_overlay.dart';
 import 'package:wildrapport/widgets/toasts/snack_bar_with_progress.dart';
 import 'package:wildrapport/widgets/shared_ui_widgets/white_bulk_button.dart';
@@ -31,8 +30,6 @@ class _AnimalCountingState extends State<AnimalCounting> {
   String? lastSelectedGender; // Add this to remember the last gender
   int currentCount = 0;
   bool _forceRebuild = false;
-  final GlobalKey<AnimalCounterState> _counterKey =
-      GlobalKey<AnimalCounterState>();
 
   AnimalAge _convertStringToAnimalAge(String ageString) {
     return AnimalAgeExtensions.fromApiString(ageString);
@@ -53,12 +50,6 @@ class _AnimalCountingState extends State<AnimalCounting> {
   @override
   void initState() {
     super.initState();
-  }
-
-  void _handleCountChanged(String name, int count) {
-    setState(() {
-      currentCount = count;
-    });
   }
 
 void _validateAndAddToList(BuildContext context) {
@@ -133,9 +124,6 @@ void _validateAndAddToList(BuildContext context) {
     _forceRebuild = !_forceRebuild;
   });
 
-  // reset the counter widget visually
-  (_counterKey.currentState as AnimalCounterState).reset();
-
   // 8. Tell parent screen "we added something"
   widget.onAddToList?.call();
 
@@ -193,7 +181,7 @@ void _validateAndAddToList(BuildContext context) {
                 children: [
                   // Top section with age/gender buttons that can change
                   SizedBox(
-                    height: 300, // Fixed height for the top section
+                    height: 260, // Fixed height for the top section
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: IntrinsicHeight(
@@ -234,39 +222,105 @@ void _validateAndAddToList(BuildContext context) {
                       ),
                     ),
                   ),
-                  // Add extra space here to move the Aantal section lower
-                  const SizedBox(height: 30),
-                  // Fixed position "Aantal" section
+                  // Add spacing between age/gender and Aantal section
+                  const SizedBox(height: 8),
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 24,
-                      vertical: 24,
-                    ),
-                    child: Column(
-                      children: [
-                        _buildHeader('Aantal'),
-                        const SizedBox(height: 8),
-                        AnimalCounter(
-                          key: _counterKey,
-                          name: "Example",
-                          height: 49,
-                          onCountChanged: _handleCountChanged,
-                        ),
-                        const SizedBox(height: 24),
-                        SizedBox(
-                          width: 350,
-                          child: WhiteBulkButton(
-                            text: "Voeg toe aan de lijst",
-                            showIcon: false,
-                            height: 85,
-                            onPressed: () => _validateAndAddToList(context),
+                        vertical: 2,
+                      ),
+                      child: Column(
+                        children: [
+                          // Header + instructional subtitle for the number picker
+                          Column(
+                            children: [
+                              _buildHeader('Kies een aantal'),
+                              const Text(
+                                'Scroll om een aantal te kiezen',
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 12,
+                                  fontFamily: 'Roboto',
+                                  fontWeight: FontWeight.normal,
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                        // Add extra padding at the bottom to ensure the button is visible
-                        SizedBox(height: 100),
-                      ],
+                          const SizedBox(height: 4),
+                          // Scrollable number picker like in the image
+                          Container(
+                            height: 120,
+                            width: 100,
+                            decoration: BoxDecoration(
+                              color: AppColors.offWhite,
+                              borderRadius: BorderRadius.circular(15),
+                              border: Border.all(
+                                color: AppColors.brown300,
+                                width: 2,
+                              ),
+                            ),
+                            child: ListWheelScrollView.useDelegate(
+                              controller: FixedExtentScrollController(initialItem: 0),
+                              itemExtent: 40,
+                              diameterRatio: 1.5,
+                              physics: const FixedExtentScrollPhysics(),
+                              onSelectedItemChanged: (index) {
+                                setState(() {
+                                  currentCount = index;
+                                });
+                              },
+                              childDelegate: ListWheelChildBuilderDelegate(
+                                builder: (context, index) {
+                                  final bool isSelected = index == currentCount;
+                                  return Center(
+                                    child: Container(
+                                      width: 70,
+                                      decoration: BoxDecoration(
+                                        color: isSelected
+                                            ? AppColors.brown300
+                                            : Colors.transparent,
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          '$index',
+                                          style: TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                            color: isSelected
+                                                ? Colors.white
+                                                : Colors.black,
+                                            fontFamily: 'Roboto',
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                                childCount: 101, // 0 to 100
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: 350,
+                            child: WhiteBulkButton(
+                              text: "Voeg toe aan de lijst",
+                              showIcon: false,
+                              height: 50,
+                              backgroundColor: AppColors.lightMintGreen100,
+                              borderColor: AppColors.lightGreen,
+                              // Ensure this button also uses Roboto/black and no drop shadow
+                              textStyle: const TextStyle(fontFamily: 'Roboto', color: Colors.black),
+                              showShadow: false,
+                              onPressed: () => _validateAndAddToList(context),
+                            ),
+                          ),
+                          // Add extra padding at the bottom to ensure the button is visible
+                          SizedBox(height: 4),
+                        ],
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -282,17 +336,11 @@ void _validateAndAddToList(BuildContext context) {
       child: Text(
         text,
         textAlign: TextAlign.center,
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.bold,
-          color: AppColors.brown,
-          shadows: [
-            Shadow(
-              color: Colors.black.withValues(alpha: 0.25),
-              offset: const Offset(0, 2),
-              blurRadius: 4,
-            ),
-          ],
+          color: Colors.black,
+          fontFamily: 'Roboto',
         ),
       ),
     );
@@ -310,7 +358,13 @@ void _validateAndAddToList(BuildContext context) {
         fontWeight: FontWeight.w500,
         textAlign: TextAlign.center,
         showIcon: false,
-        backgroundColor: isSelected ? AppColors.lightGreen : null,
+        backgroundColor: isSelected ? AppColors.brown300 : AppColors.lightMintGreen100,
+        borderColor: isSelected ? AppColors.lightMintGreen100 : AppColors.brown300,
+        hoverBackgroundColor: AppColors.brown300,
+        hoverBorderColor: AppColors.lightMintGreen100,
+        // Make the button text use Roboto and black, and remove drop shadows
+        textStyle: const TextStyle(fontFamily: 'Roboto', color: Colors.black),
+        showShadow: false,
         onPressed: () => _handleAgeSelection(text),
       ),
     );
@@ -328,7 +382,13 @@ void _validateAndAddToList(BuildContext context) {
         fontWeight: FontWeight.w500,
         textAlign: TextAlign.center,
         showIcon: false,
-        backgroundColor: isSelected ? AppColors.lightGreen : null,
+        backgroundColor: isSelected ? AppColors.brown300 : AppColors.lightMintGreen100,
+        borderColor: isSelected ? AppColors.lightMintGreen100 : AppColors.brown300,
+        hoverBackgroundColor: AppColors.brown300,
+        hoverBorderColor: AppColors.lightMintGreen100,
+        // Make the button text use Roboto and black, and remove drop shadows
+        textStyle: const TextStyle(fontFamily: 'Roboto', color: Colors.black),
+        showShadow: false,
         onPressed: () => _handleGenderSelection(text),
       ),
     );

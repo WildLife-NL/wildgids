@@ -1,4 +1,5 @@
 import 'package:wildrapport/models/ui_models/brown_button_model.dart';
+import 'package:wildrapport/constants/app_colors.dart';
 
 class ButtonModelFactory {
   static BrownButtonModel createLoginButton({
@@ -11,6 +12,8 @@ class ButtonModelFactory {
       leftIconPath: leftIconPath,
       rightIconPath: rightIconPath,
       fontSize: 16,
+      backgroundColor: AppColors.darkGreen,
+      elevation: 0,
     );
   }
 

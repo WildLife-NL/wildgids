@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:wildrapport/constants/app_colors.dart';
+import 'package:wildrapport/constants/app_text_theme.dart';
 import 'package:wildrapport/widgets/shared_ui_widgets/white_bulk_button.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/circle_icon_container.dart';
+// circle icon container no longer used here (buttons are text-only)
 
 class SelectionButtonGroup extends StatelessWidget {
   final Function(String) onStatusSelected;
@@ -45,17 +46,9 @@ class SelectionButtonGroup extends StatelessWidget {
           children: [
             Text(
               title,
-              style: TextStyle(
-                color: AppColors.brown,
+              style: AppTextTheme.textTheme.titleLarge?.copyWith(
                 fontSize: finalFontSize,
-                fontWeight: FontWeight.bold,
-                shadows: [
-                  Shadow(
-                    color: Colors.black.withValues(alpha: 0.25),
-                    offset: const Offset(0, 2),
-                    blurRadius: 4,
-                  ),
-                ],
+                color: const Color.fromARGB(255, 0, 0, 0),
               ),
             ),
             ...buttons.reversed.map(
@@ -80,43 +73,19 @@ class SelectionButtonGroup extends StatelessWidget {
     required double circleSize,
     required double arrowSize,
   }) {
-    Widget? leftWidget;
-
-    if (icon != null) {
-      leftWidget =
-          text == 'Andere'
-              ? CircleIconContainer(
-                size: circleSize,
-                icon: icon,
-                iconColor: AppColors.brown,
-                backgroundColor: AppColors.offWhite,
-                iconSize: circleSize * 0.5,
-              )
-              : Icon(icon, color: AppColors.brown, size: circleSize * 0.8);
-    } else if (imagePath != null) {
-      leftWidget = Image.asset(
-        imagePath,
-        width: circleSize * 1.2,
-        height: circleSize * 1.2,
-        fit: BoxFit.contain,
-      );
-    }
-
+    // Icons and arrows removed per design — buttons should be text-only
     return WhiteBulkButton(
       text: text,
-      leftWidget: leftWidget,
-      rightWidget: Icon(
-        Icons.arrow_forward_ios,
-        color: AppColors.brown,
-        size: arrowSize * 1.4,
-        shadows: [
-          Shadow(
-            color: Colors.black.withValues(alpha: 0.25),
-            offset: const Offset(0, 2),
-            blurRadius: 4,
-          ),
-        ],
-      ),
+      leftWidget: null,
+      // no right icon
+      showIcon: false,
+      showShadow: false,
+      // make the buttons slimmer: height based on computed circleSize
+      height: circleSize * 0.9,
+      backgroundColor: AppColors.lightMintGreen,
+      borderColor: AppColors.darkGreen,
+      arrowColor: AppColors.darkGreen,
+      textStyle: const TextStyle(color: Colors.black),
       onPressed: () => onStatusSelected(text),
     );
   }

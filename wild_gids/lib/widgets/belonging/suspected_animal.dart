@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wildrapport/interfaces/reporting/belonging_damage_report_interface.dart';
 import 'package:wildrapport/screens/belonging/belonging_animal_screen.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/white_bulk_button.dart';
+import 'package:wildrapport/widgets/location/selection_button_group.dart';
 
 class SuspectedAnimal extends StatefulWidget {
   const SuspectedAnimal({super.key});
@@ -21,9 +21,9 @@ class _SuspectedAnimalState extends State<SuspectedAnimal> {
         context.read<BelongingDamageReportInterface>();
   }
 
-  Future<dynamic> pressed(String animalType) {
-    _belongingDamageReportManager.updateSuspectedAnimal(animalType);
-    return Navigator.push(
+  void _handleCategorySelection(String category) {
+    _belongingDamageReportManager.updateSuspectedAnimal(category);
+    Navigator.push(
       context,
       MaterialPageRoute(
         builder:
@@ -34,67 +34,27 @@ class _SuspectedAnimalState extends State<SuspectedAnimal> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: MediaQuery.of(context).size.width * 0.05,
-            vertical: MediaQuery.of(context).size.height * 0.02,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 40), // Optional spacing at top
-              _buildButton(
-                text: "Onbekend",
-                image: Image.asset("assets/icons/questionnaire/arrow_forward.png"),
-                height: 63,
-                width: 200,
-                onPressed: () => pressed("Onbekend"),
-              ),
-              const SizedBox(height: 24),
-              _buildButton(
-                text: "Vogels",
-                image: Image.asset("assets/icons/questionnaire/arrow_forward.png"),
-                height: 63,
-                width: 277,
-                onPressed: () => pressed("Vogels"),
-              ),
-              const SizedBox(height: 24),
-              _buildButton(
-                text: "Knaagdieren",
-                image: Image.asset("assets/icons/questionnaire/arrow_forward.png"),
-                height: 70,
-                width: 339,
-                onPressed: () => pressed("Knaagdieren"),
-              ),
-              const SizedBox(height: 24),
-              _buildButton(
-                text: "Evenhoevigen",
-                image: Image.asset("assets/icons/questionnaire/arrow_forward.png"),
-                height: 70,
-                width: 339,
-                onPressed: () => pressed("Evenhoevigen"),
-              ),
-              const SizedBox(height: 40), // Optional bottom spacing
-            ],
-          ),
+    return SelectionButtonGroup(
+      buttons: const [
+        (
+          text: 'Evenhoevigen',
+          icon: null,
+          imagePath: 'assets/icons/category/evenhoevigen.png',
         ),
-      ),
-    );
-  }
-
-  Widget _buildButton({
-    required String text,
-    required Image image,
-    double? height,
-    double? width,
-    VoidCallback? onPressed,
-  }) {
-    return WhiteBulkButton(
-      text: text,
-      rightWidget: SizedBox(width: 24, height: 24, child: image),
-      onPressed: onPressed,
+        (
+          text: 'Knaagdieren',
+          icon: null,
+          imagePath: 'assets/icons/category/knaagdieren.png',
+        ),
+        (
+          text: ' Roofdieren',
+          icon: Icons.flutter_dash, // Using icon since no vogels.png exists
+          imagePath: null,
+        ),
+        (text: 'Onbekend', icon: Icons.more_horiz, imagePath: null),
+      ],
+      onStatusSelected: _handleCategorySelection,
+      title: 'Selecteer Categorie',
     );
   }
 }

@@ -61,10 +61,19 @@ class _AnimalCountingScreenState extends State<AnimalCountingScreen> {
             CustomAppBar(
               leftIcon: Icons.arrow_back_ios,
               centerText: 'Telling toevoegen',
-              rightIcon: Icons.menu,
+              // Show the profile/user icon on the right (like other screens)
+              rightIcon: null,
+              showUserIcon: true,
               onLeftIconPressed: () => _handleBackNavigation(context),
-              onRightIconPressed: () {},
+              // Match the other screens: black icons/text and slightly larger font/icon scales
+              iconColor: Colors.black,
+              textColor: Colors.black,
+              fontScale: 1.15,
+              iconScale: 1.15,
+              userIconScale: 1.15,
             ),
+            // Add extra spacing between the app bar and the category selectors
+            const SizedBox(height: 34),
             Expanded(
               child: Center(
                 child: AnimalCounting(
@@ -89,6 +98,8 @@ class _AnimalCountingScreenState extends State<AnimalCountingScreen> {
           );
         },
         showNextButton: _hasAddedItems,
+        // Hide the bottom "Terug" button — top app bar already provides back navigation
+        showBackButton: false,
       ),
     );
   }

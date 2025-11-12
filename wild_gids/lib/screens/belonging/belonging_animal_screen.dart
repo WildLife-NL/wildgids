@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/interfaces/filters/dropdown_interface.dart';
+import 'package:wildrapport/widgets/overlay/error_overlay.dart';
 import 'package:wildrapport/interfaces/waarneming_flow/animal_interface.dart';
 import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
 import 'package:wildrapport/interfaces/other/permission_interface.dart';
-import 'package:wildrapport/models/enums/dropdown_type.dart';
 import 'package:wildrapport/models/animal_waarneming_models/animal_model.dart';
+import 'package:wildrapport/models/enums/filter_type.dart';
 import 'package:wildrapport/providers/belonging_damage_report_provider.dart';
 import 'package:wildrapport/screens/belonging/belonging_location_screen.dart';
 import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
+import 'package:wildrapport/constants/app_colors.dart';
 import 'package:wildrapport/widgets/animals/scrollable_animal_grid.dart';
 
 class BelongingAnimalScreen extends StatefulWidget {
@@ -23,7 +24,7 @@ class BelongingAnimalScreen extends StatefulWidget {
 class _BelongingAnimalScreenState extends State<BelongingAnimalScreen> {
   final ScrollController _scrollController = ScrollController();
   late final BelongingDamageReportProvider _belongingDamageReportProvider;
-  bool _isExpanded = false;
+  late final AnimalManagerInterface _animalManager;
   List<AnimalModel> _animals = [];
   bool _isLoading = true;
   String? _pendingSnackBarMessage;
@@ -32,24 +33,31 @@ class _BelongingAnimalScreenState extends State<BelongingAnimalScreen> {
   void initState() {
     super.initState();
     _belongingDamageReportProvider = context.read<BelongingDamageReportProvider>();
+    _animalManager = context.read<AnimalManagerInterface>();
+    _animalManager.addListener(_handleStateChange);
     _loadAnimals();
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _animalManager.removeListener(_handleStateChange);
     super.dispose();
   }
 
-  Future<void> _loadAnimals() async {
-    final animalManager = context.read<AnimalManagerInterface>();
+  void _handleStateChange() {
+    if (mounted) {
+      _loadAnimals();
+    }
+  }
 
+  Future<void> _loadAnimals() async {
     setState(() {
       _isLoading = true;
     });
 
     try {
-      final animals = await animalManager.getAnimals();
+      final animals = await _animalManager.getAnimals();
       setState(() {
         _animals = animals;
         _isLoading = false;
@@ -62,18 +70,15 @@ class _BelongingAnimalScreenState extends State<BelongingAnimalScreen> {
     }
   }
 
-  void _toggleExpanded() {
-    setState(() {
-      _isExpanded = !_isExpanded;
-    });
-  }
-
   void _handlePendingSnackBar() {
     if (_pendingSnackBarMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_pendingSnackBarMessage!),
-          backgroundColor: Colors.red,
+      showDialog(
+        context: context,
+        builder: (_) => ErrorOverlay(
+          messages: [
+            _pendingSnackBarMessage!,
+            'Corrigeer je invoer en probeer het opnieuw.',
+          ],
         ),
       );
       _pendingSnackBarMessage = null;
@@ -82,35 +87,127 @@ class _BelongingAnimalScreenState extends State<BelongingAnimalScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final dropdownInterface = context.read<DropdownInterface>();
     return Scaffold(
+      backgroundColor: AppColors.lightMintGreen,
       body: SafeArea(
         child: Column(
           children: [
             CustomAppBar(
               leftIcon: Icons.arrow_back_ios,
               centerText: widget.appBarTitle,
-              rightIcon: Icons.menu,
+              rightIcon: null,
+              showUserIcon: true,
               onLeftIconPressed: () {
                 debugPrint('[BelongingAnimalScreen] Back button pressed');
                 Navigator.pop(context);
               },
-              onRightIconPressed: () {
-                debugPrint('[BelongingAnimalScreen] Menu button pressed');
-              },
+              iconColor: Colors.black,
+              textColor: Colors.black,
+              fontScale: 1.15,
+              iconScale: 1.15,
+              userIconScale: 1.15,
             ),
             Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: dropdownInterface.buildDropdown(
-                type: DropdownType.filter,
-                selectedValue: context.read<AnimalManagerInterface>().getSelectedFilter(),
-                isExpanded: _isExpanded,
-                onExpandChanged: (_) => _toggleExpanded(),
-                onOptionSelected: (value) {
-                  context.read<AnimalManagerInterface>().updateFilter(value);
-                  _loadAnimals();
-                },
-                context: context,
+              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
+              child: Column(
+                children: [
+                  // Search box
+                  Container(
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: AppColors.lightMintGreen,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppColors.darkGreen, width: 1.5),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.search, color: AppColors.darkGreen),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextField(
+                            style: const TextStyle(fontSize: 16),
+                            decoration: const InputDecoration(
+                              hintText: 'zoeken',
+                              border: InputBorder.none,
+                              isCollapsed: true,
+                              contentPadding: EdgeInsets.symmetric(vertical: 14),
+                            ),
+                            onChanged: (val) {
+                              _animalManager.updateSearchTerm(val);
+                              setState(() {});
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  // Filter pills
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            _animalManager.updateFilter(FilterType.mostViewed.displayText);
+                            setState(() {});
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: _animalManager.getSelectedFilter() == FilterType.mostViewed.displayText
+                                  ? AppColors.darkGreen
+                                  : AppColors.lightMintGreen,
+                              borderRadius: BorderRadius.circular(25),
+                              border: Border.all(color: AppColors.darkGreen, width: 1.5),
+                            ),
+                            child: Center(
+                              child: Text(
+                                'Meest gezien',
+                                style: TextStyle(
+                                  color: _animalManager.getSelectedFilter() == FilterType.mostViewed.displayText
+                                      ? Colors.white
+                                      : AppColors.darkGreen,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            _animalManager.updateFilter(FilterType.alphabetical.displayText);
+                            setState(() {});
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: _animalManager.getSelectedFilter() == FilterType.alphabetical.displayText
+                                  ? AppColors.darkGreen
+                                  : AppColors.lightMintGreen,
+                              borderRadius: BorderRadius.circular(25),
+                              border: Border.all(color: AppColors.darkGreen, width: 1.5),
+                            ),
+                            child: Center(
+                              child: Text(
+                                'A-Z',
+                                style: TextStyle(
+                                  color: _animalManager.getSelectedFilter() == FilterType.alphabetical.displayText
+                                      ? Colors.white
+                                      : AppColors.darkGreen,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
             ScrollableAnimalGrid(

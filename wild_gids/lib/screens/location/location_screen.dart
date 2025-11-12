@@ -5,10 +5,8 @@ import 'package:wildrapport/interfaces/waarneming_flow/animal_sighting_reporting
 import 'package:wildrapport/interfaces/reporting/interaction_interface.dart';
 import 'package:wildrapport/interfaces/location/location_screen_interface.dart';
 import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
-import 'package:wildrapport/managers/map/location_screen_manager.dart';
 import 'package:wildrapport/models/beta_models/animal_sighting_report_wrapper.dart';
 import 'package:wildrapport/models/beta_models/interaction_response_model.dart';
-import 'package:wildrapport/models/enums/date_time_type.dart';
 import 'package:wildrapport/models/enums/interaction_type.dart';
 import 'package:wildrapport/models/enums/report_type.dart';
 import 'package:wildrapport/models/enums/location_source.dart';
@@ -22,6 +20,7 @@ import 'package:wildrapport/utils/sighting_api_transformer.dart';
 import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
 import 'package:wildrapport/widgets/shared_ui_widgets/bottom_app_bar.dart';
 import 'package:wildrapport/widgets/location/location_screen_ui_widget.dart';
+import 'package:wildrapport/widgets/overlay/error_overlay.dart';
 
 class LocationScreen extends StatefulWidget {
   const LocationScreen({super.key});
@@ -37,11 +36,16 @@ class _LocationScreenState extends State<LocationScreen> {
 
   void _handlePendingActions() {
     if (_pendingSnackBarMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_pendingSnackBarMessage!),
-          backgroundColor: _pendingSnackBarMessage!.contains('fout') ? Colors.red : Colors.orange,
-          behavior: SnackBarBehavior.fixed,
+      // Replace error SnackBar with ErrorOverlay
+      showDialog(
+        context: context,
+        builder: (_) => ErrorOverlay(
+          messages: [
+            _pendingSnackBarMessage!,
+            _pendingSnackBarMessage!.contains('Selecteer')
+                ? 'Kies eerst een geldige optie en probeer opnieuw.'
+                : 'Corrigeer het probleem en probeer opnieuw.'
+          ],
         ),
       );
     }
@@ -58,69 +62,7 @@ class _LocationScreenState extends State<LocationScreen> {
     _pendingRemoveUntil = false;
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            CustomAppBar(
-              leftIcon: Icons.arrow_back_ios,
-              centerText: 'Locatie',
-              rightIcon: Icons.menu,
-              onLeftIconPressed: () => context
-                  .read<NavigationStateInterface>()
-                  .pushReplacementBack(context, const Rapporteren()),
-              onRightIconPressed: () {
-                /* Handle menu */
-              },
-            ),
-            Expanded(child: const LocationScreenUIWidget()),
-          ],
-        ),
-      ),
-      bottomNavigationBar: SizedBox(
-        height: 60,
-        child: CustomBottomAppBar(
-          onBackPressed: () async {
-            final locationManager = context.read<LocationScreenInterface>();
-            final animalSightingManager = context.read<AnimalSightingReportingInterface>();
-            try {
-              final locationInfo = await locationManager.getLocationAndDateTime(context);
-              if (locationInfo['dateTime'] != null && locationInfo['dateTime']['dateTime'] != null) {
-                final dateTimeStr = locationInfo['dateTime']['dateTime'];
-                final dateTime = DateTime.parse(dateTimeStr);
-                animalSightingManager.updateDateTime(dateTime);
-                if (locationManager is LocationScreenManager) {
-                  final dateTimeType = locationInfo['dateTime']['type'];
-                  if (dateTimeType == 'current') {
-                    locationManager.updateDateTime(DateTimeType.current.displayText);
-                  } else if (dateTimeType == 'unknown') {
-                    locationManager.updateDateTime(DateTimeType.unknown.displayText);
-                  } else if (dateTimeType == 'custom') {
-                    locationManager.updateDateTime(DateTimeType.custom.displayText, date: dateTime);
-                  }
-                }
-              }
-              if (locationInfo['selectedLocation'] != null) {
-                final userLocation = LocationModel(
-                  latitude: locationInfo['selectedLocation']['latitude'],
-                  longitude: locationInfo['selectedLocation']['longitude'],
-                  source: LocationSource.manual,
-                );
-                animalSightingManager.updateLocation(userLocation);
-              }
-            } catch (e) {
-              debugPrint('\x1B[31m[LocationScreen] Error saving state before navigation: $e\x1B[0m');
-            }
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              context.read<NavigationStateInterface>().pushReplacementBack(
-                context,
-                AnimalListOverviewScreen(),
-              );
-            });
-          },
-onNextPressed: () async {
+  Future<void> _handleNextPressed() async {
   final animalSightingManager = context.read<AnimalSightingReportingInterface>();
   final locationManager = context.read<LocationScreenInterface>();
   final interactionManager = context.read<InteractionInterface>();
@@ -241,11 +183,39 @@ onNextPressed: () async {
     _pendingSnackBarMessage = 'Er is een fout opgetreden: $e';
     WidgetsBinding.instance.addPostFrameCallback((_) => _handlePendingActions());
   }
-},
+}
 
-          showNextButton: true,
-          showBackButton: true,
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
+          children: [
+            CustomAppBar(
+              leftIcon: Icons.arrow_back_ios,
+              centerText: 'Locatie',
+              rightIcon: null,
+              showUserIcon: true,
+              onLeftIconPressed: () => context
+                  .read<NavigationStateInterface>()
+                  .pushReplacementBack(context, AnimalListOverviewScreen()),
+              iconColor: Colors.black,
+              textColor: Colors.black,
+              fontScale: 1.15,
+              iconScale: 1.15,
+              userIconScale: 1.15,
+            ),
+            Expanded(child: const LocationScreenUIWidget()),
+          ],
         ),
+      ),
+      bottomNavigationBar: CustomBottomAppBar(
+        onBackPressed: () => context
+            .read<NavigationStateInterface>()
+            .pushReplacementBack(context, AnimalListOverviewScreen()),
+        onNextPressed: _handleNextPressed,
+        showNextButton: true,
+        showBackButton: false,
       ),
     );
   }

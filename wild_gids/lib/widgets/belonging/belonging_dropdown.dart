@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
+import 'package:wildrapport/constants/app_colors.dart';
 import 'package:wildrapport/providers/belonging_damage_report_provider.dart';
 
 class BelongingDropdown extends StatefulWidget {
@@ -118,7 +119,7 @@ class _BelongingDropdownState extends State<BelongingDropdown> {
         children: [
           widget.hasDropdownSideDescription
               ? Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Text(widget.dropdownSideDescriptionText ?? ''),
                   const SizedBox(width: 10),
@@ -172,7 +173,7 @@ class _BelongingDropdownState extends State<BelongingDropdown> {
         width: widget.containerWidth ?? 200,
         height: widget.containerHeight ?? 50,
         decoration: BoxDecoration(
-          color: const Color(0xFF6C452D),
+          color: AppColors.darkGreen,
           borderRadius: BorderRadius.circular(30),
           border:
               widget.hasError
@@ -192,7 +193,7 @@ class _BelongingDropdownState extends State<BelongingDropdown> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Icon(Icons.agriculture, color: Color(0xFF6C452D)),
+            const Icon(Icons.agriculture, color: Colors.transparent),
             Text(
               selectedText,
               style: const TextStyle(color: Colors.white, fontSize: 18),
@@ -222,20 +223,39 @@ class _BelongingDropdownState extends State<BelongingDropdown> {
 
     overlayEntry = OverlayEntry(
       builder: (context) {
-        return Positioned(
-          top: top, // Position the dropdown right below the button
-          left: buttonPosition.dx, // Align the dropdown with the button
-          child: Material(
-            color: Colors.transparent,
-            child: Column(
-              children:
-                  widget.dropdownItems.asMap().entries.map((entry) {
-                    int index = entry.key;
-                    Map<String, String> item = entry.value;
-                    return buildDropdownItem(item, buttonWidth, index);
-                  }).toList(),
+        return Stack(
+          children: [
+            // Semi-transparent overlay backdrop
+            GestureDetector(
+              onTap: () {
+                closeOverlay();
+                setState(() {
+                  isExpanded = false;
+                });
+              },
+              child: Container(
+                width: MediaQuery.of(context).size.width,
+                height: MediaQuery.of(context).size.height,
+                color: Colors.black.withOpacity(0.3),
+              ),
             ),
-          ),
+            // Dropdown items
+            Positioned(
+              top: top, // Position the dropdown right below the button
+              left: buttonPosition.dx, // Align the dropdown with the button
+              child: Material(
+                color: Colors.transparent,
+                child: Column(
+                  children:
+                      widget.dropdownItems.asMap().entries.map((entry) {
+                        int index = entry.key;
+                        Map<String, String> item = entry.value;
+                        return buildDropdownItem(item, buttonWidth, index);
+                      }).toList(),
+                ),
+              ),
+            ),
+          ],
         );
       },
     );
@@ -273,7 +293,7 @@ class _BelongingDropdownState extends State<BelongingDropdown> {
         height: widget.containerHeight ?? 50,
         margin: const EdgeInsets.only(top: 8),
         decoration: BoxDecoration(
-          color: const Color(0xFF6C452D),
+          color: AppColors.darkGreen,
           borderRadius: BorderRadius.circular(30),
           boxShadow: [
             BoxShadow(

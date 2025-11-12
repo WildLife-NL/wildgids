@@ -21,14 +21,7 @@ class LoginOverlay extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppColors.offWhite,
                 borderRadius: BorderRadius.circular(25),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.25),
-                    spreadRadius: 0,
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+                
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -51,13 +44,6 @@ class LoginOverlay extends StatelessWidget {
                           Icons.exit_to_app,
                           size: 32,
                           color: Colors.black,
-                          shadows: [
-                            Shadow(
-                              color: Colors.black.withValues(alpha: 0.25),
-                              offset: const Offset(0, 2),
-                              blurRadius: 4,
-                            ),
-                          ],
                         ),
                       ),
                       onPressed: () => Navigator.of(context).pop(),
@@ -75,13 +61,6 @@ class LoginOverlay extends StatelessWidget {
                             style: AppTextTheme.textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                               fontSize: 24,
-                              shadows: [
-                                Shadow(
-                                  color: Colors.black.withValues(alpha: 0.25),
-                                  offset: const Offset(0, 2),
-                                  blurRadius: 4,
-                                ),
-                              ],
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -91,13 +70,7 @@ class LoginOverlay extends StatelessWidget {
                             'Als er al een account bestaat, wordt u ingelogd. Zo niet, dan wordt er '
                             'automatisch een account voor u aangemaakt en direct ingelogd.',
                             style: AppTextTheme.textTheme.bodyMedium?.copyWith(
-                              shadows: [
-                                Shadow(
-                                  color: Colors.black.withValues(alpha: 0.25),
-                                  offset: const Offset(0, 2),
-                                  blurRadius: 4,
-                                ),
-                              ],
+                              
                             ),
                             textAlign: TextAlign.center,
                           ),

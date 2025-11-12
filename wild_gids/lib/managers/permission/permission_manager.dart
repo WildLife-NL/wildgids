@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import 'package:wildrapport/interfaces/other/permission_interface.dart';
+import 'package:wildrapport/constants/app_colors.dart';
+import 'package:wildrapport/constants/app_text_theme.dart';
 
 class PermissionManager implements PermissionInterface {
   PermissionManager();
@@ -47,23 +49,39 @@ class PermissionManager implements PermissionInterface {
   ) async {
     return await showDialog(
           context: context,
-          builder:
-              (context) => AlertDialog(
-                title: const Text('Locatie Toegang'),
-                content: const Text(
-                  'We hebben toegang tot je locatie nodig om nauwkeurig te kunnen rapporteren waar je dieren hebt waargenomen.',
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    child: const Text('Niet nu'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, true),
-                    child: const Text('Doorgaan'),
-                  ),
-                ],
+          builder: (context) => AlertDialog(
+            backgroundColor: AppColors.lightMintGreen,
+            title: Text(
+              'Locatie Toegang',
+              style: AppTextTheme.textTheme.titleMedium?.copyWith(
+                color: Colors.black,
               ),
+            ),
+            content: Text(
+              'We hebben toegang tot je locatie nodig om nauwkeurig te kunnen rapporteren waar je dieren hebt waargenomen.',
+              style: AppTextTheme.textTheme.bodyMedium?.copyWith(
+                color: Colors.black,
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.darkGreen,
+                  textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                ),
+                child: const Text('Niet nu'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.darkGreen,
+                  textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                ),
+                child: const Text('Doorgaan'),
+              ),
+            ],
+          ),
         ) ??
         false;
   }

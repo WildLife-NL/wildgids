@@ -111,17 +111,7 @@ class _LoginScreenState extends State<LoginScreen> with PermissionChecker<LoginS
             child: Container(
               decoration: BoxDecoration(
                 color: AppColors.darkGreen,
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(75),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    spreadRadius: 2,
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+                borderRadius: BorderRadius.zero,
               ),
               child: Stack(
                 clipBehavior: Clip.none,
@@ -136,11 +126,7 @@ class _LoginScreenState extends State<LoginScreen> with PermissionChecker<LoginS
                   Positioned(
                     bottom: -20,
                     right: -10,
-                    child: Image.asset(
-                      'assets/gifs/login.gif',
-                      width: screenWidth * 0.35,
-                      fit: BoxFit.contain,
-                    ),
+                    child: SizedBox.shrink(),
                   ),
                 ],
               ),
@@ -159,103 +145,88 @@ class _LoginScreenState extends State<LoginScreen> with PermissionChecker<LoginS
                       },
                       email: emailController.text,
                     )
-                  : Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Voer uw e-mailadres in',
-                          style: AppTextTheme.textTheme.titleMedium?.copyWith(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                            shadows: [
-                              Shadow(
-                                color: Colors.black.withValues(alpha: 0.25),
-                                offset: const Offset(0, 2),
-                                blurRadius: 4,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 5),
-                        if (isError) ...[
-                          Padding(
-                            padding: const EdgeInsets.only(
-                              left: 8,
-                              bottom: 5,
+                  : Transform.translate(
+                      offset: const Offset(0, -20),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Voer uw e-mailadres in',
+                            textAlign: TextAlign.center,
+                            style: AppTextTheme.textTheme.titleMedium?.copyWith(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
                             ),
-                            child: Text(
-                              errorMessage,
-                              style: TextStyle(
-                                color: Colors.red.shade600,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                          ),
+                          const SizedBox(height: 12),
+                          if (isError) ...[
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                left: 8,
+                                bottom: 5,
+                              ),
+                              child: Text(
+                                errorMessage,
+                                style: TextStyle(
+                                  color: Colors.red.shade600,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                          ],
+                          const SizedBox(height: 8),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Color(0xFFF1F5F2),
+                              borderRadius: BorderRadius.circular(25),
+                              border: Border.all(color: AppColors.brown, width: 1.5),
+                            ),
+                            child: TextField(
+                              controller: emailController,
+                              decoration: InputDecoration(
+                                hintText: 'voorbeeld@gmail.com',
+                                hintStyle: TextStyle(color: Colors.grey),
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 15,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          BrownButton(
+                            model: ButtonModelFactory.createLoginButton(
+                              text: 'Login',
+                            ),
+                            onPressed: _handleLogin,
+                          ),
+                          const SizedBox(height: 16),
+                          Center(
+                            child: InkWell(
+                              onTap: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => const LoginOverlay(),
+                                );
+                              },
+                              child: Text(
+                                'Leer hoe de registratie werkt?',
+                                style: TextStyle(
+                                  color: AppColors.brown,
+                                  decoration: TextDecoration.underline,
+                                  decorationColor: AppColors.brown,
+                                ),
                               ),
                             ),
                           ),
                         ],
-                        Container(
-                          decoration: BoxDecoration(
-                            color: AppColors.offWhite,
-                            borderRadius: BorderRadius.circular(25),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.25),
-                                spreadRadius: 0,
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: TextField(
-                            controller: emailController,
-                            decoration: InputDecoration(
-                              hintText: 'voorbeeld@gmail.com',
-                              hintStyle: TextStyle(color: Colors.grey),
-                              border: InputBorder.none,
-                              enabledBorder: InputBorder.none,
-                              focusedBorder: InputBorder.none,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 15,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        BrownButton(
-                          model: ButtonModelFactory.createLoginButton(
-                            text: 'Login',
-                          ),
-                          onPressed: _handleLogin,
-                        ),
-                        const SizedBox(height: 20),
-                        Center(
-                          child: InkWell(
-                            onTap: () {
-                              showDialog(
-                                context: context,
-                                builder: (context) => const LoginOverlay(),
-                              );
-                            },
-                            child: Text(
-                              'Leer hoe de registratie werkt?',
-                              style: TextStyle(
-                                color: AppColors.brown,
-                                decoration: TextDecoration.underline,
-                                decorationColor: AppColors.brown,
-                                shadows: [
-                                  Shadow(
-                                    color: Colors.black.withValues(alpha: 0.25),
-                                    offset: const Offset(0, 2),
-                                    blurRadius: 4,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
             ),
           ),

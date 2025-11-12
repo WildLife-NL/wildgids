@@ -16,53 +16,69 @@ class AnimalTile extends StatelessWidget {
         onPressed: onTap,
         style: ElevatedButton.styleFrom(
           padding: EdgeInsets.zero,
-          backgroundColor: AppColors.offWhite,
+          // Use pure white for the button background when not tapped
+          backgroundColor: AppColors.lightMintGreen100,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(25),
           ),
-          elevation: 4,
-          foregroundColor: Colors.black.withValues(alpha: 0.1),
+          elevation: 0,
+        ).copyWith(
+          // Use the app's brown300 color for hover/pressed overlay so the
+          // photo container highlights with 0xFFEBC4A6 as requested.
+          overlayColor: MaterialStateProperty.resolveWith<Color?>(
+            (states) {
+              if (states.contains(MaterialState.hovered)) {
+                return AppColors.brown300.withOpacity(0.12);
+              }
+              if (states.contains(MaterialState.pressed)) {
+                return AppColors.brown300.withOpacity(0.18);
+              }
+              return null;
+            },
+          ),
         ),
         child: Ink(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(25),
-            color: AppColors.offWhite,
+            // Make the visible container background pure white when idle
+            color: AppColors.lightMintGreen100,
           ),
           child: Column(
             children: [
-              Expanded(
+              // Make image container square using AspectRatio
+              AspectRatio(
+                aspectRatio: 1.0, // Square ratio
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(25),
+                  borderRadius: BorderRadius.circular(6),
                   child: Container(
                     width: double.infinity,
-                    color: AppColors.offWhite,
-                    child:
-                        animal.animalImagePath != null
-                            ? Image(
-                              image: AssetImage(animal.animalImagePath!),
-                              fit: BoxFit.cover,
-                              frameBuilder: (
-                                context,
-                                child,
-                                frame,
-                                wasSynchronouslyLoaded,
-                              ) {
-                                if (wasSynchronouslyLoaded) return child;
-                                return AnimatedOpacity(
-                                  opacity: frame == null ? 0 : 1,
-                                  duration: const Duration(milliseconds: 300),
-                                  curve: Curves.easeOut,
-                                  child: child,
-                                );
-                              },
-                            )
-                            : const Center(
-                              child: Icon(
-                                Icons.help_outline,
-                                size: 80,
-                                color: AppColors.brown,
-                              ),
+                    color: AppColors.lightMintGreen100,
+                    child: animal.animalImagePath != null
+                        ? Image(
+                            image: AssetImage(animal.animalImagePath!),
+                            fit: BoxFit.cover, // Cover to fill the square, cropping if needed
+                            frameBuilder: (
+                              context,
+                              child,
+                              frame,
+                              wasSynchronouslyLoaded,
+                            ) {
+                              if (wasSynchronouslyLoaded) return child;
+                              return AnimatedOpacity(
+                                opacity: frame == null ? 0 : 1,
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeOut,
+                                child: child,
+                              );
+                            },
+                          )
+                        : const Center(
+                            child: Icon(
+                              Icons.help_outline,
+                              size: 80,
+                              color: AppColors.brown,
                             ),
+                          ),
                   ),
                 ),
               ),
@@ -73,7 +89,7 @@ class AnimalTile extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.brown,
+                    color: Colors.black,
                   ),
                   textAlign: TextAlign.center,
                 ),

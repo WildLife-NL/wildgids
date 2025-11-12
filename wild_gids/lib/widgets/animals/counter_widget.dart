@@ -79,14 +79,8 @@ class AnimalCounterState extends State<AnimalCounter> {
       decoration: BoxDecoration(
         color: AppColors.offWhite,
         borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.25),
-            spreadRadius: 0,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        // Removed boxShadow to match the no-dropshadow requirement
+        boxShadow: null,
       ),
       child: Row(
         children: [
@@ -99,7 +93,7 @@ class AnimalCounterState extends State<AnimalCounter> {
             width: 1,
             color: Colors.grey.withValues(
               alpha: 0.7,
-            ), // Increased opacity from 0.5 to 0.7
+            ),
           ),
           Expanded(
             child: GestureDetector(
@@ -115,58 +109,40 @@ class AnimalCounterState extends State<AnimalCounter> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Center(
-                      child:
-                          _isEditing
-                              ? TextField(
-                                controller: _controller,
-                                keyboardType: TextInputType.number,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color:
-                                      AppColors
-                                          .brown, // Add this line to make text brown when typing
-                                  shadows: [
-                                    Shadow(
-                                      color: Colors.black.withValues(
-                                        alpha: 0.25,
-                                      ),
-                                      offset: const Offset(0, 2),
-                                      blurRadius: 4,
-                                    ),
-                                  ],
-                                ),
-                                decoration: const InputDecoration(
-                                  border: InputBorder.none,
-                                  contentPadding: EdgeInsets.zero,
-                                ),
-                                onSubmitted: _handleTextSubmitted,
-                                autofocus: true,
-                              )
-                              : Text(
-                                '$_count',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  shadows: [
-                                    Shadow(
-                                      color: Colors.black.withValues(
-                                        alpha: 0.25,
-                                      ),
-                                      offset: const Offset(0, 2),
-                                      blurRadius: 4,
-                                    ),
-                                  ],
-                                ),
+                      child: _isEditing
+                          ? TextField(
+                              controller: _controller,
+                              keyboardType: TextInputType.number,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                                fontFamily: 'Roboto',
                               ),
+                              decoration: const InputDecoration(
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                              onSubmitted: _handleTextSubmitted,
+                              autofocus: true,
+                            )
+                          : Text(
+                              '$_count',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                                fontFamily: 'Roboto',
+                              ),
+                            ),
                     ),
                     Container(
                       height: 1,
                       width: 40, // Width of the underline
                       color: Colors.grey.withValues(
                         alpha: 0.7,
-                      ), // Increased opacity from 0.5 to 0.7
+                      ),
                     ),
                   ],
                 ),
@@ -178,7 +154,7 @@ class AnimalCounterState extends State<AnimalCounter> {
             width: 1,
             color: Colors.grey.withValues(
               alpha: 0.7,
-            ), // Increased opacity from 0.5 to 0.7
+            ),
           ),
           Padding(
             padding: const EdgeInsets.only(right: 6.0),
@@ -195,7 +171,7 @@ class AnimalCounterState extends State<AnimalCounter> {
       width: 44, // Same width for both buttons
       height: widget.height - 13, // Adjust height based on parent container
       child: Material(
-        color: Colors.transparent, // Remove brown background
+        color: Colors.transparent,
         child: InkWell(
           onTap: onPressed,
           splashColor: AppColors.brown.withValues(alpha: 0.3),
@@ -204,18 +180,12 @@ class AnimalCounterState extends State<AnimalCounter> {
             child: Text(
               symbol,
               style: TextStyle(
-                color: AppColors.brown, // Change text color to brown
+                color: Colors.black,
                 fontSize: 24,
                 fontWeight: FontWeight.w400,
                 letterSpacing: isMinus ? 2.0 : 0,
                 height: 1,
-                shadows: [
-                  Shadow(
-                    color: Colors.black.withValues(alpha: 0.25),
-                    offset: const Offset(0, 2),
-                    blurRadius: 4,
-                  ),
-                ],
+                fontFamily: 'Roboto',
               ),
             ),
           ),
