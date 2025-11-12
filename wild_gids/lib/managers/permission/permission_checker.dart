@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:wildrapport/interfaces/other/permission_interface.dart';
 import 'package:permission_handler/permission_handler.dart' as ph;
+import 'package:geolocator/geolocator.dart';
 import 'package:flutter/services.dart';
 import 'package:wildrapport/providers/app_state_provider.dart';
 import 'package:provider/provider.dart';
@@ -37,10 +38,12 @@ mixin PermissionChecker<T extends StatefulWidget> on State<T> {
     bool hasPermission = await _permissionManager!.isPermissionGranted(
       PermissionType.location,
     );
-    debugPrint('Permission granted: $hasPermission');
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    debugPrint('Permission granted: $hasPermission, serviceEnabled: $serviceEnabled');
 
-    if (!hasPermission) {
-      // Defer permission request to a synchronous callback with fresh context
+    // If either permission or device location service is missing, request/ask the user.
+    if (!hasPermission || !serviceEnabled) {
+      // Defer permission/service request to a synchronous callback with fresh context
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return; // ensure state is still active before using context
         _requestPermissions();
@@ -58,11 +61,10 @@ mixin PermissionChecker<T extends StatefulWidget> on State<T> {
 
     // Use fresh context here. Make permission mandatory: if the user denies,
     // show a blocking dialog that forces them to either retry, open settings,
-    // or exit the app. Loop until permission is granted or the user exits.
+    // or exit the app. Loop until permission is granted and the device location
+    // service is enabled, or the user exits.
     Future<void>.microtask(() async {
-      // The permission manager may show dialogs using the provided BuildContext.
-      // We guard against the state being unmounted after awaits below, so
-      // suppress the analyzer warning about using BuildContext across async gaps.
+      // Initial permission request (permission manager internally shows rationale if needed)
       // ignore: use_build_context_synchronously
       bool hasPermission = await _permissionManager!.requestPermission(
         context,
@@ -72,17 +74,20 @@ mixin PermissionChecker<T extends StatefulWidget> on State<T> {
 
       if (!mounted) return; // avoid using context across async gap
 
-      if (hasPermission) {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+
+      if (hasPermission && serviceEnabled) {
         await _handlePermissionGranted();
         return;
       }
 
-      debugPrint('\x1B[31m[${widget.runtimeType}] Location permission denied - showing mandatory dialog\x1B[0m');
+      debugPrint('\x1B[31m[${widget.runtimeType}] Location permission/service missing - showing mandatory dialog\x1B[0m');
 
-      // Loop until permission granted or user exits
-      while (!hasPermission) {
+      // Loop until permission and device location service are available or user exits
+      while (!(hasPermission && serviceEnabled)) {
         if (!mounted) break; // user likely left the screen
 
+        // Ask the user to enable permission and/or device location service
         // ignore: use_build_context_synchronously
         final action = await showDialog<String>(
           context: context,
@@ -90,7 +95,7 @@ mixin PermissionChecker<T extends StatefulWidget> on State<T> {
           builder: (ctx) => AlertDialog(
             title: const Text('Locatie vereist'),
             content: const Text(
-              'WildGids heeft locatie-tracking nodig om te werken. Geef locatie toestemming of sluit de app.',
+              'WildGids heeft locatie-tracking nodig om te werken. Geef locatie toestemming en zet locatie (GPS) aan, of sluit de app.',
             ),
             actions: [
               TextButton(
@@ -118,18 +123,22 @@ mixin PermissionChecker<T extends StatefulWidget> on State<T> {
             showRationale: true,
           );
           if (!mounted) break;
-          if (hasPermission) {
+          serviceEnabled = await Geolocator.isLocationServiceEnabled();
+          if (!mounted) break;
+          if (hasPermission && serviceEnabled) {
             await _handlePermissionGranted();
             break;
           }
         } else if (action == 'settings') {
-          // Open app settings; user can enable permission there.
+          // Open OS location settings (device) so user can enable GPS, and also open app settings
+          await Geolocator.openLocationSettings();
           await ph.openAppSettings();
           if (!mounted) break;
-          // After returning from settings, re-check grant status.
+          // After returning from settings, re-check grant status and service status.
           hasPermission = await _permissionManager!.isPermissionGranted(PermissionType.location);
+          serviceEnabled = await Geolocator.isLocationServiceEnabled();
           if (!mounted) break;
-          if (hasPermission) {
+          if (hasPermission && serviceEnabled) {
             await _handlePermissionGranted();
             break;
           }
