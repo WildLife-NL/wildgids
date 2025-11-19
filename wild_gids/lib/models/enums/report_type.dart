@@ -8,9 +8,9 @@ enum ReportType {
       case ReportType.waarneming:
         return 'Waarneming';
       case ReportType.gewasschade:
-        return 'Schademelding';
+        return 'Gewasschade';
       case ReportType.verkeersongeval:
-        return 'Dieraanrijding';
+        return 'Verkeersongeval';
     }
   }
 }

@@ -60,7 +60,7 @@ class InteractionApi implements InteractionApiInterface {
                 "longitude": report.userSelectedLocation?.longtitude,
               },
               "reportOfDamage": {
-                "belonging": report.possesion.possesionName,  // Send the free text name as required by API schema
+                "belonging": report.possesion.possesionID,  // Send just the ID string as required by API
                 "estimatedDamage": report.currentImpactDamages.toInt(),
                 "estimatedLoss": report.estimatedTotalDamages.toInt(),
                 "impactType": report.impactedAreaType,

@@ -188,14 +188,15 @@ class _BelongingDropdownState extends State<BelongingDropdown> {
           ],
         ),
         padding: const EdgeInsets.symmetric(
-          horizontal: 8,
+          horizontal: 20,
         ), // Ensure you know the padding
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            const Icon(Icons.agriculture, color: Colors.transparent),
             Text(
               selectedText,
-              style: const TextStyle(color: Colors.white, fontSize: 16),
+              style: const TextStyle(color: Colors.white, fontSize: 18),
             ),
             Icon(
               isExpanded ? Icons.expand_less : Icons.expand_more,

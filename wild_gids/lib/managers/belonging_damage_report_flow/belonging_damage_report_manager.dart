@@ -165,33 +165,46 @@ Future<InteractionResponse?> postInteraction() async {
     formProvider.setUserLocation(value);
   }
 
-@override
-void updateCurrentDamage(double value) {
-  formProvider.setEstimatedDamage(value);
-}
+  @override
+  void updateCurrentDamage(double value) {
+    formProvider.setCurrentDamage(value);
+  }
 
   @override
   void updateDescription(String value) {
     formProvider.setDescription(value);
   }
 
-@override
-void updateExpectedDamage(double value) {
-  formProvider.setEstimatedLoss(value);
-}
+  @override
+  void updateExpectedDamage(double value) {
+    formProvider.setExpectedDamage(value);
+  }
 
-@override
-void updateImpactedArea(double value) {
-  // UI already restricts to integer text; we still guard for > 0
-  if (value <= 0) return;
-  formProvider.setImpactedArea(value);
-}
+  @override
+  void updateImpactedArea(double value) {
+    try {
+      if (formProvider.impactedAreaType == "hectare") {
+        debugPrint("$greenLog impactArea selected is Hectare");
+        formProvider.setImpactedArea(value);
+      } else if (formProvider.impactedAreaType == "vierkante meters") {
+        debugPrint("$greenLog impactArea selected is Vierkante Meters");
+        formProvider.setImpactedArea(value);
+      } else {
+        throw Exception(
+          "$redLog Impacted Area Type of: ${formProvider.impactedAreaType} Isn't Valid!",
+        );
+      }
+    } catch (e, stackTrace) {
+      debugPrint("$redLog Something went wrong:");
+      debugPrint("$redLog Message: ${e.toString()}");
+      debugPrint("$redLog Stacktrace: $stackTrace");
+    }
+  }
 
-@override
-void updateImpactedAreaType(String value) {
-  // value is 'vierkante meters' or 'units'
-  formProvider.setImpactedAreaType(value);
-}
+  @override
+  void updateImpactedAreaType(String value) {
+    formProvider.setImpactedAreaType(value);
+  }
 
   @override
   void updateImpactedCrop(String value) {
@@ -203,70 +216,105 @@ void updateImpactedAreaType(String value) {
     formProvider.setSuspectedAnimal(value);
   }
 
-@override
-BelongingDamageReport? buildBelongingReport() {
-  debugPrint("✅ buildBelongingReport called");
-  debugPrint("✅ formProvider.impactedCrop: '${formProvider.impactedCrop}'");
-  debugPrint("✅ formProvider.impactedArea: ${formProvider.impactedArea}");
-  debugPrint("✅ formProvider.impactedAreaType: '${formProvider.impactedAreaType}'");
-
-  try {
-    // --- validate minimal required fields ---
-    if (formProvider.impactedCrop.isEmpty) {
-      throw Exception("Impacted crop is empty");
-    }
-    if (formProvider.impactedArea == null) {
-      throw Exception("Impacted area is empty");
-    }
-
-    // ✅ Use the free text crop name directly as belonging
-    final Possesion pos = Possesion(
-      possesionID: null,
-      possesionName: formProvider.impactedCrop,
-      category: null,
-    );
-    debugPrint("✅ Created Possesion with name: '${pos.possesionName}'");
-
-    // locations (fallbacks if missing)
-    final systemReportLocation =
-        formProvider.systemLocation ??
-        ReportLocation(latitude: 20.0, longtitude: 20.0);
-
-    final userReportLocation =
-        formProvider.userLocation ??
-        ReportLocation(latitude: 20.0, longtitude: 20.0);
-
-    // ✅ Convert UI unit -> API unit using provider helpers
-    final String impactType = formProvider.apiImpactType; // "square-meters" | "units"
-    final int? impactValueInt = formProvider.apiImpactValueOrNull; // already m²/units as INT
-    if (impactValueInt == null || impactValueInt < 1) {
-      throw Exception("Invalid impact value");
-    }
-
-    // Build the report model (toJson will round everything correctly as ints)
-    final report = BelongingDamageReport(
-      possesion: pos,
-      impactedAreaType: impactType,                      // e.g. "square-meters"
-      impactedArea: impactValueInt.toDouble(),           // keep double in model; toJson rounds
-      currentImpactDamages: formProvider.estimatedDamage,
-      estimatedTotalDamages: formProvider.estimatedLoss,
-      description: formProvider.description,
-      suspectedSpeciesID: formProvider.suspectedSpeciesID,
-      userSelectedDateTime: DateTime.now(),
-      systemDateTime: DateTime.now(),
-      systemLocation: systemReportLocation,
-      userSelectedLocation: userReportLocation,
-    );
-
-    debugPrint("✅ Report created: $report");
-    return report;
-  } catch (e, stackTrace) {
-    debugPrint("❌ Exception in buildBelongingReport: $e");
-    debugPrint("🔍 Stack trace: $stackTrace");
-    rethrow;
+  //we only use vierkante meters and unit, unit as in number of sheep in the future
+  String getCorrectImpactAreaType() {
+    return "square-meters";
   }
-}
 
+  String getCorrectImpactArea() {
+    try {
+      switch (formProvider.impactedAreaType) {
+        case "vierkante meters":
+          return formProvider.impactedArea.toString();
+        case "hectare":
+          return (formProvider.impactedArea! * 10000).toString();
+
+        default:
+          throw Exception("impactedAreaType is invalid!");
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  BelongingDamageReport? buildBelongingReport() {
+    debugPrint("✅ buildReportTesting called");
+    _ensureBelongingsLoaded();
+    try {
+      // Log provider state
+      debugPrint(
+        "📍 formProvider location state: "
+        "selectedPosition=${formProvider.userLocation}, "
+        "currentPosition=${formProvider.systemLocation}",
+      );
+      debugPrint(
+        "📋 formProvider state: "
+        "impactedCrop=${formProvider.impactedCrop}, "
+        "impactedAreaType=${getCorrectImpactAreaType()}, "
+        "impactedArea=${getCorrectImpactArea()}, "
+        "currentDamage=${formProvider.currentDamage}, "
+        "expectedDamage=${formProvider.expectedDamage}, "
+        "description=${formProvider.description}, "
+        "suspectedSpeciesID=${formProvider.suspectedSpeciesID}",
+      );
+
+      // --- validation of required fields ---
+      if (formProvider.impactedCrop.isEmpty) {
+        throw Exception("Impacted crop is empty");
+      }
+      if (formProvider.impactedArea == 0) {
+        throw Exception("Impacted area is empty");
+      }
+      final impactedArea = formProvider.impactedArea;
+      if (impactedArea == null) {
+        throw Exception("Invalid impacted area: ${formProvider.impactedArea}");
+      }
+
+      // --- map selected crop name -> Possesion model (what got damaged) ---
+      final Possesion? pos = _getCorrectPossesion(formProvider.impactedCrop);
+
+      if (pos == null) {
+        debugPrint(
+          "$redLog[BelongingDamageReportManager] Could not resolve possesion from '${formProvider.impactedCrop}'$yellowLog",
+        );
+        // If we can't resolve the crop to a backend ID, we *must* stop,
+        // because the API needs a real belonging.
+        return null;
+      }
+
+      // -- locations (we prefer real values but fall back to dummy coords) --
+      final systemReportLocation =
+          formProvider.systemLocation ??
+          ReportLocation(latitude: 20.0, longtitude: 20.0);
+
+      final userReportLocation =
+          formProvider.userLocation ??
+          ReportLocation(latitude: 20.0, longtitude: 20.0);
+
+      // --- actually build the report we will send ---
+      final report = BelongingDamageReport(
+        possesion: pos,
+        impactedAreaType: "square-meters", // API expects "square-meters"
+        impactedArea: impactedArea,
+        currentImpactDamages: formProvider.currentDamage,
+        estimatedTotalDamages: formProvider.expectedDamage,
+        description: formProvider.description,
+        suspectedSpeciesID: formProvider.suspectedSpeciesID,
+        userSelectedDateTime: DateTime.now(),
+        systemDateTime: DateTime.now(),
+        systemLocation: systemReportLocation,
+        userSelectedLocation: userReportLocation,
+      );
+
+      debugPrint("✅ Report created: $report");
+      return report;
+    } catch (e, stackTrace) {
+      debugPrint("❌ Exception in buildReportTesting: $e");
+      debugPrint("🔍 Stack trace: $stackTrace");
+      rethrow;
+    }
+  }
 
   String _normalize(String input) {
     return input

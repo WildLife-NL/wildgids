@@ -4,10 +4,8 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:wildrapport/models/enums/location_type.dart';
 import 'package:wildrapport/providers/map_provider.dart';
-import 'package:wildrapport/screens/location/map_screen.dart';
-import 'package:wildrapport/screens/belonging/belonging_location_screen.dart';
-import 'package:wildrapport/widgets/location/custom_location_map_widget.dart';
 import 'package:lottie/lottie.dart';
+import 'package:wildrapport/constants/app_colors.dart';
 
 class LocationMapPreview extends StatelessWidget {
   const LocationMapPreview({super.key});
@@ -54,15 +52,18 @@ class LocationMapPreview extends StatelessWidget {
               ),
             ),
             child: Center(
-              child: SizedBox(
+                child: SizedBox(
                 width: 100,
                 height: 100,
-                child: Lottie.asset(
-                  'assets/loaders/loading_paw.json',
-                  fit: BoxFit.contain,
-                  repeat: true,
-                  animate: true,
-                  frameRate: FrameRate(60),
+                child: ColorFiltered(
+                  colorFilter: ColorFilter.mode(AppColors.darkGreen, BlendMode.srcIn),
+                  child: Lottie.asset(
+                    'assets/loaders/loading_paw.json',
+                    fit: BoxFit.contain,
+                    repeat: true,
+                    animate: true,
+                    frameRate: FrameRate(60),
+                  ),
                 ),
               ),
             ),
@@ -74,91 +75,41 @@ class LocationMapPreview extends StatelessWidget {
             mapProvider.selectedPosition ?? mapProvider.currentPosition!;
         final point = LatLng(position.latitude, position.longitude);
 
-        return Stack(
-          children: [
-            SizedBox(
-              height: 150,
-              child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
-                child: flutter_map.FlutterMap(
-                  mapController: mapProvider.mapController,
-                  options: flutter_map.MapOptions(
-                    initialCenter: point,
-                    initialZoom: 15,
-                    interactionOptions: const flutter_map.InteractionOptions(
-                      flags: flutter_map.InteractiveFlag.none,
-                    ),
-                  ),
-                  children: [
-                    flutter_map.TileLayer(
-                      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                      userAgentPackageName: 'com.wildrapport.app',
-                    ),
-                    flutter_map.MarkerLayer(
-                      markers: [
-                        flutter_map.Marker(
-                          point: point,
-                          width: 40,
-                          height: 40,
-                          child: const Icon(
-                            Icons.location_pin,
-                            color: Colors.red,
-                            size: 40,
-                          ),
-                        ),
-                      ],
+        return SizedBox(
+          height: 150,
+          child: ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+            child: flutter_map.FlutterMap(
+              mapController: mapProvider.mapController,
+              options: flutter_map.MapOptions(
+                initialCenter: point,
+                initialZoom: 15,
+                interactionOptions: const flutter_map.InteractionOptions(
+                  flags: flutter_map.InteractiveFlag.none,
+                ),
+              ),
+              children: [
+                flutter_map.TileLayer(
+                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  userAgentPackageName: 'com.wildrapport.app',
+                ),
+                flutter_map.MarkerLayer(
+                  markers: [
+                    flutter_map.Marker(
+                      point: point,
+                      width: 40,
+                      height: 40,
+                      child: const Icon(
+                        Icons.location_pin,
+                        color: Colors.red,
+                        size: 40,
+                      ),
                     ),
                   ],
                 ),
-              ),
+              ],
             ),
-            Positioned(
-              top: 8,
-              right: 8,
-              child: Material(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                elevation: 4,
-                child: InkWell(
-                  onTap: () {
-                    debugPrint('[LocationMapPreview] Expand button tapped!');
-                    
-                    // Check if we're in the possession flow
-                    final isFromPossession =
-                        ModalRoute.of(context)?.settings.name == 'PossesionLocationScreen' ||
-                        context.findAncestorWidgetOfExactType<BelongingLocationScreen>() != null;
-                    
-                    debugPrint('[LocationMapPreview] isFromPossession: $isFromPossession');
-                    
-                    // Navigate to full interactive map
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        settings: RouteSettings(
-                          name: isFromPossession ? 'PossesionCustomMap' : 'CustomMap',
-                        ),
-                        builder: (_) => MapScreen(
-                          title: 'Selecteer locatie',
-                          mapWidget: CustomLocationMapScreen(
-                            isFromPossession: isFromPossession,
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                  borderRadius: BorderRadius.circular(8),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Icon(
-                      Icons.fullscreen,
-                      color: Colors.grey[700],
-                      size: 24,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
+          ),
         );
       },
     );

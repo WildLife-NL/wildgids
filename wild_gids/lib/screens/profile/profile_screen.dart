@@ -38,7 +38,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Expanded(
                       child: Center(
                         child: Text(
-                          'Profiel',
+                          'Profile',
                           style: TextStyle(
                             color: AppColors.offWhite,
                             fontSize: 24,
@@ -86,7 +86,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               // Location Tracking label
               Center(
                 child: Text(
-                  'Locatie delen',
+                  'Location Tracking',
                   style: TextStyle(
                     color: AppColors.offWhite,
                     fontSize: 16,
@@ -122,7 +122,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           child: Center(
                             child: Text(
-                              'Aan',
+                              'On',
                               style: TextStyle(
                                 color: locationTrackingEnabled ? AppColors.darkGreen : AppColors.offWhite,
                                 fontWeight: FontWeight.w600,
@@ -146,7 +146,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           child: Center(
                             child: Text(
-                              'Uit',
+                              'Off',
                               style: TextStyle(
                                 color: !locationTrackingEnabled ? AppColors.darkGreen : AppColors.offWhite,
                                 fontWeight: FontWeight.w600,
@@ -168,23 +168,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Column(
                     children: [
                       // Delete account - outlined
-                      _outlinedButton('Account verwijderen', onPressed: () {
+                      _outlinedButton('Delete account', onPressed: () {
                         // placeholder
                       }),
 
                       const SizedBox(height: 12),
 
                       // Log out - filled white
-                      _filledButton('Afmelden', onPressed: () {
+                      _filledButton('Log Out', onPressed: () {
                         showDialog(
                           context: context,
                           builder: (ctx) => AlertDialog(
-                            title: const Text('Afmelden?'),
-                            content: const Text('Wilt u uitloggen?'),
+                            title: const Text('Log out?'),
+                            content: const Text('Do you want to log out?'),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.of(ctx).pop(),
-                                child: const Text('Annuleren'),
+                                child: const Text('Cancel'),
                               ),
                               TextButton(
                                 onPressed: () async {
@@ -192,7 +192,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   final appStateProvider = context.read<AppStateProvider>();
                                   await appStateProvider.logout();
                                 },
-                                child: const Text('Afmelden'),
+                                child: const Text('Log out'),
                               ),
                             ],
                           ),
@@ -202,7 +202,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 12),
 
                       // Update Info
-                      _filledButton('Gegevens bijwerken', onPressed: () {}),
+                      _filledButton('Update Info', onPressed: () {}),
                       const SizedBox(height: 12),
 
                       // Taal

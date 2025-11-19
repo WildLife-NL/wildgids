@@ -38,10 +38,10 @@ class BelongingDamageApiTransformer {
       throw StateError('impactValue must be > 0');
     }
 
-final belongingName = report.possesion.possesionName ?? '';
+final possesionID = report.possesion.possesionID ?? '';
 
-if (belongingName.trim().isEmpty) {
-  throw StateError('belonging name is required');
+if (possesionID.trim().isEmpty) {
+  throw StateError('belonging ID is required');
 }
 
     // --- final payload exactly how /interaction expects it for R5 ---
@@ -60,8 +60,8 @@ if (belongingName.trim().isEmpty) {
       },
 
       "reportOfDamage": {
-        // Backend expects a free text string for the belonging
-        "belonging": belongingName,
+        // Backend expects a string ID for the belonging
+        "belonging": possesionID,
 
         "estimatedDamage": report.currentImpactDamages,
         "estimatedLoss": report.estimatedTotalDamages,

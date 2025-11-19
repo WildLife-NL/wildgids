@@ -42,14 +42,14 @@ class _RapporterenState extends State<Rapporteren> {
         nextScreen = const CategoryScreen();
         _initializeMapInBackground();
         break;
-      case 'Schademelding':
-        debugPrint('[Rapporteren] Schademelding selected, initializing map');
+      case 'Gewasschade':
+        debugPrint('[Rapporteren] Gewasschade selected, initializing map');
         selectedReportType = ReportType.gewasschade;
         nextScreen = BelongingDamagesScreen();
         _initializeMapInBackground();
         break;
-      case 'Dieraanrijding':
-        debugPrint('[Rapporteren] Dieraanrijding selected, initializing map');
+      case 'Verkeersongeval':
+        debugPrint('[Rapporteren] Verkeersongeval selected, initializing map');
         selectedReportType = ReportType.verkeersongeval;
         // Create animal sighting report and save it in provider
         final animalSightingManagerVerkeer =
@@ -155,37 +155,16 @@ class _RapporterenState extends State<Rapporteren> {
                           mainAxisSize: MainAxisSize.min,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            SizedBox(
-                              width: screenSize.width * 0.9,
-                              height: screenSize.height * 0.22,
-                              child: ReportButton(
-                                image: 'assets/icons/agriculture.png',
-                                text: 'Schademelding',
-                                onPressed: () =>
-                                    _handleReportTypeSelection('Schademelding'),
-                              ),
-                            ),
-                            SizedBox(height: screenSize.height * 0.03),
-                            SizedBox(
-                              width: screenSize.width * 0.9,
-                              height: screenSize.height * 0.22,
-                              child: ReportButton(
-                                image: 'assets/icons/binoculars.png',
-                                text: 'Waarnemingen',
-                                onPressed: () => _handleReportTypeSelection(
-                                  'animalSightingen',
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: screenSize.height * 0.03),
-                            SizedBox(
-                              width: screenSize.width * 0.9,
-                              height: screenSize.height * 0.22,
-                              child: ReportButton(
-                                image: 'assets/icons/accident.png',
-                                text: 'Dieraanrijding',
-                                onPressed: () => _handleReportTypeSelection(
-                                  'Dieraanrijding',
+                            Center(
+                              child: SizedBox(
+                                width: 260,
+                                height: 200,
+                                child: ReportButton(
+                                  image: 'assets/icons/binoculars.png',
+                                  text: 'Waarnemingen',
+                                  onPressed: () => _handleReportTypeSelection(
+                                    'animalSightingen',
+                                  ),
                                 ),
                               ),
                             ),

@@ -8,6 +8,7 @@ import 'package:wildrapport/constants/app_colors.dart';
 import 'package:wildrapport/widgets/overzicht/top_container.dart';
 import 'package:wildrapport/widgets/overzicht/action_buttons.dart';
 import 'package:wildrapport/screens/shared/rapporteren.dart';
+import 'package:wildrapport/screens/species/species_list_screen.dart';
 import 'package:wildrapport/providers/app_state_provider.dart';
 import 'package:wildrapport/screens/location/kaart_overview_screen.dart';
 
@@ -21,39 +22,12 @@ class OverzichtScreen extends StatefulWidget {
 class _OverzichtScreenState extends State<OverzichtScreen>
     with PermissionChecker<OverzichtScreen> {
   String userName = "Joe Doe";
-  String reportButtonLabel = 'Rapporteren';
 
   @override
   void initState() {
     super.initState();
     initiatePermissionCheck();
     _loadUserName();
-    _loadReportButtonLabel();
-  }
-
-  Future<void> _loadReportButtonLabel() async {
-    try {
-      final typesManager = Provider.of(context, listen: false) as dynamic;
-      // Try to call ensureFetched() if it exists
-      try {
-        final types = await typesManager.ensureFetched();
-        // prefer the manager helper if available
-        String? name;
-        try {
-          name = typesManager.nameForTypeId(1);
-        } catch (_) {}
-        name ??= (types.isNotEmpty ? types.first.name : null);
-        if (name != null && name.isNotEmpty) {
-          setState(() {
-            reportButtonLabel = name!;
-          });
-        }
-      } catch (_) {
-        // ignore fetch failures and keep default
-      }
-    } catch (_) {
-      // Provider not available or unexpected type - keep default label
-    }
   }
 
   Future<void> _loadUserName() async {
@@ -128,8 +102,22 @@ class _OverzichtScreenState extends State<OverzichtScreen>
                                   },
                                 ),
 
+                                  (
+                                    text: 'Dieren Species',
+                                    icon: Icons.pets,
+                                    imagePath: null,
+                                    key: Key('soorten_button'),
+                                    onPressed: () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) => const SpeciesListScreen(),
+                                        ),
+                                      );
+                                    },
+                                  ),
+
                                 (
-                                  text: reportButtonLabel,
+                                  text: 'Rapporteren',
                                   icon: Icons.edit_note,
                                   imagePath: null,
                                   key: Key('rapporteren_button'),
@@ -176,9 +164,10 @@ class _OverzichtScreenState extends State<OverzichtScreen>
                                 ),
                               ],
                               iconSize: iconSize,
-                              verticalPadding: spacing / 2,
+                              // Reduce vertical padding and spacing between buttons
+                              verticalPadding: spacing / 3,
                               horizontalPadding: spacing,
-                              buttonSpacing: spacing * 3,
+                              buttonSpacing: spacing * 1.4,
                               buttonHeight: buttonHeight,
                               buttonFontSize: buttonFontSize,
                             ),

@@ -40,7 +40,7 @@ class _TermsScreenState extends State<TermsScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Kon voorwaarden niet accepteren: $e')),
+        SnackBar(content: Text('Failed to accept terms: $e')),
       );
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -52,7 +52,7 @@ class _TermsScreenState extends State<TermsScreen> {
     return Scaffold(
       backgroundColor: AppColors.lightMintGreen,
       appBar: AppBar(
-        title: const Text('Algemene Voorwaarden'),
+        title: const Text('Terms & Conditions'),
         backgroundColor: AppColors.lightMintGreen,
         elevation: 0,
         foregroundColor: Colors.black,
@@ -65,8 +65,8 @@ class _TermsScreenState extends State<TermsScreen> {
               const Expanded(
                 child: SingleChildScrollView(
                   child: Text(
-                    'Algemene Voorwaarden\n\n'
-                    'Deze app wordt geleverd door WildlifeNL om wildlifemelding te vergemakkelijken. Door gebruik te maken van deze app, gaat u ermee akkoord dat u zich houdt aan alle toepasselijke wet- en regelgeving met betrekking tot de bescherming van wilde dieren en gegevensprivacy. U erkent dat alle gegevens die u via deze app indient, door WildlifeNL kunnen worden gebruikt voor onderzoeksdoeleinden.',
+                    'Here are the Terms & Conditions...\n\n'
+                    'This app is provided by WildlifeNL to facilitate wildlife reporting. By using this app, you agree to comply with all applicable laws and regulations regarding wildlife protection and data privacy. You acknowledge that any data you submit through this app may be used by WildlifeNL for research purposes.',
                     style: TextStyle(fontSize: 16, color: Colors.black),
                   ),
                 ),
@@ -82,7 +82,7 @@ class _TermsScreenState extends State<TermsScreen> {
                   ),
                   const Expanded(
                     child: Text(
-                      'Ik heb de Algemene Voorwaarden gelezen en accepteer deze',
+                      'I have read and accept the Terms & Conditions',
                       style: TextStyle(color: Colors.black),
                     ),
                   ),
@@ -103,7 +103,7 @@ class _TermsScreenState extends State<TermsScreen> {
                           height: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Accepteren & Doorgaan'),
+                      : const Text('Accept & Continue'),
                 ),
               ),
             ],
