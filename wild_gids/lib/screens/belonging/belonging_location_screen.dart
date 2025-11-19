@@ -107,14 +107,40 @@ class _BelongingLocationScreenState extends State<BelongingLocationScreen> {
     Map<String, dynamic>? locationInfo;
     if (context.mounted) {
       debugPrint("$blueLog[BelongingLocationScreen] 📍 Fetching location with valid context\x1B[0m");
+      debugPrint("$blueLog[BelongingLocationScreen] 📍 Map selected position: ${mapProvider.selectedPosition}\x1B[0m");
+      debugPrint("$blueLog[BelongingLocationScreen] 📍 Map selected address: ${mapProvider.selectedAddress}\x1B[0m");
+      
       try {
         // ignore: use_build_context_synchronously
         locationInfo = await locationManager.getLocationAndDateTime(context);
-      } catch (e) {
+      } catch (e, stackTrace) {
         debugPrint("$redLog[BelongingLocationScreen] ❌ Error fetching location: $e\x1B[0m");
-        _pendingSnackBarMessage = 'Kan locatie niet ophalen';
-        WidgetsBinding.instance.addPostFrameCallback((_) => _handlePendingActions());
-        return;
+        debugPrint("$redLog[BelongingLocationScreen] Stack trace: $stackTrace\x1B[0m");
+        
+        // If the error is GPS-related but we have a selected position, use it anyway
+        if (mapProvider.selectedPosition != null) {
+          debugPrint("$yellowLog[BelongingLocationScreen] ⚠️ GPS error but using map selected position\x1B[0m");
+          locationInfo = {
+            'currentGpsLocation': {
+              'latitude': mapProvider.selectedPosition!.latitude,
+              'longitude': mapProvider.selectedPosition!.longitude,
+              'address': mapProvider.selectedAddress,
+            },
+            'selectedLocation': {
+              'latitude': mapProvider.selectedPosition!.latitude,
+              'longitude': mapProvider.selectedPosition!.longitude,
+              'address': mapProvider.selectedAddress,
+            },
+            'dateTime': {
+              'dateTime': DateTime.now().toIso8601String(),
+              'type': 'current',
+            },
+          };
+        } else {
+          _pendingSnackBarMessage = 'Kan locatie niet ophalen. Probeer opnieuw.';
+          WidgetsBinding.instance.addPostFrameCallback((_) => _handlePendingActions());
+          return;
+        }
       }
     } else {
       debugPrint("$redLog[BelongingLocationScreen] ⚠️ Widget unmounted, skipping location fetch\x1B[0m");
@@ -129,7 +155,7 @@ class _BelongingLocationScreenState extends State<BelongingLocationScreen> {
 
     if (locationInfo['selectedLocation'] == null) {
       debugPrint("$redLog[BelongingLocationScreen] ⚠️ No selected location found\x1B[0m");
-      _pendingSnackBarMessage = 'Selecteer een locatie';
+      _pendingSnackBarMessage = 'Selecteer een locatie op de kaart';
       WidgetsBinding.instance.addPostFrameCallback((_) => _handlePendingActions());
       return;
     }
