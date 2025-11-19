@@ -4,8 +4,13 @@ import 'package:wildrapport/constants/app_text_theme.dart';
 
 class ErrorOverlay extends StatelessWidget {
   final List<String> messages;
+  final String? title;
+  final String? instruction;
 
-  const ErrorOverlay({super.key, required this.messages});
+  /// messages: one or more descriptive messages. If the first message is
+  /// short it will be used as the title and the remainder shown as details.
+  /// Optionally provide [title] and [instruction] to override defaults.
+  const ErrorOverlay({super.key, required this.messages, this.title, this.instruction});
 
   @override
   Widget build(BuildContext context) {
@@ -21,9 +26,9 @@ class ErrorOverlay extends StatelessWidget {
               margin: const EdgeInsets.symmetric(horizontal: 20),
               constraints: const BoxConstraints(maxWidth: 500),
               decoration: BoxDecoration(
-                color: AppColors.offWhite,
+                color: AppColors.lightMintGreen,
                 borderRadius: BorderRadius.circular(25),
-                border: Border.all(color: Colors.red.shade300, width: 2.0),
+                border: Border.all(color: Colors.red.shade700, width: 1.6),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.25),
@@ -70,36 +75,80 @@ class ErrorOverlay extends StatelessWidget {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            'Fout',
-                            style: AppTextTheme.textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 24,
-                              color: Colors.red.shade700,
-                              shadows: [
-                                Shadow(
-                                  color: Colors.black.withValues(alpha: 0.25),
-                                  offset: const Offset(0, 2),
-                                  blurRadius: 4,
+                          // Determine title and body from provided values
+                          Builder(builder: (context) {
+                            final rawTitle = title;
+                            String titleToShow;
+                            String bodyToShow = '';
+
+                            if (rawTitle != null && rawTitle.isNotEmpty) {
+                              titleToShow = rawTitle;
+                              bodyToShow = messages.join('\n');
+                            } else if (messages.isNotEmpty) {
+                              // If first message is short, use it as title
+                              if (messages.first.length <= 60 && messages.length > 1) {
+                                titleToShow = messages.first;
+                                bodyToShow = messages.sublist(1).join('\n');
+                              } else if (messages.length == 1 && messages.first.length <= 80) {
+                                // Single, reasonably short message -> show as title with optional instruction
+                                titleToShow = messages.first;
+                                bodyToShow = instruction ?? '';
+                              } else {
+                                // Long first message -> use generic title and show full message as body
+                                titleToShow = 'Fout';
+                                bodyToShow = messages.join('\n');
+                              }
+                            } else {
+                              titleToShow = 'Fout';
+                              bodyToShow = instruction ?? '';
+                            }
+
+                            return Column(
+                              children: [
+                                Text(
+                                  titleToShow,
+                                  style: AppTextTheme.textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                    color: Colors.red.shade700,
+                                    shadows: [
+                                      Shadow(
+                                        color: Colors.black.withValues(alpha: 0.25),
+                                        offset: const Offset(0, 2),
+                                        blurRadius: 4,
+                                      ),
+                                    ],
+                                  ),
+                                  textAlign: TextAlign.center,
                                 ),
+                                const SizedBox(height: 12),
+                                if (bodyToShow.isNotEmpty) ...[
+                                  Text(
+                                    bodyToShow,
+                                    style: AppTextTheme.textTheme.bodyMedium?.copyWith(
+                                      shadows: [
+                                        Shadow(
+                                          color: Colors.black.withValues(alpha: 0.18),
+                                          offset: const Offset(0, 2),
+                                          blurRadius: 3,
+                                        ),
+                                      ],
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 8),
+                                ],
+                                // If an instruction was not provided and there is no body,
+                                // show a small default guidance line.
+                                if ((instruction == null || instruction!.isEmpty) && bodyToShow.isEmpty)
+                                  Text(
+                                    'Controleer de invoer en probeer het opnieuw.',
+                                    style: AppTextTheme.textTheme.bodySmall?.copyWith(color: Colors.black54),
+                                    textAlign: TextAlign.center,
+                                  ),
                               ],
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 20),
-                          Text(
-                            messages.join('\n'),
-                            style: AppTextTheme.textTheme.bodyMedium?.copyWith(
-                              shadows: [
-                                Shadow(
-                                  color: Colors.black.withValues(alpha: 0.25),
-                                  offset: const Offset(0, 2),
-                                  blurRadius: 4,
-                                ),
-                              ],
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
+                            );
+                          }),
                         ],
                       ),
                     ),

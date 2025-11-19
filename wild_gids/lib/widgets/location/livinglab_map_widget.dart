@@ -245,32 +245,36 @@ class _LivingLabMapScreenState extends State<LivingLabMapScreen> {
   }
 
   Future<void> _handleTap(TapPosition tapPosition, LatLng point) async {
-    if (point.latitude >= minLat &&
-        point.latitude <= maxLat &&
-        point.longitude >= minLng &&
-        point.longitude <= maxLng) {
-      final tempPoint = point;
+    // Check if tapped point is within Living Lab boundaries
+    if (point.latitude < minLat ||
+        point.latitude > maxLat ||
+        point.longitude < minLng ||
+        point.longitude > maxLng) {
+      debugPrint('[LivingLabMapScreen] Tap outside boundaries - ignoring');
+      return;
+    }
+
+    final tempPoint = point;
+    if (mounted) {
+      setState(() {
+        _markedLocation = tempPoint;
+        _markedAddress = 'Fetching address...';
+      });
+    }
+
+    try {
+      final address = await _mapService.getAddressFromLatLng(point);
+      if (!mounted) return;
+
+      setState(() {
+        _markedAddress = address;
+      });
+    } catch (e) {
+      debugPrint('Error fetching address: $e');
       if (mounted) {
         setState(() {
-          _markedLocation = tempPoint;
-          _markedAddress = 'Fetching address...';
+          _markedAddress = 'Address unavailable';
         });
-      }
-
-      try {
-        final address = await _mapService.getAddressFromLatLng(point);
-        if (!mounted) return;
-
-        setState(() {
-          _markedAddress = address;
-        });
-      } catch (e) {
-        debugPrint('Error fetching address: $e');
-        if (mounted) {
-          setState(() {
-            _markedAddress = 'Address unavailable';
-          });
-        }
       }
     }
   }

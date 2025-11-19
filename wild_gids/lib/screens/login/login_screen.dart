@@ -17,41 +17,24 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen>
-  with PermissionChecker<LoginScreen>, SingleTickerProviderStateMixin {
+class _LoginScreenState extends State<LoginScreen> with PermissionChecker<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   late final LoginInterface _loginManager;
   bool showVerification = false;
   bool isError = false;
   String errorMessage = '';
   String? _pendingErrorMessage;
-  // Deer animation fields
-  late AnimationController _controller;
-  late Animation<double> _yJump;
 
   @override
   void initState() {
     super.initState();
     _loginManager = context.read<LoginInterface>();
     initiatePermissionCheck();
-    // Deer animation controller
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 4),
-    );
-
-    _yJump = TweenSequence([
-      TweenSequenceItem(tween: Tween(begin: 0.0, end: -120.0), weight: 50),
-      TweenSequenceItem(tween: Tween(begin: -120.0, end: 0.0), weight: 50),
-    ]).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-
-    _controller.repeat();
   }
 
   @override
   void dispose() {
     emailController.dispose();
-    _controller.dispose();
     super.dispose();
   }
 
@@ -130,72 +113,35 @@ class _LoginScreenState extends State<LoginScreen>
                 color: AppColors.darkGreen,
                 borderRadius: BorderRadius.zero,
               ),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final containerHeight = constraints.maxHeight;
-                  return Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      // Column with logo on top and deer animation below
-                      Column(
-                        children: [
-                          SizedBox(height: containerHeight * 0.12),
-                          Align(
-                            alignment: Alignment.topCenter,
-                            child: Image.asset(
-                              'assets/LogoWildlifeNL.png',
-                              width: screenWidth * 0.55,
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                          SizedBox(height: containerHeight * 0.02),
-                          // animation area (bigger, allow overflow)
-                          SizedBox(
-                            height: containerHeight * 0.6,
-                            child: Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                AnimatedBuilder(
-                                  animation: _controller,
-                                  builder: (context, child) {
-                                    final deerSize = screenWidth * 0.35; // make deer bigger
-                                    final left = (_controller.value) * (screenWidth + deerSize) - deerSize;
-                                    // Raise the deer by using containerHeight as base
-                                    final bottom = (containerHeight * 0.30) + _yJump.value;
-                                    return Positioned(
-                                      left: left,
-                                      bottom: bottom,
-                                      child: Image.asset(
-                                        'assets/icons/deer.png',
-                                        width: deerSize,
-                                        height: deerSize,
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      // 'Wild Gids' centered at the bottom inside the green container
-                      Align(
-                        alignment: Alignment.bottomCenter,
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: 12.0),
-                          child: Text(
-                            'Wild Gids',
-                            style: AppTextTheme.textTheme.titleLarge?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image.asset(
+                          'assets/LogoWildlifeNL.png',
+                          width: screenWidth * 0.6,
+                          fit: BoxFit.contain,
                         ),
-                      ),
-                    ],
-                  );
-                },
+                        const SizedBox(height: 12),
+                        Text(
+                          'Wild Rapport',
+                          style: AppTextTheme.textTheme.titleLarge?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ) ?? const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w700),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Positioned(
+                    bottom: -20,
+                    right: -10,
+                    child: SizedBox.shrink(),
+                  ),
+                ],
               ),
             ),
           ),
@@ -254,7 +200,7 @@ class _LoginScreenState extends State<LoginScreen>
                             child: TextField(
                               controller: emailController,
                               decoration: InputDecoration(
-                                hintText: 'voorbeeld@gmail.com',
+                                hintText: 'e-mailadres',
                                 hintStyle: TextStyle(color: Colors.grey),
                                 border: InputBorder.none,
                                 enabledBorder: InputBorder.none,
@@ -269,7 +215,7 @@ class _LoginScreenState extends State<LoginScreen>
                           const SizedBox(height: 24),
                           BrownButton(
                             model: ButtonModelFactory.createLoginButton(
-                              text: 'Login',
+                              text: 'Aanmelden',
                             ),
                             onPressed: _handleLogin,
                           ),
@@ -283,7 +229,7 @@ class _LoginScreenState extends State<LoginScreen>
                                 );
                               },
                               child: Text(
-                                'Leer hoe de registratie werkt?',
+                                'Hoe werkt de registratie?',
                                 style: TextStyle(
                                   color: AppColors.brown,
                                   decoration: TextDecoration.underline,

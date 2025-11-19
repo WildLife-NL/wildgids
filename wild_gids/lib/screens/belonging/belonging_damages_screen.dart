@@ -171,7 +171,7 @@ class _PossesionDamageScreenState extends State<BelongingDamagesScreen> {
           children: [
             CustomAppBar(
               leftIcon: Icons.arrow_back_ios,
-              centerText: "Gewasschade",
+              centerText: "Schademelding",
               rightIcon: null,
               showUserIcon: true,
               onLeftIconPressed: () {

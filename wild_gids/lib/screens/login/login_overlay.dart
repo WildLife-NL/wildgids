@@ -57,7 +57,7 @@ class LoginOverlay extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            'Heeft u geen account?',
+                            'Hebt u nog geen account?',
                             style: AppTextTheme.textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                               fontSize: 24,
@@ -66,9 +66,10 @@ class LoginOverlay extends StatelessWidget {
                           ),
                           const SizedBox(height: 20),
                           Text(
-                            'Voer uw e-mailadres in. U ontvangt een verificatiecode per e-mail. '
-                            'Als er al een account bestaat, wordt u ingelogd. Zo niet, dan wordt er '
-                            'automatisch een account voor u aangemaakt en direct ingelogd.',
+                            'Geef uw e-mailadres op en bevestig met de knop \'Aanmelden\'. '
+                            'U ontvangt een verificatiecode per e-mail welke u dan in deze app invoert. '
+                            'Indien er nog geen account bestaat voor dit e-mailadres wordt deze automatisch geregistreerd. '
+                            'Daarna bent u aangemeld.',
                             style: AppTextTheme.textTheme.bodyMedium?.copyWith(
                               
                             ),

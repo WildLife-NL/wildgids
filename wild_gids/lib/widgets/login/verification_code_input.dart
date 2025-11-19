@@ -218,20 +218,17 @@ Future<void> _verifyCode() async {
         child: SizedBox(
           width: 200,
           height: 200,
-          child: ColorFiltered(
-            colorFilter: ColorFilter.mode(AppColors.darkGreen, BlendMode.srcIn),
-            child: Lottie.asset(
-              'assets/loaders/loading_paw.json',
-              fit: BoxFit.contain,
-              repeat: true,
-              animate: true,
-              frameRate: FrameRate(60),
-              controller: _animationController,
-              onLoaded: (composition) {
-                _animationController.duration = composition.duration;
-                _animationController.forward();
-              },
-            ),
+          child: Lottie.asset(
+            'assets/loaders/loading_paw.json',
+            fit: BoxFit.contain,
+            repeat: true,
+            animate: true,
+            frameRate: FrameRate(60),
+            controller: _animationController,
+            onLoaded: (composition) {
+              _animationController.duration = composition.duration;
+              _animationController.forward();
+            },
           ),
         ),
       );

@@ -63,7 +63,6 @@ class AnimalSightingReportingManager implements AnimalSightingReportingInterface
     String? animalImagePath,
     String? animalName,
     List<AnimalGenderViewCount>? genderViewCounts,
-    AnimalAge? age,
   }) {
     return AnimalModel(
       animalId: animalId ?? source.animalId,
@@ -71,7 +70,6 @@ class AnimalSightingReportingManager implements AnimalSightingReportingInterface
       animalName: animalName ?? source.animalName,
       genderViewCounts: genderViewCounts ?? source.genderViewCounts,
       condition: source.condition,
-      age: age ?? source.age,
     );
   }
 
@@ -165,15 +163,8 @@ AnimalSightingModel createanimalSighting() {
   @override
   AnimalSightingModel updateAge(AnimalAge age) {
     _validateCurrentAnimal();
-    final currentAnimal = _currentanimalSighting!.animalSelected!;
-
-    final updatedAnimal = _createAnimalModel(
-      source: currentAnimal,
-      age: age,
-    );
-
     return _updateSighting(
-      animalSelected: updatedAnimal,
+      animalSelected: _currentanimalSighting!.animalSelected,
     );
   }
 
@@ -458,7 +449,6 @@ List<ObservedAnimalEntry> getObservedAnimals() {
         animalName: baseAnimal.animalName,
         condition: entry.condition,
         genderViewCounts: [gvc],
-        age: entry.age,
       );
 
       converted.add(batchModel);

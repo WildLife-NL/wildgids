@@ -36,7 +36,7 @@ class _CollisionDetailsScreenState extends State<CollisionDetailsScreen> {
           children: [
             CustomAppBar(
               leftIcon: Icons.arrow_back_ios,
-              centerText: 'Verkeersongeval Details',
+              centerText: 'Dieraanrijding Details',
               rightIcon: null,
               showUserIcon: true,
               onLeftIconPressed: () {
