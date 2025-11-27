@@ -10,6 +10,7 @@ import 'package:geolocator/geolocator.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wildrapport/screens/login/login_screen.dart';
+import 'package:wildrapport/managers/encounter_message_manager.dart';
 
 class AppStateProvider with ChangeNotifier {
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -203,6 +204,9 @@ class AppStateProvider with ChangeNotifier {
     } catch (e, st) {
       debugPrint('[AppStateProvider] logout(): failed to clear token: $e\n$st');
     }
+
+    // Clear encounter message history so they can show again on next login
+    EncounterMessageManager().clear();
 
     // Reset in-memory app state
     _screenStates.clear();

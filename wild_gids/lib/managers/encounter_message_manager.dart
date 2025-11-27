@@ -11,11 +11,8 @@ class EncounterMessageManager extends ChangeNotifier {
   EncounterMessageManager._internal();
 
   final Queue<TrackingNotice> _messageQueue = Queue<TrackingNotice>();
-  final Map<String, DateTime> _shownMessages = <String, DateTime>{};
+  final Set<String> _shownMessagesThisSession = <String>{};
   bool _isShowingMessage = false;
-
-  /// How long to remember shown messages (5 minutes)
-  static const Duration _deduplicationWindow = Duration(minutes: 5);
 
   /// Check if currently showing a message
   bool get isShowingMessage => _isShowingMessage;
@@ -23,31 +20,21 @@ class EncounterMessageManager extends ChangeNotifier {
   /// Get the number of queued messages
   int get queueSize => _messageQueue.length;
 
-  /// Add a notice to the queue (with time-based deduplication)
+  /// Add a notice to the queue (with app session-based deduplication)
   void addNotice(TrackingNotice notice) {
     final key = _getNoticeKey(notice);
-    final now = DateTime.now();
     
     debugPrint('[EncounterManager] addNotice called for: $key');
     
-    // Clean up old entries
-    _shownMessages.removeWhere((k, timestamp) => 
-      now.difference(timestamp) > _deduplicationWindow
-    );
-    
-    debugPrint('[EncounterManager] After cleanup: ${_shownMessages.length} messages in history');
-    
-    // Skip if shown recently
-    if (_shownMessages.containsKey(key)) {
-      final lastShown = _shownMessages[key]!;
-      final timeSince = now.difference(lastShown);
-      debugPrint('[EncounterManager] Skipping duplicate: $key (shown ${timeSince.inSeconds}s ago)');
+    // Skip if already shown this app session (since login)
+    if (_shownMessagesThisSession.contains(key)) {
+      debugPrint('[EncounterManager] Skipping duplicate: $key (already shown since login)');
       return;
     }
 
-    // Add to queue
+    // Add to queue and mark as shown
     _messageQueue.add(notice);
-    _shownMessages[key] = now;
+    _shownMessagesThisSession.add(key);
 
     debugPrint('[EncounterManager] ✓✓✓ Added notice to queue: $key (Queue size: ${_messageQueue.length})');
     debugPrint('[EncounterManager] About to call notifyListeners()...');
@@ -91,16 +78,10 @@ class EncounterMessageManager extends ChangeNotifier {
   /// Clear all messages and history
   void clear() {
     _messageQueue.clear();
-    _shownMessages.clear();
+    _shownMessagesThisSession.clear();
     _isShowingMessage = false;
     debugPrint('[EncounterManager] ✓ Cleared all messages and history');
     notifyListeners();
-  }
-
-  /// Clear only the deduplication history (for testing)
-  void clearHistory() {
-    _shownMessages.clear();
-    debugPrint('[EncounterManager] ✓ Cleared deduplication history');
   }
 
   /// Trigger vibration feedback
