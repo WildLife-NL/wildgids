@@ -15,6 +15,8 @@ import 'package:wildrapport/managers/api_managers/detection_pins_manager.dart';
 
 import 'package:wildrapport/interfaces/data_apis/tracking_api_interface.dart'
     show TrackingApiInterface, TrackingNotice;
+import 'package:wildrapport/managers/encounter_message_manager.dart';
+import 'package:wildrapport/managers/api_managers/vicinity_manager.dart';
 import 'dart:async';
 
 
@@ -76,7 +78,11 @@ Future<TrackingNotice?> sendTrackingPingFromPosition(Position pos) async {
 
     if (notice != null) {
       _lastTrackingNotice = notice;
-      debugPrint('[MapProvider] 🔔 Got tracking notice, calling notifyListeners()');
+      debugPrint('[MapProvider] 🔔 Got tracking notice, adding to global queue');
+      
+      // Add to global encounter message manager
+      EncounterMessageManager().addNotice(notice);
+      
       notifyListeners(); // if any UI wants to react to changes
       debugPrint('[MapProvider] ✓ tracking-reading OK; notice="${notice.text}"'
           ' sev=${notice.severity ?? '-'}');
@@ -129,6 +135,11 @@ Future<TrackingNotice?> sendTrackingPingFromPosition(Position pos) async {
   InteractionQueryManager? _interactionsManager;
   void setInteractionsManager(InteractionQueryManager manager) {
     _interactionsManager = manager;
+  }
+
+  VicinityManager? _vicinityManager;
+  void setVicinityManager(VicinityManager manager) {
+    _vicinityManager = manager;
   }
 
   List<InteractionQueryResult> get interactions =>
@@ -412,7 +423,63 @@ Future<TrackingNotice?> sendTrackingPingFromPosition(Position pos) async {
     }
   }
 
-  /// Convenience to load everything for the current view
+  /// Load all data from the vicinity endpoint (NEW preferred method)
+  /// This replaces separate loadAnimalPins, loadDetectionPins, loadInteractions calls
+  Future<void> loadVicinity() async {
+    if (_vicinityManager == null) {
+      debugPrint(
+        '[MapProvider] VicinityManager not set. Call setVicinityManager() first.',
+      );
+      return;
+    }
+
+    _animalPinsLoading = true;
+    _detectionPinsLoading = true;
+    _interactionsLoading = true;
+    notifyListeners();
+
+    try {
+      final vicinity = await _vicinityManager!.loadVicinity();
+
+      _animalPins
+        ..clear()
+        ..addAll(vicinity.animals);
+
+      _detectionPins
+        ..clear()
+        ..addAll(vicinity.detections);
+
+      _interactions
+        ..clear()
+        ..addAll(vicinity.interactions);
+
+      _animalPinsLoading = false;
+      _detectionPinsLoading = false;
+      _interactionsLoading = false;
+      _animalPinsError = null;
+      _detectionPinsError = null;
+      _interactionsError = null;
+
+      debugPrint(
+        '[MapProvider/Vicinity] Loaded ${_animalPins.length} animals, '
+        '${_detectionPins.length} detections, ${_interactions.length} interactions',
+      );
+
+      notifyListeners();
+    } catch (e) {
+      _animalPinsLoading = false;
+      _detectionPinsLoading = false;
+      _interactionsLoading = false;
+      _animalPinsError = e.toString();
+      _detectionPinsError = e.toString();
+      _interactionsError = e.toString();
+      debugPrint('[MapProvider/Vicinity] Error loading vicinity: $e');
+      notifyListeners();
+    }
+  }
+
+  /// Convenience to load everything for the current view (LEGACY - kept for compatibility)
+  /// Prefer using loadVicinity() instead
   Future<void> loadAllPinsForView({
     required double lat,
     required double lon,

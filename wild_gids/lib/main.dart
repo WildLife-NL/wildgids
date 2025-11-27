@@ -60,8 +60,11 @@ import 'package:wildrapport/managers/api_managers/detection_pins_manager.dart';
 
 import 'package:wildrapport/providers/conveyance_provider.dart';
 import 'package:wildrapport/data_managers/conveyance_api.dart';
+import 'package:wildrapport/data_managers/vicinity_api.dart';
+import 'package:wildrapport/managers/api_managers/vicinity_manager.dart';
 
 import 'package:wildrapport/utils/token_validator.dart';
+import 'package:wildrapport/widgets/global_encounter_handler.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -106,9 +109,14 @@ void main() async {
 
   final interactionQueryApi = InteractionQueryApi(geoApiClient);
   final interactionQueryManager = InteractionQueryManager(interactionQueryApi);
+  
+  final vicinityApi = VicinityApi(apiClient);
+  final vicinityManager = VicinityManager(vicinityApi);
+  
   mapProvider.setInteractionsManager(interactionQueryManager);
   mapProvider.setDetectionPinsManager(detectionPinsManager);
   mapProvider.setAnimalPinsManager(animalPinsManager);
+  mapProvider.setVicinityManager(vicinityManager);
 
   final trackingApi = TrackingApi(apiClient);
   mapProvider.setTrackingApi(trackingApi);
@@ -231,13 +239,17 @@ class MyApp extends StatelessWidget {
           ),
         ),
         builder: (context, child) {
+          final appState = context.read<AppStateProvider>();
           return MediaQuery(
             data: MediaQuery.of(context).copyWith(
               textScaler: TextScaler.linear(
                 MediaQuery.textScalerOf(context).scale(1.0).clamp(0.8, 1.4),
               ),
             ),
-            child: child!,
+            child: GlobalEncounterHandler(
+              navigatorKey: appState.navigatorKey,
+              child: child ?? const SizedBox(),
+            ),
           );
         },
         home: initialScreen,
