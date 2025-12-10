@@ -4,6 +4,34 @@ import 'package:wildrapport/interfaces/data_apis/species_api_interface.dart';
 import 'package:wildrapport/models/api_models/species.dart';
 import 'package:wildrapport/constants/app_colors.dart';
 
+// Map common species names to asset paths, if available
+String? _assetForCommonName(String? commonName) {
+  if (commonName == null || commonName.isEmpty) return null;
+  final name = commonName.toLowerCase();
+  if (name.contains('wolf')) return 'assets/wolf.png';
+  if (name.contains('vos')) return 'assets/vos.png';
+  if (name.contains('ree')) return 'assets/ree.png';
+  if (name.contains('damhert')) return 'assets/Damhert app.png';
+  if (name.contains('edelhert')) return 'assets/Edelhert.png';
+  if (name.contains('hert')) return 'assets/deer.png';
+  if (name.contains('zwijn') || name.contains('wild zwijn')) return 'assets/Wild Zwijn.png';
+  if (name.contains('bever')) return 'assets/Bever.png';
+  if (name.contains('eekhoorn')) return 'assets/eekhoorn.png';
+  if (name.contains('konijn')) return 'assets/konijn.png';
+  if (name.contains('haas')) return 'assets/haas.png';
+  if (name.contains('das')) return 'assets/Das.png';
+  if (name.contains('marter') || name.contains('steenmarter')) return 'assets/steenmarter.png';
+  if (name.contains('bunzing')) return 'assets/Bunzing.png';
+  if (name.contains('wilde kat')) return 'assets/wilde kat.png';
+  if (name.contains('beer')) return 'assets/beer.png';
+  if (name.contains('konik')) return 'assets/Konikpaard.png';
+  if (name.contains('pony') || name.contains('shetland')) return 'assets/Shetland pony.png';
+  if (name.contains('galloway')) return 'assets/Galloway.png';
+  if (name.contains('wisent')) return 'assets/Wisent App.png';
+  if (name.contains('tauros')) return 'assets/Tauros app.png';
+  return null;
+}
+
 class SpeciesListScreen extends StatefulWidget {
   const SpeciesListScreen({super.key});
 
@@ -194,6 +222,7 @@ class _SpeciesTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final imgPath = _assetForCommonName(species.commonName);
     return ElevatedButton(
       onPressed: () {
         Navigator.of(context).push(
@@ -219,9 +248,9 @@ class _SpeciesTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(6),
                 child: Container(
                   color: AppColors.darkGreen,
-                  child: const Center(
-                    child: Icon(Icons.pets, size: 64, color: Colors.white),
-                  ),
+                  child: imgPath != null
+                      ? Image(image: AssetImage(imgPath), fit: BoxFit.cover)
+                      : const Center(child: Icon(Icons.pets, size: 64, color: Colors.white)),
                 ),
               ),
             ),
@@ -254,6 +283,7 @@ class _SpeciesList extends StatelessWidget {
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final s = species[index];
+        final imgPath = _assetForCommonName(s.commonName);
         return Material(
           color: Colors.transparent,
           child: InkWell(
@@ -270,7 +300,7 @@ class _SpeciesList extends StatelessWidget {
                 child: Row(
                   children: [
                     const SizedBox(width: 12),
-                    _imageBox(),
+                    _imageBox(imgPath),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -304,7 +334,7 @@ class _SpeciesList extends StatelessWidget {
     );
   }
 
-  Widget _imageBox() {
+  Widget _imageBox(String? imgPath) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
       child: Container(
@@ -313,101 +343,213 @@ class _SpeciesList extends StatelessWidget {
         color: AppColors.darkGreen,
         child: Container(
           decoration: BoxDecoration(color: Colors.white.withOpacity(0.12), borderRadius: BorderRadius.circular(8)),
-          child: const Icon(Icons.pets, color: Colors.white, size: 28),
+          child: imgPath != null
+              ? Image(image: AssetImage(imgPath), fit: BoxFit.cover)
+              : const Icon(Icons.pets, color: Colors.white, size: 28),
         ),
       ),
     );
   }
 }
 
-class SpeciesDetailScreen extends StatelessWidget {
+class SpeciesDetailScreen extends StatefulWidget {
   final Species species;
 
   const SpeciesDetailScreen({super.key, required this.species});
 
   @override
+  State<SpeciesDetailScreen> createState() => _SpeciesDetailScreenState();
+}
+
+class _SpeciesDetailScreenState extends State<SpeciesDetailScreen> {
+  late final PageController _pageController;
+  int _currentPage = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: 0);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final species = widget.species;
+    final title = species.commonName.isNotEmpty ? species.commonName : (species.latinName ?? 'Soort');
+    final headerImage = _assetForCommonName(species.commonName);
+
     return Scaffold(
-      appBar: AppBar(title: Text(species.commonName.isNotEmpty ? species.commonName : (species.latinName ?? 'Soort'))),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (species.latinName != null)
-              _InfoSection(
-                title: 'Wetenschappelijke naam',
-                child: Text(
-                  species.latinName!,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontStyle: FontStyle.italic, color: Colors.black),
+      body: Column(
+        children: [
+          // Header
+          Container(
+            color: AppColors.darkGreen,
+            padding: const EdgeInsets.only(top: 48, left: 20, right: 20, bottom: 16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 4),
+                      Text(species.category, style: const TextStyle(color: Colors.white70, fontSize: 14)),
+                    ],
+                  ),
                 ),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    width: 72,
+                    height: 72,
+                    color: Colors.white.withOpacity(0.2),
+                    child: headerImage != null
+                        ? Image(image: AssetImage(headerImage), fit: BoxFit.cover)
+                        : const Center(child: Icon(Icons.pets, color: Colors.white, size: 36)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Divider
+          Container(height: 6, color: Colors.white),
+
+          // Slideshow cards with stacked look
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        // back layers for stacked effect
+                        Positioned(
+                          right: 0,
+                          top: 24,
+                          child: _stackedLayer(widthFactor: 0.92),
+                        ),
+                        Positioned(
+                          right: 8,
+                          top: 12,
+                          child: _stackedLayer(widthFactor: 0.96),
+                        ),
+                        // main page view card
+                        _pageCardContainer(
+                          child: PageView(
+                            controller: _pageController,
+                            onPageChanged: (i) => setState(() => _currentPage = i),
+                            children: [
+                              _contentCard(title: 'Omschrijving', text: _composeText(species, include: const ['description'])),
+                              _contentCard(title: 'Gedrag', text: _composeText(species, include: const ['behaviour'])),
+                              _contentCard(title: 'Rol in de natuur', text: _composeText(species, include: const ['roleInNature'])),
+                              _contentCard(title: 'Advies', text: _composeText(species, include: const ['advice'])),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // chips row to switch pages
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _chip('OMSCHRIJVING', 0),
+                      _chip('GEDRAG', 1),
+                      _chip('ROL IN DE NATUUR', 2),
+                      _chip('ADVIES', 3),
+                    ],
+                  ),
+                ],
               ),
-            if (species.category.isNotEmpty)
-              _InfoSection(
-                title: 'Categorie',
-                child: Text(species.category, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.black)),
-              ),
-            if (species.description != null)
-              _InfoSection(
-                title: 'Beschrijving',
-                child: Text(species.description!, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.black)),
-              ),
-            if (species.behaviour != null)
-              _InfoSection(
-                title: 'Gedrag',
-                child: Text(species.behaviour!, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.black)),
-              ),
-            if (species.roleInNature != null)
-              _InfoSection(
-                title: 'Rol in de natuur',
-                child: Text(species.roleInNature!, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.black)),
-              ),
-            if (species.advice != null)
-              _InfoSection(
-                title: 'Advies',
-                child: Text(species.advice!, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.black)),
-              ),
-            if (species.schema != null)
-              _InfoSection(
-                title: 'Schema',
-                child: Text(species.schema!, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.black)),
-              ),
-          ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper to compose text sections
+  String _composeText(Species s, {required List<String> include}) {
+    final parts = <String?>[];
+    if (include.contains('description')) parts.add(s.description);
+    if (include.contains('behaviour')) parts.add(s.behaviour);
+    if (include.contains('roleInNature')) parts.add(s.roleInNature);
+    if (include.contains('advice')) parts.add(s.advice);
+    return parts.where((p) => (p ?? '').isNotEmpty).cast<String>().join('\n\n');
+  }
+
+  // Chip widget
+  Widget _chip(String label, int page) {
+    final selected = _currentPage == page;
+    return ElevatedButton(
+      onPressed: () => _pageController.animateToPage(
+        page,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeInOut,
+      ),
+      style: ElevatedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        backgroundColor: selected ? AppColors.darkGreen : AppColors.lightMintGreen,
+        foregroundColor: selected ? Colors.white : AppColors.brown,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: AppColors.darkGreen)),
+        elevation: 0,
+      ),
+      child: Text(label),
+    );
+  }
+
+  // Container styling for the page view card
+  Widget _pageCardContainer({required Widget child}) {
+    return Container(
+      width: double.infinity,
+      height: 440,
+      decoration: BoxDecoration(
+        color: AppColors.darkGreen,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: child,
+    );
+  }
+
+  Widget _stackedLayer({required double widthFactor}) {
+    return FractionallySizedBox(
+      widthFactor: widthFactor,
+      child: Container(
+        height: 420,
+        decoration: BoxDecoration(
+          color: AppColors.darkGreen,
+          borderRadius: BorderRadius.circular(18),
         ),
       ),
     );
   }
-}
-
-class _InfoSection extends StatelessWidget {
-  final String title;
-  final Widget child;
-
-  const _InfoSection({required this.title, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
-      elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppColors.darkGreen,
-                    fontWeight: FontWeight.w700,
-                  ),
-            ),
-            const SizedBox(height: 8),
-            child,
-          ],
+  // Content card for each page
+  Widget _contentCard({required String title, required String text}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Center(
+          child: Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
         ),
-      ),
+        const SizedBox(height: 12),
+        Expanded(
+          child: SingleChildScrollView(
+            child: Text(
+              text.isNotEmpty ? text : '—',
+              style: const TextStyle(color: Colors.white, height: 1.4),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
