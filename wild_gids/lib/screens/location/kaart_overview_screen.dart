@@ -6,13 +6,11 @@ import 'package:geolocator/geolocator.dart';
 import 'package:wildrapport/providers/map_provider.dart';
 import 'package:wildrapport/providers/app_state_provider.dart';
 import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/screens/overlay/encounter_message_overlay.dart';
 import 'package:wildrapport/managers/map/location_map_manager.dart';
 import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
 import 'package:wildrapport/screens/shared/overzicht_screen.dart';
 import 'package:wildrapport/screens/profile/profile_screen.dart';
 import 'dart:async';
-import 'dart:math' as math;
 import 'dart:convert';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart'
     as cl;
@@ -38,10 +36,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
   // cache things we must clean up
   late MapProvider _mp; // <— cached provider
   StreamSubscription<Position>? _posSub;
-  VoidCallback? _mpListener;
-  bool _listenerAttached = false;
   Timer? _debounce;
-  String? _lastNoticeKey;
 
   double? _lastZoom;
   static const _debounceMs = 450;
@@ -49,7 +44,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
   bool _useClusters = true;
   static const double _clusterUntilZoom = 17.0;
 
-  static const double _initialZoom = 8.0; // same as your initialZoom
+  static const double _initialZoom = 15.0; // Initial zoom when map loads
   bool _followUser = true;
 
   // Filter state (default: show only last hour; enable others via filter)
@@ -70,71 +65,8 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
   void didChangeDependencies() {
     super.didChangeDependencies();
     _mp = context.read<MapProvider>();
-
-    _mpListener ??= () {
-      debugPrint('[Kaart] 📨 Listener triggered');
-      final n = _mp.lastTrackingNotice;
-
-      if (n == null) {
-        debugPrint('[Kaart] No tracking notice to show');
-        return;
-      }
-
-      if (!mounted) {
-        debugPrint('[Kaart] Widget not mounted, skipping notice');
-        return;
-      }
-
-      debugPrint(
-        '[Kaart] Received notice: "${n.text}" (severity: ${n.severity})',
-      );
-
-      // Dedup the same notice
-      final key = '${n.text}|${n.severity ?? ''}';
-      if (_lastNoticeKey == key) {
-        debugPrint('[Kaart] Duplicate notice, skipping');
-        return;
-      }
-      _lastNoticeKey = key;
-
-      debugPrint('[Kaart] Scheduling popup dialog to show');
-
-      // Schedule the dialog to show after the current frame completes
-      // This ensures we're not modifying the widget tree during a build
-      Future.microtask(() {
-        if (!mounted) return;
-
-        // Use a post-frame callback as an extra safety layer
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-
-          try {
-            debugPrint('[Kaart] 🎉 Showing message-style popup: "${n.text}"');
-            showDialog(
-              context: context,
-              barrierDismissible: true,
-              builder:
-                  (_) => EncounterMessageOverlay(
-                    message: n.text,
-                    title:
-                        n.severity == 1
-                            ? 'Waarschuwing'
-                            : (n.severity == 2 ? 'Melding' : 'Informatie'),
-                    severity: n.severity,
-                  ),
-            );
-          } catch (e) {
-            debugPrint('[Kaart] ❌ Failed to show tracking notice: $e');
-          }
-        });
-      });
-    };
-
-    if (!_listenerAttached) {
-      debugPrint('[Kaart] 🔗 Attaching listener to MapProvider');
-      _mp.addListener(_mpListener!);
-      _listenerAttached = true;
-    }
+    // Note: Encounter messages are now handled globally via GlobalEncounterHandler
+    // No need for local listener here
   }
 
   @override
@@ -148,9 +80,6 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
   void dispose() {
     _debounce?.cancel();
     _posSub?.cancel();
-    if (_listenerAttached && _mpListener != null) {
-      _mp.removeListener(_mpListener!);
-    }
     _mp.stopTracking();
     super.dispose();
   }
@@ -158,7 +87,10 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
   void _queueFetch() {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: _debounceMs), () {
-      if (mounted) _fetchAllForView();
+      if (mounted) {
+        final map = context.read<MapProvider>();
+        map.loadVicinity();
+      }
     });
   }
 
@@ -213,69 +145,6 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
         _mp.mapController.move(LatLng(pos.latitude, pos.longitude), z);
       }
     });
-  }
-
-  Future<void> _fetchAllForView() async {
-    final map = context.read<MapProvider>();
-    final camera = map.mapController.camera;
-    final center = camera.center;
-    final zoom = camera.zoom;
-
-    final widthPx = MediaQuery.of(context).size.width;
-    final metersPerPixel =
-        156543.03392 *
-        math.cos(center.latitude * math.pi / 180.0) /
-        math.pow(2.0, zoom);
-    final radius = ((widthPx / 2) * metersPerPixel).round().clamp(1000, 30000);
-
-    final now = DateTime.now().toUtc();
-    final after = now.subtract(const Duration(days: 30));
-
-    await map.loadAllPinsForView(
-      lat: center.latitude,
-      lon: center.longitude,
-      radiusMeters: radius,
-      after: after,
-      before: now,
-    );
-
-    debugPrint(
-      '[Map] initial totals  animals=${map.animalPins.length} '
-      'detections=${map.detectionPins.length} interactions=${map.interactions.length} '
-      'total=${map.totalPins}',
-    );
-
-    // Log all animals with JSON output
-    debugPrint(
-      '═══════════════════════════════════════════════════════════════',
-    );
-    debugPrint('[ANIMALS] Total count: ${map.animalPins.length}');
-    debugPrint(
-      '═══════════════════════════════════════════════════════════════',
-    );
-
-    for (int i = 0; i < map.animalPins.length; i++) {
-      final animal = map.animalPins[i];
-      try {
-        final jsonOutput = jsonEncode({
-          'index': i,
-          'id': animal.id,
-          'speciesName': animal.speciesName,
-          'lat': animal.lat,
-          'lon': animal.lon,
-          'seenAt': animal.seenAt.toIso8601String(),
-        });
-        debugPrint('[ANIMAL $i] JSON: $jsonOutput');
-      } catch (e) {
-        debugPrint('[ANIMAL $i] Error serializing: $e');
-        debugPrint(
-          '[ANIMAL $i] Raw: id=${animal.id}, species=${animal.speciesName}, lat=${animal.lat}, lon=${animal.lon}, seenAt=${animal.seenAt}',
-        );
-      }
-    }
-    debugPrint(
-      '═══════════════════════════════════════════════════════════════',
-    );
   }
 
   Future<void> _bootstrap() async {
@@ -343,14 +212,8 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
           _initialZoom,
         );
 
-        final now = DateTime.now().toUtc();
-        await map.loadAllPinsForView(
-          lat: pos.latitude,
-          lon: pos.longitude,
-          radiusMeters: 5000, // start fairly wide
-          after: now.subtract(const Duration(days: 31)),
-          before: now,
-        );
+        // Use new vicinity endpoint to load all data
+        await map.loadVicinity();
 
         debugPrint(
           '[Map] initial totals  '
@@ -2028,9 +1891,11 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
             target ??= await Geolocator.getLastKnownPosition();
 
             if (target != null) {
+              // Preserve current zoom level when centering
+              final currentZoom = mp.mapController.camera.zoom;
               mp.mapController.move(
                 LatLng(target.latitude, target.longitude),
-                _initialZoom,
+                currentZoom,
               );
             } else {
               if (!mounted) return;

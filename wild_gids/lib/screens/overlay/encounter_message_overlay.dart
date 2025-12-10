@@ -20,24 +20,24 @@ class EncounterMessageOverlay extends StatelessWidget {
     return GestureDetector(
       onTap: () => Navigator.of(context).pop(),
       child: Material(
-        color: Colors.black.withOpacity(0.28),
+        color: Colors.transparent, // No dimmed layer - handled by showDialog barrierColor
         child: Center(
           child: GestureDetector(
-            onTap: () {},
+            onTap: () {}, // Prevent tap-through
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 360, maxHeight: 160),
               child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 20),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
-                  color: AppColors.lightMintGreen.withOpacity(0.95),
+                  color: AppColors.lightMintGreen.withOpacity(0.98),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: AppColors.darkGreen, width: 1.6),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.14),
-                      blurRadius: 6,
-                      offset: const Offset(0, 3),
+                      color: Colors.black.withOpacity(0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
