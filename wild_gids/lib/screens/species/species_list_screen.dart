@@ -389,32 +389,47 @@ class _SpeciesDetailScreenState extends State<SpeciesDetailScreen> {
           // Header
           Container(
             color: AppColors.darkGreen,
-            padding: const EdgeInsets.only(top: 48, left: 20, right: 20, bottom: 16),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            padding: const EdgeInsets.only(top: 48, left: 8, right: 20, bottom: 16),
+            child: SizedBox(
+              height: 80,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Back button on the left
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ),
+                  // Centered title/category
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text(title, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w700)),
+                      Text(title, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w700), textAlign: TextAlign.center),
                       const SizedBox(height: 4),
-                      Text(species.category, style: const TextStyle(color: Colors.white70, fontSize: 14)),
+                      Text(species.category, style: const TextStyle(color: Colors.white70, fontSize: 14), textAlign: TextAlign.center),
                     ],
                   ),
-                ),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    width: 72,
-                    height: 72,
-                    color: Colors.white.withOpacity(0.2),
-                    child: headerImage != null
-                        ? Image(image: AssetImage(headerImage), fit: BoxFit.cover)
-                        : const Center(child: Icon(Icons.pets, color: Colors.white, size: 36)),
+                  // Image on the right
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        width: 72,
+                        height: 72,
+                        color: Colors.white.withOpacity(0.2),
+                        child: headerImage != null
+                            ? Image(image: AssetImage(headerImage), fit: BoxFit.cover)
+                            : const Center(child: Icon(Icons.pets, color: Colors.white, size: 36)),
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           // Divider
