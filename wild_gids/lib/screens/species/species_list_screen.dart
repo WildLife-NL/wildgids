@@ -442,14 +442,65 @@ class _SpeciesDetailScreenState extends State<SpeciesDetailScreen> {
                         ),
                         // main page view card
                         _pageCardContainer(
-                          child: PageView(
-                            controller: _pageController,
-                            onPageChanged: (i) => setState(() => _currentPage = i),
+                          child: Stack(
                             children: [
-                              _contentCard(title: 'Omschrijving', text: _composeText(species, include: const ['description'])),
-                              _contentCard(title: 'Gedrag', text: _composeText(species, include: const ['behaviour'])),
-                              _contentCard(title: 'Rol in de natuur', text: _composeText(species, include: const ['roleInNature'])),
-                              _contentCard(title: 'Advies', text: _composeText(species, include: const ['advice'])),
+                              // PageView with animated transitions
+                              PageView.builder(
+                                controller: _pageController,
+                                itemCount: 4,
+                                onPageChanged: (i) => setState(() => _currentPage = i),
+                                itemBuilder: (context, index) {
+                                  final titles = const ['Omschrijving', 'Gedrag', 'Rol in de natuur', 'Advies'];
+                                  final includes = const [
+                                    ['description'],
+                                    ['behaviour'],
+                                    ['roleInNature'],
+                                    ['advice'],
+                                  ];
+                                  return AnimatedBuilder(
+                                    animation: _pageController,
+                                    builder: (context, child) {
+                                      double t = 0.0;
+                                      if (_pageController.position.hasContentDimensions) {
+                                        final current = (_pageController.page ?? _currentPage.toDouble());
+                                        t = current - index.toDouble();
+                                      } else {
+                                        t = _currentPage.toDouble() - index.toDouble();
+                                      }
+                                      final scale = 1.0 - (t.abs() * 0.06).clamp(0.0, 0.06);
+                                      final opacity = 1.0 - (t.abs() * 0.35).clamp(0.0, 0.35);
+                                      return Transform.scale(
+                                        scale: scale,
+                                        child: Opacity(
+                                          opacity: opacity,
+                                          child: _contentCard(title: titles[index], text: _composeText(species, include: includes[index])),
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                              // Left/Right arrows
+                              Positioned(
+                                left: 8,
+                                bottom: 8,
+                                child: IconButton(
+                                  icon: const Icon(Icons.chevron_left, color: Colors.white, size: 28),
+                                  onPressed: _currentPage > 0
+                                      ? () => _pageController.previousPage(duration: const Duration(milliseconds: 250), curve: Curves.easeInOut)
+                                      : null,
+                                ),
+                              ),
+                              Positioned(
+                                right: 8,
+                                bottom: 8,
+                                child: IconButton(
+                                  icon: const Icon(Icons.chevron_right, color: Colors.white, size: 28),
+                                  onPressed: _currentPage < 3
+                                      ? () => _pageController.nextPage(duration: const Duration(milliseconds: 250), curve: Curves.easeInOut)
+                                      : null,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -458,13 +509,25 @@ class _SpeciesDetailScreenState extends State<SpeciesDetailScreen> {
                   ),
                   const SizedBox(height: 12),
                   // chips row to switch pages
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  Column(
                     children: [
-                      _chip('OMSCHRIJVING', 0),
-                      _chip('GEDRAG', 1),
-                      _chip('ROL IN DE NATUUR', 2),
-                      _chip('ADVIES', 3),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Expanded(child: _chip('OMSCHRIJVING', 0)),
+                          const SizedBox(width: 12),
+                          Expanded(child: _chip('GEDRAG', 1)),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Expanded(child: _chip('ROL IN DE NATUUR', 2)),
+                          const SizedBox(width: 12),
+                          Expanded(child: _chip('ADVIES', 3)),
+                        ],
+                      ),
                     ],
                   ),
                 ],
