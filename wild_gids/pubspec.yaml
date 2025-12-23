@@ -102,6 +102,9 @@ flutter:
     - assets/icons/possesion/gewassen/tulip_2.svg
     - assets/icons/possesion/gewassen/wheat.svg
     - assets/location/location_icon.png
+    # Ensure these folders are bundled (explicit to avoid manifest misses on web)
+    - assets/animal_drawings_no_bg/
+    - assets/real_animal_pics_no_bg/
     - assets/
     - .env
 

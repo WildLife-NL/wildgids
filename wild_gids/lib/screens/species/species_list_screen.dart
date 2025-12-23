@@ -3,34 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:wildrapport/interfaces/data_apis/species_api_interface.dart';
 import 'package:wildrapport/models/api_models/species.dart';
 import 'package:wildrapport/constants/app_colors.dart';
+import 'package:wildrapport/utils/species_click_tracker.dart';
+import 'package:wildrapport/utils/species_image_resolver.dart';
 
-// Map common species names to asset paths, if available
-String? _assetForCommonName(String? commonName) {
-  if (commonName == null || commonName.isEmpty) return null;
-  final name = commonName.toLowerCase();
-  if (name.contains('wolf')) return 'assets/wolf.png';
-  if (name.contains('vos')) return 'assets/vos.png';
-  if (name.contains('ree')) return 'assets/ree.png';
-  if (name.contains('damhert')) return 'assets/Damhert app.png';
-  if (name.contains('edelhert')) return 'assets/Edelhert.png';
-  if (name.contains('hert')) return 'assets/deer.png';
-  if (name.contains('zwijn') || name.contains('wild zwijn')) return 'assets/Wild Zwijn.png';
-  if (name.contains('bever')) return 'assets/Bever.png';
-  if (name.contains('eekhoorn')) return 'assets/eekhoorn.png';
-  if (name.contains('konijn')) return 'assets/konijn.png';
-  if (name.contains('haas')) return 'assets/haas.png';
-  if (name.contains('das')) return 'assets/Das.png';
-  if (name.contains('marter') || name.contains('steenmarter')) return 'assets/steenmarter.png';
-  if (name.contains('bunzing')) return 'assets/Bunzing.png';
-  if (name.contains('wilde kat')) return 'assets/wilde kat.png';
-  if (name.contains('beer')) return 'assets/beer.png';
-  if (name.contains('konik')) return 'assets/Konikpaard.png';
-  if (name.contains('pony') || name.contains('shetland')) return 'assets/Shetland pony.png';
-  if (name.contains('galloway')) return 'assets/Galloway.png';
-  if (name.contains('wisent')) return 'assets/Wisent App.png';
-  if (name.contains('tauros')) return 'assets/Tauros app.png';
-  return null;
-}
+// Image resolution now handled by SpeciesImageResolver + SpeciesClickTracker
 
 class SpeciesListScreen extends StatefulWidget {
   const SpeciesListScreen({super.key});
@@ -128,8 +104,8 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20.0),
                   child: _isGridView
-                      ? _SpeciesGrid(species: _filtered)
-                      : _SpeciesList(species: _filtered),
+                      ? _SpeciesGrid(species: _filtered, onChanged: () => setState(() {}))
+                      : _SpeciesList(species: _filtered, onChanged: () => setState(() {})),
                 ),
               ),
             ],
@@ -190,7 +166,8 @@ class _ViewToggle extends StatelessWidget {
 
 class _SpeciesGrid extends StatelessWidget {
   final List<Species> species;
-  const _SpeciesGrid({required this.species});
+  final VoidCallback? onChanged;
+  const _SpeciesGrid({required this.species, this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -208,7 +185,7 @@ class _SpeciesGrid extends StatelessWidget {
           return SizedBox(
             width: tileWidth,
             height: tileHeight,
-            child: _SpeciesTile(species: s),
+            child: _SpeciesTile(species: s, onChanged: onChanged),
           );
         }).toList(),
       ),
@@ -218,16 +195,18 @@ class _SpeciesGrid extends StatelessWidget {
 
 class _SpeciesTile extends StatelessWidget {
   final Species species;
-  const _SpeciesTile({required this.species});
+  final VoidCallback? onChanged;
+  const _SpeciesTile({required this.species, this.onChanged});
 
   @override
   Widget build(BuildContext context) {
-    final imgPath = _assetForCommonName(species.commonName);
     return ElevatedButton(
-      onPressed: () {
-        Navigator.of(context).push(
+      onPressed: () async {
+        await SpeciesClickTracker.markClicked(species.id);
+        await Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => SpeciesDetailScreen(species: species)),
         );
+        if (onChanged != null) onChanged!();
       },
       style: ElevatedButton.styleFrom(
         padding: EdgeInsets.zero,
@@ -248,9 +227,19 @@ class _SpeciesTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(6),
                 child: Container(
                   color: AppColors.darkGreen,
-                  child: imgPath != null
-                      ? Image(image: AssetImage(imgPath), fit: BoxFit.cover)
-                      : const Center(child: Icon(Icons.pets, size: 64, color: Colors.white)),
+                  child: FutureBuilder<bool>(
+                    future: SpeciesClickTracker.isClicked(species.id),
+                    builder: (context, snapshot) {
+                      final clicked = snapshot.data ?? false;
+                      final path = clicked
+                          ? SpeciesImageResolver.realForCommonName(species.commonName)
+                          : SpeciesImageResolver.drawingForCommonName(species.commonName);
+                      if (path == null) {
+                        return const Center(child: Icon(Icons.pets, size: 64, color: Colors.white));
+                      }
+                      return Image(image: AssetImage(path), fit: BoxFit.cover);
+                    },
+                  ),
                 ),
               ),
             ),
@@ -273,7 +262,8 @@ class _SpeciesTile extends StatelessWidget {
 
 class _SpeciesList extends StatelessWidget {
   final List<Species> species;
-  const _SpeciesList({required this.species});
+  final VoidCallback? onChanged;
+  const _SpeciesList({required this.species, this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -283,14 +273,15 @@ class _SpeciesList extends StatelessWidget {
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final s = species[index];
-        final imgPath = _assetForCommonName(s.commonName);
         return Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: () {
-              Navigator.of(context).push(
+            onTap: () async {
+              await SpeciesClickTracker.markClicked(s.id);
+              await Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => SpeciesDetailScreen(species: s)),
               );
+              if (onChanged != null) onChanged!();
             },
             borderRadius: BorderRadius.circular(16),
             child: Ink(
@@ -300,7 +291,7 @@ class _SpeciesList extends StatelessWidget {
                 child: Row(
                   children: [
                     const SizedBox(width: 12),
-                    _imageBox(imgPath),
+                    _imageBox(commonName: s.commonName, speciesId: s.id),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -334,7 +325,7 @@ class _SpeciesList extends StatelessWidget {
     );
   }
 
-  Widget _imageBox(String? imgPath) {
+  Widget _imageBox({required String commonName, required String speciesId}) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
       child: Container(
@@ -343,9 +334,17 @@ class _SpeciesList extends StatelessWidget {
         color: AppColors.darkGreen,
         child: Container(
           decoration: BoxDecoration(color: Colors.white.withOpacity(0.12), borderRadius: BorderRadius.circular(8)),
-          child: imgPath != null
-              ? Image(image: AssetImage(imgPath), fit: BoxFit.cover)
-              : const Icon(Icons.pets, color: Colors.white, size: 28),
+          child: FutureBuilder<bool>(
+            future: SpeciesClickTracker.isClicked(speciesId),
+            builder: (context, snapshot) {
+              final clicked = snapshot.data ?? false;
+              final path = clicked
+                  ? SpeciesImageResolver.realForCommonName(commonName)
+                  : SpeciesImageResolver.drawingForCommonName(commonName);
+              if (path == null) return const Icon(Icons.pets, color: Colors.white, size: 28);
+              return Image(image: AssetImage(path), fit: BoxFit.cover);
+            },
+          ),
         ),
       ),
     );
@@ -381,7 +380,7 @@ class _SpeciesDetailScreenState extends State<SpeciesDetailScreen> {
   Widget build(BuildContext context) {
     final species = widget.species;
     final title = species.commonName.isNotEmpty ? species.commonName : (species.latinName ?? 'Soort');
-    final headerImage = _assetForCommonName(species.commonName);
+    final headerImageDrawing = SpeciesImageResolver.drawingForCommonName(species.commonName);
 
     return Scaffold(
       body: Column(
@@ -422,9 +421,19 @@ class _SpeciesDetailScreenState extends State<SpeciesDetailScreen> {
                         width: 72,
                         height: 72,
                         color: Colors.white.withOpacity(0.2),
-                        child: headerImage != null
-                            ? Image(image: AssetImage(headerImage), fit: BoxFit.cover)
-                            : const Center(child: Icon(Icons.pets, color: Colors.white, size: 36)),
+                        child: FutureBuilder<bool>(
+                            future: SpeciesClickTracker.isClicked(species.id),
+                            builder: (context, snapshot) {
+                              final clicked = snapshot.data ?? false;
+                              final path = clicked
+                                  ? SpeciesImageResolver.realForCommonName(species.commonName)
+                                  : headerImageDrawing;
+                              if (path == null) {
+                                return const Center(child: Icon(Icons.pets, color: Colors.white, size: 36));
+                              }
+                              return Image(image: AssetImage(path), fit: BoxFit.cover);
+                            },
+                          )
                       ),
                     ),
                   ),
