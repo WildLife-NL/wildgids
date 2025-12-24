@@ -14,6 +14,8 @@ class LoginHeader extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.darkGreen,
           borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(75),
+            topRight: Radius.circular(75),
             bottomLeft: Radius.circular(75),
           ),
           boxShadow: [

@@ -224,7 +224,10 @@ class _SpeciesTile extends StatelessWidget {
             AspectRatio(
               aspectRatio: 1.0,
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  topRight: Radius.circular(12),
+                ),
                 child: Container(
                   color: AppColors.darkGreen,
                   child: FutureBuilder<bool>(
@@ -327,7 +330,10 @@ class _SpeciesList extends StatelessWidget {
 
   Widget _imageBox({required String commonName, required String speciesId}) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: const BorderRadius.only(
+        topLeft: Radius.circular(8),
+        topRight: Radius.circular(8),
+      ),
       child: Container(
         width: 56,
         height: 56,
@@ -386,10 +392,15 @@ class _SpeciesDetailScreenState extends State<SpeciesDetailScreen> {
       body: Column(
         children: [
           // Header
-          Container(
-            color: AppColors.darkGreen,
-            padding: const EdgeInsets.only(top: 48, left: 8, right: 20, bottom: 16),
-            child: SizedBox(
+          ClipRRect(
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(16),
+              topRight: Radius.circular(16),
+            ),
+            child: Container(
+              padding: const EdgeInsets.only(top: 48, left: 8, right: 20, bottom: 16),
+              color: AppColors.darkGreen,
+              child: SizedBox(
               height: 80,
               child: Stack(
                 alignment: Alignment.center,
@@ -438,6 +449,7 @@ class _SpeciesDetailScreenState extends State<SpeciesDetailScreen> {
                     ),
                   ),
                 ],
+              ),
               ),
             ),
           ),

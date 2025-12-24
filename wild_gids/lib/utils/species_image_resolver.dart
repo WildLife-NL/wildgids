@@ -1,5 +1,5 @@
 class SpeciesImageResolver {
-  static const String _drawingsDir = 'assets/animal_drawings_no_bg';
+  static const String _drawingsDir = 'assets/black_icons_animal';
   static const String _realDir = 'assets/real_animal_pics_no_bg';
 
   // Map lowercased common names to the canonical asset base names used in files
@@ -10,7 +10,8 @@ class SpeciesImageResolver {
     'ree': 'ree',
     'damhert': 'Damhert',
     'edelhert': 'Edelhert',
-    'hert': 'deer', // fallback (may not exist for real/drawing split)
+    // Use a specific valid icon for generic "hert" requests
+    'hert': 'Edelhert',
     'wild zwijn': 'Wild_Zwijn',
     'zwijn': 'Wild_Zwijn',
     'bever': 'Bever',
@@ -48,7 +49,15 @@ class SpeciesImageResolver {
     final key = _normalize(commonName);
     final base = _baseName[key];
     if (base == null) return null;
-    return '$_drawingsDir/${base}_drawing.png';
+    // Black icon filenames follow "<base>_black_icon-removebg-preview.png".
+    // Some bases differ in case compared to drawing/real assets.
+    // Preserve existing base mapping and override only where black icon filenames are lowercase.
+    final blackBase = switch (base) {
+      'Bever' => 'bever',
+      'Das' => 'das',
+      _ => base,
+    };
+    return '$_drawingsDir/${blackBase}_black_icon-removebg-preview.png';
   }
 
   static String? realForCommonName(String? commonName) {

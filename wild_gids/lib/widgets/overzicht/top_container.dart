@@ -29,7 +29,10 @@ class TopContainer extends StatelessWidget {
           width: double.infinity,
           decoration: BoxDecoration(
             color: AppColors.darkGreen,
-            borderRadius: BorderRadius.zero, // straight bottom edge to match mock
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
           ),
           child: Center(
             child: Padding(
