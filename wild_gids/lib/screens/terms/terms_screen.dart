@@ -1,9 +1,12 @@
+import 'package:wildrapport/widgets/shared_ui_widgets/white_bulk_button.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:wildrapport/interfaces/data_apis/profile_api_interface.dart';
+import 'package:wildrapport/models/beta_models/profile_model.dart';
 import 'package:wildrapport/constants/app_colors.dart';
 import 'package:wildrapport/screens/shared/overzicht_screen.dart';
+import 'package:wildrapport/utils/responsive_utils.dart';
 
 class TermsScreen extends StatefulWidget {
   const TermsScreen({super.key});
@@ -15,6 +18,40 @@ class TermsScreen extends StatefulWidget {
 class _TermsScreenState extends State<TermsScreen> {
   bool _checked = false;
   bool _submitting = false;
+  bool _loadingProfile = true;
+
+  final TextEditingController _displayNameController = TextEditingController();
+  Profile? _currentProfile;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInitialProfile();
+  }
+
+  @override
+  void dispose() {
+    _displayNameController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadInitialProfile() async {
+    try {
+      final profileApi = context.read<ProfileApiInterface>();
+      final profile = await profileApi.fetchMyProfile();
+      if (!mounted) return;
+      _currentProfile = profile;
+
+      final email = profile.email;
+      final derived = (email.contains('@')) ? email.split('@').first : email;
+      final initialName = (profile.userName.isNotEmpty) ? profile.userName : derived;
+      _displayNameController.text = initialName;
+    } catch (_) {
+      // leave empty; user can fill manually
+    } finally {
+      if (mounted) setState(() => _loadingProfile = false);
+    }
+  }
 
   Future<void> _onAcceptPressed() async {
     if (_submitting) return;
@@ -23,16 +60,27 @@ class _TermsScreenState extends State<TermsScreen> {
     try {
       final profileApi = context.read<ProfileApiInterface>();
 
-      // 1) Persist acceptance on the server
-      await profileApi.updateReportAppTerms(true);
+      final newName = _displayNameController.text.trim();
+      if (newName.isEmpty) {
+        throw Exception('Voer alstublieft een geldige gebruikersnaam in.');
+      }
 
-      // 2) (Optional) Pull fresh profile to update local cache
-      // If your API already caches in updateReportAppTerms, you can skip this.
+      final base = _currentProfile;
+      final updated = Profile(
+        userID: base?.userID ?? '',
+        email: base?.email ?? '',
+        gender: base?.gender,
+        userName: newName,
+        postcode: base?.postcode,
+        reportAppTerms: true,
+        recreationAppTerms: base?.recreationAppTerms,
+      );
+
+      await profileApi.updateMyProfile(updated);
       await profileApi.setProfileDataInDeviceStorage();
 
       if (!mounted) return;
 
-      // 3) Navigate to the home screen (no local flags involved)
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const OverzichtScreen()),
         (_) => false,
@@ -40,7 +88,7 @@ class _TermsScreenState extends State<TermsScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to accept terms: $e')),
+        SnackBar(content: Text('Kon voorwaarden niet accepteren: $e')),
       );
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -49,61 +97,111 @@ class _TermsScreenState extends State<TermsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final responsive = context.responsive;
     return Scaffold(
       backgroundColor: AppColors.lightMintGreen,
       appBar: AppBar(
-        title: const Text('Terms & Conditions'),
+        title: Text(
+          'Algemene Voorwaarden',
+          style: TextStyle(fontSize: responsive.fontSize(18)),
+        ),
         backgroundColor: AppColors.lightMintGreen,
         elevation: 0,
         foregroundColor: Colors.black,
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(responsive.spacing(16)),
           child: Column(
             children: [
-              const Expanded(
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Gebruikersnaam',
+                  style: TextStyle(
+                    fontSize: responsive.fontSize(14),
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+              SizedBox(height: responsive.spacing(6)),
+              TextField(
+                controller: _displayNameController,
+                enabled: !_submitting && !_loadingProfile,
+                decoration: InputDecoration(
+                  hintText: 'Voer uw weergavenaam in',
+                  filled: true,
+                  fillColor: AppColors.lightMintGreen100,
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: AppColors.brown),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: AppColors.darkGreen),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  contentPadding: EdgeInsets.symmetric(
+                    vertical: responsive.spacing(10),
+                    horizontal: responsive.spacing(12),
+                  ),
+                ),
+                style: TextStyle(fontSize: responsive.fontSize(14)),
+              ),
+              SizedBox(height: responsive.spacing(12)),
+              Expanded(
                 child: SingleChildScrollView(
                   child: Text(
-                    'Here are the Terms & Conditions...\n\n'
-                    'This app is provided by WildlifeNL to facilitate wildlife reporting. By using this app, you agree to comply with all applicable laws and regulations regarding wildlife protection and data privacy. You acknowledge that any data you submit through this app may be used by WildlifeNL for research purposes.',
-                    style: TextStyle(fontSize: 16, color: Colors.black),
+                    'Algemene Voorwaarden\n\n'
+                    'Deze app wordt geleverd door WildlifeNL om wildlifemelding te vergemakkelijken. Door gebruik te maken van deze app, gaat u ermee akkoord dat u zich houdt aan alle toepasselijke wet- en regelgeving met betrekking tot de bescherming van wilde dieren en gegevensprivacy. U erkent dat alle gegevens die u via deze app indient, door WildlifeNL kunnen worden gebruikt voor onderzoeksdoeleinden.',
+                    style: TextStyle(
+                      fontSize: responsive.fontSize(16),
+                      color: Colors.black,
+                    ),
                   ),
                 ),
               ),
               Row(
                 children: [
-                  Checkbox(
-                    value: _checked,
-                    activeColor: AppColors.darkGreen,
-                    onChanged: _submitting
-                        ? null
-                        : (v) => setState(() => _checked = v ?? false),
+                  Transform.scale(
+                    scale: responsive.sp(0.15),
+                    child: Checkbox(
+                      value: _checked,
+                      activeColor: AppColors.darkGreen,
+                      onChanged: _submitting
+                          ? null
+                          : (v) => setState(() => _checked = v ?? false),
+                    ),
                   ),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'I have read and accept the Terms & Conditions',
-                      style: TextStyle(color: Colors.black),
+                      'Ik heb de Algemene Voorwaarden gelezen en accepteer deze',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: responsive.fontSize(14),
+                      ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: responsive.spacing(8)),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: (_checked && !_submitting) ? _onAcceptPressed : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.darkGreen,
-                    foregroundColor: Colors.white,
+                child: WhiteBulkButton(
+                  text: 'Accepteren & Doorgaan',
+                  showIcon: false,
+                  backgroundColor: AppColors.lightMintGreen100,
+                  borderColor: AppColors.brown,
+                  textStyle: TextStyle(
+                    fontFamily: 'Roboto',
+                    color: Colors.black,
+                    fontSize: responsive.fontSize(16),
+                    fontWeight: FontWeight.w600,
                   ),
-                  child: _submitting
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Accept & Continue'),
+                  onPressed: (_checked && !_submitting && !_loadingProfile)
+                      ? _onAcceptPressed
+                      : null,
+                  showShadow: false,
                 ),
               ),
             ],

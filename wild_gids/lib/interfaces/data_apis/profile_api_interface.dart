@@ -4,6 +4,8 @@ abstract class ProfileApiInterface {
   Future<void> setProfileDataInDeviceStorage();
 
   Future<Profile> fetchMyProfile();
-  
+
   Future<Profile> updateReportAppTerms(bool accepted);
+
+  Future<Profile> updateMyProfile(Profile updatedProfile);
 }

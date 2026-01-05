@@ -4,6 +4,8 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:wildrapport/providers/map_provider.dart';
+import 'package:wildrapport/interfaces/data_apis/tracking_api_interface.dart'
+  show TrackingReadingResponse;
 import 'package:wildrapport/providers/app_state_provider.dart';
 import 'package:wildrapport/constants/app_colors.dart';
 import 'package:wildrapport/managers/map/location_map_manager.dart';
@@ -46,6 +48,10 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
 
   static const double _initialZoom = 15.0; // Initial zoom when map loads
   bool _followUser = true;
+
+  // Tracking history state
+  bool _showTrackingHistory = false;
+  List<TrackingReadingResponse> _trackingHistory = const [];
 
   // Filter state (default: show only last hour; enable others via filter)
   bool _showAnimals = true;
@@ -145,6 +151,18 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
         _mp.mapController.move(LatLng(pos.latitude, pos.longitude), z);
       }
     });
+  }
+
+  Future<void> _toggleTrackingHistory() async {
+    setState(() => _showTrackingHistory = !_showTrackingHistory);
+    if (_showTrackingHistory && _trackingHistory.isEmpty) {
+      try {
+        final mp = context.read<MapProvider>();
+        final list = await mp.getMyTrackingReadings();
+        if (!mounted) return;
+        setState(() => _trackingHistory = list);
+      } catch (_) {}
+    }
   }
 
   Future<void> _bootstrap() async {
@@ -1771,6 +1789,36 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                       })
                                       .toList(),
                             ),
+
+                        // ── TRACKING HISTORY (polyline + points) ───────────────
+                        if (_showTrackingHistory && _trackingHistory.isNotEmpty)
+                          fm.PolylineLayer(
+                            polylines: [
+                              fm.Polyline(
+                                points: _trackingHistory
+                                    .map((r) => LatLng(r.latitude, r.longitude))
+                                    .toList(),
+                                color: Colors.blue.withOpacity(0.6),
+                                strokeWidth: 2.0,
+                              ),
+                            ],
+                          ),
+                        if (_showTrackingHistory && _trackingHistory.isNotEmpty)
+                          fm.CircleLayer(
+                            circles: _trackingHistory
+                                .map((reading) => fm.CircleMarker(
+                                      point: LatLng(
+                                        reading.latitude,
+                                        reading.longitude,
+                                      ),
+                                      radius: 4,
+                                      color: Colors.blue.withOpacity(0.8),
+                                      borderColor: Colors.white,
+                                      borderStrokeWidth: 1,
+                                      useRadiusInMeter: false,
+                                    ))
+                                .toList(),
+                          ),
                       ],
                     ),
 
@@ -1857,6 +1905,22 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                             ),
                           );
                         },
+                      ),
+                    ),
+
+                    // ── Tracking history toggle ────────────────────────────────────────────────
+                    Positioned(
+                      left: 16,
+                      bottom: 140,
+                      child: FloatingActionButton(
+                        heroTag: 'track_toggle_btn',
+                        backgroundColor:
+                            _showTrackingHistory ? Colors.blue : AppColors.darkGreen,
+                        child: const Icon(
+                          Icons.timeline,
+                          color: Colors.white,
+                        ),
+                        onPressed: _toggleTrackingHistory,
                       ),
                     ),
 

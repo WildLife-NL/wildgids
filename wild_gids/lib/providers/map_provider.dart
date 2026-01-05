@@ -14,7 +14,7 @@ import 'package:wildrapport/managers/api_managers/animal_pins_manager.dart';
 import 'package:wildrapport/managers/api_managers/detection_pins_manager.dart';
 
 import 'package:wildrapport/interfaces/data_apis/tracking_api_interface.dart'
-    show TrackingApiInterface, TrackingNotice;
+  show TrackingApiInterface, TrackingNotice, TrackingReadingResponse;
 import 'package:wildrapport/managers/encounter_message_manager.dart';
 import 'package:wildrapport/managers/api_managers/vicinity_manager.dart';
 import 'dart:async';
@@ -150,6 +150,16 @@ Future<TrackingNotice?> sendTrackingPingFromPosition(Position pos) async {
 
   int get totalPins =>
       _animalPins.length + _detectionPins.length + _interactions.length;
+
+  Future<List<TrackingReadingResponse>> getMyTrackingReadings() async {
+    if (_trackingApi == null) return [];
+    try {
+      return await _trackingApi!.getMyTrackingReadings();
+    } catch (e) {
+      debugPrint('[MapProvider] getMyTrackingReadings failed: $e');
+      return [];
+    }
+  }
 
   // ===== Lifecycle / base map helpers =====
   Future<void> initialize() async {

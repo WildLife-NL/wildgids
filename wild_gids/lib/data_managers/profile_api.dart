@@ -145,11 +145,43 @@ Future<Profile> updateReportAppTerms(bool accepted) async {
       "Failed to update reportAppTerms (${response.statusCode}): ${response.body}",
     );
   }
-}
+  }
+      @override
+      Future<Profile> updateMyProfile(Profile updatedProfile) async {
+        final body = {
+          'name': updatedProfile.userName,
+          'email': updatedProfile.email,
+          'gender': updatedProfile.gender,
+          'postcode': updatedProfile.postcode,
+          'reportAppTerms': updatedProfile.reportAppTerms ?? false,
+          'recreationAppTerms': updatedProfile.recreationAppTerms ?? false,
+          if (updatedProfile.toJson().containsKey('dateOfBirth'))
+            'dateOfBirth': updatedProfile.toJson()['dateOfBirth'],
+          if (updatedProfile.toJson().containsKey('description'))
+            'description': updatedProfile.toJson()['description'],
+        };
 
+        debugPrint('[ProfileApi] PUT /profile/me/ body: ${jsonEncode(body)}');
 
+        final http.Response response = await client.put(
+          '/profile/me/',
+          body,
+          authenticated: true,
+        );
 
+        debugPrint('[ProfileApi] PUT Response (${response.statusCode}): ${response.body}');
 
+        if (response.statusCode == HttpStatus.ok) {
+          final Map<String, dynamic> json = jsonDecode(response.body);
+          final updated = Profile.fromJson(json);
+          await _cacheProfile(updated);
+          return updated;
+        } else {
+          throw Exception(
+            "$redLog Failed to update profile (${response.statusCode}): ${response.body}",
+          );
+        }
+      }
 
 
 

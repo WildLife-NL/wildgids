@@ -28,7 +28,16 @@ class QuestionnaireManager implements QuestionnaireInterface {
     VoidCallback previousScreen,
   ) async {
     final List<Widget> questionnaireWidgets = [];
-    questionnaireWidgets.add(QuestionnaireHome(nextScreen: nextScreen, amountOfQuestions: questionnaire.questions!.length));
+    questionnaireWidgets.add(
+      QuestionnaireHome(
+        nextScreen: nextScreen,
+        amountOfQuestions: questionnaire.questions!.length,
+        questionnaireName: questionnaire.name,
+        questionnaireDescription: '',
+        interactionID: interactionID,
+        questionnaire: questionnaire,
+      ),
+    );
 
     final int length = questionnaire.questions!.length;
 

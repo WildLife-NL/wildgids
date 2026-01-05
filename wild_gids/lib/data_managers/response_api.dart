@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:wildrapport/data_managers/api_client.dart';
 import 'package:wildrapport/interfaces/data_apis/response_api_interface.dart';
+import 'dart:convert';
 
 class ResponseApi implements ResponseApiInterface {
   final ApiClient client;
@@ -54,6 +55,38 @@ class ResponseApi implements ResponseApiInterface {
       debugPrint("$redLog [ResponseApi]: Status code: ${response.statusCode}");
       debugPrint("$redLog [ResponseApi]: Response body: ${response.body}");
       return false;
+    }
+  }
+
+  @override
+  Future<List<dynamic>> getMyResponsesRaw() async {
+    final yellowLog = '\x1B[93m';
+    final redLog = '\x1B[31m';
+    final greenLog = '\x1B[32m';
+
+    try {
+      debugPrint("$yellowLog[ResponseApi]: GET /responses/me/");
+      final http.Response response = await client.get(
+        'responses/me/',
+        authenticated: true,
+      );
+      debugPrint("$yellowLog[ResponseApi]: Status: ${response.statusCode}");
+
+      if (response.statusCode == HttpStatus.ok) {
+        final body = response.body;
+        final parsed = jsonDecode(body);
+        if (parsed is List) {
+          debugPrint("$greenLog[ResponseApi]: Received ${parsed.length} responses");
+          return parsed;
+        }
+        debugPrint("$redLog[ResponseApi]: Unexpected body format for responses/me");
+        return [];
+      }
+      debugPrint("$redLog[ResponseApi]: Failed (${response.statusCode}) body: ${response.body}");
+      return [];
+    } catch (e) {
+      debugPrint("$redLog[ResponseApi]: Error fetching my responses: $e");
+      return [];
     }
   }
 }

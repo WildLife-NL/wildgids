@@ -89,4 +89,22 @@ class TrackingApi implements TrackingApiInterface {
 
     return null; // success, but no message to show
   }
+
+  @override
+  Future<List<TrackingReadingResponse>> getMyTrackingReadings() async {
+    final res = await client.get('/tracking-readings/me', authenticated: true);
+
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw Exception('[TrackingApi] Failed (${res.statusCode}): ${res.body}');
+    }
+
+    try {
+      final List<dynamic> jsonList = jsonDecode(res.body);
+      return jsonList
+          .map((j) => TrackingReadingResponse.fromJson(j as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

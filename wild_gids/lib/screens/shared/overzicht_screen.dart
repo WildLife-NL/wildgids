@@ -11,6 +11,7 @@ import 'package:wildrapport/screens/shared/rapporteren.dart';
 import 'package:wildrapport/screens/species/species_list_screen.dart';
 import 'package:wildrapport/providers/app_state_provider.dart';
 import 'package:wildrapport/screens/location/kaart_overview_screen.dart';
+import 'package:wildrapport/screens/logbook/logbook_screen.dart';
 
 class OverzichtScreen extends StatefulWidget {
   const OverzichtScreen({super.key});
@@ -145,10 +146,10 @@ class _OverzichtScreenState extends State<OverzichtScreen>
                                   imagePath: null,
                                   key: Key('logboek_button'),
                                   onPressed: () {
-                                    ToastNotificationHandler.sendToastNotification(
-                                      context,
-                                      "Deze functie is nog niet toegevoegd",
-                                      2,
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => const LogbookScreen(),
+                                      ),
                                     );
                                   },
                                 ),
