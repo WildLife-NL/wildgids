@@ -9,7 +9,7 @@ void main() {
   setUp(() {
     mockExperiment = MockExperiment();
     mockUser = MockUser();
-    
+
     // Setup default behavior
     when(mockExperiment.id).thenReturn('exp-1');
     when(mockExperiment.name).thenReturn('Test Experiment');
@@ -17,7 +17,7 @@ void main() {
     when(mockExperiment.start).thenReturn(DateTime(2023, 1, 1));
     when(mockExperiment.end).thenReturn(DateTime(2023, 12, 31));
     when(mockExperiment.user).thenReturn(mockUser);
-    
+
     when(mockUser.id).thenReturn('user-1');
     when(mockUser.name).thenReturn('Test User');
   });
@@ -44,7 +44,7 @@ void main() {
         'end': '2023-12-31T00:00:00.000',
         'user': {'id': 'user-1', 'name': 'Test User'},
       });
-      
+
       // Verify
       final json = mockExperiment.toJson();
       expect(json['id'], 'exp-1');

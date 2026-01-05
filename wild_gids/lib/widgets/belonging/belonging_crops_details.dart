@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:wildrapport/constants/app_colors.dart';
 import 'package:wildrapport/interfaces/reporting/belonging_damage_report_interface.dart';
 import 'package:wildrapport/providers/belonging_damage_report_provider.dart';
-import 'package:wildrapport/widgets/belonging/belonging_dropdown.dart';
+import 'package:flutter/services.dart';
+import 'package:wildrapport/screens/belonging/area_selection_map.dart';
+import 'package:wildrapport/models/beta_models/polygon_area_model.dart';
 
 class BelongingCropsDetails extends StatefulWidget {
   const BelongingCropsDetails({super.key});
@@ -13,6 +15,7 @@ class BelongingCropsDetails extends StatefulWidget {
 }
 
 class _BelongingCropsDetailsState extends State<BelongingCropsDetails> {
+  late final TextEditingController _belongingController;
   late final TextEditingController _impactValueController;
   late final TextEditingController _descriptionController;
   late final TextEditingController _currentDamageController;
@@ -29,33 +32,59 @@ class _BelongingCropsDetailsState extends State<BelongingCropsDetails> {
         context.read<BelongingDamageReportInterface>();
 
     final belongingDamageReportProvider =
-      Provider.of<BelongingDamageReportProvider>(context, listen: false);
-    
+        Provider.of<BelongingDamageReportProvider>(context, listen: false);
+
+    // STEP A: Legacy normalization — if old state stored 'hectare', convert to m²
+    if (belongingDamageReportProvider.impactedAreaType == 'hectare' &&
+        belongingDamageReportProvider.impactedArea != null) {
+      final ha = belongingDamageReportProvider.impactedArea!;
+      belongingDamageReportProvider.setImpactedAreaType('vierkante meters');
+      belongingDamageReportProvider.updateSelectedText('m2');
+      belongingDamageReportProvider.setImpactedArea(ha * 10000); // ha -> m²
+    }
+
     // Initialize controllers with proper text values
+    final initialBelonging =
+        belongingDamageReportProvider.impactedCrop.isNotEmpty
+            ? belongingDamageReportProvider.impactedCrop
+            : '';
+    _belongingController = TextEditingController(text: initialBelonging);
+
     final impactAreaString = formatImpactAreaString();
-    final initialImpact = (impactAreaString.isNotEmpty && impactAreaString != "0" && impactAreaString != "0.0") 
-        ? impactAreaString 
-        : '';
+    final initialImpact =
+        (impactAreaString.isNotEmpty &&
+                impactAreaString != "0" &&
+                impactAreaString != "0.0")
+            ? impactAreaString
+            : '';
     _impactValueController = TextEditingController(text: initialImpact);
-    
-    final initialDescription = belongingDamageReportProvider.description.isNotEmpty 
-        ? belongingDamageReportProvider.description 
-        : '';
+
+    final initialDescription =
+        belongingDamageReportProvider.description.isNotEmpty
+            ? belongingDamageReportProvider.description
+            : '';
     _descriptionController = TextEditingController(text: initialDescription);
-    
-    final initialCurrentDamage = belongingDamageReportProvider.currentDamage > 0 
-        ? belongingDamageReportProvider.currentDamage.round().toString() 
-        : '';
-    _currentDamageController = TextEditingController(text: initialCurrentDamage);
-    
-    final initialExpectedDamage = belongingDamageReportProvider.expectedDamage > 0 
-        ? belongingDamageReportProvider.expectedDamage.round().toString() 
-        : '';
-    _expectedDamageController = TextEditingController(text: initialExpectedDamage);
+
+    final initialCurrentDamage =
+        belongingDamageReportProvider.currentDamage > 0
+            ? belongingDamageReportProvider.currentDamage.round().toString()
+            : '';
+    _currentDamageController = TextEditingController(
+      text: initialCurrentDamage,
+    );
+
+    final initialExpectedDamage =
+        belongingDamageReportProvider.expectedDamage > 0
+            ? belongingDamageReportProvider.expectedDamage.round().toString()
+            : '';
+    _expectedDamageController = TextEditingController(
+      text: initialExpectedDamage,
+    );
   }
-  
+
   @override
   void dispose() {
+    _belongingController.dispose();
     _impactValueController.dispose();
     _descriptionController.dispose();
     _currentDamageController.dispose();
@@ -137,486 +166,601 @@ class _BelongingCropsDetailsState extends State<BelongingCropsDetails> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                BelongingDropdown(
-                  key: const Key('impacted-crop'),
-                  onChanged: (value) {
-                    _belongingDamageReportManager.updateImpactedCrop(value);
-                    belongingDamageReportProvider.setErrorState(
-                      "impactedCrop",
-                      false,
-                    );
-                  },
-                  getSelectedValue: belongingDamageReportProvider.impactedCrop,
-                  getSelectedText: capitalize(
-                    belongingDamageReportProvider.impactedCrop,
-                  ),
-                  dropdownItems: [
-                    {'text': 'Mais', 'value': 'mais'},
-                    {'text': 'Bieten', 'value': 'bieten'},
-                    {'text': 'Granen', 'value': 'granen'},
-                    {'text': 'Bloementeelt', 'value': 'bloementeelt'},
-                    {'text': 'Grasvelden', 'value': 'grasvelden'},
-                    {'text': 'Boomteelt', 'value': 'boomteelt'},
-                    {'text': 'Tuinbouw', 'value': 'tuinbouw'},
-                  ],
-                  containerHeight: 50,
-                  containerWidth: 400,
-                  startingValue: "mais",
-                  defaultValue: "Kies Gewas",
-                  hasDropdownSideDescription: false,
-                  hasError: belongingDamageReportProvider.hasErrorImpactedCrop,
-                  useIcons: true,
-                ),
-                const SizedBox(height: 10),
-
-                BelongingDropdown(
-                  key: const Key('impacted-area-type'),
-                  onChanged: (value) {
-                    // Update the impacted area type
-                    switch (value) {
-                      case "vierkante meters":
-                        belongingDamageReportProvider.updateSelectedText("m2");
-                      case "hectare":
-                        belongingDamageReportProvider.updateSelectedText("ha");
-                      default:
-                        belongingDamageReportProvider.updateSelectedText(
-                          "Type",
-                        );
-                    }
-                    convertImpactArea(value);
-                    _belongingDamageReportManager.updateImpactedAreaType(value);
-                    belongingDamageReportProvider.setErrorState(
-                      "impactedAreaType",
-                      false,
-                    );
-
-                    // If impactedArea is not null or empty, validate the input
-                    if (_impactValueController.text.isNotEmpty) {
-                      final areaType = value;
-                      String cleanedValue = _impactValueController.text.replaceAll(
-                        ',',
-                        '.',
-                      );
-
-                      bool isValid = false;
-                      double? parsed;
-
-                      if (areaType == "vierkante meters") {
-                        // Only allow full integers
-                        final intRegex = RegExp(r'^\d+$');
-                        if (intRegex.hasMatch(_impactValueController.text)) {
-                          parsed = double.tryParse(_impactValueController.text);
-                          isValid = parsed != null;
-                        }
-                      } else if (areaType == "hectare") {
-                        // Allow decimals with comma or dot
-                        final decimalRegex = RegExp(r'^\d+([.,]\d+)?$');
-                        if (decimalRegex.hasMatch(cleanedValue)) {
-                          parsed = double.tryParse(cleanedValue);
-                          isValid = parsed != null;
-                        }
-                      }
-                      debugPrint("$isValid");
-                      if (isValid) {
-                        setState(() {});
-                        debugPrint("$yellowLog is valid = $isValid");
-                        debugPrint("$yellowLog parsed = $parsed");
-
-                        _belongingDamageReportManager.updateImpactedArea(
-                          parsed!,
-                        );
-                        belongingDamageReportProvider.setHasErrorImpactedArea(
-                          false,
-                        ); // Clear error in provider
-                        belongingDamageReportProvider
-                            .resetInputErrorImpactArea();
-
-                        debugPrint(
-                          "$yellowLog ErrorImpactedArea = ${belongingDamageReportProvider.hasErrorImpactedArea}",
-                        );
-                      } else {
-                        setState(() {
-                          belongingDamageReportProvider
-                              .updateInputErrorImpactArea(
-                                areaType == "vierkante meters"
-                                    ? "Alleen gehele getallen toegestaan"
-                                    : "Gebruik een geldig getal (bv. 1,5 of 1.5)",
-                              );
-                        });
-                        belongingDamageReportProvider.setHasErrorImpactedArea(
-                          true,
-                        ); // Set error in provider
-                      }
-                    }
-                  },
-                  getSelectedValue:
-                      belongingDamageReportProvider.impactedAreaType,
-                  getSelectedText:
-                      belongingDamageReportProvider.selectedText ?? "Type",
-                  dropdownItems: [
-                    {'text': 'ha', 'value': 'hectare'},
-                    {'text': 'm2', 'value': 'vierkante meters'},
-                  ],
-                  containerHeight: 40,
-                  containerWidth: 150,
-                  startingValue: "vierkante meters",
-                  defaultValue: "Type",
-                  hasDropdownSideDescription: true,
-                  dropdownSideDescriptionText: "Getroffen Gebied",
-                  hasError:
-                      belongingDamageReportProvider.hasErrorImpactedAreaType,
-                  useIcons: false,
-                ),
-
-                const SizedBox(height: 10),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        decoration: const BoxDecoration(),
-                        child: TextField(
-                          key: const Key('area-value'),
-                          controller: _impactValueController,
+                      const Text(
+                        "Beschrijf uw schade",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Roboto',
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        key: const Key('belonging-field'),
+                        controller: _belongingController,
+                        minLines: 1,
+                        maxLines: null,
+                        onChanged: (value) {
+                          _belongingDamageReportManager.updateImpactedCrop(
+                            value,
+                          );
+                          belongingDamageReportProvider.setErrorState(
+                            "impactedCrop",
+                            false,
+                          );
+                        },
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: Colors.white,
+                          hintText: 'Typ hier...',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                            borderSide: BorderSide(
+                              color:
+                                  belongingDamageReportProvider
+                                          .hasErrorImpactedCrop
+                                      ? Colors.red
+                                      : AppColors.darkGreen,
+                              width: 2.0,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                            borderSide: BorderSide(
+                              color:
+                                  belongingDamageReportProvider
+                                          .hasErrorImpactedCrop
+                                      ? Colors.red
+                                      : AppColors.darkGreen,
+                              width: 2.0,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                            borderSide: BorderSide(
+                              color:
+                                  belongingDamageReportProvider
+                                          .hasErrorImpactedCrop
+                                      ? Colors.red
+                                      : AppColors.darkGreen,
+                              width: 2.0,
+                            ),
+                          ),
+                        ),
+                        style: const TextStyle(
+                          fontSize: 18,
+                          color: AppColors.brown,
+                          fontFamily: 'Roboto',
+                        ),
+                      ),
+                      if (belongingDamageReportProvider.hasErrorImpactedCrop)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 5),
+                          child: Text(
+                            'Dit veld is verplicht',
+                            style: TextStyle(
+                              color: Colors.red,
+                              fontSize: 12,
+                              fontFamily: 'Roboto',
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // Category selector (Crops/Livestock)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Categorie",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Roboto',
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                belongingDamageReportProvider.setDamageCategory(
+                                  'crops',
+                                );
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                                decoration: BoxDecoration(
+                                  color:
+                                      belongingDamageReportProvider
+                                                  .damageCategory ==
+                                              'crops'
+                                          ? AppColors.darkGreen
+                                          : Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: AppColors.darkGreen,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'Gewassen',
+                                    style: TextStyle(
+                                      color:
+                                          belongingDamageReportProvider
+                                                      .damageCategory ==
+                                                  'crops'
+                                              ? Colors.white
+                                              : AppColors.darkGreen,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                belongingDamageReportProvider.setDamageCategory(
+                                  'livestock',
+                                );
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                                decoration: BoxDecoration(
+                                  color:
+                                      belongingDamageReportProvider
+                                                  .damageCategory ==
+                                              'livestock'
+                                          ? AppColors.darkGreen
+                                          : Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: AppColors.darkGreen,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'Vee',
+                                    style: TextStyle(
+                                      color:
+                                          belongingDamageReportProvider
+                                                      .damageCategory ==
+                                                  'livestock'
+                                              ? Colors.white
+                                              : AppColors.darkGreen,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // ── CONDITIONAL: CROPS - MAP AREA SELECTION ──────────────────
+                if (belongingDamageReportProvider.damageCategory == 'crops')
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Selecteer beschadigd gebied op de kaart",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Roboto',
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: () async {
+                              final result = await Navigator.of(
+                                context,
+                              ).push<PolygonArea>(
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => AreaSelectionMap(
+                                        onAreaSelected: (area) {
+                                          belongingDamageReportProvider
+                                              .setPolygonArea(area);
+                                        },
+                                        existingArea:
+                                            belongingDamageReportProvider
+                                                .polygonArea,
+                                      ),
+                                ),
+                              );
+                              if (result != null) {
+                                belongingDamageReportProvider.setPolygonArea(
+                                  result,
+                                );
+                              }
+                            },
+                            icon: const Icon(Icons.map),
+                            label: const Text(
+                              'Selecteer gebied op kaart',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.darkGreen,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          ),
+                        ),
+                        if (belongingDamageReportProvider.polygonArea == null)
+                          const Padding(
+                            padding: EdgeInsets.only(top: 8),
+                            child: Text(
+                              'Geen gebied geselecteerd',
+                              style: TextStyle(
+                                color: Colors.red,
+                                fontSize: 12,
+                                fontFamily: 'Roboto',
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 8),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: AppColors.darkGreen,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child:
+                              belongingDamageReportProvider.polygonArea == null
+                                  ? const Text(
+                                    "Hier kiest u hoe u gewasschade aangeeft: loop de schade af of plaats pinnen op de kaart. Na het invullen van een waarde per eenheid berekent de kaart ook de kosten van uw schade.",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      height: 1.6,
+                                    ),
+                                  )
+                                  : Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Oppervlakte: ${belongingDamageReportProvider.polygonArea!.calculateAreaInSquareMeters().toStringAsFixed(0)} m²',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          height: 1.5,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        (belongingDamageReportProvider
+                                                    .estimatedDamage >
+                                                0)
+                                            ? 'Kosten: € ${belongingDamageReportProvider.estimatedDamage.toStringAsFixed(2)}'
+                                            : 'Kosten:',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          height: 1.5,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                        ),
+                      ],
+                    ),
+                  ),
+                // ── CONDITIONAL: LIVESTOCK - AMOUNT FIELD ───────────────────
+                if (belongingDamageReportProvider.damageCategory == 'livestock')
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Aantal",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Roboto',
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
                           onChanged: (value) {
-                            debugPrint(value);
-                            
-                            // Handle empty input
-                            if (value.isEmpty) {
-                              setState(() {
-                                belongingDamageReportProvider.resetImpactedArea();
-                                belongingDamageReportProvider.updateInputErrorImpactArea('This field is required');
-                                belongingDamageReportProvider.setHasErrorImpactedArea(true);
-                              });
-                              return;
-                            }
-                            
-                            final areaType =
-                                belongingDamageReportProvider.impactedAreaType;
-                            String cleanedValue = value.replaceAll(',', '.');
-
-                            bool isValid = false;
-                            double? parsed;
-
-                            if (areaType == "vierkante meters") {
-                              // Only allow full integers
-                              final intRegex = RegExp(r'^\d+$');
-                              if (intRegex.hasMatch(value)) {
-                                parsed = double.tryParse(value);
-                                isValid = parsed != null;
-                              }
-                            } else if (areaType == "hectare") {
-                              // Allow decimals with comma or dot
-                              final decimalRegex = RegExp(r'^\d+([.,]\d+)?$');
-                              if (decimalRegex.hasMatch(cleanedValue)) {
-                                parsed = double.tryParse(cleanedValue);
-                                isValid = parsed != null;
-                              }
-                            }
-
-                            if (isValid) {
-                              setState(() {
+                            if (value.isNotEmpty) {
+                              final amount = int.tryParse(value);
+                              if (amount != null && amount > 0) {
                                 belongingDamageReportProvider
-                                    .resetInputErrorImpactArea(); // Clear the error if the input is valid
-                              });
-                              _belongingDamageReportManager.updateImpactedArea(
-                                parsed!,
-                              );
-                              belongingDamageReportProvider
-                                  .setHasErrorImpactedArea(
-                                    false,
-                                  ); // Clear error in provider
-                            } else {
-                              // Only show 'This field is required' when input is empty
-                              setState(() {
-                                if (value.isNotEmpty &&
-                                    areaType != "vierkante meters" &&
-                                    areaType != "hectare") {
-                                  debugPrint(
-                                    "$greenLog [GewasschadeDetails]: Line 198",
-                                  );
-                                  belongingDamageReportProvider
-                                      .updateInputErrorImpactArea(
-                                        "Vul Getroffen Gebied in",
-                                      );
-                                } else if (value.isEmpty) {
-                                  debugPrint(
-                                    "$greenLog [GewasschadeDetails]: Line 197, value = $value",
-                                  );
-                                  belongingDamageReportProvider
-                                      .resetImpactedArea();
-                                  belongingDamageReportProvider
-                                      .updateInputErrorImpactArea(
-                                        "This field is required",
-                                      ); // Show error if the input is empty
-                                } else {
-                                  belongingDamageReportProvider
-                                      .updateInputErrorImpactArea(
-                                        areaType == "vierkante meters"
-                                            ? "Alleen gehele getallen toegestaan"
-                                            : "Gebruik een geldig getal (bv. 1,5 of 1.5)",
-                                      );
+                                    .setLivestockAmount(amount);
+                              }
+                            }
+                          },
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            hintText: 'Voer aantal in...',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12.0),
+                              borderSide: const BorderSide(
+                                color: AppColors.darkGreen,
+                                width: 2.0,
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12.0),
+                              borderSide: const BorderSide(
+                                color: AppColors.darkGreen,
+                                width: 2.0,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12.0),
+                              borderSide: const BorderSide(
+                                color: AppColors.darkGreen,
+                                width: 2.0,
+                              ),
+                            ),
+                          ),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            color: AppColors.brown,
+                            fontFamily: 'Roboto',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 6),
+                // Scope of Damage field removed
+                const SizedBox(height: 6),
+                if (belongingDamageReportProvider.damageCategory == 'livestock')
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Geschatte huidige schade",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Roboto',
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          decoration: const BoxDecoration(),
+                          child: TextField(
+                            key: const Key('estimated-damage'),
+                            controller: _currentDamageController,
+                            minLines: 1,
+                            maxLines: null,
+                            onChanged: (value) {
+                              if (value.isEmpty) {
+                                _belongingDamageReportManager
+                                    .updateCurrentDamage(0);
+                              } else {
+                                final parsed = double.tryParse(value);
+                                if (parsed != null) {
+                                  _belongingDamageReportManager
+                                      .updateCurrentDamage(parsed);
                                 }
-                              });
-                              belongingDamageReportProvider
-                                  .setHasErrorImpactedArea(
-                                    true,
-                                  ); // Set error in provider
-                            }
-                          },
-                          keyboardType: TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
-                          decoration: InputDecoration(
-                            filled: true,
-                            fillColor: Colors.white,
-                            hintText: 'hoe groot',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12.0),
-                              borderSide:
-                                  (belongingDamageReportProvider
-                                                  .inputErrorImpactArea !=
-                                              null ||
-                                          belongingDamageReportProvider
-                                              .hasErrorImpactedArea)
-                                      ? const BorderSide(
-                                        color: Colors.red,
-                                        width: 2.0,
-                                      )
-                                      : const BorderSide(
-                                        color: AppColors.darkGreen,
-                                        width: 2.0,
-                                      ),
+                              }
+                            },
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
                             ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12.0),
-                              borderSide:
-                                  (belongingDamageReportProvider
-                                                  .inputErrorImpactArea !=
-                                              null ||
-                                          belongingDamageReportProvider
-                                              .hasErrorImpactedArea)
-                                      ? const BorderSide(
-                                        color: Colors.red,
-                                        width: 2.0,
-                                      )
-                                      : const BorderSide(
-                                        color: AppColors.darkGreen,
-                                        width: 2.0,
-                                      ),
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor: Colors.white,
+                              label: const Text('Bedrag in €'),
+                              prefixText: '€ ',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12.0),
+                                borderSide: const BorderSide(
+                                  color: AppColors.darkGreen,
+                                  width: 2.0,
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12.0),
+                                borderSide: const BorderSide(
+                                  color: AppColors.darkGreen,
+                                  width: 2.0,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12.0),
+                                borderSide: const BorderSide(
+                                  color: AppColors.darkGreen,
+                                  width: 2.0,
+                                ),
+                              ),
                             ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12.0),
-                              borderSide:
-                                  (belongingDamageReportProvider
-                                                  .inputErrorImpactArea !=
-                                              null ||
-                                          belongingDamageReportProvider
-                                              .hasErrorImpactedArea)
-                                      ? const BorderSide(
-                                        color: Colors.red,
-                                        width: 2.0,
-                                      )
-                                      : const BorderSide(
-                                        color: AppColors.darkGreen,
-                                        width: 2.0,
-                                      ),
+                            style: const TextStyle(
+                              fontSize: 18,
+                              color: AppColors.brown,
+                              fontFamily: 'Roboto',
                             ),
-                          ),
-                          style: const TextStyle(
-                            fontSize: 18,
-                            color: AppColors.brown,
-                            fontFamily: 'Roboto',
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 5),
-                      belongingDamageReportProvider.hasErrorImpactedArea
-                          ? Text(
-                            belongingDamageReportProvider
-                                    .inputErrorImpactArea ??
-                                'This field is required',
-                            style: const TextStyle(color: Colors.red, fontSize: 12, fontFamily: 'Roboto'),
-                          )
-                          : const SizedBox.shrink(), // invisible when no error
-                    ],
+                      ],
+                    ),
                   ),
-                ),
                 const SizedBox(height: 20),
+                if (belongingDamageReportProvider.damageCategory == 'livestock')
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Verwachte inkomstenderving",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Roboto',
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          decoration: const BoxDecoration(),
+                          child: TextField(
+                            key: const Key('estimated-future-damage'),
+                            controller: _expectedDamageController,
+                            minLines: 1,
+                            maxLines: null,
+                            onChanged: (value) {
+                              if (value.isEmpty) {
+                                _belongingDamageReportManager
+                                    .updateExpectedDamage(0);
+                              } else {
+                                final parsed = double.tryParse(value);
+                                if (parsed != null) {
+                                  _belongingDamageReportManager
+                                      .updateExpectedDamage(parsed);
+                                }
+                              }
+                            },
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor: Colors.white,
+                              label: const Text('Bedrag in €'),
+                              prefixText: '€ ',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12.0),
+                                borderSide: const BorderSide(
+                                  color: AppColors.darkGreen,
+                                  width: 2.0,
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12.0),
+                                borderSide: const BorderSide(
+                                  color: AppColors.darkGreen,
+                                  width: 2.0,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12.0),
+                                borderSide: const BorderSide(
+                                  color: AppColors.darkGreen,
+                                  width: 2.0,
+                                ),
+                              ),
+                            ),
+                            style: const TextStyle(
+                              fontSize: 18,
+                              color: AppColors.brown,
+                              fontFamily: 'Roboto',
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                // Comment field
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        "Geschatte huidige schade",
-                        style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Roboto', fontSize: 16),
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        decoration: const BoxDecoration(),
-                        child: TextField(
-                          key: const Key('estimated-damage'),
-                          controller: _currentDamageController,
-                          onChanged: (value) {
-                            if (value.isEmpty) {
-                              _belongingDamageReportManager.updateCurrentDamage(0);
-                            } else {
-                              final parsed = double.tryParse(value);
-                              if (parsed != null) {
-                                _belongingDamageReportManager.updateCurrentDamage(parsed);
-                              }
-                            }
-                          },
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                          decoration: InputDecoration(
-                            filled: true,
-                            fillColor: Colors.white,
-                            hintText: 'Bedrag in €',
-                            prefixText: '€ ',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12.0),
-                              borderSide: const BorderSide(
-                                color: AppColors.darkGreen,
-                                width: 2.0,
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12.0),
-                              borderSide: const BorderSide(
-                                color: AppColors.darkGreen,
-                                width: 2.0,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12.0),
-                              borderSide: const BorderSide(
-                                color: AppColors.darkGreen,
-                                width: 2.0,
-                              ),
-                            ),
-                          ),
-                          style: const TextStyle(
-                            fontSize: 18,
-                            color: AppColors.brown,
-                            fontFamily: 'Roboto',
-                          ),
+                        "Opmerking",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Roboto',
+                          fontSize: 16,
                         ),
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        "Verwachte toekomstige schade",
-                        style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Roboto', fontSize: 16),
-                      ),
                       const SizedBox(height: 8),
-                      Container(
-                        decoration: const BoxDecoration(),
-                        child: TextField(
-                          key: const Key('estimated-future-damage'),
-                          controller: _expectedDamageController,
-                          onChanged: (value) {
-                            if (value.isEmpty) {
-                              _belongingDamageReportManager.updateExpectedDamage(0);
-                            } else {
-                              final parsed = double.tryParse(value);
-                              if (parsed != null) {
-                                _belongingDamageReportManager.updateExpectedDamage(parsed);
-                              }
-                            }
-                          },
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                          decoration: InputDecoration(
-                            filled: true,
-                            fillColor: Colors.white,
-                            hintText: 'Bedrag in €',
-                            prefixText: '€ ',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12.0),
-                              borderSide: const BorderSide(
-                                color: AppColors.darkGreen,
-                                width: 2.0,
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12.0),
-                              borderSide: const BorderSide(
-                                color: AppColors.darkGreen,
-                                width: 2.0,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12.0),
-                              borderSide: const BorderSide(
-                                color: AppColors.darkGreen,
-                                width: 2.0,
-                              ),
+                      TextField(
+                        controller: _descriptionController,
+                        minLines: 3,
+                        maxLines: null,
+                        onChanged: (value) {
+                          // Keep both provider and manager in sync
+                          final provider = Provider.of<BelongingDamageReportProvider>(
+                            context,
+                            listen: false,
+                          );
+                          provider.setDescription(value);
+                          _belongingDamageReportManager.updateDescription(value);
+                        },
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: Colors.white,
+                          hintText: 'Typ hier...',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                            borderSide: const BorderSide(
+                              color: AppColors.darkGreen,
+                              width: 2.0,
                             ),
                           ),
-                          style: const TextStyle(
-                            fontSize: 18,
-                            color: AppColors.brown,
-                            fontFamily: 'Roboto',
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                            borderSide: const BorderSide(
+                              color: AppColors.darkGreen,
+                              width: 2.0,
+                            ),
                           ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                            borderSide: const BorderSide(
+                              color: AppColors.darkGreen,
+                              width: 2.0,
+                            ),
+                          ),
+                        ),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: AppColors.brown,
+                          fontFamily: 'Roboto',
                         ),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 30),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                  child: Container(
-                    decoration: const BoxDecoration(),
-                    child: TextField(
-                      key: const Key('description'),
-                      controller: _descriptionController,
-                      onChanged:
-                          (val) => _belongingDamageReportManager
-                              .updateDescription(val),
-                      maxLines: 5,
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: Colors.white,
-                        hintText: 'opmerkingen...',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.0),
-                          borderSide: const BorderSide(
-                            color: AppColors.darkGreen,
-                            width: 2.0,
-                          ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.0),
-                          borderSide: const BorderSide(
-                            color: AppColors.darkGreen,
-                            width: 2.0,
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.0),
-                          borderSide: const BorderSide(
-                            color: AppColors.darkGreen,
-                            width: 2.0,
-                          ),
-                        ),
-                      ),
-                      style: const TextStyle(
-                        fontSize: 18,
-                        color: AppColors.brown,
-                        fontFamily: 'Roboto',
-                      ),
-                    ),
-                  ),
-                ),
               ],
             ),
           ],

@@ -14,9 +14,7 @@ import '../mock_generator.mocks.dart';
 class InteractionHelpers {
   static Future<void> setupEnvironment() async {
     // Setup mock SharedPreferences with default values
-    SharedPreferences.setMockInitialValues({
-      "userID": "test-user-123",
-    });
+    SharedPreferences.setMockInitialValues({"userID": "test-user-123"});
   }
 
   static MockInteractionApiInterface getMockInteractionApi() {
@@ -40,7 +38,9 @@ class InteractionHelpers {
     );
   }
 
-  static void setupSuccessfulInteractionResponse(MockInteractionApiInterface mockApi) {
+  static void setupSuccessfulInteractionResponse(
+    MockInteractionApiInterface mockApi,
+  ) {
     final response = InteractionResponse(
       questionnaire: Questionnaire(
         id: 'q-123',
@@ -65,24 +65,26 @@ class InteractionHelpers {
       ),
       interactionID: 'int-123',
     );
-    
+
     when(mockApi.sendInteraction(any)).thenAnswer((_) async => response);
   }
 
-  static void setupFailedInteractionResponse(MockInteractionApiInterface mockApi) {
+  static void setupFailedInteractionResponse(
+    MockInteractionApiInterface mockApi,
+  ) {
     when(mockApi.sendInteraction(any)).thenThrow(Exception('API Error'));
   }
 
   static void setupOfflineConnectivity(MockConnectivity mockConnectivity) {
-    when(mockConnectivity.checkConnectivity()).thenAnswer(
-      (_) async => [ConnectivityResult.none],
-    );
+    when(
+      mockConnectivity.checkConnectivity(),
+    ).thenAnswer((_) async => [ConnectivityResult.none]);
   }
 
   static void setupOnlineConnectivity(MockConnectivity mockConnectivity) {
-    when(mockConnectivity.checkConnectivity()).thenAnswer(
-      (_) async => [ConnectivityResult.wifi],
-    );
+    when(
+      mockConnectivity.checkConnectivity(),
+    ).thenAnswer((_) async => [ConnectivityResult.wifi]);
   }
 
   static InteractionResponse createMockInteractionResponse() {
@@ -112,6 +114,3 @@ class InteractionHelpers {
     );
   }
 }
-
-
-

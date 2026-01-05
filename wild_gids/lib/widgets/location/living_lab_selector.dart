@@ -6,6 +6,7 @@ import 'package:wildrapport/screens/belonging/belonging_location_screen.dart';
 import 'package:wildrapport/widgets/location/livinglab_map_widget.dart';
 import 'package:wildrapport/screens/location/map_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:wildrapport/utils/responsive_utils.dart';
 
 class LivingLabSelector extends StatefulWidget {
   final String currentLabName;
@@ -82,18 +83,22 @@ class _LivingLabSelectorState extends State<LivingLabSelector>
     );
   }
 
-  Widget _buildLabOption(String labName) {
+  Widget _buildLabOption(String labName, BuildContext context) {
+    final responsive = context.responsive;
     final isSelected = labName == widget.currentLabName;
     return GestureDetector(
       onTap: () => _selectLab(labName),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 14),
-        margin: const EdgeInsets.only(
-          bottom: 6,
+        padding: EdgeInsets.symmetric(
+          vertical: responsive.hp(2),
+          horizontal: responsive.wp(3.5),
+        ),
+        margin: EdgeInsets.only(
+          bottom: responsive.spacing(6),
         ), // Slight space between options
         decoration: BoxDecoration(
           color: isSelected ? AppColors.brown.withValues(alpha: 0.1) : null,
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(responsive.sp(1.5)),
         ),
         child: Row(
           children: [
@@ -102,34 +107,40 @@ class _LivingLabSelectorState extends State<LivingLabSelector>
                 labName,
                 style: TextStyle(
                   color: AppColors.brown,
-                  fontSize: 15,
+                  fontSize: responsive.fontSize(15),
                   fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
                 ),
               ),
             ),
-            if (isSelected) Icon(Icons.check, color: AppColors.brown, size: 16),
+            if (isSelected)
+              Icon(
+                Icons.check,
+                color: AppColors.brown,
+                size: responsive.sp(16),
+              ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildExpanded() {
+  Widget _buildExpanded(BuildContext context) {
+    final responsive = context.responsive;
     return AnimatedSize(
       duration: _expandDuration,
       curve: Curves.easeInOut,
       alignment: Alignment.topCenter,
       child: Container(
-        width: 300,
-        padding: const EdgeInsets.all(12),
+        width: responsive.wp(75),
+        padding: EdgeInsets.all(responsive.spacing(12)),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(responsive.sp(3)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.1),
               offset: const Offset(0, 2),
-              blurRadius: 8,
+              blurRadius: responsive.sp(2),
             ),
           ],
         ),
@@ -142,52 +153,65 @@ class _LivingLabSelectorState extends State<LivingLabSelector>
                 Icon(
                   Icons.location_on_rounded,
                   color: AppColors.brown,
-                  size: 20,
+                  size: responsive.sp(20),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: responsive.spacing(8)),
                 Expanded(
                   child: Text(
                     'Living Labs',
                     style: TextStyle(
                       color: AppColors.brown,
-                      fontSize: 16,
+                      fontSize: responsive.fontSize(16),
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
-                Icon(Icons.chevron_left, color: AppColors.brown, size: 22),
+                Icon(
+                  Icons.chevron_left,
+                  color: AppColors.brown,
+                  size: responsive.sp(22),
+                ),
               ],
             ),
-            const SizedBox(height: 12),
-            _buildLabOption('Nationaal Park Zuid-Kennemerland'),
-            _buildLabOption('Grenspark Kempen-Broek'),
+            SizedBox(height: responsive.spacing(12)),
+            _buildLabOption('Nationaal Park Zuid-Kennemerland', context),
+            _buildLabOption('Grenspark Kempen-Broek', context),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildCollapsed() {
+  Widget _buildCollapsed(BuildContext context) {
+    final responsive = context.responsive;
     return Container(
-      width: 80,
-      padding: const EdgeInsets.all(12),
+      width: responsive.wp(20),
+      padding: EdgeInsets.all(responsive.spacing(12)),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(responsive.sp(3)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.1),
             offset: const Offset(0, 2),
-            blurRadius: 8,
+            blurRadius: responsive.sp(2),
           ),
         ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.location_on_rounded, color: AppColors.brown, size: 22),
-          const SizedBox(width: 6),
-          Icon(Icons.chevron_right, color: AppColors.brown, size: 24),
+          Icon(
+            Icons.location_on_rounded,
+            color: AppColors.brown,
+            size: responsive.sp(22),
+          ),
+          SizedBox(width: responsive.spacing(6)),
+          Icon(
+            Icons.chevron_right,
+            color: AppColors.brown,
+            size: responsive.sp(24),
+          ),
         ],
       ),
     );
@@ -197,7 +221,7 @@ class _LivingLabSelectorState extends State<LivingLabSelector>
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => setState(() => _isExpanded = !_isExpanded),
-      child: _isExpanded ? _buildExpanded() : _buildCollapsed(),
+      child: _isExpanded ? _buildExpanded(context) : _buildCollapsed(context),
     );
   }
 }

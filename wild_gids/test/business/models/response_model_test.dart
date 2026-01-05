@@ -7,7 +7,7 @@ void main() {
 
   setUp(() {
     mockResponse = MockResponse();
-    
+
     // Setup default behavior
     when(mockResponse.interactionID).thenReturn('response-1');
     when(mockResponse.questionID).thenReturn('question-1');
@@ -32,7 +32,7 @@ void main() {
         'answerId': 'answer-1',
         'openResponse': 'Test open response',
       });
-      
+
       // Verify
       final json = mockResponse.toJson();
       expect(json['id'], 'response-1');

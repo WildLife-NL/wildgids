@@ -28,7 +28,8 @@ class Response {
     }
     return data;
   }
-    Response copyWith({
+
+  Response copyWith({
     String? answerID,
     String? interactionID,
     String? questionID,

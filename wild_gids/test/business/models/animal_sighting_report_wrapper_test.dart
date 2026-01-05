@@ -14,7 +14,6 @@ import 'package:wildrapport/models/ui_models/image_list_model.dart';
 
 void main() {
   group('AnimalSightingReportWrapper', () {
-    
     test('should have correct properties', () {
       // Arrange
       final animalModel = AnimalModel(
@@ -23,22 +22,28 @@ void main() {
         animalImagePath: 'assets/wolf.png',
         genderViewCounts: [],
       );
-      
+
       final sightingModel = AnimalSightingModel(
         animals: [animalModel],
         animalSelected: animalModel,
         category: AnimalCategory.roofdieren,
         description: 'Test description',
-        locations: [LocationModel(latitude: 52.0, longitude: 4.0, source: LocationSource.system)],
+        locations: [
+          LocationModel(
+            latitude: 52.0,
+            longitude: 4.0,
+            source: LocationSource.system,
+          ),
+        ],
         dateTime: DateTimeModel(dateTime: DateTime(2023, 1, 1)),
       );
-      
+
       final reportWrapper = AnimalSightingReportWrapper(sightingModel);
-      
+
       // Assert
       expect(reportWrapper.sighting, sightingModel);
     });
-    
+
     test('should convert to JSON correctly', () {
       // Arrange
       final animalModel = AnimalModel(
@@ -47,7 +52,7 @@ void main() {
         animalImagePath: 'assets/wolf.png',
         genderViewCounts: [],
       );
-      
+
       final sightingModel = AnimalSightingModel(
         animals: [animalModel],
         animalSelected: animalModel,
@@ -55,17 +60,25 @@ void main() {
         description: 'Test description',
         // Add required fields for API transformation
         locations: [
-          LocationModel(latitude: 52.0, longitude: 4.0, source: LocationSource.system),
-          LocationModel(latitude: 52.1, longitude: 4.1, source: LocationSource.manual)
+          LocationModel(
+            latitude: 52.0,
+            longitude: 4.0,
+            source: LocationSource.system,
+          ),
+          LocationModel(
+            latitude: 52.1,
+            longitude: 4.1,
+            source: LocationSource.manual,
+          ),
         ],
         dateTime: DateTimeModel(dateTime: DateTime(2023, 1, 1)),
       );
-      
+
       final reportWrapper = AnimalSightingReportWrapper(sightingModel);
-      
+
       // Act
       final json = reportWrapper.toJson();
-      
+
       // Assert
       expect(json, isA<Map<String, dynamic>>());
       expect(json['description'], 'Test description');
@@ -76,7 +89,7 @@ void main() {
       expect(json['moment'], isNotNull);
       expect(json['reportOfSighting'], isNotNull);
     });
-    
+
     test('should throw StateError when locations are missing', () {
       // Arrange
       final animalModel = AnimalModel(
@@ -85,7 +98,7 @@ void main() {
         animalImagePath: 'assets/wolf.png',
         genderViewCounts: [],
       );
-      
+
       final sightingModel = AnimalSightingModel(
         animals: [animalModel],
         animalSelected: animalModel,
@@ -94,13 +107,13 @@ void main() {
         // Missing locations
         dateTime: DateTimeModel(dateTime: DateTime(2023, 1, 1)),
       );
-      
+
       final reportWrapper = AnimalSightingReportWrapper(sightingModel);
-      
+
       // Act & Assert
       expect(() => reportWrapper.toJson(), throwsStateError);
     });
-    
+
     test('should throw StateError when dateTime is missing', () {
       // Arrange
       final animalModel = AnimalModel(
@@ -109,25 +122,33 @@ void main() {
         animalImagePath: 'assets/wolf.png',
         genderViewCounts: [],
       );
-      
+
       final sightingModel = AnimalSightingModel(
         animals: [animalModel],
         animalSelected: animalModel,
         category: AnimalCategory.roofdieren,
         description: 'Test description',
         locations: [
-          LocationModel(latitude: 52.0, longitude: 4.0, source: LocationSource.system),
-          LocationModel(latitude: 52.1, longitude: 4.1, source: LocationSource.manual)
+          LocationModel(
+            latitude: 52.0,
+            longitude: 4.0,
+            source: LocationSource.system,
+          ),
+          LocationModel(
+            latitude: 52.1,
+            longitude: 4.1,
+            source: LocationSource.manual,
+          ),
         ],
         // Missing dateTime
       );
-      
+
       final reportWrapper = AnimalSightingReportWrapper(sightingModel);
-      
+
       // Act & Assert
       expect(() => reportWrapper.toJson(), throwsStateError);
     });
-    
+
     test('should throw StateError when animals list is empty', () {
       // Arrange
       final animalModel = AnimalModel(
@@ -136,25 +157,33 @@ void main() {
         animalImagePath: 'assets/wolf.png',
         genderViewCounts: [],
       );
-      
+
       final sightingModel = AnimalSightingModel(
         animals: [], // Empty animals list
         animalSelected: animalModel,
         category: AnimalCategory.roofdieren,
         description: 'Test description',
         locations: [
-          LocationModel(latitude: 52.0, longitude: 4.0, source: LocationSource.system),
-          LocationModel(latitude: 52.1, longitude: 4.1, source: LocationSource.manual)
+          LocationModel(
+            latitude: 52.0,
+            longitude: 4.0,
+            source: LocationSource.system,
+          ),
+          LocationModel(
+            latitude: 52.1,
+            longitude: 4.1,
+            source: LocationSource.manual,
+          ),
         ],
         dateTime: DateTimeModel(dateTime: DateTime(2023, 1, 1)),
       );
-      
+
       final reportWrapper = AnimalSightingReportWrapper(sightingModel);
-      
+
       // Act & Assert
       expect(() => reportWrapper.toJson(), throwsStateError);
     });
-    
+
     test('should throw StateError when animalSelected is missing', () {
       // Arrange
       final animalModel = AnimalModel(
@@ -163,25 +192,33 @@ void main() {
         animalImagePath: 'assets/wolf.png',
         genderViewCounts: [],
       );
-      
+
       final sightingModel = AnimalSightingModel(
         animals: [animalModel],
         animalSelected: null, // Missing selected animal
         category: AnimalCategory.roofdieren,
         description: 'Test description',
         locations: [
-          LocationModel(latitude: 52.0, longitude: 4.0, source: LocationSource.system),
-          LocationModel(latitude: 52.1, longitude: 4.1, source: LocationSource.manual)
+          LocationModel(
+            latitude: 52.0,
+            longitude: 4.0,
+            source: LocationSource.system,
+          ),
+          LocationModel(
+            latitude: 52.1,
+            longitude: 4.1,
+            source: LocationSource.manual,
+          ),
         ],
         dateTime: DateTimeModel(dateTime: DateTime(2023, 1, 1)),
       );
-      
+
       final reportWrapper = AnimalSightingReportWrapper(sightingModel);
-      
+
       // Act & Assert
       expect(() => reportWrapper.toJson(), throwsStateError);
     });
-    
+
     test('should throw StateError when system location is missing', () {
       // Arrange
       final animalModel = AnimalModel(
@@ -190,7 +227,7 @@ void main() {
         animalImagePath: 'assets/wolf.png',
         genderViewCounts: [],
       );
-      
+
       final sightingModel = AnimalSightingModel(
         animals: [animalModel],
         animalSelected: animalModel,
@@ -198,17 +235,21 @@ void main() {
         description: 'Test description',
         locations: [
           // Only manual location, missing system location
-          LocationModel(latitude: 52.1, longitude: 4.1, source: LocationSource.manual)
+          LocationModel(
+            latitude: 52.1,
+            longitude: 4.1,
+            source: LocationSource.manual,
+          ),
         ],
         dateTime: DateTimeModel(dateTime: DateTime(2023, 1, 1)),
       );
-      
+
       final reportWrapper = AnimalSightingReportWrapper(sightingModel);
-      
+
       // Act & Assert
       expect(() => reportWrapper.toJson(), throwsStateError);
     });
-    
+
     test('should throw StateError when manual location is missing', () {
       // Arrange
       final animalModel = AnimalModel(
@@ -217,7 +258,7 @@ void main() {
         animalImagePath: 'assets/wolf.png',
         genderViewCounts: [],
       );
-      
+
       final sightingModel = AnimalSightingModel(
         animals: [animalModel],
         animalSelected: animalModel,
@@ -225,17 +266,21 @@ void main() {
         description: 'Test description',
         locations: [
           // Only system location, missing manual location
-          LocationModel(latitude: 52.0, longitude: 4.0, source: LocationSource.system)
+          LocationModel(
+            latitude: 52.0,
+            longitude: 4.0,
+            source: LocationSource.system,
+          ),
         ],
         dateTime: DateTimeModel(dateTime: DateTime(2023, 1, 1)),
       );
-      
+
       final reportWrapper = AnimalSightingReportWrapper(sightingModel);
-      
+
       // Act & Assert
       expect(() => reportWrapper.toJson(), throwsStateError);
     });
-    
+
     test('should handle complex animal sighting with multiple animals', () {
       // Arrange
       final wolf = AnimalModel(
@@ -254,7 +299,7 @@ void main() {
         ],
         condition: AnimalCondition.levend,
       );
-      
+
       final fox = AnimalModel(
         animalId: '2',
         animalName: 'Fox',
@@ -267,28 +312,41 @@ void main() {
         ],
         condition: AnimalCondition.levend,
       );
-      
+
       final sightingModel = AnimalSightingModel(
         animals: [wolf, fox],
         animalSelected: wolf,
         category: AnimalCategory.roofdieren,
         description: 'Pack of wolves and foxes spotted near the forest',
         locations: [
-          LocationModel(latitude: 52.0, longitude: 4.0, source: LocationSource.system),
-          LocationModel(latitude: 52.1, longitude: 4.1, source: LocationSource.manual)
+          LocationModel(
+            latitude: 52.0,
+            longitude: 4.0,
+            source: LocationSource.system,
+          ),
+          LocationModel(
+            latitude: 52.1,
+            longitude: 4.1,
+            source: LocationSource.manual,
+          ),
         ],
         dateTime: DateTimeModel(dateTime: DateTime(2023, 1, 1, 14, 30)),
-        images: ImageListModel(imagePaths: ['path/to/image1.jpg', 'path/to/image2.jpg']),
+        images: ImageListModel(
+          imagePaths: ['path/to/image1.jpg', 'path/to/image2.jpg'],
+        ),
       );
-      
+
       final reportWrapper = AnimalSightingReportWrapper(sightingModel);
-      
+
       // Act
       final json = reportWrapper.toJson();
-      
+
       // Assert
       expect(json, isA<Map<String, dynamic>>());
-      expect(json['description'], 'Pack of wolves and foxes spotted near the forest');
+      expect(
+        json['description'],
+        'Pack of wolves and foxes spotted near the forest',
+      );
       expect(json['speciesID'], '1');
       expect(json['location']['latitude'], 52.0);
       expect(json['location']['longitude'], 4.0);
@@ -297,7 +355,7 @@ void main() {
       expect(json['reportOfSighting']['involvedAnimals'], isA<List>());
       expect(json['moment'], contains('2023-01-01T14:30:00'));
     });
-    
+
     test('should handle sighting with minimal required data', () {
       // Arrange
       final animalModel = AnimalModel(
@@ -306,25 +364,33 @@ void main() {
         animalImagePath: 'assets/wolf.png',
         genderViewCounts: [],
       );
-      
+
       final sightingModel = AnimalSightingModel(
         animals: [animalModel],
         animalSelected: animalModel,
         // No category
         description: '', // Empty description
         locations: [
-          LocationModel(latitude: 52.0, longitude: 4.0, source: LocationSource.system),
-          LocationModel(latitude: 52.1, longitude: 4.1, source: LocationSource.manual)
+          LocationModel(
+            latitude: 52.0,
+            longitude: 4.0,
+            source: LocationSource.system,
+          ),
+          LocationModel(
+            latitude: 52.1,
+            longitude: 4.1,
+            source: LocationSource.manual,
+          ),
         ],
         dateTime: DateTimeModel(dateTime: DateTime(2023, 1, 1)),
         // No images
       );
-      
+
       final reportWrapper = AnimalSightingReportWrapper(sightingModel);
-      
+
       // Act
       final json = reportWrapper.toJson();
-      
+
       // Assert
       expect(json, isA<Map<String, dynamic>>());
       expect(json['description'], '');
@@ -332,4 +398,3 @@ void main() {
     });
   });
 }
-

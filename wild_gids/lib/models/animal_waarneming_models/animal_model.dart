@@ -2,23 +2,22 @@ import 'package:wildrapport/models/enums/animal_gender.dart';
 import 'package:wildrapport/models/animal_waarneming_models/view_count_model.dart';
 import 'package:wildrapport/models/enums/animal_condition.dart';
 import 'package:wildrapport/models/animal_waarneming_models/animal_gender_view_count_model.dart'; // <-- Import the new file!
-import 'package:wildrapport/models/enums/animal_age.dart';
 
 class AnimalModel {
   final String? animalId;
   final String? animalImagePath;
   final String animalName;
+  final String? category;
   final List<AnimalGenderViewCount> genderViewCounts;
   final AnimalCondition? condition;
-  final AnimalAge? age;
 
   AnimalModel({
     this.animalId,
     this.animalImagePath,
     required this.animalName,
+    this.category,
     required this.genderViewCounts,
     this.condition,
-    this.age,
   });
 
   // Helper methods
@@ -37,6 +36,7 @@ class AnimalModel {
       animalId: animalId,
       animalImagePath: animalImagePath,
       animalName: animalName,
+      category: category,
       genderViewCounts: [
         AnimalGenderViewCount(
           gender: newGender,
@@ -44,7 +44,6 @@ class AnimalModel {
         ),
       ],
       condition: condition,
-      age: age,
     );
   }
 
@@ -53,6 +52,7 @@ class AnimalModel {
       animalId: animalId,
       animalImagePath: animalImagePath,
       animalName: animalName,
+      category: category,
       genderViewCounts: [
         AnimalGenderViewCount(
           gender: gender ?? AnimalGender.onbekend,
@@ -60,18 +60,6 @@ class AnimalModel {
         ),
       ],
       condition: condition,
-      age: age,
-    );
-  }
-
-  AnimalModel updateAge(AnimalAge newAge) {
-    return AnimalModel(
-      animalId: animalId,
-      animalImagePath: animalImagePath,
-      animalName: animalName,
-      genderViewCounts: genderViewCounts,
-      condition: condition,
-      age: newAge,
     );
   }
 }

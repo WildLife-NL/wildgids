@@ -23,7 +23,8 @@ class InteractionQueryManager {
     final clampedRadius = radiusMeters.clamp(250, 20000);
 
     final nowUtc = DateTime.now().toUtc();
-    final normalizedAfter = (after ?? nowUtc.subtract(const Duration(days: 365))).toUtc();
+    final normalizedAfter =
+        (after ?? nowUtc.subtract(const Duration(days: 365))).toUtc();
     final normalizedBefore = (before ?? nowUtc).toUtc();
 
     return api.queryInteractions(

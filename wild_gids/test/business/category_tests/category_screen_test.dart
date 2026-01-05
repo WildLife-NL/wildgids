@@ -30,24 +30,26 @@ void main() {
     mockAppStateProvider = MockAppStateProvider();
 
     // Stub required getters and methods
-    when(mockAppStateProvider.currentReportType)
-        .thenReturn(ReportType.waarneming);
+    when(
+      mockAppStateProvider.currentReportType,
+    ).thenReturn(ReportType.waarneming);
     when(mockSightingInterface.getCurrentanimalSighting()).thenReturn(null);
 
     // Stub the methods used in the widget logic
-    when(mockSightingInterface.convertStringToCategory(any))
-        .thenReturn(AnimalCategory.evenhoevigen);
-    when(mockSightingInterface.updateCategory(any))
-        .thenReturn(AnimalSightingModel());
+    when(
+      mockSightingInterface.convertStringToCategory(any),
+    ).thenReturn(AnimalCategory.evenhoevigen);
+    when(
+      mockSightingInterface.updateCategory(any),
+    ).thenReturn(AnimalSightingModel());
 
-    when(mockSightingInterface.clearCurrentanimalSighting())
-        .thenReturn(null);
+    when(mockSightingInterface.clearCurrentanimalSighting()).thenReturn(null);
     when(mockAppStateProvider.resetApplicationState(any)).thenReturn(null);
     when(mockNavigationInterface.clearApplicationState(any)).thenReturn(null);
-    when(mockNavigationInterface.pushAndRemoveUntil(any, any))
-        .thenReturn(null);
-    when(mockNavigationInterface.pushReplacementForward(any, any))
-        .thenReturn(null);
+    when(mockNavigationInterface.pushAndRemoveUntil(any, any)).thenReturn(null);
+    when(
+      mockNavigationInterface.pushReplacementForward(any, any),
+    ).thenReturn(null);
   });
 
   Widget createTestWidget() {
@@ -63,14 +65,13 @@ void main() {
           value: mockAppStateProvider,
         ),
       ],
-      child: const MaterialApp(
-        home: CategoryScreen(),
-      ),
+      child: const MaterialApp(home: CategoryScreen()),
     );
   }
 
-  testWidgets('CategoryScreen renders and category buttons are clickable',
-      (WidgetTester tester) async {
+  testWidgets('CategoryScreen renders and category buttons are clickable', (
+    WidgetTester tester,
+  ) async {
     // Fix layout overflow by increasing test screen size
     tester.view.physicalSize = const Size(1080, 1920);
     tester.view.devicePixelRatio = 1.0;
@@ -87,15 +88,18 @@ void main() {
     await tester.tap(evenhoevigen);
     await tester.pumpAndSettle();
 
-    verify(mockSightingInterface.convertStringToCategory('Evenhoevigen'))
-        .called(1);
-    verify(mockSightingInterface.updateCategory(AnimalCategory.evenhoevigen))
-        .called(1);
+    verify(
+      mockSightingInterface.convertStringToCategory('Evenhoevigen'),
+    ).called(1);
+    verify(
+      mockSightingInterface.updateCategory(AnimalCategory.evenhoevigen),
+    ).called(1);
     verify(mockNavigationInterface.pushReplacementForward(any, any)).called(1);
   });
 
-  testWidgets('Back button clears state and navigates to Rapporteren',
-      (WidgetTester tester) async {
+  testWidgets('Back button clears state and navigates to Rapporteren', (
+    WidgetTester tester,
+  ) async {
     tester.view.physicalSize = const Size(1080, 1920);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() => tester.view.resetPhysicalSize());
@@ -107,7 +111,7 @@ void main() {
     // Use a more specific finder to get the correct back button
     final backButton = find.byType(CustomAppBar).evaluate().first;
     final customAppBar = backButton.widget as CustomAppBar;
-    
+
     // Call the onLeftIconPressed callback directly
     customAppBar.onLeftIconPressed?.call();
     await tester.pumpAndSettle();
@@ -116,16 +120,8 @@ void main() {
     verify(mockSightingInterface.clearCurrentanimalSighting()).called(1);
     verify(mockAppStateProvider.resetApplicationState(any)).called(1);
     verify(mockNavigationInterface.clearApplicationState(any)).called(1);
-    
+
     // Verify navigation to Rapporteren screen
     verify(mockNavigationInterface.pushAndRemoveUntil(any, any)).called(1);
   });
 }
-
-
-
-
-
-
-
-

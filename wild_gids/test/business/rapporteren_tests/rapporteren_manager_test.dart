@@ -20,24 +20,30 @@ void main() {
   group('AnimalSightingReportingInterface', () {
     test('should create animal sighting report', () {
       // Arrange
-      when(animalSightingManager.createanimalSighting()).thenReturn(AnimalSightingModel());
-      
+      when(
+        animalSightingManager.createanimalSighting(),
+      ).thenReturn(AnimalSightingModel());
+
       // Act
       final result = animalSightingManager.createanimalSighting();
-      
+
       // Assert
       expect(result, isA<AnimalSightingModel>());
       verify(animalSightingManager.createanimalSighting()).called(1);
     });
-    
+
     test('should handle animal sighting creation failure', () {
       // Arrange
-      when(animalSightingManager.createanimalSighting()).thenThrow(Exception('Failed to create'));
-      
+      when(
+        animalSightingManager.createanimalSighting(),
+      ).thenThrow(Exception('Failed to create'));
+
       // Act & Assert
-      expect(() => animalSightingManager.createanimalSighting(), throwsException);
+      expect(
+        () => animalSightingManager.createanimalSighting(),
+        throwsException,
+      );
       verify(animalSightingManager.createanimalSighting()).called(1);
     });
   });
 }
-

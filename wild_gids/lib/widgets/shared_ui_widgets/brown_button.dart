@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:wildrapport/constants/app_colors.dart';
 import 'package:wildrapport/models/ui_models/brown_button_model.dart';
 import 'package:wildrapport/widgets/shared_ui_widgets/circle_icon_container.dart';
+import 'package:wildrapport/utils/responsive_utils.dart';
 
 class BrownButton extends StatelessWidget {
   final BrownButtonModel? model;
@@ -38,12 +39,12 @@ class BrownButton extends StatelessWidget {
                     child: _buildLeftIcon(),
                   )
                 else
-                  const SizedBox(width: 24),
+                  SizedBox(width: context.responsive.spacing(24)),
                 if (model?.rightIconPath != null &&
                     model!.rightIconPath!.isNotEmpty)
                   _buildRightIcon()
                 else
-                  const SizedBox(width: 24),
+                  SizedBox(width: context.responsive.spacing(24)),
               ],
             ),
             Text(

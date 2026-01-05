@@ -19,10 +19,8 @@ class InteractionManager implements InteractionInterface {
 
   bool _isRetryingSend = false;
 
-  InteractionManager({
-    required this.interactionAPI, 
-    Connectivity? connectivity,
-  }) : _connectivity = connectivity ?? Connectivity();
+  InteractionManager({required this.interactionAPI, Connectivity? connectivity})
+    : _connectivity = connectivity ?? Connectivity();
 
   final greenLog = '\x1B[32m';
   final redLog = '\x1B[31m';
@@ -204,4 +202,3 @@ class InteractionManager implements InteractionInterface {
     await prefs.setStringList('interaction_cache', interactionJson);
   }
 }
-

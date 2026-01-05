@@ -13,46 +13,39 @@ void main() {
 
   group('AnimalTile Widget Tests', () {
     testWidgets('should display animal name', (WidgetTester tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: AnimalTile(
-            animal: testAnimal,
-            onTap: () {},
-          ),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(body: AnimalTile(animal: testAnimal, onTap: () {})),
         ),
-      ));
-      
+      );
+
       expect(find.text('Wolf'), findsOneWidget);
     });
 
     testWidgets('should call onTap when pressed', (WidgetTester tester) async {
       bool tapped = false;
-      
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: AnimalTile(
-            animal: testAnimal,
-            onTap: () => tapped = true,
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AnimalTile(animal: testAnimal, onTap: () => tapped = true),
           ),
         ),
-      ));
-      
+      );
+
       await tester.tap(find.byType(InkWell).first);
       await tester.pump();
-      
+
       expect(tapped, true);
     });
 
     testWidgets('should display animal image', (WidgetTester tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: AnimalTile(
-            animal: testAnimal,
-            onTap: () {},
-          ),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(body: AnimalTile(animal: testAnimal, onTap: () {})),
         ),
-      ));
-      
+      );
+
       expect(find.byType(Image), findsOneWidget);
     });
   });

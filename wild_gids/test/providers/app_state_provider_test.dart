@@ -46,7 +46,10 @@ void main() {
 
       // Act
       appStateProvider.setScreenState('testScreen', 'testKey', 'testValue');
-      final value = appStateProvider.getScreenState<String>('testScreen', 'testKey');
+      final value = appStateProvider.getScreenState<String>(
+        'testScreen',
+        'testKey',
+      );
 
       // Assert
       expect(value, 'testValue');
@@ -56,7 +59,10 @@ void main() {
     test('should not set screen state when value is null', () {
       // Act
       appStateProvider.setScreenState('testScreen', 'testKey', null);
-      final value = appStateProvider.getScreenState<String>('testScreen', 'testKey');
+      final value = appStateProvider.getScreenState<String>(
+        'testScreen',
+        'testKey',
+      );
 
       // Assert
       expect(value, isNull);
@@ -87,7 +93,10 @@ void main() {
 
       // Act
       appStateProvider.setScreenState('testScreen', 'testKey', 123);
-      final value = appStateProvider.getScreenState<String>('testScreen', 'testKey');
+      final value = appStateProvider.getScreenState<String>(
+        'testScreen',
+        'testKey',
+      );
 
       // Assert
       expect(value, 'testValue'); // Value should not change
@@ -104,7 +113,10 @@ void main() {
 
       // Act
       appStateProvider.clearScreenState('testScreen');
-      final value = appStateProvider.getScreenState<String>('testScreen', 'testKey');
+      final value = appStateProvider.getScreenState<String>(
+        'testScreen',
+        'testKey',
+      );
 
       // Assert
       expect(value, isNull);
@@ -142,7 +154,10 @@ void main() {
       appStateProvider.resetApplicationState(mockContext);
 
       // Assert
-      expect(appStateProvider.getScreenState<String>('testScreen', 'testKey'), isNull);
+      expect(
+        appStateProvider.getScreenState<String>('testScreen', 'testKey'),
+        isNull,
+      );
       expect(appStateProvider.currentReportType, isNull);
       expect(appStateProvider.getCurrentReport(), isNull);
       expect(listenerCalled, isTrue);
@@ -157,4 +172,3 @@ void main() {
     // or adding test-specific methods to the AppStateProvider
   });
 }
-

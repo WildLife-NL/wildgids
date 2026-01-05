@@ -17,23 +17,31 @@ class VicinityApi implements VicinityApiInterface {
     if (res.statusCode == 200) {
       final body = res.body.trim();
       debugPrint('[VicinityApi] Response body length: ${body.length}');
-      debugPrint('[VicinityApi] Raw response: ${body.substring(0, body.length > 500 ? 500 : body.length)}...');
-      
+      debugPrint(
+        '[VicinityApi] Raw response: ${body.substring(0, body.length > 500 ? 500 : body.length)}...',
+      );
+
       if (body.isEmpty) {
-        debugPrint('[VicinityApi] Empty response body, returning empty vicinity');
+        debugPrint(
+          '[VicinityApi] Empty response body, returning empty vicinity',
+        );
         return Vicinity(animals: [], detections: [], interactions: []);
       }
-      
+
       final data = json.decode(body) as Map<String, dynamic>;
-      debugPrint('[VicinityApi] Parsed JSON - animals: ${(data['animals'] as List?)?.length ?? 0}, '
-                 'detections: ${(data['detections'] as List?)?.length ?? 0}, '
-                 'interactions: ${(data['interactions'] as List?)?.length ?? 0}');
-      
+      debugPrint(
+        '[VicinityApi] Parsed JSON - animals: ${(data['animals'] as List?)?.length ?? 0}, '
+        'detections: ${(data['detections'] as List?)?.length ?? 0}, '
+        'interactions: ${(data['interactions'] as List?)?.length ?? 0}',
+      );
+
       final vicinity = Vicinity.fromJson(data);
-      debugPrint('[VicinityApi] Created Vicinity object - animals: ${vicinity.animals.length}, '
-                 'detections: ${vicinity.detections.length}, '
-                 'interactions: ${vicinity.interactions.length}');
-      
+      debugPrint(
+        '[VicinityApi] Created Vicinity object - animals: ${vicinity.animals.length}, '
+        'detections: ${vicinity.detections.length}, '
+        'interactions: ${vicinity.interactions.length}',
+      );
+
       return vicinity;
     }
 

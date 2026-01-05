@@ -7,7 +7,7 @@ void main() {
 
   setUp(() {
     mockQuestion = MockQuestion();
-    
+
     // Setup default behavior
     when(mockQuestion.id).thenReturn('q-1');
     when(mockQuestion.text).thenReturn('Test Question');
@@ -41,7 +41,7 @@ void main() {
         'allowOpenResponse': true,
         'answers': [],
       });
-      
+
       // Verify
       final json = mockQuestion.toJson();
       expect(json['id'], 'q-1');

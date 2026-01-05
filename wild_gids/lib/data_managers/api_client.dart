@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:http/http.dart' as http;
@@ -20,7 +19,7 @@ class ApiClient {
   }) async {
     headers = await _buildHeaders(headers, authenticated);
     final uri = _buildUri(url);
-    debugPrint("GET: $uri");
+    // debugPrint("GET: $uri");
     return await http.get(uri, headers: headers);
   }
 
@@ -32,7 +31,7 @@ class ApiClient {
   }) async {
     headers = await _buildHeaders(headers, authenticated);
     final uri = _buildUri(url);
-    debugPrint("POST: $uri");
+    // debugPrint("POST: $uri");
     http.Response response = await http.post(
       uri,
       body: jsonEncode(body),
@@ -50,12 +49,8 @@ class ApiClient {
   }) async {
     headers = await _buildHeaders(headers, authenticated);
     final uri = _buildUri(url);
-    debugPrint("PUT: $uri");
-    return await http.put(
-      uri,
-      body: jsonEncode(body),
-      headers: headers,
-    );
+    // debugPrint("PUT: $uri");
+    return await http.put(uri, body: jsonEncode(body), headers: headers);
   }
 
   Future<http.Response> delete(
@@ -65,7 +60,7 @@ class ApiClient {
   }) async {
     headers = await _buildHeaders(headers, authenticated);
     final uri = _buildUri(url);
-    debugPrint("DELETE: $uri");
+    // debugPrint("DELETE: $uri");
     return await http.delete(uri, headers: headers);
   }
 
@@ -78,12 +73,8 @@ class ApiClient {
   }) async {
     headers = await _buildHeaders(headers, authenticated);
     final uri = _buildUri(url);
-    debugPrint("PATCH: $uri");
-    return await http.patch(
-      uri,
-      body: jsonEncode(body),
-      headers: headers,
-    );
+    // debugPrint("PATCH: $uri");
+    return await http.patch(uri, body: jsonEncode(body), headers: headers);
   }
 
   Future<Map<String, String>> _buildHeaders(

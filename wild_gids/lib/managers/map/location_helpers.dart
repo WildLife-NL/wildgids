@@ -3,7 +3,7 @@ import 'package:geolocator/geolocator.dart';
 
 class FreshPositionResult {
   final Position? provisional; // last known (may be null)
-  final Position? fresh;       // high-accuracy fix (may be null)
+  final Position? fresh; // high-accuracy fix (may be null)
   FreshPositionResult({this.provisional, this.fresh});
 }
 
@@ -12,7 +12,7 @@ class LocationHelpers {
   /// high-accuracy fix within [freshTimeout].
   static Future<FreshPositionResult> getFreshPosition({
     Duration lastKnownTimeout = const Duration(milliseconds: 400),
-    Duration freshTimeout     = const Duration(seconds: 7),
+    Duration freshTimeout = const Duration(seconds: 7),
     double goodEnoughAccuracyMeters = 5, // tighten if you want
   }) async {
     // 1) Permissions + service
@@ -29,8 +29,9 @@ class LocationHelpers {
     Position? provisional;
     try {
       // lastKnown can resolve very quickly or be null; don’t block.
-      provisional = await Geolocator.getLastKnownPosition()
-          .timeout(lastKnownTimeout);
+      provisional = await Geolocator.getLastKnownPosition().timeout(
+        lastKnownTimeout,
+      );
     } catch (_) {}
 
     // 3) Fresh fix via stream (more reliable than a single getCurrentPosition on some devices)
@@ -49,16 +50,15 @@ class LocationHelpers {
     }
 
     try {
-      sub = Geolocator.getPositionStream(locationSettings: settings).listen(
-        (pos) {
-          // Accept the first "good enough" fix
-          final acc = pos.accuracy.isFinite ? pos.accuracy : 9999;
-          if (acc <= goodEnoughAccuracyMeters) {
-            finish(pos);
-          }
-        },
-        onError: (_) => finish(null),
-      );
+      sub = Geolocator.getPositionStream(locationSettings: settings).listen((
+        pos,
+      ) {
+        // Accept the first "good enough" fix
+        final acc = pos.accuracy.isFinite ? pos.accuracy : 9999;
+        if (acc <= goodEnoughAccuracyMeters) {
+          finish(pos);
+        }
+      }, onError: (_) => finish(null));
 
       // Also set an overall timeout
       Future.delayed(freshTimeout, () => finish(null));

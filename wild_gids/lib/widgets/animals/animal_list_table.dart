@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:wildrapport/constants/app_colors.dart';
 import 'package:wildrapport/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
@@ -26,6 +27,83 @@ class AnimalListTableState extends State<AnimalListTable> {
   String getDescription() {
     return _opmerkingController.text;
   }
+
+  void clearTextFields() {
+    _opmerkingController.clear();
+    for (var controller in _controllers.values) {
+      controller.clear();
+    }
+  }
+
+  /// Completely reset all table data: description, temporary counts,
+  /// underlying animal view counts in the active sighting.
+  void clearAllData() {
+    final animalSightingManager =
+        context.read<AnimalSightingReportingInterface>();
+    final currentSighting = animalSightingManager.getCurrentanimalSighting();
+
+    // Reset description in manager and controller
+    _opmerkingController.clear();
+    animalSightingManager.updateDescription('');
+
+    // Clear temp counts and controllers
+    _tempCounts.clear();
+    for (var controller in _controllers.values) {
+      controller.clear();
+    }
+
+    // Reset all animal view counts to zero
+    if (currentSighting?.animals != null) {
+      for (var animal in currentSighting!.animals!) {
+        final zeroViewCount = ViewCountModel(
+          pasGeborenAmount: 0,
+          onvolwassenAmount: 0,
+          volwassenAmount: 0,
+          unknownAmount: 0,
+        );
+        final updatedAnimal = AnimalModel(
+          animalId: animal.animalId,
+          animalImagePath: animal.animalImagePath,
+          animalName: animal.animalName,
+          genderViewCounts: [
+            AnimalGenderViewCount(
+              gender: animal.gender ?? AnimalGender.onbekend,
+              viewCount: zeroViewCount,
+            ),
+          ],
+          condition: animal.condition,
+        );
+        animalSightingManager.updateAnimal(updatedAnimal);
+      }
+    }
+
+    setState(() {});
+  }
+
+  /// Clear only the remarks (Opmerkingen) field and manager description, keep counts intact.
+  void clearRemarksOnly() {
+    final animalSightingManager =
+        context.read<AnimalSightingReportingInterface>();
+    _opmerkingController.clear();
+    animalSightingManager.updateDescription('');
+    setState(() {});
+  }
+
+  // Formatter to cap numeric input at a maximum value.
+  // Prevents entering numbers greater than [max] directly.
+  // If user pastes a larger number it is truncated to max.
+  static TextInputFormatter maxValueFormatter(int max) =>
+      TextInputFormatter.withFunction((oldValue, newValue) {
+        if (newValue.text.isEmpty) return newValue;
+        final value = int.tryParse(newValue.text) ?? 0;
+        if (value > max) {
+          return TextEditingValue(
+            text: max.toString(),
+            selection: TextSelection.collapsed(offset: max.toString().length),
+          );
+        }
+        return newValue;
+      });
 
   @override
   void initState() {
@@ -193,7 +271,7 @@ class AnimalListTableState extends State<AnimalListTable> {
 
     // Sum up counts from ALL animals in the list (not just the first one)
     int totalCount = 0;
-    
+
     for (final animal in currentSighting.animals!) {
       // Find the gender view count for the specified gender
       final genderViewCount = animal.genderViewCounts.firstWhere(
@@ -300,8 +378,11 @@ class AnimalListTableState extends State<AnimalListTable> {
                             _buildHeaderRow(usedGenders),
                             ...List.generate(
                               4,
-                              (index) =>
-                                  _buildDataRow(index + 1, usedGenders, context),
+                              (index) => _buildDataRow(
+                                index + 1,
+                                usedGenders,
+                                context,
+                              ),
                             ),
                           ],
                         ),
@@ -326,18 +407,17 @@ class AnimalListTableState extends State<AnimalListTable> {
           verticalAlignment: TableCellVerticalAlignment.middle,
           child: Container(
             height: 50.0,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.black, width: 1),
-            ),
+            // Removed per-cell border to prevent double thick lines (TableBorder already draws grid)
+            decoration: const BoxDecoration(color: Colors.white),
             child: const Padding(
               padding: EdgeInsets.all(5.0),
               child: Center(
                 child: Text(
-                  'Leeftijdscategorie',
+                  'Leeftijd',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Roboto',
-                    fontSize: 13,
+                    fontSize: 16,
                   ),
                 ),
               ),
@@ -362,21 +442,17 @@ class AnimalListTableState extends State<AnimalListTable> {
         icon = '?';
         break;
     }
-    
+
     return TableCell(
       verticalAlignment: TableCellVerticalAlignment.middle,
       child: Container(
         height: 50.0,
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.black, width: 1),
-        ),
+        // Removed per-cell border to avoid doubled lines
+        decoration: const BoxDecoration(color: Colors.white),
         child: Center(
           child: Text(
             icon,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
         ),
       ),
@@ -394,7 +470,7 @@ class AnimalListTableState extends State<AnimalListTable> {
     switch (index) {
       case 1:
         age = AnimalAge.pasGeboren;
-        ageLabel = 'Baby';
+        ageLabel = 'Pas geboren';
         break;
       case 2:
         age = AnimalAge.onvolwassen;
@@ -406,11 +482,11 @@ class AnimalListTableState extends State<AnimalListTable> {
         break;
       case 4:
         age = AnimalAge.onbekend;
-        ageLabel = 'Unknown';
+        ageLabel = 'Onbekend';
         break;
       default:
         age = AnimalAge.onbekend;
-        ageLabel = 'Unknown';
+        ageLabel = 'Onbekend';
     }
 
     return TableRow(
@@ -418,9 +494,8 @@ class AnimalListTableState extends State<AnimalListTable> {
         TableCell(
           verticalAlignment: TableCellVerticalAlignment.middle,
           child: Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.black, width: 1),
-            ),
+            // Removed per-cell border (grid handled by TableBorder)
+            decoration: const BoxDecoration(color: Colors.white),
             child: Padding(
               padding: const EdgeInsets.all(12.0),
               child: Text(
@@ -452,9 +527,8 @@ class AnimalListTableState extends State<AnimalListTable> {
       verticalAlignment: TableCellVerticalAlignment.middle,
       child: Container(
         height: 50.0,
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.black, width: 1),
-        ),
+        // Removed per-cell border (TableBorder provides lines)
+        decoration: const BoxDecoration(color: Colors.white),
         child: Center(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -462,8 +536,15 @@ class AnimalListTableState extends State<AnimalListTable> {
                 _isEditing
                     ? TextFormField(
                       controller: _getController(age, gender),
+                      minLines: 1,
+                      maxLines: null,
                       textAlign: TextAlign.center,
                       keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(3),
+                        AnimalListTableState.maxValueFormatter(100),
+                      ],
                       decoration: const InputDecoration(
                         isDense: true,
                         contentPadding: EdgeInsets.symmetric(
@@ -471,8 +552,8 @@ class AnimalListTableState extends State<AnimalListTable> {
                           vertical: 8,
                         ),
                         border: InputBorder.none,
-                        hintText: 'type..',
-                        hintStyle: TextStyle(color: Colors.grey),
+                        label: Text('type..'),
+                        labelStyle: TextStyle(color: Colors.grey),
                       ),
                       onTap: () {
                         // Clear the text when tapped
@@ -487,7 +568,15 @@ class AnimalListTableState extends State<AnimalListTable> {
                       },
                       onChanged: (value) {
                         if (!mounted) return;
-                        final count = int.tryParse(value) ?? 0;
+                        var count = int.tryParse(value) ?? 0;
+                        if (count > 100) {
+                          count = 100;
+                          final controller = _getController(age, gender);
+                          controller.text = '100';
+                          controller.selection = TextSelection.fromPosition(
+                            TextPosition(offset: controller.text.length),
+                          );
+                        }
                         final key = '${age.name}_${gender.name}';
                         _tempCounts[key] = count;
                         debugPrint('Updated temp count: $key = $count');
@@ -521,7 +610,9 @@ class AnimalListTableState extends State<AnimalListTable> {
           const SizedBox(height: 8),
           Container(
             width: double.infinity,
-            height: 150,
+            // Removed fixed height so the field can expand as user types.
+            // Constrain only the minimum height to keep initial single-line appearance.
+            constraints: const BoxConstraints(minHeight: 52),
             decoration: BoxDecoration(
               color: AppColors.offWhite,
               borderRadius: BorderRadius.circular(25),
@@ -536,10 +627,11 @@ class AnimalListTableState extends State<AnimalListTable> {
                 padding: const EdgeInsets.all(16.0),
                 child: TextField(
                   controller: _opmerkingController,
+                  minLines: 1,
                   maxLines: null,
                   decoration: const InputDecoration(
                     border: InputBorder.none,
-                    hintText: 'typ hier...',
+                    label: Text('Typ hier...'),
                   ),
                   style: const TextStyle(fontSize: 16, height: 1.5),
                 ),

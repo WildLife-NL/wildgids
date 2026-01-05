@@ -27,11 +27,14 @@ class _MyResponsesScreenState extends State<MyResponsesScreen> {
   Future<List<MyResponse>> _load() async {
     final apiClient = context.read<ApiClient>();
     final responseApi = ResponseApi(apiClient);
+    // Ensure any locally cached responses are submitted before fetching
     try {
       await context.read<ResponseManager>().submitResponses();
     } catch (_) {}
     final raw = await responseApi.getMyResponsesRaw();
-    return raw.map((e) => MyResponse.fromJson(e as Map<String, dynamic>)).toList();
+    return raw
+        .map((e) => MyResponse.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<void> _refresh() async {
@@ -118,9 +121,12 @@ class _ResponseTile extends StatelessWidget {
     final ts = DateFormat('dd-MM-yyyy HH:mm').format(r.timestamp.toLocal());
     final conveyMsg = r.conveyance?.messageText;
     final conveyAnimal = r.conveyance?.animalName;
-    final conveyTs = r.conveyance != null
-        ? DateFormat('dd-MM-yyyy HH:mm').format(r.conveyance!.timestamp.toLocal())
-        : null;
+    final conveyTs =
+        r.conveyance != null
+            ? DateFormat(
+              'dd-MM-yyyy HH:mm',
+            ).format(r.conveyance!.timestamp.toLocal())
+            : null;
 
     return Card(
       color: Colors.white,
@@ -163,7 +169,10 @@ class _ResponseTile extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Antwoord: ', style: TextStyle(fontWeight: FontWeight.w600)),
+                    const Text(
+                      'Antwoord: ',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
                     Expanded(child: Text(answerText)),
                   ],
                 ),
@@ -174,7 +183,10 @@ class _ResponseTile extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Tekst: ', style: TextStyle(fontWeight: FontWeight.w600)),
+                    const Text(
+                      'Tekst: ',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
                     Expanded(child: Text(freeText)),
                   ],
                 ),
@@ -185,7 +197,10 @@ class _ResponseTile extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Bericht: ', style: TextStyle(fontWeight: FontWeight.w600)),
+                    const Text(
+                      'Bericht: ',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
                     Expanded(child: Text(conveyMsg)),
                   ],
                 ),
@@ -196,7 +211,10 @@ class _ResponseTile extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Dier: ', style: TextStyle(fontWeight: FontWeight.w600)),
+                    const Text(
+                      'Dier: ',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
                     Expanded(child: Text(conveyAnimal)),
                   ],
                 ),
@@ -207,7 +225,10 @@ class _ResponseTile extends StatelessWidget {
                 children: [
                   const Icon(Icons.schedule, size: 16, color: Colors.black54),
                   const SizedBox(width: 6),
-                  Text(ts, style: const TextStyle(color: Colors.black54, fontSize: 12)),
+                  Text(
+                    ts,
+                    style: const TextStyle(color: Colors.black54, fontSize: 12),
+                  ),
                 ],
               ),
             ),
@@ -216,9 +237,19 @@ class _ResponseTile extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 4),
                 child: Row(
                   children: [
-                    const Icon(Icons.notifications, size: 16, color: Colors.black54),
+                    const Icon(
+                      Icons.notifications,
+                      size: 16,
+                      color: Colors.black54,
+                    ),
                     const SizedBox(width: 6),
-                    Text(conveyTs, style: const TextStyle(color: Colors.black54, fontSize: 12)),
+                    Text(
+                      conveyTs,
+                      style: const TextStyle(
+                        color: Colors.black54,
+                        fontSize: 12,
+                      ),
+                    ),
                   ],
                 ),
               ),

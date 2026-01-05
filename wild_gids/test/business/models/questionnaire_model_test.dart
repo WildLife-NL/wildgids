@@ -12,19 +12,15 @@ void main() {
     late MockQuestionnaire mockQuestionnaire;
     late Experiment mockExperiment;
     late InteractionType mockInteractionType;
-    
+
     setUp(() {
       mockQuestionnaire = MockQuestionnaire();
       mockExperiment = Experiment(
-        id: 'exp1', 
+        id: 'exp1',
         name: 'Test Experiment',
         description: 'Test experiment description',
         start: DateTime.now(),
-        user: User(
-          id: 'user1',
-          email: 'test@example.com',
-          name: 'Test User',
-        ),
+        user: User(id: 'user1', email: 'test@example.com', name: 'Test User'),
       );
       mockInteractionType = InteractionType(
         id: 1,
@@ -32,7 +28,7 @@ void main() {
         description: 'Test interaction description',
       );
     });
-    
+
     test('should have correct properties', () {
       // Arrange
       final questionnaire = Questionnaire(
@@ -42,7 +38,7 @@ void main() {
         interactionType: mockInteractionType,
         questions: [],
       );
-      
+
       // Assert
       expect(questionnaire.id, '123');
       expect(questionnaire.name, 'Test Questionnaire');
@@ -50,7 +46,7 @@ void main() {
       expect(questionnaire.interactionType, mockInteractionType);
       expect(questionnaire.questions, isEmpty);
     });
-    
+
     test('should add questions correctly', () {
       // Arrange
       final questionnaire = Questionnaire(
@@ -60,7 +56,7 @@ void main() {
         interactionType: mockInteractionType,
         questions: [],
       );
-      
+
       final question = Question(
         id: 'q1',
         text: 'Test Question',
@@ -70,26 +66,24 @@ void main() {
         allowOpenResponse: false,
         answers: [],
       );
-      
+
       // Act
       questionnaire.questions!.add(question);
-      
+
       // Assert
       expect(questionnaire.questions!.length, 1);
       expect(questionnaire.questions!.first.id, 'q1');
       expect(questionnaire.questions!.first.text, 'Test Question');
     });
-    
+
     test('mock questionnaire should return expected values', () {
       // Arrange
       when(mockQuestionnaire.id).thenReturn('mock-q-123');
       when(mockQuestionnaire.name).thenReturn('Mock Questionnaire');
-      
+
       // Assert
       expect(mockQuestionnaire.id, 'mock-q-123');
       expect(mockQuestionnaire.name, 'Mock Questionnaire');
     });
   });
 }
-
-

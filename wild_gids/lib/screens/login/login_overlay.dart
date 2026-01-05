@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:wildrapport/constants/app_colors.dart';
 import 'package:wildrapport/constants/app_text_theme.dart';
+import 'package:wildrapport/utils/responsive_utils.dart';
 
 class LoginOverlay extends StatelessWidget {
   const LoginOverlay({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final responsive = context.responsive;
     return GestureDetector(
       onTap: () => Navigator.of(context).pop(),
       child: Material(
@@ -16,18 +18,17 @@ class LoginOverlay extends StatelessWidget {
             onTap:
                 () {}, // Prevents taps on the container from closing the overlay
             child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20),
-              constraints: const BoxConstraints(maxWidth: 500),
+              margin: EdgeInsets.symmetric(horizontal: responsive.wp(5)),
+              constraints: BoxConstraints(maxWidth: responsive.wp(80)),
               decoration: BoxDecoration(
                 color: AppColors.offWhite,
-                borderRadius: BorderRadius.circular(25),
-                
+                borderRadius: BorderRadius.circular(responsive.sp(3.1)),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.only(top: 12),
+                    padding: EdgeInsets.only(top: responsive.hp(1.5)),
                     child: IconButton(
                       icon: ShaderMask(
                         shaderCallback: (Rect bounds) {
@@ -42,35 +43,41 @@ class LoginOverlay extends StatelessWidget {
                         },
                         child: Icon(
                           Icons.exit_to_app,
-                          size: 32,
+                          size: responsive.sp(4),
                           color: Colors.black,
                         ),
                       ),
                       onPressed: () => Navigator.of(context).pop(),
-                      iconSize: 50,
+                      iconSize: responsive.sp(6),
                     ),
                   ),
                   Flexible(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                      padding: EdgeInsets.fromLTRB(
+                        responsive.wp(5),
+                        responsive.hp(1),
+                        responsive.wp(5),
+                        responsive.hp(2.5),
+                      ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            'Heeft u geen account?',
+                            'Hebt u nog geen account?',
                             style: AppTextTheme.textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
-                              fontSize: 24,
+                              fontSize: responsive.fontSize(24),
                             ),
                             textAlign: TextAlign.center,
                           ),
-                          const SizedBox(height: 20),
+                          SizedBox(height: responsive.spacing(20)),
                           Text(
-                            'Voer uw e-mailadres in. U ontvangt een verificatiecode per e-mail. '
-                            'Als er al een account bestaat, wordt u ingelogd. Zo niet, dan wordt er '
-                            'automatisch een account voor u aangemaakt en direct ingelogd.',
+                            'Geef uw e-mailadres op en bevestig met de knop \'Aanmelden\'. '
+                            'U ontvangt een verificatiecode per e-mail welke u dan in deze app invoert. '
+                            'Indien er nog geen account bestaat voor dit e-mailadres wordt deze automatisch geregistreerd. '
+                            'Daarna bent u aangemeld.',
                             style: AppTextTheme.textTheme.bodyMedium?.copyWith(
-                              
+                              fontSize: responsive.fontSize(14),
                             ),
                             textAlign: TextAlign.center,
                           ),

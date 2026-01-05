@@ -39,10 +39,10 @@ class TestScreenState extends ScreenStateManager<TestScreen> {
 
   @override
   Map<String, dynamic> getInitialState() => {
-        'counter': 0,
-        'text': 'initial',
-        'isEnabled': true,
-      };
+    'counter': 0,
+    'text': 'initial',
+    'isEnabled': true,
+  };
 
   @override
   Map<String, dynamic> getCurrentState() => state;
@@ -93,7 +93,9 @@ void main() {
     mockAppStateProvider = MockAppStateProvider();
 
     // Default behavior for unsaved state
-    when(mockAppStateProvider.getScreenState<dynamic>(any, any)).thenReturn(null);
+    when(
+      mockAppStateProvider.getScreenState<dynamic>(any, any),
+    ).thenReturn(null);
   });
 
   group('ScreenStateManager', () {
@@ -103,18 +105,25 @@ void main() {
       await tester.pumpWidget(
         TestWrapper(
           appStateProvider: mockAppStateProvider,
-          child: TestScreen(
-            onStateLoaded: (_) => stateLoaded = true,
-          ),
+          child: TestScreen(onStateLoaded: (_) => stateLoaded = true),
         ),
       );
 
       await tester.pumpAndSettle();
 
       expect(stateLoaded, true);
-      verify(mockAppStateProvider.getScreenState<dynamic>('test_screen', 'counter')).called(1);
-      verify(mockAppStateProvider.getScreenState<dynamic>('test_screen', 'text')).called(1);
-      verify(mockAppStateProvider.getScreenState<dynamic>('test_screen', 'isEnabled')).called(1);
+      verify(
+        mockAppStateProvider.getScreenState<dynamic>('test_screen', 'counter'),
+      ).called(1);
+      verify(
+        mockAppStateProvider.getScreenState<dynamic>('test_screen', 'text'),
+      ).called(1);
+      verify(
+        mockAppStateProvider.getScreenState<dynamic>(
+          'test_screen',
+          'isEnabled',
+        ),
+      ).called(1);
     });
 
     testWidgets('should save state on dispose', (tester) async {
@@ -137,14 +146,24 @@ void main() {
       expect(savedState!['text'], 'initial');
       expect(savedState!['isEnabled'], true);
 
-      verify(mockAppStateProvider.setScreenState('test_screen', 'counter', 0)).called(1);
-      verify(mockAppStateProvider.setScreenState('test_screen', 'text', 'initial')).called(1);
-      verify(mockAppStateProvider.setScreenState('test_screen', 'isEnabled', true)).called(1);
+      verify(
+        mockAppStateProvider.setScreenState('test_screen', 'counter', 0),
+      ).called(1);
+      verify(
+        mockAppStateProvider.setScreenState('test_screen', 'text', 'initial'),
+      ).called(1);
+      verify(
+        mockAppStateProvider.setScreenState('test_screen', 'isEnabled', true),
+      ).called(1);
     });
 
     testWidgets('should update state with saved values', (tester) async {
-      when(mockAppStateProvider.getScreenState<int>('test_screen', 'counter')).thenReturn(5);
-      when(mockAppStateProvider.getScreenState<String>('test_screen', 'text')).thenReturn('saved');
+      when(
+        mockAppStateProvider.getScreenState<int>('test_screen', 'counter'),
+      ).thenReturn(5);
+      when(
+        mockAppStateProvider.getScreenState<String>('test_screen', 'text'),
+      ).thenReturn('saved');
 
       Map<String, dynamic>? loadedState;
 
@@ -164,8 +183,12 @@ void main() {
       expect(loadedState!['isEnabled'], true);
     });
 
-    testWidgets('should not update state if current value equals saved value', (tester) async {
-      when(mockAppStateProvider.getScreenState<int>('test_screen', 'counter')).thenReturn(0);
+    testWidgets('should not update state if current value equals saved value', (
+      tester,
+    ) async {
+      when(
+        mockAppStateProvider.getScreenState<int>('test_screen', 'counter'),
+      ).thenReturn(0);
 
       Map<String, dynamic>? loadedState;
 
@@ -181,7 +204,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(loadedState!['counter'], 0);
-      verifyNever(mockAppStateProvider.setScreenState('test_screen', 'counter', any));
+      verifyNever(
+        mockAppStateProvider.setScreenState('test_screen', 'counter', any),
+      );
     });
   });
 }

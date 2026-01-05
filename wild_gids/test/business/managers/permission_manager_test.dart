@@ -9,15 +9,15 @@ import '../mock_generator.mocks.dart';
 // Create a testable version of PermissionManager
 class TestablePermissionManager extends PermissionManager {
   TestablePermissionManager(this.mockPrefs);
-  
+
   final SharedPreferences mockPrefs;
   bool mockPermissionGranted = false;
-  
+
   @override
   Future<bool> isPermissionGranted(PermissionType permission) async {
     return mockPermissionGranted;
   }
-  
+
   @override
   Future<bool> requestPermission(
     BuildContext context,
@@ -35,9 +35,9 @@ class TestablePermissionManager extends PermissionManager {
 void main() {
   late TestablePermissionManager permissionManager;
   late SharedPreferences mockPrefs;
-  
+
   TestWidgetsFlutterBinding.ensureInitialized();
-  
+
   setUp(() {
     mockPrefs = MockSharedPreferences();
     permissionManager = TestablePermissionManager(mockPrefs);
@@ -47,16 +47,22 @@ void main() {
     test('should check if permission is granted', () async {
       // Set the mock to return false
       permissionManager.mockPermissionGranted = false;
-      final result = await permissionManager.isPermissionGranted(PermissionType.location);
+      final result = await permissionManager.isPermissionGranted(
+        PermissionType.location,
+      );
       expect(result, isFalse);
-      
+
       // Set the mock to return true
       permissionManager.mockPermissionGranted = true;
-      final result2 = await permissionManager.isPermissionGranted(PermissionType.location);
+      final result2 = await permissionManager.isPermissionGranted(
+        PermissionType.location,
+      );
       expect(result2, isTrue);
     });
 
-    testWidgets('should show permission rationale dialog', (WidgetTester tester) async {
+    testWidgets('should show permission rationale dialog', (
+      WidgetTester tester,
+    ) async {
       // Build test app
       await tester.pumpWidget(
         MaterialApp(
@@ -64,7 +70,10 @@ void main() {
             builder: (BuildContext context) {
               return TextButton(
                 onPressed: () {
-                  permissionManager.showPermissionRationale(context, PermissionType.location);
+                  permissionManager.showPermissionRationale(
+                    context,
+                    PermissionType.location,
+                  );
                 },
                 child: const Text('Show Dialog'),
               );
@@ -79,12 +88,19 @@ void main() {
 
       // Verify dialog is shown with correct content
       expect(find.text('Locatie Toegang'), findsOneWidget);
-      expect(find.text('We hebben toegang tot je locatie nodig om nauwkeurig te kunnen rapporteren waar je dieren hebt waargenomen.'), findsOneWidget);
+      expect(
+        find.text(
+          'We hebben toegang tot je locatie nodig om nauwkeurig te kunnen rapporteren waar je dieren hebt waargenomen.',
+        ),
+        findsOneWidget,
+      );
       expect(find.text('Niet nu'), findsOneWidget);
       expect(find.text('Doorgaan'), findsOneWidget);
     });
 
-    testWidgets('should return true when user accepts permission rationale', (WidgetTester tester) async {
+    testWidgets('should return true when user accepts permission rationale', (
+      WidgetTester tester,
+    ) async {
       // Build test app
       late bool dialogResult;
       await tester.pumpWidget(
@@ -93,7 +109,11 @@ void main() {
             builder: (BuildContext context) {
               return TextButton(
                 onPressed: () async {
-                  dialogResult = await permissionManager.showPermissionRationale(context, PermissionType.location);
+                  dialogResult = await permissionManager
+                      .showPermissionRationale(
+                        context,
+                        PermissionType.location,
+                      );
                 },
                 child: const Text('Show Dialog'),
               );
@@ -114,7 +134,9 @@ void main() {
       expect(dialogResult, isTrue);
     });
 
-    testWidgets('should return false when user rejects permission rationale', (WidgetTester tester) async {
+    testWidgets('should return false when user rejects permission rationale', (
+      WidgetTester tester,
+    ) async {
       // Build test app
       late bool dialogResult;
       await tester.pumpWidget(
@@ -123,7 +145,11 @@ void main() {
             builder: (BuildContext context) {
               return TextButton(
                 onPressed: () async {
-                  dialogResult = await permissionManager.showPermissionRationale(context, PermissionType.location);
+                  dialogResult = await permissionManager
+                      .showPermissionRationale(
+                        context,
+                        PermissionType.location,
+                      );
                 },
                 child: const Text('Show Dialog'),
               );
@@ -155,4 +181,3 @@ void main() {
 
 // Mock BuildContext for testing
 class MockBuildContext extends Mock implements BuildContext {}
-

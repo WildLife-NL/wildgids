@@ -14,7 +14,8 @@ class AnimalPinsManager {
   AnimalPinsManager(this.api, {this.cacheTtl});
 
   Future<List<AnimalPin>> loadAll({bool forceRefresh = false}) async {
-    final isFresh = _cache != null &&
+    final isFresh =
+        _cache != null &&
         (!forceRefresh) &&
         (cacheTtl == null ||
             (_cachedAt != null &&

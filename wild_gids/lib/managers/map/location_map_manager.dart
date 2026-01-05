@@ -123,30 +123,29 @@ class LocationMapManager
     }
   }
 
-@override
-Future<String> getAddressFromPosition(Position position) async {
-  try {
-    return _placemarkToString(
-      await placemarkFromCoordinates(position.latitude, position.longitude),
-    );
-  } catch (e) {
-    debugPrint('[LocationMapManager] geocoding unavailable (web): $e');
-    return 'Adres niet beschikbaar';
+  @override
+  Future<String> getAddressFromPosition(Position position) async {
+    try {
+      return _placemarkToString(
+        await placemarkFromCoordinates(position.latitude, position.longitude),
+      );
+    } catch (e) {
+      debugPrint('[LocationMapManager] geocoding unavailable (web): $e');
+      return 'Adres niet beschikbaar';
+    }
   }
-}
 
-@override
-Future<String> getAddressFromLatLng(LatLng point) async {
-  try {
-    return _placemarkToString(
-      await placemarkFromCoordinates(point.latitude, point.longitude),
-    );
-  } catch (e) {
-    debugPrint('[LocationMapManager] geocoding unavailable (web): $e');
-    return 'Adres niet beschikbaar';
+  @override
+  Future<String> getAddressFromLatLng(LatLng point) async {
+    try {
+      return _placemarkToString(
+        await placemarkFromCoordinates(point.latitude, point.longitude),
+      );
+    } catch (e) {
+      debugPrint('[LocationMapManager] geocoding unavailable (web): $e');
+      return 'Adres niet beschikbaar';
+    }
   }
-}
-
 
   String _placemarkToString(List<Placemark> placemarks) {
     if (placemarks.isEmpty) return 'Address not found';

@@ -13,6 +13,7 @@ class MyInteractionApi {
 
   MyInteractionApi(this.client);
 
+  /// Fetches the user's interaction history from the GET /interactions/me endpoint
   Future<List<MyInteraction>> getMyInteractions() async {
     try {
       debugPrint("$yellowLog[MyInteractionApi]: Fetching my interactions");
@@ -33,7 +34,9 @@ class MyInteractionApi {
         );
 
         List<MyInteraction> interactions =
-            json.map((e) => MyInteraction.fromJson(e as Map<String, dynamic>)).toList();
+            json
+                .map((e) => MyInteraction.fromJson(e as Map<String, dynamic>))
+                .toList();
 
         return interactions;
       } else {

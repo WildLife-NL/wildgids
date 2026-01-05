@@ -20,13 +20,15 @@ class ResponseHelpers {
 
   static MockConnectivity getMockConnectivity() {
     final mock = MockConnectivity();
-    
+
     // Setup default behavior
-    when(mock.checkConnectivity())
-        .thenAnswer((_) async => [ConnectivityResult.wifi]);
-    when(mock.onConnectivityChanged)
-        .thenAnswer((_) => Stream.value([ConnectivityResult.wifi]));
-    
+    when(
+      mock.checkConnectivity(),
+    ).thenAnswer((_) async => [ConnectivityResult.wifi]);
+    when(
+      mock.onConnectivityChanged,
+    ).thenAnswer((_) => Stream.value([ConnectivityResult.wifi]));
+
     return mock;
   }
 
@@ -60,26 +62,29 @@ class ResponseHelpers {
     );
   }
 
-  static void setupSuccessfulResponseSubmission(MockResponseApiInterface mockApi) {
-    when(mockApi.addReponse(any, any, any, any)).thenAnswer((_) async => true);
+  static void setupSuccessfulResponseSubmission(
+    MockResponseApiInterface mockApi,
+  ) {
+    when(mockApi.addReponse(any, any, any, any)).thenAnswer(
+      (_) async => ResponseSubmissionResult(success: true),
+    );
   }
 
   static void setupFailedResponseSubmission(MockResponseApiInterface mockApi) {
-    when(mockApi.addReponse(any, any, any, any)).thenAnswer((_) async => false);
+    when(mockApi.addReponse(any, any, any, any)).thenAnswer(
+      (_) async => ResponseSubmissionResult(success: false),
+    );
   }
 
   static void setupOfflineConnectivity(MockConnectivity mockConnectivity) {
-    when(mockConnectivity.checkConnectivity()).thenAnswer(
-      (_) async => [ConnectivityResult.none],
-    );
+    when(
+      mockConnectivity.checkConnectivity(),
+    ).thenAnswer((_) async => [ConnectivityResult.none]);
   }
 
   static void setupOnlineConnectivity(MockConnectivity mockConnectivity) {
-    when(mockConnectivity.checkConnectivity()).thenAnswer(
-      (_) async => [ConnectivityResult.wifi],
-    );
+    when(
+      mockConnectivity.checkConnectivity(),
+    ).thenAnswer((_) async => [ConnectivityResult.wifi]);
   }
 }
-
-
-

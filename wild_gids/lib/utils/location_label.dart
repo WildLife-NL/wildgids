@@ -6,6 +6,7 @@ class ProvincePolygon {
   const ProvincePolygon(this.name, this.vertices);
 }
 
+// Simplified province rectangles (approximate) to give a friendly label.
 const List<ProvincePolygon> _provinces = [
   ProvincePolygon('Drenthe', [
     LatLng(53.2, 6.1),

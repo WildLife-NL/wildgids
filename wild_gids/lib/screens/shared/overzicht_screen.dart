@@ -2,16 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
-import 'package:wildrapport/managers/permission/permission_checker.dart';
-import 'package:wildrapport/utils/toast_notification_handler.dart';
 import 'package:wildrapport/constants/app_colors.dart';
 import 'package:wildrapport/widgets/overzicht/top_container.dart';
 import 'package:wildrapport/widgets/overzicht/action_buttons.dart';
 import 'package:wildrapport/screens/shared/rapporteren.dart';
-import 'package:wildrapport/screens/species/species_list_screen.dart';
+import 'package:wildrapport/screens/logbook/logbook_screen.dart';
 import 'package:wildrapport/providers/app_state_provider.dart';
 import 'package:wildrapport/screens/location/kaart_overview_screen.dart';
-import 'package:wildrapport/screens/logbook/logbook_screen.dart';
 
 class OverzichtScreen extends StatefulWidget {
   const OverzichtScreen({super.key});
@@ -20,15 +17,40 @@ class OverzichtScreen extends StatefulWidget {
   State<OverzichtScreen> createState() => _OverzichtScreenState();
 }
 
-class _OverzichtScreenState extends State<OverzichtScreen>
-    with PermissionChecker<OverzichtScreen> {
+class _OverzichtScreenState extends State<OverzichtScreen> {
   String userName = "Joe Doe";
+  String reportButtonLabel = 'Rapporteren';
 
   @override
   void initState() {
     super.initState();
-    initiatePermissionCheck();
     _loadUserName();
+    _loadReportButtonLabel();
+  }
+
+  Future<void> _loadReportButtonLabel() async {
+    try {
+      final typesManager = Provider.of(context, listen: false) as dynamic;
+      // Try to call ensureFetched() if it exists
+      try {
+        final types = await typesManager.ensureFetched();
+        // prefer the manager helper if available
+        String? name;
+        try {
+          name = typesManager.nameForTypeId(1);
+        } catch (_) {}
+        name ??= (types.isNotEmpty ? types.first.name : null);
+        if (name != null && name.isNotEmpty) {
+          setState(() {
+            reportButtonLabel = name!;
+          });
+        }
+      } catch (_) {
+        // ignore fetch failures and keep default
+      }
+    } catch (_) {
+      // Provider not available or unexpected type - keep default label
+    }
   }
 
   Future<void> _loadUserName() async {
@@ -63,122 +85,132 @@ class _OverzichtScreenState extends State<OverzichtScreen>
         backgroundColor: AppColors.lightMintGreen,
         body: LayoutBuilder(
           builder: (context, constraints) {
+            final double estimatedContentHeight =
+                (screenSize.height * 0.4).clamp(180.0, 300.0) + // TopContainer
+                (screenSize.height * 0.02).clamp(8.0, 24.0) * 3.8 + // SizedBox
+                (screenSize.height * 0.08).clamp(
+                  48.0,
+                  64.0,
+                ) + // ActionButtons (approx)
+                (screenSize.height * 0.02).clamp(8.0, 24.0) * 1.5 + // SizedBox
+                48.0; // Padding and other elements
+
+            final bool shouldScroll =
+                estimatedContentHeight > constraints.maxHeight;
+
+            final content = Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TopContainer(
+                  userName: userName,
+                  height: topContainerHeight,
+                  welcomeFontSize: welcomeFontSize,
+                  usernameFontSize: usernameFontSize,
+                ),
+                SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      vertical: spacing / 2,
+                      horizontal: spacing,
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(height: spacing * 3.8),
+                        ActionButtons(
+                          buttons: [
+                            (
+                              text: 'Kaart',
+                              icon: Icons.map,
+                              imagePath: null,
+                              key: Key('rapporten_kaart_button'),
+                              onPressed: () {
+                                context
+                                    .read<NavigationStateInterface>()
+                                    .pushReplacementForward(
+                                      context,
+                                      const KaartOverviewScreen(),
+                                    );
+                              },
+                            ),
+                            (
+                              text: reportButtonLabel,
+                              icon: Icons.edit_note,
+                              imagePath: null,
+                              key: Key('rapporteren_button'),
+                              onPressed: () {
+                                try {
+                                  navigationManager.pushReplacementForward(
+                                    context,
+                                    const Rapporteren(),
+                                  );
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Er is een fout opgetreden bij het navigeren',
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
+                            (
+                              text: 'Logboek',
+                              icon: Icons.description,
+                              imagePath: null,
+                              key: Key('logboek_button'),
+                              onPressed: () {
+                                try {
+                                  navigationManager.pushReplacementForward(
+                                    context,
+                                    const LogbookScreen(),
+                                  );
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Er is een fout opgetreden bij het navigeren',
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
+                            (
+                              text: 'Uitloggen',
+                              icon: Icons.logout,
+                              imagePath: null,
+                              key: Key('uitloggen_button'),
+                              onPressed: () {
+                                context.read<AppStateProvider>().logout();
+                              },
+                            ),
+                          ],
+                          iconSize: iconSize,
+                          verticalPadding: spacing / 2,
+                          horizontalPadding: spacing,
+                          buttonSpacing: spacing * 3,
+                          buttonHeight: buttonHeight,
+                          buttonFontSize: buttonFontSize,
+                        ),
+                        SizedBox(height: spacing * 1.5),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            );
+
             return SingleChildScrollView(
+              physics:
+                  shouldScroll
+                      ? const AlwaysScrollableScrollPhysics()
+                      : const NeverScrollableScrollPhysics(),
               child: ConstrainedBox(
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TopContainer(
-                      userName: userName,
-                      height: topContainerHeight,
-                      welcomeFontSize: welcomeFontSize,
-                      usernameFontSize: usernameFontSize,
-                    ),
-                    SafeArea(
-                      top: false,
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(
-                          vertical: spacing / 2,
-                          horizontal: spacing,
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SizedBox(height: spacing * 3.8),
-                            ActionButtons(
-                              buttons: [
-                                (
-                                  text: 'Kaart',
-                                  icon: Icons.map,
-                                  imagePath: null,
-                                  key: Key('rapporten_kaart_button'),
-                                  onPressed: () {
-                                    context
-                                        .read<NavigationStateInterface>()
-                                        .pushReplacementForward(
-                                          context,
-                                          const KaartOverviewScreen(),
-                                        );
-                                  },
-                                ),
-
-                                  (
-                                    text: 'Dieren Species',
-                                    icon: Icons.pets,
-                                    imagePath: null,
-                                    key: Key('soorten_button'),
-                                    onPressed: () {
-                                      Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (_) => const SpeciesListScreen(),
-                                        ),
-                                      );
-                                    },
-                                  ),
-
-                                (
-                                  text: 'Rapporteren',
-                                  icon: Icons.edit_note,
-                                  imagePath: null,
-                                  key: Key('rapporteren_button'),
-                                  onPressed: () {
-                                    try {
-                                      navigationManager.pushReplacementForward(
-                                        context,
-                                        const Rapporteren(),
-                                      );
-                                    } catch (e) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            'Er is een fout opgetreden bij het navigeren',
-                                          ),
-                                        ),
-                                      );
-                                    }
-                                  },
-                                ),
-
-                                (
-                                  text: 'Logboek',
-                                  icon: Icons.description,
-                                  imagePath: null,
-                                  key: Key('logboek_button'),
-                                  onPressed: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) => const LogbookScreen(),
-                                      ),
-                                    );
-                                  },
-                                ),
-
-                                (
-                                  text: 'Uitloggen',
-                                  icon: Icons.logout,
-                                  imagePath: null,
-                                  key: Key('uitloggen_button'),
-                                  onPressed: () {
-                                    context.read<AppStateProvider>().logout();
-                                  },
-                                ),
-                              ],
-                              iconSize: iconSize,
-                              // Reduce vertical padding and spacing between buttons
-                              verticalPadding: spacing / 3,
-                              horizontalPadding: spacing,
-                              buttonSpacing: spacing * 1.4,
-                              buttonHeight: buttonHeight,
-                              buttonFontSize: buttonFontSize,
-                            ),
-                            SizedBox(height: spacing * 1.5),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                child: content,
               ),
             );
           },

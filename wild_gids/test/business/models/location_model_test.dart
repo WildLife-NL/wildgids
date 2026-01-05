@@ -11,13 +11,13 @@ void main() {
         longitude: 4.9041,
         source: LocationSource.system,
       );
-      
+
       // Assert
       expect(location.latitude, 52.3676);
       expect(location.longitude, 4.9041);
       expect(location.source, LocationSource.system);
     });
-    
+
     test('should convert to JSON correctly', () {
       // Arrange
       final location = LocationModel(
@@ -25,17 +25,17 @@ void main() {
         longitude: 4.9041,
         source: LocationSource.system,
       );
-      
+
       // Act
       final json = location.toJson();
-      
+
       // Assert
       expect(json, isA<Map<String, dynamic>>());
       expect(json['latitude'], 52.3676);
       expect(json['longitude'], 4.9041);
       expect(json['source'], LocationSource.system.toString());
     });
-    
+
     test('should create from JSON correctly', () {
       // Arrange
       final Map<String, dynamic> json = {
@@ -43,16 +43,16 @@ void main() {
         'longitude': 4.4777,
         'source': 'LocationSource.manual',
       };
-      
+
       // Act
       final location = LocationModel.fromJson(json);
-      
+
       // Assert
       expect(location.latitude, 51.9244);
       expect(location.longitude, 4.4777);
       expect(location.source, LocationSource.manual);
     });
-    
+
     test('should handle unknown source in fromJson', () {
       // Arrange
       final Map<String, dynamic> json = {
@@ -60,15 +60,17 @@ void main() {
         'longitude': 4.4777,
         'source': 'LocationSource.unknown',
       };
-      
+
       // Act
       final location = LocationModel.fromJson(json);
-      
+
       // Assert
       expect(location.latitude, 51.9244);
       expect(location.longitude, 4.4777);
-      expect(location.source, LocationSource.unknown); // The actual implementation returns unknown
+      expect(
+        location.source,
+        LocationSource.unknown,
+      ); // The actual implementation returns unknown
     });
   });
 }
-

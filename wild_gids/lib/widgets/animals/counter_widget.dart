@@ -91,9 +91,7 @@ class AnimalCounterState extends State<AnimalCounter> {
           Container(
             height: widget.height - 20, // Adjust height of divider
             width: 1,
-            color: Colors.grey.withValues(
-              alpha: 0.7,
-            ),
+            color: Colors.grey.withValues(alpha: 0.7),
           ),
           Expanded(
             child: GestureDetector(
@@ -109,40 +107,39 @@ class AnimalCounterState extends State<AnimalCounter> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Center(
-                      child: _isEditing
-                          ? TextField(
-                              controller: _controller,
-                              keyboardType: TextInputType.number,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
-                                fontFamily: 'Roboto',
+                      child:
+                          _isEditing
+                              ? TextField(
+                                controller: _controller,
+                                keyboardType: TextInputType.number,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                  fontFamily: 'Roboto',
+                                ),
+                                decoration: const InputDecoration(
+                                  border: InputBorder.none,
+                                  contentPadding: EdgeInsets.zero,
+                                ),
+                                onSubmitted: _handleTextSubmitted,
+                                autofocus: true,
+                              )
+                              : Text(
+                                '$_count',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                  fontFamily: 'Roboto',
+                                ),
                               ),
-                              decoration: const InputDecoration(
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.zero,
-                              ),
-                              onSubmitted: _handleTextSubmitted,
-                              autofocus: true,
-                            )
-                          : Text(
-                              '$_count',
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
-                                fontFamily: 'Roboto',
-                              ),
-                            ),
                     ),
                     Container(
                       height: 1,
                       width: 40, // Width of the underline
-                      color: Colors.grey.withValues(
-                        alpha: 0.7,
-                      ),
+                      color: Colors.grey.withValues(alpha: 0.7),
                     ),
                   ],
                 ),
@@ -152,9 +149,7 @@ class AnimalCounterState extends State<AnimalCounter> {
           Container(
             height: widget.height - 20, // Adjust height of divider
             width: 1,
-            color: Colors.grey.withValues(
-              alpha: 0.7,
-            ),
+            color: Colors.grey.withValues(alpha: 0.7),
           ),
           Padding(
             padding: const EdgeInsets.only(right: 6.0),

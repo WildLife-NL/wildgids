@@ -20,11 +20,7 @@ class User {
     return {'id': id, 'email': email, 'name': name};
   }
 
-    Map<String, dynamic> toTermsUpdateJson() {
-    return {
-      if (reportAppTerms != null) 'reportAppTerms': reportAppTerms,
-    };
+  Map<String, dynamic> toTermsUpdateJson() {
+    return {if (reportAppTerms != null) 'reportAppTerms': reportAppTerms};
   }
 }
-
-

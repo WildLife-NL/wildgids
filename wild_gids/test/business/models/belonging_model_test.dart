@@ -10,13 +10,13 @@ void main() {
         name: 'Test Belonging',
         category: 'Test Category',
       );
-      
+
       // Assert
       expect(belonging.ID, 'belonging-123');
       expect(belonging.name, 'Test Belonging');
       expect(belonging.category, 'Test Category');
     });
-    
+
     test('should create from JSON correctly', () {
       // Arrange
       final json = {
@@ -24,16 +24,16 @@ void main() {
         'name': 'Test Belonging',
         'category': 'Test Category',
       };
-      
+
       // Act
       final belonging = Belonging.fromJson(json);
-      
+
       // Assert
       expect(belonging.ID, 'belonging-123');
       expect(belonging.name, 'Test Belonging');
       expect(belonging.category, 'Test Category');
     });
-    
+
     test('should convert to JSON correctly', () {
       // Arrange
       final belonging = Belonging(
@@ -41,10 +41,10 @@ void main() {
         name: 'Test Belonging',
         category: 'Test Category',
       );
-      
+
       // Act
       final json = belonging.toJson();
-      
+
       // Assert
       expect(json['ID'], 'belonging-123');
       expect(json['name'], 'Test Belonging');
@@ -53,12 +53,8 @@ void main() {
 
     test('should handle null values correctly', () {
       // Arrange
-      final belonging = Belonging(
-        ID: 'belonging-123',
-        name: '',
-        category: '',
-      );
-      
+      final belonging = Belonging(ID: 'belonging-123', name: '', category: '');
+
       // Assert
       expect(belonging.ID, 'belonging-123');
       expect(belonging.name, isEmpty);
@@ -67,12 +63,8 @@ void main() {
 
     test('should handle empty values correctly', () {
       // Arrange
-      final belonging = Belonging(
-        ID: 'belonging-123',
-        name: '',
-        category: '',
-      );
-      
+      final belonging = Belonging(ID: 'belonging-123', name: '', category: '');
+
       // Assert
       expect(belonging.ID, 'belonging-123');
       expect(belonging.name, isEmpty);
@@ -85,10 +77,10 @@ void main() {
         'ID': 'belonging-123',
         // name and category are missing
       };
-      
+
       // Act
       final belonging = Belonging.fromJson(json);
-      
+
       // Assert
       expect(belonging.ID, 'belonging-123');
       expect(belonging.name, isEmpty);
@@ -103,10 +95,10 @@ void main() {
         'category': 'Test Category',
         'extraField': 'This should be ignored',
       };
-      
+
       // Act
       final belonging = Belonging.fromJson(json);
-      
+
       // Assert
       expect(belonging.ID, 'belonging-123');
       expect(belonging.name, 'Test Belonging');
@@ -121,13 +113,13 @@ void main() {
         name: 'Test Belonging',
         category: 'Test Category',
       );
-      
+
       final belonging2 = Belonging(
         ID: 'belonging-123',
         name: 'Test Belonging',
         category: 'Test Category',
       );
-      
+
       // Assert
       expect(belonging1.ID, belonging2.ID);
       expect(belonging1.name, belonging2.name);
@@ -141,7 +133,7 @@ void main() {
         name: 'Test Belonging',
         category: 'Test Category',
       );
-      
+
       // Assert
       expect(belonging.ID, null);
       expect(belonging.name, 'Test Belonging');
@@ -149,6 +141,3 @@ void main() {
     });
   });
 }
-
-
-

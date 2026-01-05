@@ -10,13 +10,13 @@ void main() {
         category: 'mammal',
         commonName: 'Red Fox',
       );
-      
+
       // Assert
       expect(species.id, 'species-123');
       expect(species.category, 'mammal');
       expect(species.commonName, 'Red Fox');
     });
-    
+
     test('should create from JSON correctly', () {
       // Arrange
       final json = {
@@ -24,16 +24,16 @@ void main() {
         'category': 'mammal',
         'commonName': 'Red Fox',
       };
-      
+
       // Act
       final species = Species.fromJson(json);
-      
+
       // Assert
       expect(species.id, 'species-123');
       expect(species.category, 'mammal');
       expect(species.commonName, 'Red Fox');
     });
-    
+
     test('should convert to JSON correctly', () {
       // Arrange
       final species = Species(
@@ -41,10 +41,10 @@ void main() {
         category: 'mammal',
         commonName: 'Red Fox',
       );
-      
+
       // Act
       final json = species.toJson();
-      
+
       // Assert
       expect(json['id'], 'species-123');
       expect(json['category'], 'mammal');

@@ -7,17 +7,14 @@ void main() {
   group('AccidentReport Model', () {
     test('should have correct properties', () {
       // Arrange
-      final location = ReportLocation(
-        latitude: 52.3676,
-        longtitude: 4.9041,
-      );
-      
+      final location = ReportLocation(latitude: 52.3676, longtitude: 4.9041);
+
       final animal = SightedAnimal(
         condition: 'alive',
         lifeStage: 'adult',
         sex: 'male',
       );
-      
+
       final report = AccidentReport(
         accidentReportID: 'accident-123',
         description: 'Deer collision on highway',
@@ -31,7 +28,7 @@ void main() {
         intensity: 'Medium',
         urgency: 'High',
       );
-      
+
       // Assert
       expect(report.accidentReportID, 'accident-123');
       expect(report.description, 'Deer collision on highway');
@@ -44,7 +41,7 @@ void main() {
       expect(report.intensity, 'Medium');
       expect(report.urgency, 'High');
     });
-    
+
     test('should create from JSON correctly', () {
       // Arrange
       final json = {
@@ -52,30 +49,20 @@ void main() {
         'description': 'Deer collision on highway',
         'damages': 'Front bumper damaged',
         'suspectedSpeciesID': 'Deer',
-        'userSelectedLocation': {
-          'latitude': 52.3676,
-          'longtitude': 4.9041,
-        },
-        'systemLocation': {
-          'latitude': 52.3676,
-          'longtitude': 4.9041,
-        },
+        'userSelectedLocation': {'latitude': 52.3676, 'longtitude': 4.9041},
+        'systemLocation': {'latitude': 52.3676, 'longtitude': 4.9041},
         'userSelectedDateTime': '2023-05-15T00:00:00.000',
         'systemDateTime': '2023-05-15T00:00:00.000',
         'animals': [
-          {
-            'condition': 'alive',
-            'lifeStage': 'adult',
-            'sex': 'male',
-          }
+          {'condition': 'alive', 'lifeStage': 'adult', 'sex': 'male'},
         ],
         'intensity': 'Medium',
         'urgency': 'High',
       };
-      
+
       // Act
       final report = AccidentReport.fromJson(json);
-      
+
       // Assert
       expect(report.accidentReportID, 'accident-123');
       expect(report.description, 'Deer collision on highway');
@@ -93,17 +80,14 @@ void main() {
 
     test('should convert to JSON correctly', () {
       // Arrange
-      final location = ReportLocation(
-        latitude: 52.3676,
-        longtitude: 4.9041,
-      );
-      
+      final location = ReportLocation(latitude: 52.3676, longtitude: 4.9041);
+
       final animal = SightedAnimal(
         condition: 'alive',
         lifeStage: 'adult',
         sex: 'male',
       );
-      
+
       final report = AccidentReport(
         accidentReportID: 'accident-123',
         description: 'Deer collision on highway',
@@ -117,10 +101,10 @@ void main() {
         intensity: 'Medium',
         urgency: 'High',
       );
-      
+
       // Act
       final json = report.toJson();
-      
+
       // Assert
       expect(json['accidentReportID'], 'accident-123');
       expect(json['estimatedDamage'], 'Front bumper damaged');
@@ -130,11 +114,8 @@ void main() {
 
     test('should handle null values correctly', () {
       // Arrange
-      final location = ReportLocation(
-        latitude: 52.3676,
-        longtitude: 4.9041,
-      );
-      
+      final location = ReportLocation(latitude: 52.3676, longtitude: 4.9041);
+
       final report = AccidentReport(
         accidentReportID: null,
         description: null,
@@ -148,7 +129,7 @@ void main() {
         intensity: 'Medium',
         urgency: 'High',
       );
-      
+
       // Assert
       expect(report.accidentReportID, isNull);
       expect(report.description, isNull);
@@ -163,24 +144,18 @@ void main() {
       final json = {
         'accidentReportID': 'accident-123',
         'damages': 'Front bumper damaged',
-        'userSelectedLocation': {
-          'latitude': 52.3676,
-          'longtitude': 4.9041,
-        },
-        'systemLocation': {
-          'latitude': 52.3676,
-          'longtitude': 4.9041,
-        },
+        'userSelectedLocation': {'latitude': 52.3676, 'longtitude': 4.9041},
+        'systemLocation': {'latitude': 52.3676, 'longtitude': 4.9041},
         'systemDateTime': '2023-05-15T00:00:00.000',
         'animals': [],
         'intensity': 'Medium',
         'urgency': 'High',
         // description, userSelectedDateTime, suspectedSpeciesID are missing
       };
-      
+
       // Act
       final report = AccidentReport.fromJson(json);
-      
+
       // Assert
       expect(report.accidentReportID, 'accident-123');
       expect(report.description, isNull);
@@ -192,17 +167,22 @@ void main() {
 
     test('should handle multiple animals correctly', () {
       // Arrange
-      final location = ReportLocation(
-        latitude: 52.3676,
-        longtitude: 4.9041,
-      );
-      
+      final location = ReportLocation(latitude: 52.3676, longtitude: 4.9041);
+
       final animals = [
         SightedAnimal(condition: 'alive', lifeStage: 'adult', sex: 'male'),
-        SightedAnimal(condition: 'injured', lifeStage: 'juvenile', sex: 'female'),
-        SightedAnimal(condition: 'deceased', lifeStage: 'adult', sex: 'unknown')
+        SightedAnimal(
+          condition: 'injured',
+          lifeStage: 'juvenile',
+          sex: 'female',
+        ),
+        SightedAnimal(
+          condition: 'deceased',
+          lifeStage: 'adult',
+          sex: 'unknown',
+        ),
       ];
-      
+
       final report = AccidentReport(
         accidentReportID: 'accident-123',
         description: 'Multiple animal collision',
@@ -216,19 +196,18 @@ void main() {
         intensity: 'High',
         urgency: 'Critical',
       );
-      
+
       // Assert
       expect(report.animals?.length, 3);
       expect(report.animals?[0].condition, 'alive');
       expect(report.animals?[1].lifeStage, 'juvenile');
       expect(report.animals?[2].sex, 'unknown');
-      
+
       // Act
       final json = report.toJson();
-      
+
       // Assert
       expect(json['involvedAnimals'].length, 3);
     });
   });
 }
-

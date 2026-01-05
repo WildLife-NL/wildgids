@@ -56,10 +56,14 @@ void main() {
     reset(mockAppStateProvider);
 
     // Mock currentReportType
-    when(mockAppStateProvider.currentReportType).thenReturn(ReportType.waarneming);
+    when(
+      mockAppStateProvider.currentReportType,
+    ).thenReturn(ReportType.waarneming);
 
     // Mock validateActiveAnimalSighting
-    when(mockAnimalSightingManager.validateActiveAnimalSighting()).thenReturn(true);
+    when(
+      mockAnimalSightingManager.validateActiveAnimalSighting(),
+    ).thenReturn(true);
 
     // Mock animal list retrieval
     when(mockAnimalManager.getAnimals()).thenAnswer((_) async => sampleAnimals);
@@ -74,33 +78,47 @@ void main() {
     });
 
     // Mock processAnimalSelection
-    when(mockAnimalSightingManager.processAnimalSelection(any, any)).thenAnswer((_) {
-      return AnimalSightingModel(animals: []);
-    });
+    when(mockAnimalSightingManager.processAnimalSelection(any, any)).thenAnswer(
+      (_) {
+        return AnimalSightingModel(animals: []);
+      },
+    );
 
     // Mock updateSearchTerm as a void function with correct argument type
-    when(mockAnimalManager.updateFilter(argThat(isA<String>()))).thenAnswer((invocation) {
+    when(mockAnimalManager.updateFilter(argThat(isA<String>()))).thenAnswer((
+      invocation,
+    ) {
       // No return needed since it's a void function
     });
 
     // Mock updateFilter as a void function with correct argument type
-    when(mockAnimalManager.updateFilter(argThat(isA<String>()))).thenAnswer((invocation) {
+    when(mockAnimalManager.updateFilter(argThat(isA<String>()))).thenAnswer((
+      invocation,
+    ) {
       // No return needed since it's a void function
     });
 
     // Mock dropdown interface to simulate a searchable dropdown
-    when(mockDropdownInterface.buildDropdown(
-      type: anyNamed('type'),
-      selectedValue: anyNamed('selectedValue'),
-      isExpanded: anyNamed('isExpanded'),
-      onExpandChanged: anyNamed('onExpandChanged'),
-      onOptionSelected: anyNamed('onOptionSelected'),
-      context: anyNamed('context'),
-    )).thenAnswer((invocation) {
-      final isExpanded = invocation.namedArguments[const Symbol('isExpanded')] as bool;
-      final onExpandChanged = invocation.namedArguments[const Symbol('onExpandChanged')] as Function(bool);
-      final onOptionSelected = invocation.namedArguments[const Symbol('onOptionSelected')] as Function(String);
-      final selectedValue = invocation.namedArguments[const Symbol('selectedValue')] as String;
+    when(
+      mockDropdownInterface.buildDropdown(
+        type: anyNamed('type'),
+        selectedValue: anyNamed('selectedValue'),
+        isExpanded: anyNamed('isExpanded'),
+        onExpandChanged: anyNamed('onExpandChanged'),
+        onOptionSelected: anyNamed('onOptionSelected'),
+        context: anyNamed('context'),
+      ),
+    ).thenAnswer((invocation) {
+      final isExpanded =
+          invocation.namedArguments[const Symbol('isExpanded')] as bool;
+      final onExpandChanged =
+          invocation.namedArguments[const Symbol('onExpandChanged')]
+              as Function(bool);
+      final onOptionSelected =
+          invocation.namedArguments[const Symbol('onOptionSelected')]
+              as Function(String);
+      final selectedValue =
+          invocation.namedArguments[const Symbol('selectedValue')] as String;
 
       return StatefulBuilder(
         builder: (context, setState) {
@@ -113,7 +131,9 @@ void main() {
                     onExpandChanged(!isExpanded);
                   });
                 },
-                child: Text(selectedValue == 'Filteren' ? 'Filteren' : selectedValue),
+                child: Text(
+                  selectedValue == 'Filteren' ? 'Filteren' : selectedValue,
+                ),
               ),
               if (isExpanded) ...[
                 TextField(
@@ -121,11 +141,16 @@ void main() {
                   onChanged: (value) {
                     mockAnimalManager.updateSearchTerm(value);
                   },
-                  decoration: const InputDecoration(hintText: 'Zoek een dier...'),
+                  decoration: const InputDecoration(
+                    hintText: 'Zoek een dier...',
+                  ),
                 ),
                 ...[
                   DropdownMenuItem(value: 'Filteren', child: Text('Filteren')),
-                  DropdownMenuItem(value: 'Alfabetisch', child: Text('Alfabetisch')),
+                  DropdownMenuItem(
+                    value: 'Alfabetisch',
+                    child: Text('Alfabetisch'),
+                  ),
                 ].map((item) {
                   return ElevatedButton(
                     onPressed: () {
@@ -152,15 +177,9 @@ void main() {
           Provider<NavigationStateInterface>.value(
             value: mockNavigationManager,
           ),
-          Provider<AnimalManagerInterface>.value(
-            value: mockAnimalManager,
-          ),
-          Provider<DropdownInterface>.value(
-            value: mockDropdownInterface,
-          ),
-          Provider<FilterInterface>.value(
-            value: mockFilterInterface,
-          ),
+          Provider<AnimalManagerInterface>.value(value: mockAnimalManager),
+          Provider<DropdownInterface>.value(value: mockDropdownInterface),
+          Provider<FilterInterface>.value(value: mockFilterInterface),
           Provider<AnimalSightingReportingInterface>.value(
             value: mockAnimalSightingManager,
           ),
@@ -180,7 +199,9 @@ void main() {
   }
 
   group('AnimalScreen', () {
-    testWidgets('should render animal list when loaded', (WidgetTester tester) async {
+    testWidgets('should render animal list when loaded', (
+      WidgetTester tester,
+    ) async {
       // Set a fixed viewport size for consistent testing
       tester.view.physicalSize = const Size(1080, 1920);
       tester.view.devicePixelRatio = 1.0;
@@ -199,7 +220,9 @@ void main() {
       addTearDown(() => tester.view.resetPhysicalSize());
     });
 
-    testWidgets('should show search field when dropdown is expanded', (WidgetTester tester) async {
+    testWidgets('should show search field when dropdown is expanded', (
+      WidgetTester tester,
+    ) async {
       // Set a fixed viewport size
       tester.view.physicalSize = const Size(1080, 1920);
       tester.view.devicePixelRatio = 1.0;
@@ -223,7 +246,9 @@ void main() {
 
     // Removed test: 'should filter animals when search term is entered in dropdown'
 
-    testWidgets('should select animal when tapped', (WidgetTester tester) async {
+    testWidgets('should select animal when tapped', (
+      WidgetTester tester,
+    ) async {
       // Set a fixed viewport size
       tester.view.physicalSize = const Size(1080, 1920);
       tester.view.devicePixelRatio = 1.0;
@@ -242,10 +267,14 @@ void main() {
       await tester.pumpAndSettle();
 
       // Assert - Verify processAnimalSelection was called
-      verify(mockAnimalSightingManager.processAnimalSelection(
-        argThat(predicate<AnimalModel>((animal) => animal.animalName == 'Wolf')),
-        any,
-      )).called(1);
+      verify(
+        mockAnimalSightingManager.processAnimalSelection(
+          argThat(
+            predicate<AnimalModel>((animal) => animal.animalName == 'Wolf'),
+          ),
+          any,
+        ),
+      ).called(1);
 
       // Reset the test viewport
       addTearDown(() => tester.view.resetPhysicalSize());
@@ -268,7 +297,9 @@ void main() {
       addTearDown(() => tester.view.resetPhysicalSize());
     });
 
-    testWidgets('should update filter when dropdown value changes', (WidgetTester tester) async {
+    testWidgets('should update filter when dropdown value changes', (
+      WidgetTester tester,
+    ) async {
       // Set a fixed viewport size
       tester.view.physicalSize = const Size(1080, 1920);
       tester.view.devicePixelRatio = 1.0;
@@ -286,10 +317,9 @@ void main() {
       // Select a filter option
       final filterOption = find.text('Alfabetisch');
       expect(filterOption, findsOneWidget);
-      await tester.tap(find.ancestor(
-        of: filterOption,
-        matching: find.byType(ElevatedButton),
-      ));
+      await tester.tap(
+        find.ancestor(of: filterOption, matching: find.byType(ElevatedButton)),
+      );
       await tester.pumpAndSettle();
 
       // Assert

@@ -7,10 +7,8 @@ import 'package:wildrapport/models/enums/animal_condition.dart';
 
 void main() {
   group('AnimalModel', () {
-    
-    setUp(() {
-    });
-    
+    setUp(() {});
+
     test('should have correct properties', () {
       // Arrange
       final animalModel = AnimalModel(
@@ -19,14 +17,14 @@ void main() {
         animalImagePath: 'assets/wolf.png',
         genderViewCounts: [],
       );
-      
+
       // Assert
       expect(animalModel.animalId, '1');
       expect(animalModel.animalName, 'Wolf');
       expect(animalModel.animalImagePath, 'assets/wolf.png');
       expect(animalModel.genderViewCounts, isEmpty);
     });
-    
+
     test('should add gender view count', () {
       // Arrange
       final animalModel = AnimalModel(
@@ -35,7 +33,7 @@ void main() {
         animalImagePath: 'assets/wolf.png',
         genderViewCounts: [],
       );
-      
+
       final genderViewCount = AnimalGenderViewCount(
         gender: AnimalGender.mannelijk,
         viewCount: ViewCountModel(
@@ -45,10 +43,10 @@ void main() {
           unknownAmount: 0,
         ),
       );
-      
+
       // Act
       animalModel.genderViewCounts.add(genderViewCount);
-      
+
       // Assert
       expect(animalModel.genderViewCounts.length, 1);
       expect(animalModel.genderViewCounts.first.gender, AnimalGender.mannelijk);
@@ -72,7 +70,7 @@ void main() {
           ),
         ],
       );
-      
+
       // Assert
       expect(animalModel.gender, AnimalGender.mannelijk);
     });
@@ -85,7 +83,7 @@ void main() {
         animalImagePath: 'assets/wolf.png',
         genderViewCounts: [],
       );
-      
+
       // Assert
       expect(animalModel.gender, null);
     });
@@ -98,7 +96,7 @@ void main() {
         pasGeborenAmount: 0,
         unknownAmount: 0,
       );
-      
+
       final animalModel = AnimalModel(
         animalId: '1',
         animalName: 'Wolf',
@@ -110,7 +108,7 @@ void main() {
           ),
         ],
       );
-      
+
       // Assert
       expect(animalModel.viewCount, viewCount);
     });
@@ -123,7 +121,7 @@ void main() {
         animalImagePath: 'assets/wolf.png',
         genderViewCounts: [],
       );
-      
+
       // Assert
       expect(animalModel.viewCount, null);
     });
@@ -137,7 +135,7 @@ void main() {
         genderViewCounts: [],
         condition: AnimalCondition.dood,
       );
-      
+
       // Assert
       expect(animalModel.condition, AnimalCondition.dood);
     });
@@ -150,12 +148,12 @@ void main() {
         pasGeborenAmount: 0,
         unknownAmount: 0,
       );
-      
+
       final genderViewCount = AnimalGenderViewCount(
         gender: AnimalGender.mannelijk,
         viewCount: viewCount,
       );
-      
+
       final animalModel = AnimalModel(
         animalId: '1',
         animalName: 'Wolf',
@@ -163,7 +161,7 @@ void main() {
         genderViewCounts: [genderViewCount],
         condition: AnimalCondition.levend,
       );
-      
+
       // Assert
       expect(animalModel.animalId, '1');
       expect(animalModel.animalName, 'Wolf');
@@ -180,10 +178,10 @@ void main() {
         animalImagePath: 'assets/wolf.png',
         genderViewCounts: [],
       );
-      
+
       // Act
       final updatedModel = animalModel.updateGender(AnimalGender.vrouwelijk);
-      
+
       // Assert
       expect(updatedModel.gender, AnimalGender.vrouwelijk);
       expect(updatedModel.animalId, animalModel.animalId);
@@ -199,20 +197,23 @@ void main() {
         animalImagePath: 'assets/wolf.png',
         genderViewCounts: [],
       );
-      
+
       final newViewCount = ViewCountModel(
         volwassenAmount: 3,
         onvolwassenAmount: 2,
         pasGeborenAmount: 1,
         unknownAmount: 0,
       );
-      
+
       // Act
       final updatedModel = animalModel.updateViewCount(newViewCount);
-      
+
       // Assert
       expect(updatedModel.viewCount, newViewCount);
-      expect(updatedModel.gender, AnimalGender.onbekend); // Default gender when none exists
+      expect(
+        updatedModel.gender,
+        AnimalGender.onbekend,
+      ); // Default gender when none exists
       expect(updatedModel.animalId, animalModel.animalId);
       expect(updatedModel.animalName, animalModel.animalName);
     });
@@ -226,10 +227,10 @@ void main() {
         genderViewCounts: [],
         condition: AnimalCondition.ziek,
       );
-      
+
       // Act
       final updatedModel = animalModel.updateGender(AnimalGender.mannelijk);
-      
+
       // Assert
       expect(updatedModel.gender, AnimalGender.mannelijk);
       expect(updatedModel.condition, AnimalCondition.ziek);
@@ -262,7 +263,7 @@ void main() {
           ),
         ],
       );
-      
+
       // Act & Assert
       // Calculate total manually to verify
       int expectedTotal = 0;
@@ -272,12 +273,8 @@ void main() {
         expectedTotal += gvc.viewCount.pasGeborenAmount;
         expectedTotal += gvc.viewCount.unknownAmount;
       }
-      
+
       expect(expectedTotal, 7); // 2+1+0+0+1+2+1+0 = 7
     });
   });
 }
-
-
-
-

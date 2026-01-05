@@ -37,7 +37,9 @@ class DefaultFilterMock extends MockFilterInterface {
   }
 }
 
-class MockAnimalManagerInterface extends Mock implements AnimalManagerInterface {}
+class MockAnimalManagerInterface extends Mock
+    implements AnimalManagerInterface {}
+
 class MockBuildContext extends Mock implements BuildContext {}
 
 void main() {
@@ -97,7 +99,9 @@ void main() {
       );
     });
 
-    testWidgets('should show filter options when expanded', (WidgetTester tester) async {
+    testWidgets('should show filter options when expanded', (
+      WidgetTester tester,
+    ) async {
       // Build a test widget with the dropdown
       await tester.pumpWidget(
         MaterialApp(
@@ -109,7 +113,8 @@ void main() {
                   type: DropdownType.filter,
                   selectedValue: 'Filteren',
                   isExpanded: isExpanded,
-                  onExpandChanged: (value) => setState(() => isExpanded = value),
+                  onExpandChanged:
+                      (value) => setState(() => isExpanded = value),
                   onOptionSelected: (_) {},
                   context: context,
                 );
@@ -125,7 +130,9 @@ void main() {
       expect(find.text(FilterType.alphabetical.displayText), findsOneWidget);
     });
 
-    testWidgets('should show location options when expanded', (WidgetTester tester) async {
+    testWidgets('should show location options when expanded', (
+      WidgetTester tester,
+    ) async {
       // Build a test widget with the dropdown
       await tester.pumpWidget(
         MaterialApp(
@@ -137,7 +144,8 @@ void main() {
                   type: DropdownType.location,
                   selectedValue: LocationType.current.displayText,
                   isExpanded: isExpanded,
-                  onExpandChanged: (value) => setState(() => isExpanded = value),
+                  onExpandChanged:
+                      (value) => setState(() => isExpanded = value),
                   onOptionSelected: (_) {},
                   context: context,
                 );
@@ -157,7 +165,9 @@ void main() {
       }
     });
 
-    testWidgets('should show reset filter option when a filter is selected', (WidgetTester tester) async {
+    testWidgets('should show reset filter option when a filter is selected', (
+      WidgetTester tester,
+    ) async {
       // Build a test widget with the dropdown
       await tester.pumpWidget(
         MaterialApp(
@@ -169,7 +179,8 @@ void main() {
                   type: DropdownType.filter,
                   selectedValue: FilterType.alphabetical.displayText,
                   isExpanded: isExpanded,
-                  onExpandChanged: (value) => setState(() => isExpanded = value),
+                  onExpandChanged:
+                      (value) => setState(() => isExpanded = value),
                   onOptionSelected: (_) {},
                   context: context,
                 );
@@ -185,7 +196,9 @@ void main() {
       expect(find.text('Reset filter'), findsOneWidget);
     });
 
-    testWidgets('should show search field for search filter option', (WidgetTester tester) async {
+    testWidgets('should show search field for search filter option', (
+      WidgetTester tester,
+    ) async {
       // Use a different mock that returns search filter
       final searchFilterMock = SearchFilterMock();
       final searchDropdownManager = DropdownManager(searchFilterMock);
@@ -207,7 +220,8 @@ void main() {
                     type: DropdownType.filter,
                     selectedValue: 'Filteren',
                     isExpanded: isExpanded,
-                    onExpandChanged: (value) => setState(() => isExpanded = value),
+                    onExpandChanged:
+                        (value) => setState(() => isExpanded = value),
                     onOptionSelected: (_) {},
                     context: context,
                   );
@@ -226,8 +240,3 @@ void main() {
     });
   });
 }
-
-
-
-
-

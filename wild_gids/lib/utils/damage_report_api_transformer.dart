@@ -3,31 +3,29 @@ import 'package:flutter/material.dart';
 import 'package:wildrapport/models/beta_models/belonging_damage_report_model.dart';
 
 class BelongingDamageApiTransformer {
-  static Map<String, dynamic> transformForApi(
-    BelongingDamageReport report,
-  ) {
+  static Map<String, dynamic> transformForApi(BelongingDamageReport report) {
     debugPrint('=== Starting DamageReport API Transform ===');
-    debugPrint('Input Report: ${jsonEncode({
-      "possesion": {
-        "id": report.possesion.possesionID,
-        "name": report.possesion.possesionName,
-        "category": report.possesion.category,
-      },
-      "impactedAreaType": report.impactedAreaType,
-      "impactedArea": report.impactedArea,
-      "currentImpactDamages": report.currentImpactDamages,
-      "estimatedTotalDamages": report.estimatedTotalDamages,
-      "suspectedSpeciesID": report.suspectedSpeciesID,
-      "userSelectedLocation": report.userSelectedLocation?.toJson(),
-      "systemLocation": report.systemLocation?.toJson(),
-      "userSelectedDateTime": report.userSelectedDateTime?.toIso8601String(),
-      "systemDateTime": report.systemDateTime.toIso8601String(),
-    })}');
+    debugPrint(
+      'Input Report: ${jsonEncode({
+        "possesion": {"id": report.possesion.possesionID, "name": report.possesion.possesionName, "category": report.possesion.category},
+        "impactedAreaType": report.impactedAreaType,
+        "impactedArea": report.impactedArea,
+        "currentImpactDamages": report.currentImpactDamages,
+        "estimatedTotalDamages": report.estimatedTotalDamages,
+        "suspectedSpeciesID": report.suspectedSpeciesID,
+        "userSelectedLocation": report.userSelectedLocation?.toJson(),
+        "systemLocation": report.systemLocation?.toJson(),
+        "userSelectedDateTime": report.userSelectedDateTime?.toIso8601String(),
+        "systemDateTime": report.systemDateTime.toIso8601String(),
+      })}',
+    );
 
     // --- validation before sending ---
-    if (report.systemLocation == null) {
-      throw StateError('System location is required for damage report');
+    if (report.systemLocation == null && report.userSelectedLocation == null) {
+      throw StateError('At least one location (system or user-selected) is required for damage report');
     }
+    // Prefer system location if available, otherwise user-selected
+    
     if (report.userSelectedLocation == null) {
       throw StateError('User-selected location is required for damage report');
     }
@@ -38,11 +36,11 @@ class BelongingDamageApiTransformer {
       throw StateError('impactValue must be > 0');
     }
 
-final possesionID = report.possesion.possesionID ?? '';
+    final belongingName = report.possesion.possesionName ?? '';
 
-if (possesionID.trim().isEmpty) {
-  throw StateError('belonging ID is required');
-}
+    if (belongingName.trim().isEmpty) {
+      throw StateError('belonging name is required');
+    }
 
     // --- final payload exactly how /interaction expects it for R5 ---
     final payload = {
@@ -52,16 +50,16 @@ if (possesionID.trim().isEmpty) {
         "longitude": report.systemLocation!.longtitude,
       },
       "moment": report.systemDateTime.toUtc().toIso8601String(),
-      // ^ backend examples use Z time like "2025-10-29T13:18:29.004944Z"
 
+      // ^ backend examples use Z time like "2025-10-29T13:18:29.004944Z"
       "place": {
         "latitude": report.userSelectedLocation!.latitude,
         "longitude": report.userSelectedLocation!.longtitude,
       },
 
       "reportOfDamage": {
-        // Backend expects a string ID for the belonging
-        "belonging": possesionID,
+        // Backend expects a free text string for the belonging
+        "belonging": belongingName,
 
         "estimatedDamage": report.currentImpactDamages,
         "estimatedLoss": report.estimatedTotalDamages,

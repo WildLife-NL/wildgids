@@ -6,10 +6,9 @@ import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
 import 'package:wildrapport/models/animal_waarneming_models/animal_model.dart';
 
 import 'package:wildrapport/screens/waarneming/animal_counting_screen.dart';
-import 'package:wildrapport/screens/shared/category_screen.dart';
 import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
+import 'package:wildrapport/widgets/shared_ui_widgets/bottom_app_bar.dart';
 import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/models/enums/filter_type.dart';
 import 'package:wildrapport/widgets/animals/scrollable_animal_grid.dart';
 
 class AnimalsScreen extends StatefulWidget {
@@ -32,6 +31,9 @@ class _AnimalsScreenState extends State<AnimalsScreen>
   String? _error;
   bool _isLoading = true;
   // dropdown expansion state no longer used (custom UI)
+  final TextEditingController _searchController = TextEditingController();
+  List<String> _categories = const [];
+  String _selectedCategory = 'Alle';
 
   @override
   void initState() {
@@ -44,8 +46,13 @@ class _AnimalsScreenState extends State<AnimalsScreen>
     _animalManager = context.read<AnimalManagerInterface>();
     _animalSightingManager = context.read<AnimalSightingReportingInterface>();
     _navigationManager = context.read<NavigationStateInterface>();
+    // Ensure search is reset when (re)entering this screen
+    _searchController.text = '';
+    _searchController.addListener(() => setState(() {}));
+    _animalManager.updateSearchTerm('');
     _animalManager.addListener(_handleStateChange);
     _validateAndLoad();
+    _loadCategories();
   }
 
   void _validateAndLoad() {
@@ -72,13 +79,9 @@ class _AnimalsScreenState extends State<AnimalsScreen>
         _error = null;
       });
 
-      final selectedCategory = _animalSightingManager.getCurrentanimalSighting()?.category;
-      debugPrint('[AnimalsScreen] Selected category used for query: $selectedCategory');
-
-      final animals = await _animalManager.getAnimalsByCategory(
-        category: selectedCategory,
+      final animals = await _animalManager.getAnimalsByBackendCategory(
+        category: _selectedCategory == 'Alle' ? null : _selectedCategory,
       );
-
 
       debugPrint(
         '[AnimalsScreen] Successfully loaded ${animals.length} animals',
@@ -109,7 +112,11 @@ class _AnimalsScreenState extends State<AnimalsScreen>
     debugPrint('[AnimalsScreen] Disposing screen');
     _scrollController.dispose();
     _animationController.dispose();
+    _searchController.dispose();
+    // Remove listener BEFORE clearing search term to prevent setState on disposed widget
     _animalManager.removeListener(_handleStateChange);
+    // Clear any lingering search term so future visits show all animals
+    _animalManager.updateSearchTerm('');
     super.dispose();
   }
 
@@ -132,25 +139,45 @@ class _AnimalsScreenState extends State<AnimalsScreen>
 
   void _handleBackNavigation() {
     debugPrint('[AnimalsScreen] Back button pressed');
-    // Do not dispose the navigation manager here — keep shared state alive for previous flow
-    _navigationManager.pushReplacementBack(context, const CategoryScreen());
+    // Reset search before navigating back
+    _animalManager.updateSearchTerm('');
+    // Prefer popping; if stack was cleared, reset to home to avoid a blank screen
+    if (Navigator.of(context).canPop()) {
+      Navigator.pop(context);
+    } else {
+      _navigationManager.resetToHome(context);
+    }
+  }
+
+  Future<void> _loadCategories() async {
+    try {
+      final cats = await _animalManager.getBackendCategories();
+      if (!mounted) return;
+      setState(() {
+        _categories = ['Alle', ...cats];
+      });
+    } catch (e) {
+      // Keep empty list on failure
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-  // dropdownInterface removed - using custom search/filter UI instead
+    // dropdownInterface removed - using custom search/filter UI instead
 
     return Scaffold(
       backgroundColor: AppColors.lightMintGreen,
       body: SafeArea(
+        bottom: false,
         child: Column(
           children: [
             CustomAppBar(
-              leftIcon: Icons.arrow_back_ios,
+              leftIcon: null,
               centerText: widget.appBarTitle,
               // no right icon here so the user/profile icon is shown like Rapporteren
               rightIcon: null,
               showUserIcon: true,
+              useFixedText: true,
               onLeftIconPressed: _handleBackNavigation,
               // match Rapporteren app bar styling exactly
               iconColor: Colors.black,
@@ -160,120 +187,160 @@ class _AnimalsScreenState extends State<AnimalsScreen>
               userIconScale: 1.15,
             ),
             Padding(
-              // increase vertical padding to move elements slightly down
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
-              child: Column(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20.0,
+                vertical: 12.0,
+              ),
+              child: Row(
                 children: [
-                  // Search box (larger) — use same mint background as page, no shadow
+                  // Category filter dropdown (compact)
                   Container(
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: AppColors.lightMintGreen,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.darkGreen, width: 1.5),
+                    height: 44,
+                    constraints: const BoxConstraints(
+                      minWidth: 140,
+                      maxWidth: 220,
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.search, color: AppColors.darkGreen),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: TextField(
-                            style: const TextStyle(fontSize: 16),
-                            decoration: const InputDecoration(
-                              hintText: 'zoeken',
-                              border: InputBorder.none,
-                              isCollapsed: true,
-                              contentPadding: EdgeInsets.symmetric(vertical: 14),
-                            ),
-                            onChanged: (val) {
-                              _animalManager.updateSearchTerm(val);
-                              // trigger immediate UI refresh
-                              setState(() {});
-                            },
-                          ),
-                        ),
-                      ],
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.darkGreen,
+                        width: 1.5,
+                      ),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        isDense: true,
+                        iconSize: 18,
+                        value: _selectedCategory,
+                        items:
+                            _categories
+                                .map(
+                                  (c) => DropdownMenuItem(
+                                    value: c,
+                                    child: Tooltip(
+                                      message: c,
+                                      waitDuration: const Duration(
+                                        milliseconds: 500,
+                                      ),
+                                      child: Text(
+                                        c,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(fontSize: 14),
+                                      ),
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                        selectedItemBuilder:
+                            (ctx) =>
+                                _categories
+                                    .map(
+                                      (c) => Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: Tooltip(
+                                          message: c,
+                                          waitDuration: const Duration(
+                                            milliseconds: 500,
+                                          ),
+                                          child: Text(
+                                            c,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
+                        onChanged: (val) async {
+                          if (val == null) return;
+                          setState(() => _selectedCategory = val);
+                          await _loadAnimals();
+                        },
+                        isExpanded: true,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  // Filter pills (moved down, slightly larger)
-                  Row(
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            _animalManager.updateFilter(FilterType.mostViewed.displayText);
-                            setState(() {});
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            decoration: BoxDecoration(
-                              color: _animalManager.getSelectedFilter() == FilterType.mostViewed.displayText
-                                  ? AppColors.darkGreen
-                                  : AppColors.lightMintGreen,
-                              borderRadius: BorderRadius.circular(25),
-                              border: Border.all(color: AppColors.darkGreen, width: 1.5),
-                            ),
-                            child: Center(
-                              child: Text(
-                                'Meest gezien',
-                                style: TextStyle(
-                                  color: _animalManager.getSelectedFilter() == FilterType.mostViewed.displayText
-                                      ? Colors.white
-                                      : AppColors.darkGreen,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
+                  const SizedBox(width: 12),
+                  // Search box (compact) — fits same row
+                  Expanded(
+                    child: Container(
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.lightMintGreen,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppColors.darkGreen,
+                          width: 1.5,
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            _animalManager.updateFilter(FilterType.alphabetical.displayText);
-                            setState(() {});
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            decoration: BoxDecoration(
-                              color: _animalManager.getSelectedFilter() == FilterType.alphabetical.displayText
-                                  ? AppColors.darkGreen
-                                  : AppColors.lightMintGreen,
-                              borderRadius: BorderRadius.circular(25),
-                              border: Border.all(color: AppColors.darkGreen, width: 1.5),
-                            ),
-                            child: Center(
-                              child: Text(
-                                'A-Z',
-                                style: TextStyle(
-                                  color: _animalManager.getSelectedFilter() == FilterType.alphabetical.displayText
-                                      ? Colors.white
-                                      : AppColors.darkGreen,
-                                  fontWeight: FontWeight.w600,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.search, color: AppColors.darkGreen),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: TextField(
+                              controller: _searchController,
+                              style: const TextStyle(fontSize: 14),
+                              decoration: InputDecoration(
+                                hintText: 'Zoeken',
+                                border: InputBorder.none,
+                                isCollapsed: true,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 10,
                                 ),
+                                suffixIcon:
+                                    (_searchController.text.isNotEmpty)
+                                        ? IconButton(
+                                          icon: const Icon(
+                                            Icons.clear,
+                                            color: AppColors.darkGreen,
+                                          ),
+                                          onPressed: () {
+                                            _searchController.clear();
+                                            _animalManager.updateSearchTerm('');
+                                            setState(() {});
+                                          },
+                                        )
+                                        : null,
                               ),
+                              onChanged: (val) {
+                                _animalManager.updateSearchTerm(val);
+                                setState(() {});
+                              },
                             ),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ],
               ),
             ),
-            ScrollableAnimalGrid(
-              animals: _animals, // Pass directly without the ?? []
-              isLoading: _isLoading,
-              error: _error,
-              scrollController: _scrollController,
-              onAnimalSelected: _handleAnimalSelection,
-              onRetry: _loadAnimals,
+            Expanded(
+              child: ScrollableAnimalGrid(
+                animals: _animals, // Pass directly without the ?? []
+                isLoading: _isLoading,
+                error: _error,
+                scrollController: _scrollController,
+                onAnimalSelected: _handleAnimalSelection,
+                onRetry: _loadAnimals,
+              ),
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: CustomBottomAppBar(
+        onBackPressed: _handleBackNavigation,
+        onNextPressed: null,
+        showNextButton: false,
+        showBackButton: true,
       ),
     );
   }

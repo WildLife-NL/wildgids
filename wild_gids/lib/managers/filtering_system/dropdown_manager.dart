@@ -102,9 +102,9 @@ class DropdownManager implements DropdownInterface {
                       style: const TextStyle(color: Colors.white),
                       cursorColor: Colors.white,
                       decoration: const InputDecoration(
-                        hintText: 'Zoek een dier...',
+                        label: Text('Zoek een dier...'),
                         border: InputBorder.none,
-                        hintStyle: TextStyle(color: Colors.white70),
+                        labelStyle: TextStyle(color: Colors.white70),
                         contentPadding: EdgeInsets.symmetric(horizontal: 16),
                       ),
                       onChanged: (value) {

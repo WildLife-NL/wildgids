@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:wildrapport/models/enums/location_type.dart';
-import 'package:wildrapport/constants/app_colors.dart';
+import 'package:wildrapport/utils/responsive_utils.dart';
 
 class LocationDisplay extends StatefulWidget {
   final VoidCallback onLocationIconTap;
@@ -20,7 +19,7 @@ class LocationDisplay extends StatefulWidget {
 
   String get _displayText {
     if (isLoading) return '';
-    if (locationText == LocationType.unknown.displayText) {
+    if (locationText.isEmpty) {
       return 'Geen locatie geselecteerd';
     }
     if (position == null) return locationText;
@@ -53,35 +52,39 @@ class _LocationDisplayState extends State<LocationDisplay>
 
   @override
   Widget build(BuildContext context) {
+    final responsive = context.responsive;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      padding: EdgeInsets.symmetric(
+        horizontal: responsive.wp(3),
+        vertical: responsive.hp(1),
+      ),
       child: Container(
-        constraints: const BoxConstraints(minHeight: 70),
+        constraints: BoxConstraints(minHeight: responsive.hp(8)),
         decoration: BoxDecoration(
           color: Colors.grey[100],
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(responsive.sp(2)),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        padding: EdgeInsets.symmetric(
+          horizontal: responsive.wp(3),
+          vertical: responsive.hp(1),
+        ),
         child:
             widget.isLoading
                 ? Center(
                   child: SizedBox(
-                    height: 36,
-                    child: ColorFiltered(
-                      colorFilter: ColorFilter.mode(AppColors.darkGreen, BlendMode.srcIn),
-                      child: Lottie.asset(
-                        'assets/loaders/loading_paw.json',
-                        fit: BoxFit.contain,
-                        repeat: true,
-                        animate: true,
-                        frameRate: FrameRate(60),
-                        controller: _animationController,
-                        onLoaded: (composition) {
-                          _animationController.duration =
-                              composition.duration ~/ 2;
-                          _animationController.repeat();
-                        },
-                      ),
+                    height: responsive.sp(6),
+                    child: Lottie.asset(
+                      'assets/loaders/loading_paw.json',
+                      fit: BoxFit.contain,
+                      repeat: true,
+                      animate: true,
+                      frameRate: FrameRate(60),
+                      controller: _animationController,
+                      onLoaded: (composition) {
+                        _animationController.duration =
+                            composition.duration ~/ 2;
+                        _animationController.repeat();
+                      },
                     ),
                   ),
                 )
@@ -91,17 +94,17 @@ class _LocationDisplayState extends State<LocationDisplay>
                       onTap: widget.onLocationIconTap,
                       child: Image.asset(
                         'assets/location/location_icon.png',
-                        width: 24,
-                        height: 24,
+                        width: responsive.sp(4),
+                        height: responsive.sp(4),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: responsive.spacing(8)),
                     Expanded(
                       child: Text(
                         widget._displayText,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.black54,
-                          fontSize: 14,
+                          fontSize: responsive.fontSize(12),
                           height: 1.5,
                         ),
                         textAlign: TextAlign.left,

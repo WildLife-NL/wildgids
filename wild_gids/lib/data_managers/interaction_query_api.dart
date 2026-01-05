@@ -17,11 +17,13 @@ class InteractionQueryApi implements InteractionQueryApiInterface {
     DateTime? momentBefore,
   }) async {
     final params = <String, String>{
-      'area_latitude' : areaLatitude.toString(),
+      'area_latitude': areaLatitude.toString(),
       'area_longitude': areaLongitude.toString(),
-      'area_radius'   : areaRadiusMeters.toString(),
-      if (momentAfter  != null) 'moment_after' : momentAfter.toUtc().toIso8601String(),
-      if (momentBefore != null) 'moment_before': momentBefore.toUtc().toIso8601String(),
+      'area_radius': areaRadiusMeters.toString(),
+      if (momentAfter != null)
+        'moment_after': momentAfter.toUtc().toIso8601String(),
+      if (momentBefore != null)
+        'moment_before': momentBefore.toUtc().toIso8601String(),
     };
 
     const pathOnly = 'interactions/query/';
@@ -34,7 +36,8 @@ class InteractionQueryApi implements InteractionQueryApiInterface {
 
     // Logs while debugging
     debugPrint('[IQ] GET $pathWithQuery => ${res.statusCode}');
-    final preview = res.body.length > 300 ? res.body.substring(0, 300) : res.body;
+    final preview =
+        res.body.length > 300 ? res.body.substring(0, 300) : res.body;
     debugPrint('[IQ] body preview: ${preview.replaceAll('\n', ' ')}');
 
     if (res.statusCode == 200) {
@@ -44,9 +47,12 @@ class InteractionQueryApi implements InteractionQueryApiInterface {
       final decoded = json.decode(body);
 
       // API may return a raw array or wrap it
-      final List list = decoded is List
-          ? decoded
-          : (decoded is Map && decoded['items'] is List) ? decoded['items'] : const [];
+      final List list =
+          decoded is List
+              ? decoded
+              : (decoded is Map && decoded['items'] is List)
+              ? decoded['items']
+              : const [];
 
       return list
           .whereType<Map<String, dynamic>>()
@@ -55,7 +61,8 @@ class InteractionQueryApi implements InteractionQueryApiInterface {
     }
 
     if (res.statusCode == 204 || res.statusCode == 404) return const [];
-    if (res.statusCode == 401) throw Exception('Unauthorized (401) on /interactions/query/');
+    if (res.statusCode == 401)
+      throw Exception('Unauthorized (401) on /interactions/query/');
 
     throw Exception('Query failed (${res.statusCode}): ${res.body}');
   }

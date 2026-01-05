@@ -29,16 +29,17 @@ class CircleIconContainer extends StatelessWidget {
       decoration: BoxDecoration(
         color: backgroundColor ?? AppColors.offWhite,
         shape: BoxShape.circle,
-        boxShadow: showShadow
-            ? [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.25),
-                  spreadRadius: 0,
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ]
-            : null,
+        boxShadow:
+            showShadow
+                ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.25),
+                    spreadRadius: 0,
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+                : null,
       ),
       child: Center(child: _buildContent()),
     );

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
-import 'package:wildrapport/screens/shared/category_screen.dart';
+
 import 'package:wildrapport/screens/shared/overzicht_screen.dart';
 import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
 import 'package:wildrapport/widgets/shared_ui_widgets/bottom_app_bar.dart';
@@ -37,8 +37,11 @@ class _AnimalConditionScreenState extends State<AnimalConditionScreen> {
       );
 
       final navigationManager = context.read<NavigationStateInterface>();
-      // Navigate to the next screen
-      navigationManager.pushForward(context, const CategoryScreen());
+      // Navigate back to previous screen
+      navigationManager.pushReplacementBack(
+        context,
+        const AnimalConditionScreen(),
+      );
     } catch (e) {
       setState(() {
         isLoading = false;
@@ -64,8 +67,8 @@ class _AnimalConditionScreenState extends State<AnimalConditionScreen> {
             child: Column(
               children: [
                 CustomAppBar(
-                  leftIcon: Icons.arrow_back_ios,
-                  centerText: "Selecteer dier Conditie",
+                  leftIcon: null,
+                  centerText: "Selecteer de conditie van het dier",
                   rightIcon: Icons.menu,
                   onLeftIconPressed: () {
                     // Handle back navigation
@@ -83,7 +86,7 @@ class _AnimalConditionScreenState extends State<AnimalConditionScreen> {
                   ],
                   onStatusSelected:
                       (status) => _handleStatusSelection(context, status),
-                  title: 'Selecteer dier Conditie',
+                  title: 'Selecteer de conditie van het dier',
                 ),
               ],
             ),
@@ -102,8 +105,9 @@ class _AnimalConditionScreenState extends State<AnimalConditionScreen> {
             const OverzichtScreen(),
           ); // Adjust destination as needed
         },
-        onNextPressed: () {},
+        onNextPressed: null,
         showNextButton: false,
+        showBackButton: true,
       ),
     );
   }

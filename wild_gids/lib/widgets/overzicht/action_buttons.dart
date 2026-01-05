@@ -6,13 +6,15 @@ import 'package:wildrapport/constants/app_colors.dart';
 
 class ActionButtons extends StatelessWidget {
   final List<
-      ({
-        String text,
-        IconData? icon,
-        String? imagePath,
-        VoidCallback? onPressed,
-        Key? key // Add key field
-      })> buttons;
+    ({
+      String text,
+      IconData? icon,
+      String? imagePath,
+      VoidCallback? onPressed,
+      Key? key, // Add key field
+    })
+  >
+  buttons;
   final double? verticalPadding;
   final double? horizontalPadding;
   final double? buttonSpacing;
@@ -73,13 +75,17 @@ class ActionButtons extends StatelessWidget {
     VoidCallback? onPressed,
     Key? key, // Add key parameter
   }) {
-  // we don't use the buttonIndex for per-button variations here; all buttons share the same simple style
+    // we don't use the buttonIndex for per-button variations here; all buttons share the same simple style
     // We intentionally don't render icons for the overview buttons (clean look)
 
-  // Default styles for overview buttons: same as scaffold background (light mint), dark green border, black text
-  Color background = AppColors.lightMintGreen;
-  Color? border = AppColors.darkGreen;
-  TextStyle textStyle = TextStyle(color: Colors.black, fontSize: buttonFontSize ?? 16, fontWeight: FontWeight.w500);
+    // Default styles for overview buttons: same as scaffold background (light mint), dark green border, black text
+    Color background = AppColors.lightMintGreen;
+    Color? border = AppColors.darkGreen;
+    TextStyle textStyle = TextStyle(
+      color: Colors.black,
+      fontSize: buttonFontSize ?? 16,
+      fontWeight: FontWeight.w500,
+    );
 
     // Use a slim, icon-less hover button for the overview screen
     final button = SimpleHoverButton(

@@ -31,21 +31,29 @@ void main() {
     mockProfileApi = MockProfileApiInterface();
     mockPermissionInterface = MockPermissionInterface();
     mockAppStateProvider = MockAppStateProvider();
-    
+
     // Setup successful navigation by default
     OverzichtHelpers.setupSuccessfulNavigation(mockNavigationManager);
-    
+
     // Setup user data loading by default
     OverzichtHelpers.setupUserDataLoading(mockOverzichtManager, mockProfileApi);
-    
+
     // Setup permission checks to return true by default
-    when(mockPermissionInterface.isPermissionGranted(any))
-        .thenAnswer((_) async => true);
-    when(mockPermissionInterface.requestPermission(any, any, showRationale: anyNamed('showRationale')))
-        .thenAnswer((_) async => true);
-    
+    when(
+      mockPermissionInterface.isPermissionGranted(any),
+    ).thenAnswer((_) async => true);
+    when(
+      mockPermissionInterface.requestPermission(
+        any,
+        any,
+        showRationale: anyNamed('showRationale'),
+      ),
+    ).thenAnswer((_) async => true);
+
     // Setup AppStateProvider methods that might be called
-    when(mockAppStateProvider.getScreenState<dynamic>(any, any)).thenReturn(null);
+    when(
+      mockAppStateProvider.getScreenState<dynamic>(any, any),
+    ).thenReturn(null);
     when(mockAppStateProvider.setScreenState(any, any, any)).thenReturn(null);
   });
 
@@ -56,77 +64,90 @@ void main() {
         Provider<OverzichtInterface>.value(value: mockOverzichtManager),
         Provider<ProfileApiInterface>.value(value: mockProfileApi),
         Provider<PermissionInterface>.value(value: mockPermissionInterface),
-        ChangeNotifierProvider<AppStateProvider>.value(value: mockAppStateProvider),
+        ChangeNotifierProvider<AppStateProvider>.value(
+          value: mockAppStateProvider,
+        ),
       ],
-      child: const MaterialApp(
-        home: OverzichtScreen(),
-      ),
+      child: const MaterialApp(home: OverzichtScreen()),
     );
   }
 
   group('OverzichtScreen', () {
-    testWidgets('should render top container and action buttons', (WidgetTester tester) async {
+    testWidgets('should render top container and action buttons', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       await tester.pumpWidget(createOverzichtScreen());
-      
+
       // Act - wait for screen to settle
       await tester.pumpAndSettle();
-      
+
       // Assert
       expect(find.byType(TopContainer), findsOneWidget);
       expect(find.byType(ActionButtons), findsOneWidget);
     });
 
-    testWidgets('should display username from manager', (WidgetTester tester) async {
+    testWidgets('should display username from manager', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       await tester.pumpWidget(createOverzichtScreen());
-      
+
       // Act - wait for screen to settle
       await tester.pumpAndSettle();
-      
+
       // Assert
       expect(find.text('Test User'), findsOneWidget);
     });
 
-    testWidgets('should navigate to Rapporteren screen when button is pressed', (WidgetTester tester) async {
-      // Arrange
-      await tester.pumpWidget(createOverzichtScreen());
-      await tester.pumpAndSettle();
-      
-      // Act - Find and tap the Rapporteren button
-      await tester.tap(find.text('Rapporteren'));
-      await tester.pump();
-      
-      // Assert
-      verify(mockNavigationManager.pushReplacementForward(any, any)).called(1);
-    });
+    testWidgets(
+      'should navigate to Rapporteren screen when button is pressed',
+      (WidgetTester tester) async {
+        // Arrange
+        await tester.pumpWidget(createOverzichtScreen());
+        await tester.pumpAndSettle();
 
-    testWidgets('should show snackbar for unimplemented features', (WidgetTester tester) async {
+        // Act - Find and tap the Rapporteren button
+        await tester.tap(find.text('Rapporteren'));
+        await tester.pump();
+
+        // Assert
+        verify(
+          mockNavigationManager.pushReplacementForward(any, any),
+        ).called(1);
+      },
+    );
+
+    testWidgets('should show snackbar for unimplemented features', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       await tester.pumpWidget(createOverzichtScreen());
       await tester.pumpAndSettle();
-      
+
       // Act - Find and tap the RapportenKaart button
       await tester.tap(find.text('RapportenKaart'));
       await tester.pump();
-      
+
       // Assert - Check for snackbar message
       expect(find.text('Deze functie is nog niet toegevoegd'), findsOneWidget);
     });
-    
-    testWidgets('should handle navigation failure gracefully', (WidgetTester tester) async {
+
+    testWidgets('should handle navigation failure gracefully', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       OverzichtHelpers.setupFailedNavigation(mockNavigationManager);
       await tester.pumpWidget(createOverzichtScreen());
       await tester.pumpAndSettle();
-      
+
       // Act - Find and tap the Rapporteren button
       await tester.tap(find.text('Rapporteren'));
       await tester.pump();
-      
+
       // The error is thrown by the mock, but we need to wait for the UI to update
       await tester.pump(const Duration(milliseconds: 300));
-      
+
       // Assert - Check for error message
       // If your app uses SnackBar for error messages:
       expect(find.byType(SnackBar), findsOneWidget);
@@ -135,7 +156,3 @@ void main() {
     });
   });
 }
-
-
-
-

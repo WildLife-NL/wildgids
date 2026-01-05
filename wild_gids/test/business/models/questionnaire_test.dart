@@ -12,7 +12,7 @@ void main() {
     late Experiment testExperiment;
     late InteractionType testInteractionType;
     late List<Question> testQuestions;
-    
+
     setUp(() {
       testExperiment = Experiment(
         id: 'exp-123',
@@ -25,13 +25,13 @@ void main() {
           name: 'Test User',
         ),
       );
-      
+
       testInteractionType = InteractionType(
         id: 1,
         name: 'waarneming',
         description: 'Animal sighting',
       );
-      
+
       testQuestions = [
         Question(
           id: 'q-1',
@@ -60,7 +60,7 @@ void main() {
         ),
       ];
     });
-    
+
     test('should have correct properties', () {
       // Arrange
       final questionnaire = Questionnaire(
@@ -71,7 +71,7 @@ void main() {
         identifier: 'AS-2023',
         questions: testQuestions,
       );
-      
+
       // Assert
       expect(questionnaire.id, 'quest-123');
       expect(questionnaire.experiment, testExperiment);
@@ -81,7 +81,7 @@ void main() {
       expect(questionnaire.questions, testQuestions);
       expect(questionnaire.questions!.length, 2);
     });
-    
+
     test('should create from JSON correctly', () {
       // Arrange
       final json = {
@@ -132,10 +132,10 @@ void main() {
           },
         ],
       };
-      
+
       // Act
       final questionnaire = Questionnaire.fromJson(json);
-      
+
       // Assert
       expect(questionnaire.id, 'quest-123');
       expect(questionnaire.experiment.id, 'exp-123');
@@ -147,7 +147,7 @@ void main() {
       expect(questionnaire.questions![1].answers!.length, 2);
       expect(questionnaire.questions![1].answers![0].text, 'Eating');
     });
-    
+
     test('should convert to JSON correctly', () {
       // Arrange
       final questionnaire = Questionnaire(
@@ -158,19 +158,19 @@ void main() {
         identifier: 'AS-2023',
         questions: testQuestions,
       );
-      
+
       // Act
       final json = questionnaire.toJson();
-      
+
       // Debug
       if (kDebugMode) {
         print('JSON output: ${json['interactionType']}');
       }
-      
+
       // Assert
       expect(json['ID'], 'quest-123');
       expect(json['experiment']['ID'], 'exp-123');
-      
+
       // Fix the assertion to match the actual JSON structure
       if (json['interactionType'] is Map) {
         if (json['interactionType'].containsKey('id')) {
@@ -181,7 +181,7 @@ void main() {
       } else {
         fail('interactionType is not a Map: ${json['interactionType']}');
       }
-      
+
       expect(json['name'], 'Animal Sighting Questionnaire');
       expect(json['identifier'], 'AS-2023');
       expect(json['questions'].length, 2);
@@ -189,7 +189,7 @@ void main() {
       expect(json['questions'][1]['answers'].length, 2);
       expect(json['questions'][1]['answers'][0]['text'], 'Eating');
     });
-    
+
     test('should handle null questions in constructor', () {
       // Arrange & Act
       final questionnaire = Questionnaire(
@@ -200,12 +200,12 @@ void main() {
         identifier: 'AS-2023',
         questions: null,
       );
-      
+
       // Assert
       expect(questionnaire.id, 'quest-123');
       expect(questionnaire.questions, isNull);
     });
-    
+
     test('should handle null questions in fromJson', () {
       // Arrange
       final json = {
@@ -230,15 +230,15 @@ void main() {
         'identifier': 'AS-2023',
         'questions': null,
       };
-      
+
       // Act
       final questionnaire = Questionnaire.fromJson(json);
-      
+
       // Assert
       expect(questionnaire.id, 'quest-123');
       expect(questionnaire.questions, isNull);
     });
-    
+
     test('should handle null identifier in constructor', () {
       // Arrange & Act
       final questionnaire = Questionnaire(
@@ -249,12 +249,12 @@ void main() {
         identifier: null,
         questions: testQuestions,
       );
-      
+
       // Assert
       expect(questionnaire.id, 'quest-123');
       expect(questionnaire.identifier, isNull);
     });
-    
+
     test('should handle empty questions list', () {
       // Arrange
       final questionnaire = Questionnaire(
@@ -265,17 +265,13 @@ void main() {
         identifier: 'AS-2023',
         questions: [],
       );
-      
+
       // Act
       final json = questionnaire.toJson();
-      
+
       // Assert
       expect(questionnaire.questions, isEmpty);
       expect(json['questions'], isEmpty);
     });
   });
 }
-
-
-
-

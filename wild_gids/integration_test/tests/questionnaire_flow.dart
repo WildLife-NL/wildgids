@@ -27,7 +27,10 @@ Future<void> runQuestionnaireSteps(WidgetTester tester) async {
   await tester.pumpAndSettle(const Duration(seconds: 1));
 
   expect(find.byKey(const Key('questionnaire-description')), findsOneWidget);
-  await tester.enterText(find.byKey(const Key('questionnaire-description')), 'de interactie was erg positief!');
+  await tester.enterText(
+    find.byKey(const Key('questionnaire-description')),
+    'de interactie was erg positief!',
+  );
   await tester.pumpAndSettle(const Duration(seconds: 1));
 
   await tester.tap(find.text('Volgende'));

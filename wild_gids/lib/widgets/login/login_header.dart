@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:wildrapport/constants/app_colors.dart';
+import 'package:wildrapport/utils/responsive_utils.dart';
 
 class LoginHeader extends StatelessWidget {
   const LoginHeader({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final responsive = context.responsive;
 
     return Expanded(
       flex: 1,
@@ -14,8 +15,6 @@ class LoginHeader extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.darkGreen,
           borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(75),
-            topRight: Radius.circular(75),
             bottomLeft: Radius.circular(75),
           ),
           boxShadow: [
@@ -33,16 +32,16 @@ class LoginHeader extends StatelessWidget {
             Center(
               child: Image.asset(
                 'assets/LogoWildlifeNL.png',
-                width: screenWidth * 0.7,
+                width: responsive.wp(70),
                 fit: BoxFit.contain,
               ),
             ),
             Positioned(
-              bottom: -20,
-              right: -10,
+              bottom: responsive.sp(-2),
+              right: responsive.sp(-1),
               child: Image.asset(
                 'assets/gifs/login.gif',
-                width: screenWidth * 0.35,
+                width: responsive.wp(35),
                 fit: BoxFit.contain,
               ),
             ),

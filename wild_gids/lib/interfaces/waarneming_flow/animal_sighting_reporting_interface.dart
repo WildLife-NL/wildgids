@@ -11,7 +11,6 @@ import 'package:wildrapport/models/beta_models/location_model.dart';
 import 'package:wildrapport/models/animal_waarneming_models/view_count_model.dart';
 import 'package:wildrapport/models/animal_waarneming_models/observed_animal_entry.dart';
 
-
 abstract class AnimalSightingReportingInterface {
   /// Creates a new animalSighting model with empty fields
   AnimalSightingModel createanimalSighting();
@@ -86,7 +85,7 @@ abstract class AnimalSightingReportingInterface {
 
   /// e.g. we will expand count into repeated items with sex/lifeStage/condition.
   List<ObservedAnimalEntry> getObservedAnimals();
-  
+
   /// Sync the new observed-animal list into the legacy `animals`
   /// field on AnimalSightingModel, so the API transformer can send it.
   void syncObservedAnimalsToSighting();

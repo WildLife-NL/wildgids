@@ -55,7 +55,8 @@ class ReportOfCollision {
 
   factory ReportOfCollision.fromJson(Map<String, dynamic> json) {
     return ReportOfCollision(
-      involvedAnimals: (json['involvedAnimals'] as List?)
+      involvedAnimals:
+          (json['involvedAnimals'] as List?)
               ?.map((e) => InvolvedAnimal.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
@@ -118,7 +119,8 @@ class ReportOfSighting {
 
   factory ReportOfSighting.fromJson(Map<String, dynamic> json) {
     return ReportOfSighting(
-      involvedAnimals: (json['involvedAnimals'] as List?)
+      involvedAnimals:
+          (json['involvedAnimals'] as List?)
               ?.map((e) => InvolvedAnimal.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
@@ -335,24 +337,28 @@ class MyInteraction {
         json['moment'] ?? DateTime.now().toIso8601String(),
       ),
       place: MyInteractionLocation.fromJson(json['place'] ?? {}),
-      reportOfCollision: json['reportOfCollision'] != null
-          ? ReportOfCollision.fromJson(json['reportOfCollision'])
-          : null,
-      reportOfDamage: json['reportOfDamage'] != null
-          ? ReportOfDamage.fromJson(json['reportOfDamage'])
-          : null,
-      reportOfSighting: json['reportOfSighting'] != null
-          ? ReportOfSighting.fromJson(json['reportOfSighting'])
-          : null,
+      reportOfCollision:
+          json['reportOfCollision'] != null
+              ? ReportOfCollision.fromJson(json['reportOfCollision'])
+              : null,
+      reportOfDamage:
+          json['reportOfDamage'] != null
+              ? ReportOfDamage.fromJson(json['reportOfDamage'])
+              : null,
+      reportOfSighting:
+          json['reportOfSighting'] != null
+              ? ReportOfSighting.fromJson(json['reportOfSighting'])
+              : null,
       timestamp: DateTime.parse(
         json['timestamp'] ?? DateTime.now().toIso8601String(),
       ),
       species: InteractionSpecies.fromJson(json['species'] ?? {}),
       user: InteractionUser.fromJson(json['user'] ?? {}),
       type: InteractionTypeInfo.fromJson(json['type'] ?? {}),
-      questionnaire: json['questionnaire'] != null
-          ? QuestionnaireInfo.fromJson(json['questionnaire'])
-          : null,
+      questionnaire:
+          json['questionnaire'] != null
+              ? QuestionnaireInfo.fromJson(json['questionnaire'])
+              : null,
     );
   }
 

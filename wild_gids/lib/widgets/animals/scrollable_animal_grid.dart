@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'package:wildrapport/constants/app_colors.dart';
 import 'package:wildrapport/models/animal_waarneming_models/animal_model.dart';
 import 'package:wildrapport/widgets/animals/animal_grid.dart';
 
@@ -28,15 +27,12 @@ class ScrollableAnimalGrid extends StatelessWidget {
         child: SizedBox(
           width: 200,
           height: 200,
-          child: ColorFiltered(
-            colorFilter: ColorFilter.mode(AppColors.darkGreen, BlendMode.srcIn),
-            child: Lottie.asset(
-              'assets/loaders/loading_paw.json',
-              fit: BoxFit.contain,
-              repeat: true,
-              animate: true,
-              frameRate: FrameRate(60),
-            ),
+          child: Lottie.asset(
+            'assets/loaders/loading_paw.json',
+            fit: BoxFit.contain,
+            repeat: true,
+            animate: true,
+            frameRate: FrameRate(60),
           ),
         ),
       );
@@ -47,10 +43,13 @@ class ScrollableAnimalGrid extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Error: $error'),
+            Text('Fout: $error'),
             if (onRetry != null) ...[
               const SizedBox(height: 16),
-              ElevatedButton(onPressed: onRetry, child: const Text('Retry')),
+              ElevatedButton(
+                onPressed: onRetry,
+                child: const Text('Opnieuw proberen'),
+              ),
             ],
           ],
         ),

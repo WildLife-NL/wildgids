@@ -20,18 +20,20 @@ class AnimalCountingHelpers {
 
   static MockAnimalSightingReportingInterface getMockAnimalSightingManager() {
     final mock = MockAnimalSightingReportingInterface();
-    
+
     // Setup default behavior
-    when(mock.getCurrentanimalSighting()).thenReturn(
-      createMockAnimalSighting()
-    );
-    
+    when(
+      mock.getCurrentanimalSighting(),
+    ).thenReturn(createMockAnimalSighting());
+
     // Setup update methods
     when(mock.updateGender(any)).thenReturn(createMockAnimalSighting());
     when(mock.updateViewCount(any)).thenReturn(createMockAnimalSighting());
-    when(mock.finalizeAnimal(clearSelected: anyNamed('clearSelected'))).thenReturn(createMockAnimalSighting());
+    when(
+      mock.finalizeAnimal(clearSelected: anyNamed('clearSelected')),
+    ).thenReturn(createMockAnimalSighting());
     when(mock.createanimalSighting()).thenReturn(createMockAnimalSighting());
-    
+
     return mock;
   }
 
@@ -81,11 +83,14 @@ class AnimalCountingHelpers {
     );
   }
 
-  static void setupSuccessfulNavigation(MockNavigationStateInterface mockNavigationManager) {
-    when(mockNavigationManager.pushForward(any, any))
-        .thenAnswer((_) => Future.value(true));
-    when(mockNavigationManager.pushReplacementForward(any, any))
-        .thenAnswer((_) => Future.value(true));
+  static void setupSuccessfulNavigation(
+    MockNavigationStateInterface mockNavigationManager,
+  ) {
+    when(
+      mockNavigationManager.pushForward(any, any),
+    ).thenAnswer((_) => Future.value(true));
+    when(
+      mockNavigationManager.pushReplacementForward(any, any),
+    ).thenAnswer((_) => Future.value(true));
   }
 }
-

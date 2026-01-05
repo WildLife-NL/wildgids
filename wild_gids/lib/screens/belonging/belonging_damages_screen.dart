@@ -3,7 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
 import 'package:wildrapport/interfaces/reporting/belonging_damage_report_interface.dart';
 import 'package:wildrapport/providers/belonging_damage_report_provider.dart';
-import 'package:wildrapport/screens/shared/rapporteren.dart';
+import 'package:wildrapport/screens/belonging/belonging_animal_screen.dart';
+import 'package:wildrapport/screens/belonging/belonging_location_screen.dart';
 import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
 import 'package:wildrapport/widgets/shared_ui_widgets/bottom_app_bar.dart';
 import 'package:wildrapport/widgets/location/invisible_map_preloader.dart';
@@ -62,6 +63,31 @@ class _PossesionDamageScreenState extends State<BelongingDamagesScreen> {
     debugPrint("validateImpactedArea: ${formProvider.hasErrorImpactedArea}");
     debugPrint("validateImpactedArea: ${formProvider.impactedAreaType}");
 
+    // For crops damage: validate polygon area with minimum 3 points
+    if (formProvider.damageCategory == 'crops') {
+      if (formProvider.polygonArea == null || 
+          formProvider.polygonArea!.points.isEmpty ||
+          formProvider.polygonArea!.points.length < 3) {
+        isValid = false;
+        debugPrint("Polygon area invalid or has fewer than 3 points");
+        formProvider.setErrorState('impactedArea', true);
+        return isValid;
+      }
+      return isValid;
+    }
+
+    // For livestock damage: validate amount > 0
+    if (formProvider.damageCategory == 'livestock') {
+      if (formProvider.livestockAmount == null || formProvider.livestockAmount! <= 0) {
+        isValid = false;
+        debugPrint("Livestock amount invalid");
+        formProvider.setErrorState('impactedArea', true);
+        return isValid;
+      }
+      return isValid;
+    }
+
+    // Legacy validation for when damage category is not set
     if (formProvider.impactedArea == null) {
       isValid = false;
       debugPrint("impactedArea has error");
@@ -124,6 +150,13 @@ class _PossesionDamageScreenState extends State<BelongingDamagesScreen> {
         setState(() {
           currentIndex++;
         });
+      } else {
+        // Navigate to BelongingLocationScreen when form is complete
+        final navigationManager = context.read<NavigationStateInterface>();
+        navigationManager.pushReplacementForward(
+          context,
+          const BelongingLocationScreen(),
+        );
       }
     } else {
       // Handle invalid form state, display error messages, or highlight fields
@@ -136,23 +169,27 @@ class _PossesionDamageScreenState extends State<BelongingDamagesScreen> {
 
   void previousScreen() {
     if (currentIndex > 0) {
+      // When navigating back to the first page, clear all entered values so the form restarts
+      if (currentIndex == 1) {
+        final provider = Provider.of<BelongingDamageReportProvider>(
+          context,
+          listen: false,
+        );
+        provider.clearStateOfValues();
+        provider.resetErrors();
+      }
       setState(() {
         currentIndex--;
       });
-    }
-    else{
+    } else {
       final provider = Provider.of<BelongingDamageReportProvider>(
         context,
         listen: false,
-      );      
+      );
       final navigationManager = context.read<NavigationStateInterface>();
       provider.clearStateOfValues();
       provider.resetErrors();
-      navigationManager.pushReplacementForward(
-        context,
-        const Rapporteren(),
-      );
-
+      navigationManager.pushReplacementBack(context, const BelongingAnimalScreen(appBarTitle: 'Selecteer Dier'));
     }
   }
 
@@ -170,13 +207,10 @@ class _PossesionDamageScreenState extends State<BelongingDamagesScreen> {
         child: Column(
           children: [
             CustomAppBar(
-              leftIcon: Icons.arrow_back_ios,
+              leftIcon: null,
               centerText: "Schademelding",
               rightIcon: null,
               showUserIcon: true,
-              onLeftIconPressed: () {
-                previousScreen();
-              },
               iconColor: Colors.black,
               textColor: Colors.black,
               fontScale: 1.15,
@@ -188,7 +222,7 @@ class _PossesionDamageScreenState extends State<BelongingDamagesScreen> {
               onNextPressed: nextScreen,
               onBackPressed: previousScreen,
               showNextButton: currentIndex < 1,
-              showBackButton: false,
+              showBackButton: true,
             ),
             const InvisibleMapPreloader(),
           ],

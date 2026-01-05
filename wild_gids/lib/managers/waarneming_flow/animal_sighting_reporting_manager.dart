@@ -13,7 +13,8 @@ import 'package:wildrapport/models/enums/animal_age.dart';
 import 'package:wildrapport/models/beta_models/location_model.dart';
 import 'package:wildrapport/models/animal_waarneming_models/view_count_model.dart';
 
-class AnimalSightingReportingManager implements AnimalSightingReportingInterface {
+class AnimalSightingReportingManager
+    implements AnimalSightingReportingInterface {
   final List<VoidCallback> _listeners = [];
   AnimalSightingModel? _currentanimalSighting;
   final List<ObservedAnimalEntry> _observedAnimals = [];
@@ -63,7 +64,6 @@ class AnimalSightingReportingManager implements AnimalSightingReportingInterface
     String? animalImagePath,
     String? animalName,
     List<AnimalGenderViewCount>? genderViewCounts,
-    AnimalAge? age,
   }) {
     return AnimalModel(
       animalId: animalId ?? source.animalId,
@@ -71,7 +71,6 @@ class AnimalSightingReportingManager implements AnimalSightingReportingInterface
       animalName: animalName ?? source.animalName,
       genderViewCounts: genderViewCounts ?? source.genderViewCounts,
       condition: source.condition,
-      age: age ?? source.age,
     );
   }
 
@@ -90,25 +89,24 @@ class AnimalSightingReportingManager implements AnimalSightingReportingInterface
     }
   }
 
-@override
-AnimalSightingModel createanimalSighting() {
-  _currentanimalSighting = AnimalSightingModel(
-    animals: [],
-    animalSelected: null,
-    category: null,
-    description: null,
-    locations: [],
-    dateTime: null,
-    images: null,
-  );
+  @override
+  AnimalSightingModel createanimalSighting() {
+    _currentanimalSighting = AnimalSightingModel(
+      animals: [],
+      animalSelected: null,
+      category: null,
+      description: null,
+      locations: [],
+      dateTime: null,
+      images: null,
+    );
 
-  // NEW: reset the counted animal batches when starting a new sighting
-  _observedAnimals.clear();
+    // NEW: reset the counted animal batches when starting a new sighting
+    _observedAnimals.clear();
 
-  _notifyListeners();
-  return _currentanimalSighting!;
-}
-
+    _notifyListeners();
+    return _currentanimalSighting!;
+  }
 
   @override
   AnimalSightingModel updateSelectedAnimal(AnimalModel selectedAnimal) {
@@ -165,15 +163,8 @@ AnimalSightingModel createanimalSighting() {
   @override
   AnimalSightingModel updateAge(AnimalAge age) {
     _validateCurrentAnimal();
-    final currentAnimal = _currentanimalSighting!.animalSelected!;
-
-    final updatedAnimal = _createAnimalModel(
-      source: currentAnimal,
-      age: age,
-    );
-
     return _updateSighting(
-      animalSelected: updatedAnimal,
+      animalSelected: _currentanimalSighting!.animalSelected,
     );
   }
 
@@ -409,16 +400,16 @@ AnimalSightingModel createanimalSighting() {
     }
   }
 
-@override
-void addObservedAnimal(ObservedAnimalEntry entry) {
-  _observedAnimals.add(entry);
-  _notifyListeners(); // trigger rebuilds for listeners (tables etc.)
-}
+  @override
+  void addObservedAnimal(ObservedAnimalEntry entry) {
+    _observedAnimals.add(entry);
+    _notifyListeners(); // trigger rebuilds for listeners (tables etc.)
+  }
 
-@override
-List<ObservedAnimalEntry> getObservedAnimals() {
-  return List.unmodifiable(_observedAnimals);
-}
+  @override
+  List<ObservedAnimalEntry> getObservedAnimals() {
+    return List.unmodifiable(_observedAnimals);
+  }
 
   @override
   void syncObservedAnimalsToSighting() {
@@ -435,21 +426,14 @@ List<ObservedAnimalEntry> getObservedAnimals() {
     for (final entry in _observedAnimals) {
       // Create a ViewCountModel where only the matching age bucket is filled
       final vc = ViewCountModel(
-        pasGeborenAmount:
-            entry.age == AnimalAge.pasGeboren ? entry.count : 0,
-        onvolwassenAmount:
-            entry.age == AnimalAge.onvolwassen ? entry.count : 0,
-        volwassenAmount:
-            entry.age == AnimalAge.volwassen ? entry.count : 0,
-        unknownAmount:
-            entry.age == AnimalAge.onbekend ? entry.count : 0,
+        pasGeborenAmount: entry.age == AnimalAge.pasGeboren ? entry.count : 0,
+        onvolwassenAmount: entry.age == AnimalAge.onvolwassen ? entry.count : 0,
+        volwassenAmount: entry.age == AnimalAge.volwassen ? entry.count : 0,
+        unknownAmount: entry.age == AnimalAge.onbekend ? entry.count : 0,
       );
 
       // Attach gender + the age bucket counts
-      final gvc = AnimalGenderViewCount(
-        gender: entry.gender,
-        viewCount: vc,
-      );
+      final gvc = AnimalGenderViewCount(gender: entry.gender, viewCount: vc);
 
       // Build one AnimalModel for this batch
       final batchModel = AnimalModel(
@@ -458,7 +442,6 @@ List<ObservedAnimalEntry> getObservedAnimals() {
         animalName: baseAnimal.animalName,
         condition: entry.condition,
         genderViewCounts: [gvc],
-        age: entry.age,
       );
 
       converted.add(batchModel);
@@ -471,7 +454,4 @@ List<ObservedAnimalEntry> getObservedAnimals() {
 
     _notifyListeners();
   }
-
-
-
 }

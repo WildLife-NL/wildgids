@@ -40,7 +40,7 @@ class AnimalHelpers {
       Species(id: '2', category: 'Roofdieren', commonName: 'Vos'),
       Species(id: '3', category: 'Evenhoevigen', commonName: 'Ree'),
     ];
-    
+
     when(mockApi.getAllSpecies()).thenAnswer((_) async => species);
   }
 
@@ -55,7 +55,3 @@ class AnimalHelpers {
     );
   }
 }
-
-
-
-

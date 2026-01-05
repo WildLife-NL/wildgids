@@ -11,7 +11,7 @@ void main() {
         possesionName: 'Test Belonging',
         category: 'Test Category',
       );
-      
+
       final report = BelongingDamageReport(
         possesionDamageReportID: 'report-123',
         possesion: possesion,
@@ -22,14 +22,14 @@ void main() {
         description: 'Test damage',
         systemDateTime: DateTime(2023, 5, 15),
       );
-      
+
       // Assert
       expect(report.possesionDamageReportID, 'report-123');
       expect(report.possesion, possesion);
       expect(report.description, 'Test damage');
       expect(report.systemDateTime, DateTime(2023, 5, 15));
     });
-    
+
     test('should create from JSON correctly', () {
       // Arrange
       final json = {
@@ -46,10 +46,10 @@ void main() {
         'description': 'Test damage',
         'systemDateTime': '2023-05-15T00:00:00.000',
       };
-      
+
       // Act
       final report = BelongingDamageReport.fromJson(json);
-      
+
       // Assert
       expect(report.possesionDamageReportID, 'report-123');
       expect(report.possesion.possesionID, 'belonging-123');
@@ -58,7 +58,7 @@ void main() {
       expect(report.description, 'Test damage');
       expect(report.systemDateTime, DateTime(2023, 5, 15));
     });
-    
+
     test('should convert to JSON correctly', () {
       // Arrange
       final possesion = Possesion(
@@ -66,7 +66,7 @@ void main() {
         possesionName: 'Test Belonging',
         category: 'Test Category',
       );
-      
+
       final report = BelongingDamageReport(
         possesionDamageReportID: 'report-123',
         possesion: possesion,
@@ -77,10 +77,10 @@ void main() {
         description: 'Test damage',
         systemDateTime: DateTime(2023, 5, 15),
       );
-      
+
       // Act
       final json = report.toJson();
-      
+
       // Assert
       expect(json['possesionDamageReportID'], 'report-123');
       expect(json['belonging']['ID'], 'belonging-123');
@@ -97,7 +97,7 @@ void main() {
         possesionName: 'Test Belonging',
         category: 'Test Category',
       );
-      
+
       final report = BelongingDamageReport(
         possesionDamageReportID: 'report-123',
         possesion: possesion,
@@ -108,7 +108,7 @@ void main() {
         description: null,
         systemDateTime: DateTime(2023, 5, 15),
       );
-      
+
       // Assert
       expect(report.possesionDamageReportID, 'report-123');
       expect(report.possesion, possesion);
@@ -123,7 +123,7 @@ void main() {
         possesionName: 'Test Belonging',
         category: 'Test Category',
       );
-      
+
       final report = BelongingDamageReport(
         possesionDamageReportID: 'report-123',
         possesion: possesion,
@@ -134,7 +134,7 @@ void main() {
         description: '',
         systemDateTime: DateTime(2023, 5, 15),
       );
-      
+
       // Assert
       expect(report.possesionDamageReportID, 'report-123');
       expect(report.possesion, possesion);
@@ -158,10 +158,10 @@ void main() {
         'systemDateTime': '2023-05-15T00:00:00.000',
         // description is missing
       };
-      
+
       // Act
       final report = BelongingDamageReport.fromJson(json);
-      
+
       // Assert
       expect(report.possesionDamageReportID, 'report-123');
       expect(report.possesion.possesionID, 'belonging-123');
@@ -176,13 +176,13 @@ void main() {
         possesionName: 'Test Belonging',
         category: 'Test Category',
       );
-      
+
       final possesion2 = Possesion(
         possesionID: 'belonging-123',
         possesionName: 'Test Belonging',
         category: 'Test Category',
       );
-      
+
       final report1 = BelongingDamageReport(
         possesionDamageReportID: 'report-123',
         possesion: possesion1,
@@ -193,7 +193,7 @@ void main() {
         description: 'Test damage',
         systemDateTime: DateTime(2023, 5, 15),
       );
-      
+
       final report2 = BelongingDamageReport(
         possesionDamageReportID: 'report-123',
         possesion: possesion2,
@@ -204,7 +204,7 @@ void main() {
         description: 'Test damage',
         systemDateTime: DateTime(2023, 5, 15),
       );
-      
+
       // Assert
       expect(report1.possesionDamageReportID, report2.possesionDamageReportID);
       expect(report1.possesion.possesionID, report2.possesion.possesionID);
@@ -219,7 +219,7 @@ void main() {
         possesionName: 'Test Belonging',
         category: 'Test Category',
       );
-      
+
       final report = BelongingDamageReport(
         possesionDamageReportID: null,
         possesion: possesion,
@@ -230,7 +230,7 @@ void main() {
         description: 'Test damage',
         systemDateTime: DateTime(2023, 5, 15),
       );
-      
+
       // Assert
       expect(report.possesionDamageReportID, isNull);
       expect(report.possesion, possesion);

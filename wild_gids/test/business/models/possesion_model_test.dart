@@ -10,13 +10,13 @@ void main() {
         possesionName: 'Test Possesion',
         category: 'Test Category',
       );
-      
+
       // Assert
       expect(possesion.possesionID, 'possesion-123');
       expect(possesion.possesionName, 'Test Possesion');
       expect(possesion.category, 'Test Category');
     });
-    
+
     test('should create from JSON correctly', () {
       // Arrange
       final json = {
@@ -24,16 +24,16 @@ void main() {
         'name': 'Test Possesion',
         'category': 'Test Category',
       };
-      
+
       // Act
       final possesion = Possesion.fromJson(json);
-      
+
       // Assert
       expect(possesion.possesionID, 'possesion-123');
       expect(possesion.possesionName, 'Test Possesion');
       expect(possesion.category, 'Test Category');
     });
-    
+
     test('should convert to JSON correctly', () {
       // Arrange
       final possesion = Possesion(
@@ -41,10 +41,10 @@ void main() {
         possesionName: 'Test Possesion',
         category: 'Test Category',
       );
-      
+
       // Act
       final json = possesion.toJson();
-      
+
       // Assert
       expect(json['ID'], 'possesion-123');
       expect(json['name'], 'Test Possesion');
@@ -58,7 +58,7 @@ void main() {
         possesionName: 'Test Possesion',
         category: 'Test Category',
       );
-      
+
       // Assert
       expect(possesion.possesionID, isNull);
       expect(possesion.possesionName, 'Test Possesion');
@@ -72,7 +72,7 @@ void main() {
         possesionName: '',
         category: 'Test Category',
       );
-      
+
       // Assert
       expect(possesion.possesionID, 'possesion-123');
       expect(possesion.possesionName, isEmpty);
@@ -85,10 +85,10 @@ void main() {
         'ID': 'possesion-123',
         // name and category are missing
       };
-      
+
       // Act
       final possesion = Possesion.fromJson(json);
-      
+
       // Assert
       expect(possesion.possesionID, 'possesion-123');
       expect(possesion.possesionName, isNull);
@@ -102,10 +102,10 @@ void main() {
         possesionName: '',
         category: null,
       );
-      
+
       // Act
       final json = possesion.toJson();
-      
+
       // Assert
       expect(json['ID'], isNull);
       expect(json['name'], isNull);
@@ -119,13 +119,13 @@ void main() {
         possesionName: 'Test Possesion',
         category: 'Test Category',
       );
-      
+
       final possesion2 = Possesion(
         possesionID: 'possesion-123',
         possesionName: 'Test Possesion',
         category: 'Test Category',
       );
-      
+
       // Assert
       expect(possesion1.possesionID, possesion2.possesionID);
       expect(possesion1.possesionName, possesion2.possesionName);
@@ -139,13 +139,13 @@ void main() {
         possesionName: 'Test Possesion',
         category: 'Category A',
       );
-      
+
       final possesion2 = Possesion(
         possesionID: 'possesion-123',
         possesionName: 'Test Possesion',
         category: 'Category B',
       );
-      
+
       // Assert
       expect(possesion1.possesionID, possesion2.possesionID);
       expect(possesion1.possesionName, possesion2.possesionName);
@@ -154,10 +154,8 @@ void main() {
 
     test('should create with minimal required properties', () {
       // Arrange
-      final possesion = Possesion(
-        possesionName: 'Test Possesion',
-      );
-      
+      final possesion = Possesion(possesionName: 'Test Possesion');
+
       // Assert
       expect(possesion.possesionID, isNull);
       expect(possesion.possesionName, 'Test Possesion');
@@ -165,4 +163,3 @@ void main() {
     });
   });
 }
-

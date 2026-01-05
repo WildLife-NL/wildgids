@@ -32,15 +32,20 @@ class _AnimalCountingScreenState extends State<AnimalCountingScreen> {
         context.read<AnimalSightingReportingInterface>();
     final currentSighting = animalSightingManager.getCurrentanimalSighting();
 
-    // If there are animals in the list, set _hasAddedItems to true
-    if (currentSighting?.animalSelected != null &&
+    // Consider entries already added to the sighting OR counts on the currently selected animal
+    final hasFinalizedAnimals =
+        (currentSighting?.animals?.isNotEmpty ?? false);
+
+    final hasCountsOnSelected = currentSighting?.animalSelected != null &&
         currentSighting!.animalSelected!.genderViewCounts.any(
           (gvc) =>
               gvc.viewCount.pasGeborenAmount > 0 ||
               gvc.viewCount.onvolwassenAmount > 0 ||
               gvc.viewCount.volwassenAmount > 0 ||
               gvc.viewCount.unknownAmount > 0,
-        )) {
+        );
+
+    if (hasFinalizedAnimals || hasCountsOnSelected) {
       setState(() {
         _hasAddedItems = true;
       });
@@ -50,7 +55,10 @@ class _AnimalCountingScreenState extends State<AnimalCountingScreen> {
   void _handleBackNavigation(BuildContext context) {
     // Go back to animals screen, keeping all added animals
     final navigationManager = context.read<NavigationStateInterface>();
-    navigationManager.pushReplacementBack(context, const AnimalsScreen(appBarTitle: 'Selecteer Dier'));
+    navigationManager.pushReplacementBack(
+      context,
+      const AnimalsScreen(appBarTitle: 'Selecteer Dier'),
+    );
   }
 
   @override
@@ -61,7 +69,7 @@ class _AnimalCountingScreenState extends State<AnimalCountingScreen> {
         child: Column(
           children: [
             CustomAppBar(
-              leftIcon: Icons.arrow_back_ios,
+              leftIcon: null,
               centerText: 'Telling toevoegen',
               // Show the profile/user icon on the right (like other screens)
               rightIcon: null,
@@ -96,12 +104,13 @@ class _AnimalCountingScreenState extends State<AnimalCountingScreen> {
           final navigationManager = context.read<NavigationStateInterface>();
           navigationManager.pushReplacementForward(
             context,
+            // Ensure remarks start empty when entering overview
             AnimalListOverviewScreen(),
           );
         },
+        // Allow going back to species selection at all times
         showNextButton: _hasAddedItems,
-        // Hide the bottom "Terug" button — top app bar already provides back navigation
-        showBackButton: false,
+        showBackButton: true,
       ),
     );
   }

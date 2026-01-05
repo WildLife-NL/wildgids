@@ -25,13 +25,16 @@ class ResponseProvider extends ChangeNotifier {
     responses.remove(value);
   }
 
-  void setUpdatingResponse(bool value){
+  void setUpdatingResponse(bool value) {
     debugPrint("$yellowLog [ResponseProvider]: Updating Response");
     updatingResponse = value;
     notifyListeners();
   }
+
   void updateResponse(Response? value) {
-    final index = responses.indexWhere((r) => r.questionID == value?.questionID);
+    final index = responses.indexWhere(
+      (r) => r.questionID == value?.questionID,
+    );
     if (index != -1) {
       responses[index] = value!;
       notifyListeners();
@@ -43,7 +46,8 @@ class ResponseProvider extends ChangeNotifier {
     answerID = value;
     notifyListeners();
   }
-  void clearAnswerID(){
+
+  void clearAnswerID() {
     debugPrint("$yellowLog [ResponseProvider]: clearing the answerID");
     answerID = null;
     notifyListeners();
@@ -87,7 +91,8 @@ class ResponseProvider extends ChangeNotifier {
     updatingResponse = false;
     notifyListeners();
   }
-  void clearResponsesList(){
+
+  void clearResponsesList() {
     responses = [];
   }
 }

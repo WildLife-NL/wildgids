@@ -27,6 +27,8 @@ dependencies:
   intl: ^0.20.2
   connectivity_plus: ^6.1.4
   collection: ^1.17.1
+  package_info_plus: ^8.0.3
+  flutter_local_notifications: ^17.2.1
 
 dev_dependencies:
   flutter_test:
@@ -84,6 +86,7 @@ flutter:
     - assets/icons/agriculture.png
     - assets/icons/deer.png
     - assets/icons/animals/
+    - assets/animals/
     - assets/icons/category/evenhoevigen.png
     - assets/icons/category/knaagdieren.png
     - assets/icons/category/roofdieren.png
@@ -102,10 +105,6 @@ flutter:
     - assets/icons/possesion/gewassen/tulip_2.svg
     - assets/icons/possesion/gewassen/wheat.svg
     - assets/location/location_icon.png
-    # Ensure these folders are bundled (explicit to avoid manifest misses on web)
-    - assets/black_icons_animal/
-    - assets/animal_drawings_no_bg/
-    - assets/real_animal_pics_no_bg/
     - assets/
     - .env
 

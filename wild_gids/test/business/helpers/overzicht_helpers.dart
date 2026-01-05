@@ -23,7 +23,7 @@ class OverzichtHelpers {
 
   static MockOverzichtInterface getMockOverzichtManager() {
     final mockOverzichtManager = MockOverzichtInterface();
-    
+
     // Setup default behavior
     when(mockOverzichtManager.userName).thenReturn('Test User');
     when(mockOverzichtManager.topContainerHeight).thenReturn(285.0);
@@ -31,7 +31,7 @@ class OverzichtHelpers {
     when(mockOverzichtManager.usernameFontSize).thenReturn(24.0);
     when(mockOverzichtManager.logoWidth).thenReturn(180.0);
     when(mockOverzichtManager.logoHeight).thenReturn(180.0);
-    
+
     return mockOverzichtManager;
   }
 
@@ -41,15 +41,21 @@ class OverzichtHelpers {
   }
 
   // Setup successful navigation
-  static void setupSuccessfulNavigation(MockNavigationStateInterface mockNavigationManager) {
-    when(mockNavigationManager.pushReplacementForward(any, any))
-        .thenAnswer((_) => Future.value());
+  static void setupSuccessfulNavigation(
+    MockNavigationStateInterface mockNavigationManager,
+  ) {
+    when(
+      mockNavigationManager.pushReplacementForward(any, any),
+    ).thenAnswer((_) => Future.value());
   }
 
   // Setup failed navigation
-  static void setupFailedNavigation(MockNavigationStateInterface mockNavigationManager) {
-    when(mockNavigationManager.pushReplacementForward(any, any))
-        .thenThrow(Exception('Navigation failed'));
+  static void setupFailedNavigation(
+    MockNavigationStateInterface mockNavigationManager,
+  ) {
+    when(
+      mockNavigationManager.pushReplacementForward(any, any),
+    ).thenThrow(Exception('Navigation failed'));
   }
 
   // Setup user data loading
@@ -61,15 +67,17 @@ class OverzichtHelpers {
     String userEmail = 'test@example.com',
   }) {
     when(mockOverzichtManager.userName).thenReturn(userName);
-    when(mockProfileApi.setProfileDataInDeviceStorage())
-        .thenAnswer((_) => Future.value());
+    when(
+      mockProfileApi.setProfileDataInDeviceStorage(),
+    ).thenAnswer((_) => Future.value());
   }
 
   // Setup failed user data loading
-  static void setupFailedUserDataLoading(MockProfileApiInterface mockProfileApi) {
-    when(mockProfileApi.setProfileDataInDeviceStorage())
-        .thenThrow(Exception("Failed to load user data"));
+  static void setupFailedUserDataLoading(
+    MockProfileApiInterface mockProfileApi,
+  ) {
+    when(
+      mockProfileApi.setProfileDataInDeviceStorage(),
+    ).thenThrow(Exception("Failed to load user data"));
   }
 }
-
-

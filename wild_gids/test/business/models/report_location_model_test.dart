@@ -12,7 +12,7 @@ void main() {
         streetName: 'Main Street',
         houseNumber: '123',
       );
-      
+
       // Assert
       expect(location.latitude, 52.3676);
       expect(location.longtitude, 4.9041);
@@ -20,7 +20,7 @@ void main() {
       expect(location.streetName, 'Main Street');
       expect(location.houseNumber, '123');
     });
-    
+
     test('should create from JSON correctly', () {
       // Arrange
       final json = {
@@ -30,10 +30,10 @@ void main() {
         'streetName': 'Main Street',
         'houseNumber': '123',
       };
-      
+
       // Act
       final location = ReportLocation.fromJson(json);
-      
+
       // Assert
       expect(location.latitude, 52.3676);
       expect(location.longtitude, 4.9041);
@@ -41,7 +41,7 @@ void main() {
       expect(location.streetName, 'Main Street');
       expect(location.houseNumber, '123');
     });
-    
+
     test('should convert to JSON correctly', () {
       // Arrange
       final location = ReportLocation(
@@ -51,10 +51,10 @@ void main() {
         streetName: 'Main Street',
         houseNumber: '123',
       );
-      
+
       // Act
       final json = location.toJson();
-      
+
       // Assert
       expect(json['latitude'], 52.3676);
       expect(json['longtitude'], 4.9041);
@@ -72,7 +72,7 @@ void main() {
         streetName: null,
         houseNumber: null,
       );
-      
+
       // Assert
       expect(location.latitude, isNull);
       expect(location.longtitude, isNull);
@@ -90,7 +90,7 @@ void main() {
         streetName: null,
         houseNumber: null,
       );
-      
+
       // Assert
       expect(location.latitude, 52.3676);
       expect(location.longtitude, 4.9041);
@@ -106,10 +106,10 @@ void main() {
         'longtitude': 4.9041,
         // cityName, streetName, and houseNumber are missing
       };
-      
+
       // Act
       final location = ReportLocation.fromJson(json);
-      
+
       // Assert
       expect(location.latitude, 52.3676);
       expect(location.longtitude, 4.9041);
@@ -127,7 +127,7 @@ void main() {
         streetName: '',
         houseNumber: '',
       );
-      
+
       // Assert
       expect(location.latitude, 52.3676);
       expect(location.longtitude, 4.9041);
@@ -145,10 +145,10 @@ void main() {
         streetName: null,
         houseNumber: null,
       );
-      
+
       // Act
       final json = location.toJson();
-      
+
       // Assert
       expect(json['latitude'], isNull);
       expect(json['longtitude'], isNull);
@@ -166,7 +166,7 @@ void main() {
         streetName: 'Main Street',
         houseNumber: '123',
       );
-      
+
       final location2 = ReportLocation(
         latitude: 52.3676,
         longtitude: 4.9041,
@@ -174,7 +174,7 @@ void main() {
         streetName: 'Main Street',
         houseNumber: '123',
       );
-      
+
       // Assert
       expect(location1.latitude, location2.latitude);
       expect(location1.longtitude, location2.longtitude);
@@ -184,4 +184,3 @@ void main() {
     });
   });
 }
-

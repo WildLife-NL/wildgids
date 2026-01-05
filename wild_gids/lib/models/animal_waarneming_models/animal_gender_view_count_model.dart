@@ -18,9 +18,10 @@ class AnimalGenderViewCount {
         (e) => e.toString() == json['gender'],
         orElse: () => AnimalGender.onbekend,
       ),
-      viewCount: json['viewCount'] != null 
-          ? ViewCountModel.fromJson(json['viewCount']) 
-          : ViewCountModel(),
+      viewCount:
+          json['viewCount'] != null
+              ? ViewCountModel.fromJson(json['viewCount'])
+              : ViewCountModel(),
     );
   }
 }

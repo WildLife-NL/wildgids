@@ -18,6 +18,7 @@ class InteractionType {
   }
 
   Map<String, dynamic> toJson() {
-    return {'id': id, 'name': name, 'description': description};
+    // Use API-consistent keys so saved drafts can round-trip via fromJson
+    return {'ID': id, 'name': name, 'description': description};
   }
 }

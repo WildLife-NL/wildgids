@@ -5,11 +5,9 @@ import 'package:wildrapport/constants/app_colors.dart';
 import 'package:wildrapport/data_managers/api_client.dart';
 import 'package:wildrapport/data_managers/my_interaction_api.dart';
 import 'package:wildrapport/models/api_models/my_interaction.dart';
-import 'package:wildrapport/models/api_models/species.dart';
 import 'package:wildrapport/utils/location_label.dart';
 import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
 import 'package:wildrapport/screens/logbook/logbook_screen.dart';
-import 'package:wildrapport/screens/species/species_list_screen.dart';
 
 class WaarnemingHistoryScreen extends StatelessWidget {
   const WaarnemingHistoryScreen({super.key});
@@ -61,7 +59,8 @@ class WaarnemingHistoryScreen extends StatelessWidget {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: const [
-                            Icon(Icons.error_outline, color: Colors.red, size: 48),
+                            Icon(Icons.error_outline,
+                                color: Colors.red, size: 48),
                             SizedBox(height: 16),
                             Text(
                               'Fout bij laden',
@@ -89,7 +88,8 @@ class WaarnemingHistoryScreen extends StatelessWidget {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: const [
-                            Icon(Icons.history, color: AppColors.darkGreen, size: 64),
+                            Icon(Icons.history,
+                                color: AppColors.darkGreen, size: 64),
                             SizedBox(height: 16),
                             Text(
                               'Nog geen waarnemingen',
@@ -130,9 +130,10 @@ class _HistoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final speciesName = interaction.species.commonName.isNotEmpty
-        ? interaction.species.commonName
-        : interaction.species.name;
+    final species =
+        interaction.species.commonName.isNotEmpty
+            ? interaction.species.commonName
+            : interaction.species.name;
 
     return InkWell(
       onTap: () {
@@ -163,7 +164,8 @@ class _HistoryCard extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: AppColors.darkGreen,
                     borderRadius: BorderRadius.circular(20),
@@ -178,14 +180,15 @@ class _HistoryCard extends StatelessWidget {
                 ),
                 const Spacer(),
                 Text(
-                  DateFormat('dd MMM yyyy, HH:mm').format(interaction.moment),
+                  DateFormat('dd MMM yyyy, HH:mm')
+                      .format(interaction.moment),
                   style: const TextStyle(color: Colors.grey),
                 ),
               ],
             ),
             const SizedBox(height: 12),
             Text(
-              speciesName,
+              species,
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -196,7 +199,10 @@ class _HistoryCard extends StatelessWidget {
             Divider(color: Colors.grey.shade300, height: 1),
             const SizedBox(height: 12),
             if (interaction.description.isNotEmpty) ...[
-              const Text('Beschrijving', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text(
+                'Beschrijving',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 4),
               Text(interaction.description),
               const SizedBox(height: 12),
@@ -249,13 +255,15 @@ class _InteractionDetailSheet extends StatelessWidget {
   final MyInteraction interaction;
   const _InteractionDetailSheet({required this.interaction});
 
-  String _formatDateTime(DateTime dt) => DateFormat('dd MMM yyyy, HH:mm').format(dt);
+  String _formatDateTime(DateTime dt) =>
+      DateFormat('dd MMM yyyy, HH:mm').format(dt);
 
   @override
   Widget build(BuildContext context) {
-    final speciesName = interaction.species.commonName.isNotEmpty
-        ? interaction.species.commonName
-        : interaction.species.name;
+    final species =
+        interaction.species.commonName.isNotEmpty
+            ? interaction.species.commonName
+            : interaction.species.name;
 
     return Scaffold(
       backgroundColor: AppColors.lightMintGreen,
@@ -273,12 +281,12 @@ class _InteractionDetailSheet extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
+            constraints: const BoxConstraints(maxWidth: 400),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
-                  speciesName,
+                  species,
                   style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
@@ -286,12 +294,12 @@ class _InteractionDetailSheet extends StatelessWidget {
                 Text(_formatDateTime(interaction.moment), textAlign: TextAlign.center),
                 const SizedBox(height: 12),
                 if (interaction.description.isNotEmpty) ...[
-                  const Text('Beschrijving:', style: TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                  Text('Beschrijving:', style: const TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.center),
                   const SizedBox(height: 4),
                   Text(interaction.description, textAlign: TextAlign.center),
                   const SizedBox(height: 12),
                 ],
-                const Text('Locatie:', style: TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                Text('Locatie:', style: const TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.center),
                 const SizedBox(height: 4),
                 Text(
                   formatFriendlyLocation(
@@ -301,8 +309,9 @@ class _InteractionDetailSheet extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
+                const SizedBox(height: 12),
                 if (interaction.species.category.isNotEmpty) ...[
-                  const Text('Dierencategorie:', style: TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                  Text('Dierencategorie:', style: const TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.center),
                   const SizedBox(height: 4),
                   Text(interaction.species.category, textAlign: TextAlign.center),
                   const SizedBox(height: 12),
@@ -345,31 +354,6 @@ class _InteractionDetailSheet extends StatelessWidget {
                     textAlign: TextAlign.center,
                   ),
                 ],
-                const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  onPressed: () async {
-                    // Map InteractionSpecies -> Species to show wiki detail screen
-                    final s = Species(
-                      id: interaction.species.id,
-                      category: interaction.species.category,
-                      commonName: interaction.species.commonName,
-                      advice: interaction.species.advice,
-                      behaviour: interaction.species.behaviour,
-                      description: interaction.species.description,
-                      latinName: interaction.species.name,
-                      roleInNature: interaction.species.roleInNature,
-                    );
-                    await Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => SpeciesDetailScreen(species: s)),
-                    );
-                  },
-                  icon: const Icon(Icons.menu_book),
-                  label: const Text('Open soorteninfo'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.darkGreen,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
               ],
             ),
           ),

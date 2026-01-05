@@ -21,9 +21,11 @@ class ObservedAnimalEntry {
   /// If `count` > 1, it will duplicate this map `count` times when building the payload.
   Map<String, dynamic> toBackendMapSingle() {
     return {
-      'sex': gender.apiValue,          // "male" | "female" | "other"
-      'lifeStage': age.apiValue,       // "infant" | "adolescent" | "adult" | "unknown"
-      'condition': condition.apiValue, // "healthy" | "impaired" | "dead" | "other"
+      'sex': gender.apiValue, // "male" | "female" | "other"
+      'lifeStage':
+          age.apiValue, // "infant" | "adolescent" | "adult" | "unknown"
+      'condition':
+          condition.apiValue, // "healthy" | "impaired" | "dead" | "other"
     };
   }
 }

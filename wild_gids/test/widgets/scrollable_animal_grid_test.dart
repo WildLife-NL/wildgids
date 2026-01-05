@@ -21,115 +21,135 @@ void main() {
   ];
 
   group('ScrollableAnimalGrid Widget Tests', () {
-    testWidgets('should display loading indicator when isLoading is true', (WidgetTester tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Column(
-            children: [
-              ScrollableAnimalGrid(
-                animals: null,
-                isLoading: true,
-                error: null,
-                scrollController: ScrollController(),
-                onAnimalSelected: (_) {},
-              ),
-            ],
+    testWidgets('should display loading indicator when isLoading is true', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Column(
+              children: [
+                ScrollableAnimalGrid(
+                  animals: null,
+                  isLoading: true,
+                  error: null,
+                  scrollController: ScrollController(),
+                  onAnimalSelected: (_) {},
+                ),
+              ],
+            ),
           ),
         ),
-      ));
-      
+      );
+
       // Look for Lottie animation
       expect(find.byType(Lottie), findsOneWidget);
     });
 
-    testWidgets('should display error message when error is provided', (WidgetTester tester) async {
+    testWidgets('should display error message when error is provided', (
+      WidgetTester tester,
+    ) async {
       const errorMessage = 'Test error';
-      
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Column(
-            children: [
-              ScrollableAnimalGrid(
-                animals: null,
-                isLoading: false,
-                error: errorMessage,
-                scrollController: ScrollController(),
-                onAnimalSelected: (_) {},
-              ),
-            ],
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Column(
+              children: [
+                ScrollableAnimalGrid(
+                  animals: null,
+                  isLoading: false,
+                  error: errorMessage,
+                  scrollController: ScrollController(),
+                  onAnimalSelected: (_) {},
+                ),
+              ],
+            ),
           ),
         ),
-      ));
-      
+      );
+
       expect(find.text('Error: $errorMessage'), findsOneWidget);
     });
 
-    testWidgets('should display retry button when onRetry is provided with error', (WidgetTester tester) async {
-      bool retryPressed = false;
-      
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Column(
-            children: [
-              ScrollableAnimalGrid(
-                animals: null,
-                isLoading: false,
-                error: 'Error',
-                scrollController: ScrollController(),
-                onRetry: () => retryPressed = true,
-                onAnimalSelected: (_) {},
-              ),
-            ],
-          ),
-        ),
-      ));
-      
-      await tester.tap(find.byType(ElevatedButton));
-      await tester.pump();
-      
-      expect(retryPressed, true);
-    });
+    testWidgets(
+      'should display retry button when onRetry is provided with error',
+      (WidgetTester tester) async {
+        bool retryPressed = false;
 
-    testWidgets('should display animals when provided', (WidgetTester tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Column(
-            children: [
-              ScrollableAnimalGrid(
-                animals: testAnimals,
-                isLoading: false,
-                error: null,
-                scrollController: ScrollController(),
-                onAnimalSelected: (_) {},
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Column(
+                children: [
+                  ScrollableAnimalGrid(
+                    animals: null,
+                    isLoading: false,
+                    error: 'Error',
+                    scrollController: ScrollController(),
+                    onRetry: () => retryPressed = true,
+                    onAnimalSelected: (_) {},
+                  ),
+                ],
               ),
-            ],
+            ),
+          ),
+        );
+
+        await tester.tap(find.byType(ElevatedButton));
+        await tester.pump();
+
+        expect(retryPressed, true);
+      },
+    );
+
+    testWidgets('should display animals when provided', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Column(
+              children: [
+                ScrollableAnimalGrid(
+                  animals: testAnimals,
+                  isLoading: false,
+                  error: null,
+                  scrollController: ScrollController(),
+                  onAnimalSelected: (_) {},
+                ),
+              ],
+            ),
           ),
         ),
-      ));
-      
+      );
+
       expect(find.text('Wolf'), findsOneWidget);
       expect(find.text('Fox'), findsOneWidget);
     });
 
-    testWidgets('should display empty message when animals list is empty', (WidgetTester tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Column(
-            children: [
-              ScrollableAnimalGrid(
-                animals: [],
-                isLoading: false,
-                error: null,
-                scrollController: ScrollController(),
-                onAnimalSelected: (_) {},
-              ),
-            ],
+    testWidgets('should display empty message when animals list is empty', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Column(
+              children: [
+                ScrollableAnimalGrid(
+                  animals: [],
+                  isLoading: false,
+                  error: null,
+                  scrollController: ScrollController(),
+                  onAnimalSelected: (_) {},
+                ),
+              ],
+            ),
           ),
         ),
-      ));
-      
+      );
+
       expect(find.text('Geen dieren gevonden'), findsOneWidget);
     });
   });
 }
-

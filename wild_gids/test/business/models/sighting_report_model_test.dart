@@ -7,17 +7,14 @@ void main() {
   group('SightingReport Model', () {
     test('should have correct properties', () {
       // Arrange
-      final location = ReportLocation(
-        latitude: 52.3676,
-        longtitude: 4.9041,
-      );
-      
+      final location = ReportLocation(latitude: 52.3676, longtitude: 4.9041);
+
       final sightedAnimal = SightedAnimal(
         condition: 'alive',
         lifeStage: 'adult',
         sex: 'male',
       );
-      
+
       final report = SightingReport(
         animals: [sightedAnimal],
         sightingReportID: 'report-123',
@@ -28,7 +25,7 @@ void main() {
         userSelectedDateTime: DateTime(2023, 5, 15),
         systemDateTime: DateTime.now(),
       );
-      
+
       // Assert
       expect(report.sightingReportID, 'report-123');
       expect(report.suspectedSpeciesID, 'Wolf');
@@ -38,7 +35,7 @@ void main() {
       expect(report.userSelectedDateTime, DateTime(2023, 5, 15));
       expect(report.animals.first, sightedAnimal);
     });
-    
+
     test('should create from JSON correctly', () {
       // Arrange
       final json = {
@@ -61,16 +58,14 @@ void main() {
         },
         'moment': '2023-05-15T00:00:00.000',
         'timestamp': '2023-05-15T00:00:00.000',
-        'involvedAnimals': [{
-          'condition': 'alive',
-          'lifeStage': 'adult',
-          'sex': 'male',
-        }],
+        'involvedAnimals': [
+          {'condition': 'alive', 'lifeStage': 'adult', 'sex': 'male'},
+        ],
       };
-      
+
       // Act
       final report = SightingReport.fromJson(json);
-      
+
       // Assert
       expect(report.sightingReportID, 'report-123');
       expect(report.suspectedSpeciesID, 'Wolf');
@@ -82,20 +77,17 @@ void main() {
       expect(report.animals.first.lifeStage, 'adult');
       expect(report.animals.first.sex, 'male');
     });
-    
+
     test('should convert to JSON correctly', () {
       // Arrange
-      final location = ReportLocation(
-        latitude: 52.3676,
-        longtitude: 4.9041,
-      );
-      
+      final location = ReportLocation(latitude: 52.3676, longtitude: 4.9041);
+
       final sightedAnimal = SightedAnimal(
         condition: 'alive',
         lifeStage: 'adult',
         sex: 'male',
       );
-      
+
       final report = SightingReport(
         animals: [sightedAnimal],
         sightingReportID: 'report-123',
@@ -106,10 +98,10 @@ void main() {
         userSelectedDateTime: DateTime(2023, 5, 15),
         systemDateTime: DateTime(2023, 5, 15),
       );
-      
+
       // Act
       final json = report.toJson();
-      
+
       // Assert
       expect(json['sightingReportID'], 'report-123');
       expect(json['suspectedSpeciesID'], 'Wolf');
@@ -124,11 +116,8 @@ void main() {
 
     test('should handle null values correctly', () {
       // Arrange
-      final location = ReportLocation(
-        latitude: 52.3676,
-        longtitude: 4.9041,
-      );
-      
+      final location = ReportLocation(latitude: 52.3676, longtitude: 4.9041);
+
       final report = SightingReport(
         animals: [],
         sightingReportID: 'report-123',
@@ -139,7 +128,7 @@ void main() {
         userSelectedDateTime: null,
         systemDateTime: DateTime.now(),
       );
-      
+
       // Assert
       expect(report.sightingReportID, 'report-123');
       expect(report.suspectedSpeciesID, 'Wolf');
@@ -151,11 +140,8 @@ void main() {
 
     test('should handle empty values correctly', () {
       // Arrange
-      final location = ReportLocation(
-        latitude: 52.3676,
-        longtitude: 4.9041,
-      );
-      
+      final location = ReportLocation(latitude: 52.3676, longtitude: 4.9041);
+
       final report = SightingReport(
         animals: [],
         sightingReportID: 'report-123',
@@ -166,7 +152,7 @@ void main() {
         userSelectedDateTime: DateTime(2023, 5, 15),
         systemDateTime: DateTime.now(),
       );
-      
+
       // Assert
       expect(report.sightingReportID, 'report-123');
       expect(report.suspectedSpeciesID, 'Wolf');
@@ -181,18 +167,15 @@ void main() {
       final json = {
         'sightingReportID': 'report-123',
         'suspectedSpeciesID': 'Wolf',
-        'location': {
-          'latitude': 52.3676,
-          'longtitude': 4.9041,
-        },
+        'location': {'latitude': 52.3676, 'longtitude': 4.9041},
         'timestamp': '2023-05-15T00:00:00.000',
         'involvedAnimals': [],
         // description, moment, place, and some animals fields are missing
       };
-      
+
       // Act
       final report = SightingReport.fromJson(json);
-      
+
       // Assert
       expect(report.sightingReportID, 'report-123');
       expect(report.suspectedSpeciesID, 'Wolf');
@@ -204,17 +187,22 @@ void main() {
 
     test('should handle multiple animals correctly', () {
       // Arrange
-      final location = ReportLocation(
-        latitude: 52.3676,
-        longtitude: 4.9041,
-      );
-      
+      final location = ReportLocation(latitude: 52.3676, longtitude: 4.9041);
+
       final animals = [
         SightedAnimal(condition: 'alive', lifeStage: 'adult', sex: 'male'),
-        SightedAnimal(condition: 'injured', lifeStage: 'juvenile', sex: 'female'),
-        SightedAnimal(condition: 'deceased', lifeStage: 'adult', sex: 'unknown')
+        SightedAnimal(
+          condition: 'injured',
+          lifeStage: 'juvenile',
+          sex: 'female',
+        ),
+        SightedAnimal(
+          condition: 'deceased',
+          lifeStage: 'adult',
+          sex: 'unknown',
+        ),
       ];
-      
+
       final report = SightingReport(
         animals: animals,
         sightingReportID: 'report-123',
@@ -225,7 +213,7 @@ void main() {
         userSelectedDateTime: DateTime(2023, 5, 15),
         systemDateTime: DateTime.now(),
       );
-      
+
       // Assert
       expect(report.animals.length, 3);
       expect(report.animals[0].condition, 'alive');
@@ -234,4 +222,3 @@ void main() {
     });
   });
 }
-

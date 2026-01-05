@@ -3,11 +3,7 @@ class Possesion {
   final String? possesionName;
   final String? category;
 
-  Possesion({
-    this.possesionID, 
-    required this.possesionName, 
-    this.category
-  });
+  Possesion({this.possesionID, required this.possesionName, this.category});
 
   Map<String, dynamic> toJson() => {
     'ID': possesionID,
@@ -20,5 +16,3 @@ class Possesion {
     category: json['category'],
   );
 }
-
-

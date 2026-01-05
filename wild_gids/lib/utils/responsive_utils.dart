@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 
+/// Unified responsive utilities with both proportional scaling and breakpoint logic.
 class ResponsiveUtils {
   final BuildContext context;
   late final Size _screenSize;
@@ -36,6 +37,7 @@ class ResponsiveUtils {
     return Breakpoint.extraLarge;
   }
 
+  // Getters
   Size get screenSize => _screenSize;
   double get width => _width;
   double get height => _height;
@@ -53,10 +55,12 @@ class ResponsiveUtils {
   bool get isLarge => _breakpoint == Breakpoint.large;
   bool get isExtraLarge => _breakpoint == Breakpoint.extraLarge;
 
+  // Proportional helpers
   double wp(double percentage) => _width * percentage / 100;
   double hp(double percentage) => _height * percentage / 100;
   double sp(double percentage) => _diagonal * percentage / 100;
 
+  /// Responsive font size with breakpoint modulation.
   double fontSize(double baseSize) {
     const baseWidth = 375.0;
     final scaleFactor = (_width / baseWidth).clamp(0.8, 1.4);
@@ -69,6 +73,7 @@ class ResponsiveUtils {
     return baseSize * scaleFactor * breakpointFactor;
   }
 
+  /// Responsive spacing based on height & breakpoint.
   double spacing(double baseSpacing) {
     const baseHeight = 812.0;
     final scaleFactor = (_height / baseHeight).clamp(0.7, 1.6);
@@ -81,6 +86,7 @@ class ResponsiveUtils {
     return baseSpacing * scaleFactor * breakpointFactor;
   }
 
+  /// Device-type based value selection (diagonal heuristic).
   T deviceValue<T>({required T mobile, T? tablet, T? desktop}) {
     switch (_deviceType) {
       case DeviceType.desktop:
@@ -92,6 +98,7 @@ class ResponsiveUtils {
     }
   }
 
+  /// Breakpoint-based value selection (width heuristic).
   T breakpointValue<T>({required T small, T? medium, T? large, T? extraLarge}) {
     switch (_breakpoint) {
       case Breakpoint.extraLarge:
@@ -105,6 +112,7 @@ class ResponsiveUtils {
     }
   }
 
+  /// Adaptive font convenience.
   double adaptiveFont({
     required double small,
     double? medium,
@@ -120,6 +128,7 @@ class ResponsiveUtils {
     return fontSize(chosen);
   }
 
+  /// Grid column suggestion based on breakpoint.
   int gridColumns({int small = 1, int? medium, int? large, int? extraLarge}) {
     return breakpointValue<int>(
       small: small,
@@ -129,13 +138,15 @@ class ResponsiveUtils {
     );
   }
 
+  /// Max content width (useful to constrain long-form text on desktop).
   double get maxContentWidth => breakpointValue<double>(
-        small: _width,
-        medium: _width * 0.95,
-        large: 1000,
-        extraLarge: 1200,
-      );
+    small: _width,
+    medium: _width * 0.95,
+    large: 1000,
+    extraLarge: 1200,
+  );
 
+  /// Responsive padding convenience.
   EdgeInsets responsivePadding({double horizontal = 16, double vertical = 16}) {
     return EdgeInsets.symmetric(
       horizontal: wp((horizontal / _width) * 100),
@@ -143,10 +154,12 @@ class ResponsiveUtils {
     );
   }
 
+  /// Safe area helpers.
   EdgeInsets get safeAreaPadding => MediaQuery.of(context).padding;
   double get bottomSafeArea => MediaQuery.of(context).padding.bottom;
   double get topSafeArea => MediaQuery.of(context).padding.top;
 
+  /// LayoutBuilder helper exposing constraints + utils.
   static Widget layoutBuilder({
     required BuildContext context,
     required Widget Function(
@@ -154,7 +167,7 @@ class ResponsiveUtils {
       BoxConstraints constraints,
       ResponsiveUtils ru,
     )
-        builder,
+    builder,
   }) {
     final ru = context.responsive;
     return LayoutBuilder(

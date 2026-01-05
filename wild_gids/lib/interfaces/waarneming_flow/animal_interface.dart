@@ -18,5 +18,7 @@ abstract class AnimalManagerInterface {
   void addListener(Function() listener);
   void removeListener(Function() listener);
   Future<List<AnimalModel>> getAnimalsByCategory({AnimalCategory? category});
+  // Backend-driven categories and filtering
+  Future<List<String>> getBackendCategories();
+  Future<List<AnimalModel>> getAnimalsByBackendCategory({String? category});
 }
-

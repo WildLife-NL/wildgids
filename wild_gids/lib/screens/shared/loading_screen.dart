@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:wildrapport/constants/app_colors.dart';
 import 'package:wildrapport/constants/asset_preloader.dart';
+import 'package:wildrapport/utils/responsive_utils.dart';
 
 class LoadingScreen extends StatefulWidget {
   final VoidCallback? onLoadingComplete;
@@ -58,6 +59,7 @@ class _LoadingScreenState extends State<LoadingScreen>
 
   @override
   Widget build(BuildContext context) {
+    final responsive = context.responsive;
     return Scaffold(
       backgroundColor: AppColors.lightMintGreen,
       body: Center(
@@ -65,23 +67,20 @@ class _LoadingScreenState extends State<LoadingScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SizedBox(
-              width: 200,
-              height: 200,
-              child: ColorFiltered(
-                colorFilter: ColorFilter.mode(AppColors.darkGreen, BlendMode.srcIn),
-                child: Lottie.asset(
-                  'assets/loaders/loading_paw.json',
-                  fit: BoxFit.contain,
-                  repeat: true,
-                  animate: true,
-                  frameRate: FrameRate(60),
-                  controller: _animationController,
-                  onLoaded: (composition) {
-                    _animationController.duration =
-                        composition.duration ~/ 2; // Makes it 2x faster
-                    _animationController.repeat();
-                  },
-                ),
+              width: responsive.sp(25),
+              height: responsive.sp(25),
+              child: Lottie.asset(
+                'assets/loaders/loading_paw.json',
+                fit: BoxFit.contain,
+                repeat: true,
+                animate: true,
+                frameRate: FrameRate(60),
+                controller: _animationController,
+                onLoaded: (composition) {
+                  _animationController.duration =
+                      composition.duration ~/ 2; // Makes it 2x faster
+                  _animationController.repeat();
+                },
               ),
             ),
           ],

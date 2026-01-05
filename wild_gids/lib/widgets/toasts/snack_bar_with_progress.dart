@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:wildrapport/constants/app_colors.dart';
 import 'package:wildrapport/widgets/toasts/snack_bar_text.dart';
+import 'package:wildrapport/utils/responsive_utils.dart';
 
 class SnackBarWithProgress extends StatelessWidget {
   const SnackBarWithProgress({super.key, required this.message});
@@ -12,16 +13,20 @@ class SnackBarWithProgress extends StatelessWidget {
     required String message,
     Duration duration = const Duration(seconds: 2),
   }) {
+    final responsive = context.responsive;
     final snackBar = SnackBar(
       content: SnackBarText(message: message),
       duration: duration,
       behavior: SnackBarBehavior.floating,
       backgroundColor: AppColors.offWhite,
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      padding: EdgeInsets.symmetric(
+        horizontal: responsive.spacing(16),
+        vertical: responsive.spacing(12),
+      ),
       margin: EdgeInsets.only(
-        bottom: MediaQuery.of(context).size.height - 205,
-        right: 20,
-        left: 20,
+        bottom: responsive.height - responsive.hp(25),
+        right: responsive.spacing(20),
+        left: responsive.spacing(20),
       ),
     );
 

@@ -77,6 +77,7 @@ class SavedQuestionnairesScreen extends StatelessWidget {
                                 icon: const Icon(Icons.delete_outline),
                                 onPressed: () async {
                                   await DraftsStore.removeDraft(d.interactionID);
+                                  // refresh by replacing route
                                   if (!context.mounted) return;
                                   Navigator.of(context).pushReplacement(
                                     MaterialPageRoute(

@@ -11,7 +11,6 @@ import 'package:wildrapport/models/enums/location_source.dart';
 
 void main() {
   group('AnimalSightingModel', () {
-    
     test('should have correct properties', () {
       // Arrange
       final animalModel = AnimalModel(
@@ -20,18 +19,18 @@ void main() {
         animalImagePath: 'assets/wolf.png',
         genderViewCounts: [],
       );
-      
+
       final sightingModel = AnimalSightingModel(
         animals: [],
         animalSelected: animalModel,
       );
-      
+
       // Assert
       expect(sightingModel.animalSelected, animalModel);
       expect(sightingModel.animals, isEmpty);
       expect(sightingModel.category, null); // Category is null by default
     });
-    
+
     test('should update category', () {
       // Arrange
       final animalModel = AnimalModel(
@@ -40,15 +39,17 @@ void main() {
         animalImagePath: 'assets/wolf.png',
         genderViewCounts: [],
       );
-      
+
       final sightingModel = AnimalSightingModel(
         animals: [],
         animalSelected: animalModel,
       );
-      
+
       // Act
-      final updatedModel = sightingModel.copyWith(category: AnimalCategory.roofdieren);
-      
+      final updatedModel = sightingModel.copyWith(
+        category: AnimalCategory.roofdieren,
+      );
+
       // Assert
       expect(updatedModel.category, AnimalCategory.roofdieren);
     });
@@ -59,66 +60,59 @@ void main() {
         animals: [],
         description: 'Initial description',
       );
-      
+
       // Act
-      final updatedModel = sightingModel.copyWith(description: 'Updated description');
-      
+      final updatedModel = sightingModel.copyWith(
+        description: 'Updated description',
+      );
+
       // Assert
       expect(updatedModel.description, 'Updated description');
     });
 
     test('should update locations', () {
       // Arrange
-      final sightingModel = AnimalSightingModel(
-        animals: [],
-        locations: [],
-      );
-      
+      final sightingModel = AnimalSightingModel(animals: [], locations: []);
+
       final newLocations = [
         LocationModel(
           latitude: 52.3676,
           longitude: 4.9041,
           source: LocationSource.system,
-        )
+        ),
       ];
-      
+
       // Act
       final updatedModel = sightingModel.copyWith(locations: newLocations);
-      
+
       // Assert
       expect(updatedModel.locations, newLocations);
     });
 
     test('should update dateTime', () {
       // Arrange
-      final sightingModel = AnimalSightingModel(
-        animals: [],
-      );
-      
-      final dateTime = DateTimeModel(
-        dateTime: DateTime.now(),
-      );
-      
+      final sightingModel = AnimalSightingModel(animals: []);
+
+      final dateTime = DateTimeModel(dateTime: DateTime.now());
+
       // Act
       final updatedModel = sightingModel.copyWith(dateTime: dateTime);
-      
+
       // Assert
       expect(updatedModel.dateTime, dateTime);
     });
 
     test('should update images', () {
       // Arrange
-      final sightingModel = AnimalSightingModel(
-        animals: [],
-      );
-      
+      final sightingModel = AnimalSightingModel(animals: []);
+
       final images = ImageListModel(
         imagePaths: ['path/to/image1.jpg', 'path/to/image2.jpg'],
       );
-      
+
       // Act
       final updatedModel = sightingModel.copyWith(images: images);
-      
+
       // Assert
       expect(updatedModel.images, images);
     });
@@ -131,17 +125,17 @@ void main() {
         animalImagePath: 'assets/wolf.png',
         genderViewCounts: [],
       );
-      
+
       final sightingModel = AnimalSightingModel(
         animals: [animalModel],
         animalSelected: animalModel,
         category: AnimalCategory.roofdieren,
         description: 'Test description',
       );
-      
+
       // Act
       final json = sightingModel.toJson();
-      
+
       // Assert
       expect(json, isA<Map<String, dynamic>>());
       expect(json['category'], AnimalCategory.roofdieren.toString());
@@ -161,15 +155,15 @@ void main() {
             'animalName': 'Wolf',
             'animalImagePath': 'assets/wolf.png',
             'genderViewCounts': [],
-          }
+          },
         ],
         'category': 'AnimalCategory.roofdieren',
         'description': 'Test description',
       };
-      
+
       // Act
       final sightingModel = AnimalSightingModel.fromJson(json);
-      
+
       // Assert
       expect(sightingModel.animals?.length, 1);
       expect(sightingModel.animals?[0].animalId, '1');
@@ -186,22 +180,22 @@ void main() {
         animalImagePath: 'assets/wolf.png',
         genderViewCounts: [],
       );
-      
+
       final sightingModel = AnimalSightingModel(
         animals: [],
         animalSelected: animalModel,
       );
-      
+
       final newAnimal = AnimalModel(
         animalId: '2',
         animalName: 'Fox',
         animalImagePath: 'assets/fox.png',
         genderViewCounts: [],
       );
-      
+
       // Act
       sightingModel.animals?.add(newAnimal);
-      
+
       // Assert
       expect(sightingModel.animals?.length, 1);
       expect(sightingModel.animals?[0].animalId, '2');
@@ -214,16 +208,16 @@ void main() {
         animals: [],
         animalSelected: null,
       );
-      
+
       final location = LocationModel(
         latitude: 52.3676,
         longitude: 4.9041,
         source: LocationSource.system,
       );
-      
+
       // Act
       final updatedModel = sightingModel.copyWith(locations: [location]);
-      
+
       // Assert
       expect(updatedModel.locations?.first, location);
       expect(updatedModel.locations?.first.latitude, 52.3676);
@@ -237,14 +231,12 @@ void main() {
         animals: [],
         animalSelected: null,
       );
-      
-      final dateTime = DateTimeModel(
-        dateTime: DateTime(2023, 5, 15, 14, 30),
-      );
-      
+
+      final dateTime = DateTimeModel(dateTime: DateTime(2023, 5, 15, 14, 30));
+
       // Act
       final updatedModel = sightingModel.copyWith(dateTime: dateTime);
-      
+
       // Assert
       expect(updatedModel.dateTime, dateTime);
       expect(updatedModel.dateTime?.dateTime?.year, 2023);
@@ -260,14 +252,12 @@ void main() {
         animals: [],
         animalSelected: null,
       );
-      
-      final images = ImageListModel(
-        imagePaths: ['image1.jpg', 'image2.jpg'],
-      );
-      
+
+      final images = ImageListModel(imagePaths: ['image1.jpg', 'image2.jpg']);
+
       // Act
       final updatedModel = sightingModel.copyWith(images: images);
-      
+
       // Assert
       expect(updatedModel.images, images);
       expect(updatedModel.images?.imagePaths.length, 2);
@@ -281,10 +271,10 @@ void main() {
         animals: null,
         animalSelected: null,
       );
-      
+
       // Act
       final json = sightingModel.toJson();
-      
+
       // Assert
       expect(json, isA<Map<String, dynamic>>());
       expect(json['animals'], isNull);
@@ -301,10 +291,10 @@ void main() {
         animals: [],
         animalSelected: null,
       );
-      
+
       // Act
       final json = sightingModel.toJson();
-      
+
       // Assert
       expect(json, isA<Map<String, dynamic>>());
       expect(json['animals'], isEmpty);
@@ -317,27 +307,27 @@ void main() {
         category: AnimalCategory.roofdieren,
         description: 'Original description',
       );
-      
+
       final newAnimal = AnimalModel(
         animalId: '2',
         animalName: 'Fox',
         animalImagePath: 'assets/fox.png',
         genderViewCounts: [],
       );
-      
+
       // Act
       final copiedModel = originalModel.copyWith(
         animals: [newAnimal],
         category: AnimalCategory.evenhoevigen,
         description: 'Updated description',
       );
-      
+
       // Assert
       expect(copiedModel.animals?.length, 1);
       expect(copiedModel.animals?[0].animalId, '2');
       expect(copiedModel.category, AnimalCategory.evenhoevigen);
       expect(copiedModel.description, 'Updated description');
-      
+
       // Original should remain unchanged
       expect(originalModel.animals?.length, 0);
       expect(originalModel.category, AnimalCategory.roofdieren);
@@ -352,20 +342,26 @@ void main() {
         animalImagePath: 'assets/wolf.png',
         genderViewCounts: [],
       );
-      
+
       final originalModel = AnimalSightingModel(
         animals: [animal],
         animalSelected: animal,
         category: AnimalCategory.roofdieren,
         description: 'Test description',
-        locations: [LocationModel(latitude: 52.0, longitude: 4.0, source: LocationSource.system)],
+        locations: [
+          LocationModel(
+            latitude: 52.0,
+            longitude: 4.0,
+            source: LocationSource.system,
+          ),
+        ],
         dateTime: DateTimeModel(dateTime: DateTime.now()),
         images: ImageListModel(imagePaths: []),
       );
-      
+
       // Act
       final copiedModel = originalModel.copyWith();
-      
+
       // Assert
       expect(copiedModel.animals, originalModel.animals);
       expect(copiedModel.animalSelected, originalModel.animalSelected);
@@ -387,10 +383,10 @@ void main() {
         'dateTime': null,
         'images': null,
       };
-      
+
       // Act
       final model = AnimalSightingModel.fromJson(json);
-      
+
       // Assert
       expect(model.animals, null);
       expect(model.animalSelected, null);
@@ -417,11 +413,11 @@ void main() {
                   'pasGeborenAmount': 1,
                   'onvolwassenAmount': 2,
                   'volwassenAmount': 3,
-                  'unknownAmount': 0
-                }
-              }
-            ]
-          }
+                  'unknownAmount': 0,
+                },
+              },
+            ],
+          },
         ],
         'animalSelected': {
           'animalId': '2',
@@ -435,10 +431,10 @@ void main() {
                 'pasGeborenAmount': 0,
                 'onvolwassenAmount': 1,
                 'volwassenAmount': 2,
-                'unknownAmount': 0
-              }
-            }
-          ]
+                'unknownAmount': 0,
+              },
+            },
+          ],
         },
         'category': 'AnimalCategory.roofdieren',
         'description': 'Test description',
@@ -446,35 +442,42 @@ void main() {
           {
             'latitude': 52.0,
             'longitude': 4.0,
-            'source': 'LocationSource.system'
-          }
+            'source': 'LocationSource.system',
+          },
         ],
-        'dateTime': {
-          'dateTime': '2023-01-01T12:00:00.000Z'
-        },
+        'dateTime': {'dateTime': '2023-01-01T12:00:00.000Z'},
         'images': {
-          'imagePaths': ['image1.jpg', 'image2.jpg']
-        }
+          'imagePaths': ['image1.jpg', 'image2.jpg'],
+        },
       };
-      
+
       // Act
       final model = AnimalSightingModel.fromJson(json);
-      
+
       // Assert
       expect(model.animals?.length, 1);
       expect(model.animals?[0].animalId, '1');
       expect(model.animals?[0].animalName, 'Wolf');
       expect(model.animals?[0].condition, AnimalCondition.levend);
       expect(model.animals?[0].genderViewCounts.length, 1);
-      expect(model.animals?[0].genderViewCounts[0].gender, AnimalGender.mannelijk);
-      expect(model.animals?[0].genderViewCounts[0].viewCount.pasGeborenAmount, 1);
-      
+      expect(
+        model.animals?[0].genderViewCounts[0].gender,
+        AnimalGender.mannelijk,
+      );
+      expect(
+        model.animals?[0].genderViewCounts[0].viewCount.pasGeborenAmount,
+        1,
+      );
+
       expect(model.animalSelected?.animalId, '2');
       expect(model.animalSelected?.animalName, 'Fox');
       expect(model.animalSelected?.condition, AnimalCondition.dood);
       expect(model.animalSelected?.genderViewCounts.length, 1);
-      expect(model.animalSelected?.genderViewCounts[0].gender, AnimalGender.vrouwelijk);
-      
+      expect(
+        model.animalSelected?.genderViewCounts[0].gender,
+        AnimalGender.vrouwelijk,
+      );
+
       expect(model.category, AnimalCategory.roofdieren);
       expect(model.description, 'Test description');
       expect(model.locations?.length, 1);
@@ -491,10 +494,10 @@ void main() {
     test('toJson should handle null values correctly', () {
       // Arrange
       final model = AnimalSightingModel();
-      
+
       // Act
       final json = model.toJson();
-      
+
       // Assert
       expect(json['animals'], null);
       expect(json['category'], null);
@@ -505,12 +508,3 @@ void main() {
     });
   });
 }
-
-
-
-
-
-
-
-
-

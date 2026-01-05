@@ -1,16 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:wildrapport/managers/map/location_map_manager.dart';
-import 'package:wildrapport/models/beta_models/accident_report_model.dart';
-import 'package:wildrapport/models/beta_models/belonging_damage_report_model.dart';
-import 'package:wildrapport/models/beta_models/possesion_model.dart';
 import 'package:wildrapport/models/beta_models/sighting_report_model.dart';
 import 'package:wildrapport/models/enums/report_type.dart';
 import 'package:geolocator/geolocator.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wildrapport/screens/login/login_screen.dart';
-import 'package:wildrapport/managers/encounter_message_manager.dart';
 
 class AppStateProvider with ChangeNotifier {
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -21,9 +17,9 @@ class AppStateProvider with ChangeNotifier {
   String? _cachedAddress;
   DateTime? _lastLocationUpdate;
   static const Duration locationCacheTimeout = Duration(minutes: 15);
-  
+
   // Location tracking preference
-  bool _isLocationTrackingEnabled = true;
+  bool _isLocationTrackingEnabled = false;
   bool get isLocationTrackingEnabled => _isLocationTrackingEnabled;
 
   ReportType? get currentReportType => _currentReportType;
@@ -85,31 +81,19 @@ class AppStateProvider with ChangeNotifier {
   }
 
   void initializeReport(ReportType reportType) {
-    debugPrint('\x1B[36m[AppStateProvider] 🔷 Initializing report with type: $reportType\x1B[0m');
+    debugPrint(
+      '\x1B[36m[AppStateProvider] 🔷 Initializing report with type: $reportType\x1B[0m',
+    );
     _currentReportType = reportType;
-    final report = switch (reportType) {
-      ReportType.waarneming => SightingReport(
-        animals: [],
-        systemDateTime: DateTime.now(),
-      ),
-      ReportType.gewasschade => BelongingDamageReport(
-        possesion: Possesion(possesionName: ''),
-        impactedAreaType: 'hectare',
-        impactedArea: 0.0,
-        currentImpactDamages: 0,
-        estimatedTotalDamages: 0,
-        systemDateTime: DateTime.now(),
-      ),
-      ReportType.verkeersongeval => AccidentReport(
-        damages: '0',
-        systemDateTime: DateTime.now(),
-        intensity: '0',
-        urgency: '0',
-      ),
-    };
+    final report = SightingReport(
+      animals: [],
+      systemDateTime: DateTime.now(),
+    );
 
     _activeReports['currentReport'] = report;
-    debugPrint('\x1B[36m[AppStateProvider] 🔷 Report initialized. Current type: $_currentReportType\x1B[0m');
+    debugPrint(
+      '\x1B[36m[AppStateProvider] 🔷 Report initialized. Current type: $_currentReportType\x1B[0m',
+    );
     notifyListeners();
   }
 
@@ -174,12 +158,17 @@ class AppStateProvider with ChangeNotifier {
   Future<void> loadLocationTrackingPreference() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      _isLocationTrackingEnabled = prefs.getBool('location_tracking_enabled') ?? true;
-      debugPrint('[AppStateProvider] Loaded location tracking preference: $_isLocationTrackingEnabled');
+        _isLocationTrackingEnabled =
+          prefs.getBool('location_tracking_enabled') ?? false;
+      debugPrint(
+        '[AppStateProvider] Loaded location tracking preference: $_isLocationTrackingEnabled',
+      );
       notifyListeners();
     } catch (e) {
-      debugPrint('[AppStateProvider] Failed to load location tracking preference: $e');
-      _isLocationTrackingEnabled = true; // Default to enabled
+      debugPrint(
+        '[AppStateProvider] Failed to load location tracking preference: $e',
+      );
+      _isLocationTrackingEnabled = false; // Default to disabled
     }
   }
 
@@ -189,10 +178,14 @@ class AppStateProvider with ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('location_tracking_enabled', enabled);
       _isLocationTrackingEnabled = enabled;
-      debugPrint('[AppStateProvider] Location tracking ${enabled ? "enabled" : "disabled"}');
+      debugPrint(
+        '[AppStateProvider] Location tracking ${enabled ? "enabled" : "disabled"}',
+      );
       notifyListeners();
     } catch (e) {
-      debugPrint('[AppStateProvider] Failed to save location tracking preference: $e');
+      debugPrint(
+        '[AppStateProvider] Failed to save location tracking preference: $e',
+      );
     }
   }
 
@@ -205,9 +198,6 @@ class AppStateProvider with ChangeNotifier {
       debugPrint('[AppStateProvider] logout(): failed to clear token: $e\n$st');
     }
 
-    // Clear encounter message history so they can show again on next login
-    EncounterMessageManager().clear();
-
     // Reset in-memory app state
     _screenStates.clear();
     _activeReports.clear();
@@ -216,6 +206,32 @@ class AppStateProvider with ChangeNotifier {
     _cachedAddress = null;
     _lastLocationUpdate = null;
     notifyListeners();
+
+    // Navigate to LoginScreen & clear back stack
+    navigatorKey.currentState?.pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
+  }
+
+  Future<void> deleteProfile() async {
+    // This method is called from ProfileScreen after user confirms deletion.
+    // Reset in-memory app state first
+    _screenStates.clear();
+    _activeReports.clear();
+    _currentReportType = null;
+    _cachedPosition = null;
+    _cachedAddress = null;
+    _lastLocationUpdate = null;
+    notifyListeners();
+
+    // Remove persisted auth/session
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('bearer_token');
+    } catch (e, st) {
+      debugPrint('[AppStateProvider] deleteProfile(): failed to clear token: $e\n$st');
+    }
 
     // Navigate to LoginScreen & clear back stack
     navigatorKey.currentState?.pushAndRemoveUntil(

@@ -15,7 +15,7 @@ void main() {
     test('should return all filter options when no filter is selected', () {
       // Act
       final filters = filterManager.getAvailableFilters('Filteren');
-      
+
       // Assert
       expect(filters.length, 3);
       expect(filters[0].text, FilterType.alphabetical.displayText);
@@ -26,34 +26,64 @@ void main() {
     test('should return all filter options when empty filter is provided', () {
       // Act
       final filters = filterManager.getAvailableFilters('');
-      
+
       // Assert
       expect(filters.length, 3);
     });
 
     test('should return all filter options except the selected one', () {
       // Act
-      final filters = filterManager.getAvailableFilters(FilterType.alphabetical.displayText);
-      
+      final filters = filterManager.getAvailableFilters(
+        FilterType.alphabetical.displayText,
+      );
+
       // Assert
       expect(filters.length, 2);
-      expect(filters.any((f) => f.text == FilterType.alphabetical.displayText), false);
-      expect(filters.any((f) => f.text == FilterType.mostViewed.displayText), true);
+      expect(
+        filters.any((f) => f.text == FilterType.alphabetical.displayText),
+        false,
+      );
+      expect(
+        filters.any((f) => f.text == FilterType.mostViewed.displayText),
+        true,
+      );
       expect(filters.any((f) => f.text == FilterType.search.displayText), true);
     });
 
     test('should filter animals alphabetically', () {
       // Arrange
       final animals = [
-        AnimalModel(animalId: '1', animalName: 'Wolf', animalImagePath: 'path1', genderViewCounts: []),
-        AnimalModel(animalId: '2', animalName: 'Aardvark', animalImagePath: 'path2', genderViewCounts: []),
-        AnimalModel(animalId: '3', animalName: 'Zebra', animalImagePath: 'path3', genderViewCounts: []),
-        AnimalModel(animalId: '4', animalName: 'Onbekend', animalImagePath: 'path4', genderViewCounts: []),
+        AnimalModel(
+          animalId: '1',
+          animalName: 'Wolf',
+          animalImagePath: 'path1',
+          genderViewCounts: [],
+        ),
+        AnimalModel(
+          animalId: '2',
+          animalName: 'Aardvark',
+          animalImagePath: 'path2',
+          genderViewCounts: [],
+        ),
+        AnimalModel(
+          animalId: '3',
+          animalName: 'Zebra',
+          animalImagePath: 'path3',
+          genderViewCounts: [],
+        ),
+        AnimalModel(
+          animalId: '4',
+          animalName: 'Onbekend',
+          animalImagePath: 'path4',
+          genderViewCounts: [],
+        ),
       ];
-      
+
       // Act
-      final filteredAnimals = filterManager.filterAnimalsAlphabetically(animals);
-      
+      final filteredAnimals = filterManager.filterAnimalsAlphabetically(
+        animals,
+      );
+
       // Assert
       expect(filteredAnimals.length, 4);
       expect(filteredAnimals[0].animalName, 'Aardvark');
@@ -65,7 +95,7 @@ void main() {
     test('should return animal categories with icons', () {
       // Act
       final categories = (filterManager as FilterManager).getAnimalCategories();
-      
+
       // Assert
       expect(categories.length, 3);
       expect(categories[0]['text'], 'Evenhoevigen');
@@ -78,10 +108,14 @@ void main() {
       // Arrange
       final items = ['Apple', 'Banana', 'Cherry'];
       filterFunction(String item, String category) => item.startsWith(category);
-      
+
       // Act
-      final filteredItems = filterManager.filterByCategory(items, 'A', filterFunction);
-      
+      final filteredItems = filterManager.filterByCategory(
+        items,
+        'A',
+        filterFunction,
+      );
+
       // Assert
       expect(filteredItems.length, 1);
       expect(filteredItems[0], 'Apple');
@@ -91,10 +125,14 @@ void main() {
       // Arrange
       final items = ['Apple', 'Banana', 'Cherry'];
       filterFunction(String item, String category) => item.startsWith(category);
-      
+
       // Act
-      final filteredItems = filterManager.filterByCategory(items, '', filterFunction);
-      
+      final filteredItems = filterManager.filterByCategory(
+        items,
+        '',
+        filterFunction,
+      );
+
       // Assert
       expect(filteredItems.length, 3);
     });
@@ -102,13 +140,13 @@ void main() {
     test('should sort items alphabetically', () {
       // Arrange
       final items = ['Zebra', 'Apple', 'Cherry'];
-      
+
       // Act
       final sortedItems = (filterManager as FilterManager).sortAlphabetically(
         items,
         (item) => item.toLowerCase(),
       );
-      
+
       // Assert
       expect(sortedItems[0], 'Apple');
       expect(sortedItems[1], 'Cherry');
@@ -122,13 +160,13 @@ void main() {
         {'name': 'Item2', 'views': 10},
         {'name': 'Item3', 'views': 2},
       ];
-      
+
       // Act
       final sortedItems = (filterManager as FilterManager).sortByMostViewed(
         items,
         (item) => item['views'] as int,
       );
-      
+
       // Assert
       expect(sortedItems[0]['name'], 'Item2'); // 10 views
       expect(sortedItems[1]['name'], 'Item1'); // 5 views
@@ -138,14 +176,29 @@ void main() {
     test('should search animals by name', () {
       // Arrange
       final animals = [
-        AnimalModel(animalId: '1', animalName: 'Wolf', animalImagePath: 'path1', genderViewCounts: []),
-        AnimalModel(animalId: '2', animalName: 'Red Wolf', animalImagePath: 'path2', genderViewCounts: []),
-        AnimalModel(animalId: '3', animalName: 'Fox', animalImagePath: 'path3', genderViewCounts: []),
+        AnimalModel(
+          animalId: '1',
+          animalName: 'Wolf',
+          animalImagePath: 'path1',
+          genderViewCounts: [],
+        ),
+        AnimalModel(
+          animalId: '2',
+          animalName: 'Red Wolf',
+          animalImagePath: 'path2',
+          genderViewCounts: [],
+        ),
+        AnimalModel(
+          animalId: '3',
+          animalName: 'Fox',
+          animalImagePath: 'path3',
+          genderViewCounts: [],
+        ),
       ];
-      
+
       // Act
       final searchResults = filterManager.searchAnimals(animals, 'wolf');
-      
+
       // Assert
       expect(searchResults.length, 2);
       expect(searchResults[0].animalName, 'Wolf');
@@ -155,13 +208,23 @@ void main() {
     test('should return all animals when search term is empty', () {
       // Arrange
       final animals = [
-        AnimalModel(animalId: '1', animalName: 'Wolf', animalImagePath: 'path1', genderViewCounts: []),
-        AnimalModel(animalId: '2', animalName: 'Fox', animalImagePath: 'path2', genderViewCounts: []),
+        AnimalModel(
+          animalId: '1',
+          animalName: 'Wolf',
+          animalImagePath: 'path1',
+          genderViewCounts: [],
+        ),
+        AnimalModel(
+          animalId: '2',
+          animalName: 'Fox',
+          animalImagePath: 'path2',
+          genderViewCounts: [],
+        ),
       ];
-      
+
       // Act
       final searchResults = filterManager.searchAnimals(animals, '');
-      
+
       // Assert
       expect(searchResults.length, 2);
     });
@@ -169,13 +232,23 @@ void main() {
     test('should handle case-insensitive search', () {
       // Arrange
       final animals = [
-        AnimalModel(animalId: '1', animalName: 'Wolf', animalImagePath: 'path1', genderViewCounts: []),
-        AnimalModel(animalId: '2', animalName: 'Fox', animalImagePath: 'path2', genderViewCounts: []),
+        AnimalModel(
+          animalId: '1',
+          animalName: 'Wolf',
+          animalImagePath: 'path1',
+          genderViewCounts: [],
+        ),
+        AnimalModel(
+          animalId: '2',
+          animalName: 'Fox',
+          animalImagePath: 'path2',
+          genderViewCounts: [],
+        ),
       ];
-      
+
       // Act
       final searchResults = filterManager.searchAnimals(animals, 'WOLF');
-      
+
       // Assert
       expect(searchResults.length, 1);
       expect(searchResults[0].animalName, 'Wolf');

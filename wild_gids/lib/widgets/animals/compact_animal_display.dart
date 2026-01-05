@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:wildrapport/models/animal_waarneming_models/animal_model.dart';
 import 'package:wildrapport/constants/app_colors.dart';
+import 'package:wildrapport/utils/responsive_utils.dart';
 
 class CompactAnimalDisplay extends StatelessWidget {
   final AnimalModel animal;
@@ -10,26 +11,20 @@ class CompactAnimalDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
+    final responsive = context.responsive;
 
     // Calculate responsive dimensions
     final double calculatedHeight =
-        height ?? screenSize.height * 0.17; // Increased from 0.15 to 0.17
-    final double minHeight = 110.0; // Increased from 100.0
-    final double maxHeight = 160.0; // Increased from 150.0
+        height ?? responsive.hp(17); // 17% of screen height
+    final double minHeight = responsive.sp(13);
+    final double maxHeight = responsive.sp(20);
     final double finalHeight = calculatedHeight.clamp(minHeight, maxHeight);
 
     // Calculate responsive text size
-    final double fontSize = screenSize.width * 0.04; // 4% of screen width
-    final double minFontSize = 14.0;
-    final double maxFontSize = 18.0;
-    final double finalFontSize = fontSize.clamp(minFontSize, maxFontSize);
+    final double finalFontSize = responsive.fontSize(16);
 
     // Calculate responsive padding
-    final double paddingSize = screenSize.width * 0.02; // 2% of screen width
-    final double minPadding = 8.0;
-    final double maxPadding = 16.0;
-    final double finalPadding = paddingSize.clamp(minPadding, maxPadding);
+    final double finalPadding = responsive.spacing(12);
 
     return Container(
       width: finalHeight * 0.85, // Increased from 0.8 to 0.85
@@ -50,7 +45,7 @@ class CompactAnimalDisplay extends StatelessWidget {
         children: [
           ClipRRect(
             // Use a smaller, consistent radius for images so corners are less rounded
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(responsive.sp(0.75)),
             child:
                 animal.animalImagePath != null
                     ? SizedBox(
@@ -61,13 +56,13 @@ class CompactAnimalDisplay extends StatelessWidget {
                       ),
                     )
                     : SizedBox(
-                          height: finalHeight - (finalPadding * 2),
-                          child: Icon(
-                            Icons.help_outline,
-                            color: AppColors.brown,
-                            size: (finalHeight - (finalPadding * 2)) * 0.3,
-                          ),
-                        ),
+                      height: finalHeight - (finalPadding * 2),
+                      child: Icon(
+                        Icons.help_outline,
+                        color: AppColors.brown,
+                        size: (finalHeight - (finalPadding * 2)) * 0.3,
+                      ),
+                    ),
           ),
           Padding(
             padding: EdgeInsets.only(top: finalPadding * 0.75),

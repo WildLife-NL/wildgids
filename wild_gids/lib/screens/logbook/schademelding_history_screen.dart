@@ -12,7 +12,9 @@ import 'package:wildrapport/screens/logbook/logbook_screen.dart';
 class SchademeldingHistoryScreen extends StatelessWidget {
   const SchademeldingHistoryScreen({super.key});
 
-  bool _isSchade(MyInteraction interaction) => interaction.type.id == 2;
+  bool _isSchade(MyInteraction interaction) {
+    return interaction.type.id == 2;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +45,9 @@ class SchademeldingHistoryScreen extends StatelessWidget {
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(
-                      child: CircularProgressIndicator(color: AppColors.darkGreen),
+                      child: CircularProgressIndicator(
+                        color: AppColors.darkGreen,
+                      ),
                     );
                   }
                   if (snapshot.hasError) {
@@ -53,11 +57,19 @@ class SchademeldingHistoryScreen extends StatelessWidget {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: const [
-                            Icon(Icons.error_outline, color: Colors.red, size: 48),
+                            Icon(Icons.error_outline,
+                                color: Colors.red, size: 48),
                             SizedBox(height: 16),
-                            Text('Fout bij laden', style: TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                            Text(
+                              'Fout bij laden',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                              textAlign: TextAlign.center,
+                            ),
                             SizedBox(height: 8),
-                            Text('Kon schademeldingen niet laden. Probeer opnieuw.', textAlign: TextAlign.center),
+                            Text(
+                              'Kon schademeldingen niet laden. Probeer opnieuw.',
+                              textAlign: TextAlign.center,
+                            ),
                           ],
                         ),
                       ),
@@ -74,11 +86,19 @@ class SchademeldingHistoryScreen extends StatelessWidget {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: const [
-                            Icon(Icons.history, color: AppColors.darkGreen, size: 64),
+                            Icon(Icons.history,
+                                color: AppColors.darkGreen, size: 64),
                             SizedBox(height: 16),
-                            Text('Nog geen schademeldingen', style: TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                            Text(
+                              'Nog geen schademeldingen',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                              textAlign: TextAlign.center,
+                            ),
                             SizedBox(height: 8),
-                            Text('Na het indienen van een schademelding wordt deze hier zichtbaar.', textAlign: TextAlign.center),
+                            Text(
+                              'Na het indienen van een schademelding wordt deze hier zichtbaar.',
+                              textAlign: TextAlign.center,
+                            ),
                           ],
                         ),
                       ),
@@ -116,7 +136,9 @@ class _HistoryCard extends StatelessWidget {
     return InkWell(
       onTap: () {
         Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => _DetailSheet(interaction: interaction)),
+          MaterialPageRoute(
+            builder: (_) => _DetailSheet(interaction: interaction),
+          ),
         );
       },
       child: Container(
@@ -126,7 +148,11 @@ class _HistoryCard extends StatelessWidget {
           color: const Color(0xFFF8FAF5),
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
           ],
           border: Border.all(color: Colors.grey.shade200),
         ),
@@ -136,24 +162,50 @@ class _HistoryCard extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(color: AppColors.darkGreen, borderRadius: BorderRadius.circular(20)),
-                  child: const Text('Schademelding', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppColors.darkGreen,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    'Schademelding',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
                 const Spacer(),
-                Text(DateFormat('dd MMM yyyy, HH:mm').format(interaction.moment), style: const TextStyle(color: Colors.grey)),
+                Text(
+                  DateFormat('dd MMM yyyy, HH:mm')
+                      .format(interaction.moment),
+                  style: const TextStyle(color: Colors.grey),
+                ),
               ],
             ),
             const SizedBox(height: 12),
-            Text(species, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Color(0xFF5B3C1A))),
+            Text(
+              species,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF5B3C1A),
+              ),
+            ),
             const SizedBox(height: 12),
             Divider(color: Colors.grey.shade300, height: 1),
             const SizedBox(height: 12),
-            const Text('Schade', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text(
+              'Schade',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             if (damage != null) ...[
               const SizedBox(height: 6),
-              if (damage.belonging.isNotEmpty) Text('Object: ${damage.belonging}'),
-              if (damage.impactType.isNotEmpty) Text('Type impact: ${damage.impactType}'),
+              if (damage.belonging.isNotEmpty)
+                Text('Object: ${damage.belonging}'),
+              if (damage.impactType.isNotEmpty)
+                Text('Type impact: ${damage.impactType}'),
               Text('Impact waarde: ${damage.impactValue}'),
               Text('Geschatte schade: €${damage.estimatedDamage}'),
               Text('Geschat verlies: €${damage.estimatedLoss}'),
@@ -164,7 +216,10 @@ class _HistoryCard extends StatelessWidget {
                 Icon(Icons.location_on, color: Colors.grey.shade600, size: 18),
                 const SizedBox(width: 6),
                 Text(
-                  formatFriendlyLocation(interaction.place.latitude, interaction.place.longitude),
+                  formatFriendlyLocation(
+                    interaction.place.latitude,
+                    interaction.place.longitude,
+                  ),
                   style: const TextStyle(color: Colors.grey),
                 ),
               ],
@@ -182,7 +237,13 @@ class _HistoryCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Vragenlijst: ${interaction.questionnaire!.name}', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF5B3C1A))),
+                    Text(
+                      'Vragenlijst: ${interaction.questionnaire!.name}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF5B3C1A),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -198,11 +259,15 @@ class _DetailSheet extends StatelessWidget {
   final MyInteraction interaction;
   const _DetailSheet({required this.interaction});
 
-  String _formatDateTime(DateTime dt) => DateFormat('dd MMM yyyy, HH:mm').format(dt);
+  String _formatDateTime(DateTime dt) =>
+      DateFormat('dd MMM yyyy, HH:mm').format(dt);
 
   @override
   Widget build(BuildContext context) {
-    final species = interaction.species.commonName.isNotEmpty ? interaction.species.commonName : interaction.species.name;
+    final species =
+        interaction.species.commonName.isNotEmpty
+            ? interaction.species.commonName
+            : interaction.species.name;
     final damage = interaction.reportOfDamage;
 
     return Scaffold(
@@ -225,45 +290,88 @@ class _DetailSheet extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(species, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                Text(
+                  species,
+                  style:
+                      const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
                 const SizedBox(height: 8),
-                Text(_formatDateTime(interaction.moment), textAlign: TextAlign.center),
+                Text(
+                  _formatDateTime(interaction.moment),
+                  textAlign: TextAlign.center,
+                ),
                 const SizedBox(height: 12),
                 if (interaction.description.isNotEmpty) ...[
-                  const Text('Beschrijving:', style: TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                  Text(
+                    'Beschrijving:',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
                   const SizedBox(height: 4),
                   Text(interaction.description, textAlign: TextAlign.center),
                   const SizedBox(height: 12),
                 ],
-                const Text('Locatie:', style: TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                Text(
+                  'Locatie:',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
                 const SizedBox(height: 4),
                 Text(
-                  formatFriendlyLocation(interaction.place.latitude, interaction.place.longitude),
+                  formatFriendlyLocation(
+                    interaction.place.latitude,
+                    interaction.place.longitude,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
+                const SizedBox(height: 12),
                 if (interaction.species.category.isNotEmpty) ...[
-                  const Text('Dierencategorie:', style: TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                  Text(
+                    'Dierencategorie:',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
                   const SizedBox(height: 4),
                   Text(interaction.species.category, textAlign: TextAlign.center),
                   const SizedBox(height: 12),
                 ],
                 if (damage != null) ...[
-                  const Text('Schaderapport:', style: TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                  Text(
+                    'Schaderapport:',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
                   const SizedBox(height: 8),
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(8)),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Text('Object: ${damage.belonging}', style: const TextStyle(fontSize: 12), textAlign: TextAlign.center),
+                        Text(
+                          'Object: ${damage.belonging}',
+                          style: const TextStyle(fontSize: 12),
+                          textAlign: TextAlign.center,
+                        ),
                         const SizedBox(height: 4),
-                        Text('Type impact: ${damage.impactType}', style: const TextStyle(fontSize: 12), textAlign: TextAlign.center),
-                        Text('Impact waarde: ${damage.impactValue}', style: const TextStyle(fontSize: 12), textAlign: TextAlign.center),
-                        Text('Geschatte schade: €${damage.estimatedDamage}', style: const TextStyle(fontSize: 12), textAlign: TextAlign.center),
-                        Text('Geschat verlies: €${damage.estimatedLoss}', style: const TextStyle(fontSize: 12), textAlign: TextAlign.center),
+                        Text('Type impact: ${damage.impactType}',
+                            style: const TextStyle(fontSize: 12),
+                            textAlign: TextAlign.center),
+                        Text('Impact waarde: ${damage.impactValue}',
+                            style: const TextStyle(fontSize: 12),
+                            textAlign: TextAlign.center),
+                        Text('Geschatte schade: €${damage.estimatedDamage}',
+                            style: const TextStyle(fontSize: 12),
+                            textAlign: TextAlign.center),
+                        Text('Geschat verlies: €${damage.estimatedLoss}',
+                            style: const TextStyle(fontSize: 12),
+                            textAlign: TextAlign.center),
                       ],
                     ),
                   ),

@@ -1,11 +1,11 @@
 class DetectionPin {
   final String id;
-  final String? deviceType;   // camera, acoustic, etc.
-  final String? label;        // optional class/species label
+  final String? deviceType; // camera, acoustic, etc.
+  final String? label; // optional class/species label
   final double lat;
   final double lon;
   final DateTime detectedAt;
-  final double? confidence;   // 0..1 or %
+  final double? confidence; // 0..1 or %
 
   DetectionPin({
     required this.id,
@@ -27,7 +27,8 @@ class DetectionPin {
       id: id,
       lat: lat.toDouble(),
       lon: lon.toDouble(),
-      detectedAt: DateTime.tryParse(ts ?? '')?.toUtc() ?? DateTime.now().toUtc(),
+      detectedAt:
+          DateTime.tryParse(ts ?? '')?.toUtc() ?? DateTime.now().toUtc(),
       deviceType: j['deviceType']?.toString(),
       label: j['label']?.toString(),
       confidence: (j['confidence'] as num?)?.toDouble(),

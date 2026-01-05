@@ -18,12 +18,14 @@ class CollisionDetailsScreen extends StatefulWidget {
 
 class _CollisionDetailsScreenState extends State<CollisionDetailsScreen> {
   final TextEditingController _damageController = TextEditingController();
+  final TextEditingController _detailsController = TextEditingController();
   String? _selectedIntensity;
   String? _selectedUrgency;
 
   @override
   void dispose() {
     _damageController.dispose();
+    _detailsController.dispose();
     super.dispose();
   }
 
@@ -35,12 +37,24 @@ class _CollisionDetailsScreenState extends State<CollisionDetailsScreen> {
         child: Column(
           children: [
             CustomAppBar(
-              leftIcon: Icons.arrow_back_ios,
-              centerText: 'Verkeersongeval Details',
+              leftIcon: null,
+              centerText: 'Dieraanrijding Details',
               rightIcon: null,
               showUserIcon: true,
               onLeftIconPressed: () {
-                final navigationManager = context.read<NavigationStateInterface>();
+                // Clear text controllers
+                _damageController.clear();
+                _detailsController.clear();
+                setState(() {
+                  _selectedIntensity = null;
+                  _selectedUrgency = null;
+                });
+                // Also clear remarks before returning to overview
+                final animalSightingManager =
+                    context.read<AnimalSightingReportingInterface>();
+                animalSightingManager.updateDescription('');
+                final navigationManager =
+                    context.read<NavigationStateInterface>();
                 navigationManager.pushReplacementBack(
                   context,
                   AnimalListOverviewScreen(),
@@ -87,6 +101,8 @@ class _CollisionDetailsScreenState extends State<CollisionDetailsScreen> {
                             const SizedBox(height: 12),
                             TextField(
                               controller: _damageController,
+                              minLines: 1,
+                              maxLines: null,
                               keyboardType: TextInputType.number,
                               decoration: InputDecoration(
                                 hintText: 'Voer bedrag in',
@@ -234,7 +250,9 @@ class _CollisionDetailsScreenState extends State<CollisionDetailsScreen> {
                             ),
                             const SizedBox(height: 12),
                             TextField(
-                              maxLines: 4,
+                              controller: _detailsController,
+                              minLines: 1,
+                              maxLines: null,
                               decoration: InputDecoration(
                                 hintText: 'Beschrijf het ongeval...',
                                 filled: true,
@@ -279,7 +297,18 @@ class _CollisionDetailsScreenState extends State<CollisionDetailsScreen> {
         ),
       ),
       bottomNavigationBar: CustomBottomAppBar(
-        onBackPressed: () {},
+        onBackPressed: () {
+          final navigationManager = context.read<NavigationStateInterface>();
+          final animalSightingManager =
+              context.read<AnimalSightingReportingInterface>();
+          _damageController.clear();
+          _detailsController.clear();
+          animalSightingManager.updateDescription('');
+          navigationManager.pushReplacementBack(
+            context,
+            AnimalListOverviewScreen(),
+          );
+        },
         onNextPressed: () async {
           final permissionManager = context.read<PermissionInterface>();
           final navigationManager = context.read<NavigationStateInterface>();
@@ -306,8 +335,8 @@ class _CollisionDetailsScreenState extends State<CollisionDetailsScreen> {
             );
           }
         },
-        showBackButton: false,
         showNextButton: true,
+        showBackButton: true,
       ),
     );
   }
@@ -324,10 +353,7 @@ class _CollisionDetailsScreenState extends State<CollisionDetailsScreen> {
         decoration: BoxDecoration(
           color: isSelected ? AppColors.darkGreen : Colors.white,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: AppColors.darkGreen,
-            width: 1.5,
-          ),
+          border: Border.all(color: AppColors.darkGreen, width: 1.5),
         ),
         child: Center(
           child: Text(

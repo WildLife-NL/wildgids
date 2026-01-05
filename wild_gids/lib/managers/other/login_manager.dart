@@ -74,7 +74,7 @@ class LoginManager implements LoginInterface {
     }
 
     try {
-      await authApi.authenticate("Wild Rapport", email.trim());
+      await authApi.authenticate("Wild Gids", email.trim());
       return true;
     } catch (e) {
       throw Exception("Login failed: $e");
@@ -116,7 +116,7 @@ class LoginManager implements LoginInterface {
     }
 
     try {
-      await authApi.authenticate("Wild Rapport", email.trim());
+      await authApi.authenticate("Wild Gids", email.trim());
       return true;
     } catch (e) {
       throw Exception("Resend code failed: $e");

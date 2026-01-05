@@ -7,7 +7,7 @@ void main() {
 
   setUp(() {
     mockInteractionType = MockInteractionType();
-    
+
     // Setup default behavior
     when(mockInteractionType.id).thenReturn(1);
     when(mockInteractionType.name).thenReturn('Test Interaction Type');
@@ -29,7 +29,7 @@ void main() {
         'name': 'Test Interaction Type',
         'description': 'Test Description',
       });
-      
+
       // Verify
       final json = mockInteractionType.toJson();
       expect(json['id'], 1);

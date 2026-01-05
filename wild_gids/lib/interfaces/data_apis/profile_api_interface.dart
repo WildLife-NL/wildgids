@@ -7,5 +7,7 @@ abstract class ProfileApiInterface {
 
   Future<Profile> updateReportAppTerms(bool accepted);
 
+  Future<void> deleteMyProfile();
+
   Future<Profile> updateMyProfile(Profile updatedProfile);
 }

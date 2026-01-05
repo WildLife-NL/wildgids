@@ -44,30 +44,24 @@ class SightingReport implements Reportable, CommonReportFields {
     };
   }
 
-  factory SightingReport.fromJson(Map<String, dynamic> json) => 
-    SightingReport(
-      sightingReportID: json["sightingReportID"],
-      description: json["description"],
-      suspectedSpeciesID: json["suspectedSpeciesID"],
-      userSelectedLocation:
-          json["place"] != null
-              ? ReportLocation.fromJson(json["place"])
-              : null,
-      systemLocation:
-          json["location"] != null
-              ? ReportLocation.fromJson(json["location"])
-              : null,
-      userSelectedDateTime:
-          json["moment"] != null
-              ? DateTime.parse(json["moment"])
-              : null,
-      systemDateTime: DateTime.parse(json["timestamp"]),
-      animals:
-          json["involvedAnimals"] != null
-              ? List<SightedAnimal>.from(
-                json["involvedAnimals"].map((x) => SightedAnimal.fromJson(x)),
-              )
-              : [],
-    );
+  factory SightingReport.fromJson(Map<String, dynamic> json) => SightingReport(
+    sightingReportID: json["sightingReportID"],
+    description: json["description"],
+    suspectedSpeciesID: json["suspectedSpeciesID"],
+    userSelectedLocation:
+        json["place"] != null ? ReportLocation.fromJson(json["place"]) : null,
+    systemLocation:
+        json["location"] != null
+            ? ReportLocation.fromJson(json["location"])
+            : null,
+    userSelectedDateTime:
+        json["moment"] != null ? DateTime.parse(json["moment"]) : null,
+    systemDateTime: DateTime.parse(json["timestamp"]),
+    animals:
+        json["involvedAnimals"] != null
+            ? List<SightedAnimal>.from(
+              json["involvedAnimals"].map((x) => SightedAnimal.fromJson(x)),
+            )
+            : [],
+  );
 }
-

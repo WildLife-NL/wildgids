@@ -363,7 +363,7 @@ class MockResponseApiInterface extends _i1.Mock
   }
 
   @override
-  _i18.Future<bool> addReponse(
+  _i18.Future<_i25.ResponseSubmissionResult> addReponse(
     String? interactionID,
     String? questionID,
     String? answerID,
@@ -376,9 +376,11 @@ class MockResponseApiInterface extends _i1.Mock
               answerID,
               text,
             ]),
-            returnValue: _i18.Future<bool>.value(false),
+            returnValue: _i18.Future<_i25.ResponseSubmissionResult>.value(
+              _i25.ResponseSubmissionResult(success: false),
+            ),
           )
-          as _i18.Future<bool>);
+          as _i18.Future<_i25.ResponseSubmissionResult>);
 }
 
 /// A class which mocks [SpeciesApiInterface].

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:wildrapport/models/beta_models/report_location_model.dart';
+import 'package:wildrapport/models/beta_models/polygon_area_model.dart';
 
 class BelongingDamageReportProvider extends ChangeNotifier {
   String impactedCrop = '';
   double currentDamage = 0;
   double expectedDamage = 0;
-  String impactedAreaType = '';
+  String impactedAreaType = 'vierkante meters'; // Default to m²
   double? impactedArea;
   String description = '';
   String? suspectedSpeciesID;
@@ -17,7 +18,61 @@ class BelongingDamageReportProvider extends ChangeNotifier {
   ReportLocation? userLocation;
   bool expanded = false;
   String? inputErrorImpactArea;
-  String? selectedText;
+  String? selectedText = 'm²'; // Default display text
+
+  // Map-based area reporting fields
+  String damageCategory = 'crops'; // 'crops' or 'livestock'
+  PolygonArea? polygonArea;
+  int? livestockAmount;
+
+  // ── Backend-aligned aliases (safe, incremental) ────────────────────────────
+  // Use these names everywhere new code touches the provider.
+  double get estimatedDamage => currentDamage;
+  double get estimatedLoss => expectedDamage;
+
+  void setEstimatedDamage(double value) {
+    currentDamage = value;
+    notifyListeners();
+  }
+
+  void setEstimatedLoss(double value) {
+    expectedDamage = value;
+    notifyListeners();
+  }
+
+  @Deprecated('Use setEstimatedDamage')
+  void setCurrentDamage(double value) => setEstimatedDamage(value);
+
+  @Deprecated('Use setEstimatedLoss')
+  void setExpectedDamage(double value) => setEstimatedLoss(value);
+
+  // ── API mapping helpers (UI -> API) ────────────────────────────────────────
+  // API wants impactType in {"square-meters","units"} and impactValue as int >= 1 (m² or units).
+  String get apiImpactType =>
+      impactedAreaType == 'units' ? 'units' : 'square-meters';
+
+  int? get apiImpactValueOrNull {
+    if (impactedArea == null) return null;
+
+    // Convert hectares to m²; leave m² as-is; (future) 'units' unchanged.
+    double raw = impactedArea!;
+    switch (impactedAreaType) {
+      case 'hectare':
+        raw = raw * 10000.0; // ha -> m²
+        break;
+      case 'vierkante meters':
+      case 'units':
+      default:
+        // raw unchanged
+        break;
+    }
+
+    final int rounded = raw.round();
+    return (rounded < 1) ? 1 : rounded;
+  }
+
+  bool get isReadyForSubmit =>
+      impactedCrop.isNotEmpty && apiImpactValueOrNull != null;
 
   void updateSelectedText(String value) {
     selectedText = value;
@@ -41,16 +96,6 @@ class BelongingDamageReportProvider extends ChangeNotifier {
 
   void setImpactedCrop(String value) {
     impactedCrop = value;
-    notifyListeners();
-  }
-
-  void setCurrentDamage(double value) {
-    currentDamage = value;
-    notifyListeners();
-  }
-
-  void setExpectedDamage(double value) {
-    expectedDamage = value;
     notifyListeners();
   }
 
@@ -93,6 +138,33 @@ class BelongingDamageReportProvider extends ChangeNotifier {
     impactedArea = null;
   }
 
+  // Map-based area reporting methods
+  void setDamageCategory(String category) {
+    damageCategory = category;
+    notifyListeners();
+  }
+
+  void setPolygonArea(PolygonArea area) {
+    polygonArea = area;
+    // Store impacted area in square meters for accuracy and consistency
+    impactedArea = area.calculateAreaInSquareMeters();
+    impactedAreaType = 'vierkante meters';
+    selectedText = 'm²';
+    notifyListeners();
+  }
+
+  void setLivestockAmount(int amount) {
+    livestockAmount = amount;
+    impactedArea = amount.toDouble();
+    impactedAreaType = 'units';
+    notifyListeners();
+  }
+
+  void clearPolygonArea() {
+    polygonArea = null;
+    notifyListeners();
+  }
+
   void setErrorState(String field, bool hasError) {
     if (field == 'impactedCrop') {
       hasErrorImpactedCrop = hasError;
@@ -116,6 +188,9 @@ class BelongingDamageReportProvider extends ChangeNotifier {
     hasErrorImpactedAreaType = false;
     hasErrorImpactedArea = false;
     selectedText = null;
+    damageCategory = 'crops';
+    polygonArea = null;
+    livestockAmount = null;
     resetInputErrorImpactArea();
     notifyListeners();
   }

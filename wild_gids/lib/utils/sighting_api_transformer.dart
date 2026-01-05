@@ -24,15 +24,25 @@ class SightingApiTransformer {
     }
 
     // Find system and manual locations
+    // Prefer system location if available, fall back to manual if GPS wasn't acquired
     final systemLocation = sighting.locations!.firstWhere(
       (loc) => loc.source == LocationSource.system,
-      orElse: () => throw StateError('System location is required'),
+      orElse: () {
+        // GPS wasn't acquired - try to use manual location as fallback
+        final manual = sighting.locations!.firstWhere(
+          (loc) => loc.source == LocationSource.manual,
+          orElse: () => throw StateError('At least one location (system or manual) is required'),
+        );
+        debugPrint('⚠️ System location not available, using manual location as fallback');
+        return manual;
+      },
     );
     debugPrint('System Location: ${systemLocation.toJson()}');
 
+    // Prefer manual location; if not provided, fall back to system
     final manualLocation = sighting.locations!.firstWhere(
       (loc) => loc.source == LocationSource.manual,
-      orElse: () => throw StateError('Manual location is required'),
+      orElse: () => systemLocation,
     );
     debugPrint('Manual Location: ${manualLocation.toJson()}');
 

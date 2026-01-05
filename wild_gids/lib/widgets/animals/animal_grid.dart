@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:wildrapport/models/animal_waarneming_models/animal_model.dart';
 import 'package:wildrapport/widgets/animals/animal_tile.dart';
+import 'package:wildrapport/utils/responsive_utils.dart';
 
 class AnimalGrid extends StatelessWidget {
   final List<AnimalModel> animals;
@@ -14,11 +15,15 @@ class AnimalGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Calculate the width for each column to make containers square
-    final screenWidth = MediaQuery.of(context).size.width;
-    final containerWidth = (screenWidth - 40 - 12) / 2; // 40 for horizontal padding, 12 for gap
-    final containerHeight = containerWidth + 50; // Add space for text label
-    
+    final responsive = context.responsive;
+    // Calculate the width for each column to make containers square - increased padding for smaller pictures
+    final horizontalPadding = responsive.spacing(60); // Increased from 40
+    final columnSpacing = responsive.spacing(16); // Increased from 12
+    final containerWidth =
+        (responsive.width - horizontalPadding - columnSpacing) / 2;
+    final containerHeight =
+        containerWidth + responsive.spacing(45); // Reduced height allocation
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -37,7 +42,7 @@ class AnimalGrid extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: responsive.spacing(16)),
         // Right Column
         Expanded(
           child: Column(

@@ -42,12 +42,17 @@ class _TermsScreenState extends State<TermsScreen> {
       if (!mounted) return;
       _currentProfile = profile;
 
+      // Prefer existing display name, otherwise derive from email prefix
       final email = profile.email;
-      final derived = (email.contains('@')) ? email.split('@').first : email;
-      final initialName = (profile.userName.isNotEmpty) ? profile.userName : derived;
+      final derived = (email.contains('@'))
+          ? email.split('@').first
+          : email;
+      final initialName = (profile.userName.isNotEmpty)
+          ? profile.userName
+          : derived;
       _displayNameController.text = initialName;
     } catch (_) {
-      // leave empty; user can fill manually
+      // Fallback: leave empty; user must fill manually
     } finally {
       if (mounted) setState(() => _loadingProfile = false);
     }
@@ -65,6 +70,7 @@ class _TermsScreenState extends State<TermsScreen> {
         throw Exception('Voer alstublieft een geldige gebruikersnaam in.');
       }
 
+      // Build updated profile payload, preserving existing fields when available
       final base = _currentProfile;
       final updated = Profile(
         userID: base?.userID ?? '',
@@ -74,13 +80,21 @@ class _TermsScreenState extends State<TermsScreen> {
         postcode: base?.postcode,
         reportAppTerms: true,
         recreationAppTerms: base?.recreationAppTerms,
+        dateOfBirth: base?.dateOfBirth,
+        description: base?.description,
+        location: base?.location,
+        locationTimestamp: base?.locationTimestamp,
       );
 
+      // 1) Persist display name + acceptance on the server
       await profileApi.updateMyProfile(updated);
+
+      // 2) Refresh local cache (defensive; updateMyProfile also caches)
       await profileApi.setProfileDataInDeviceStorage();
 
       if (!mounted) return;
 
+      // 3) Navigate to the home screen (no local flags involved)
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const OverzichtScreen()),
         (_) => false,
@@ -114,6 +128,7 @@ class _TermsScreenState extends State<TermsScreen> {
           padding: EdgeInsets.all(responsive.spacing(16)),
           child: Column(
             children: [
+              // Display name input
               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
@@ -168,9 +183,10 @@ class _TermsScreenState extends State<TermsScreen> {
                     child: Checkbox(
                       value: _checked,
                       activeColor: AppColors.darkGreen,
-                      onChanged: _submitting
-                          ? null
-                          : (v) => setState(() => _checked = v ?? false),
+                      onChanged:
+                          _submitting
+                              ? null
+                              : (v) => setState(() => _checked = v ?? false),
                     ),
                   ),
                   Expanded(
@@ -198,9 +214,8 @@ class _TermsScreenState extends State<TermsScreen> {
                     fontSize: responsive.fontSize(16),
                     fontWeight: FontWeight.w600,
                   ),
-                  onPressed: (_checked && !_submitting && !_loadingProfile)
-                      ? _onAcceptPressed
-                      : null,
+                  onPressed:
+                      (_checked && !_submitting && !_loadingProfile) ? _onAcceptPressed : null,
                   showShadow: false,
                 ),
               ),

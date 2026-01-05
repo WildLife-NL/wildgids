@@ -60,17 +60,14 @@ import 'package:wildrapport/models/beta_models/response_model.dart';
 @GenerateMocks([QuestionnaireApiInterface])
 @GenerateMocks([ResponseApiInterface])
 @GenerateMocks([SpeciesApiInterface])
-
 // Map interfaces Mocks
 @GenerateMocks([LocationServiceInterface])
 @GenerateMocks([MapServiceInterface])
 @GenerateMocks([MapStateInterface])
-
 // Reporting interfaces Mocks
 @GenerateMocks([CommonReportFields])
 @GenerateMocks([PossesionReportFields])
 @GenerateMocks([Reportable])
-
 // Managers interfaces Mocks
 @GenerateMocks([AnimalRepositoryInterface])
 @GenerateMocks([AnimalSightingReportingInterface])
@@ -90,17 +87,14 @@ import 'package:wildrapport/models/beta_models/response_model.dart';
 @GenerateMocks([QuestionnaireInterface])
 @GenerateMocks([ResponseInterface])
 @GenerateMocks([ScreenStateInterface])
-
 //Provider Mocks
 @GenerateMocks([AppStateProvider])
 @GenerateMocks([MapProvider])
 @GenerateMocks([AnimalManagerInterface])
-
 // External dependencies
 @GenerateMocks([BuildContext])
 @GenerateMocks([SharedPreferences])
 @GenerateMocks([Connectivity])
-
 // Model Mocks
 @GenerateMocks([AnimalModel])
 @GenerateMocks([AnimalSightingModel])

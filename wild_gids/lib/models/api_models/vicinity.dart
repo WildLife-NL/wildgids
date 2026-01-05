@@ -61,7 +61,9 @@ class Vicinity {
       }
     }
 
-    debugPrint('[Vicinity] Successfully parsed: ${animals.length} animals, ${detections.length} detections, ${interactions.length} interactions');
+    debugPrint(
+      '[Vicinity] Successfully parsed: ${animals.length} animals, ${detections.length} detections, ${interactions.length} interactions',
+    );
 
     return Vicinity(
       animals: animals,

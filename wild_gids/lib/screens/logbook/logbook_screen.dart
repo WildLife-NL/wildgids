@@ -2,14 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:wildrapport/constants/app_colors.dart';
 import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
 import 'package:wildrapport/screens/shared/overzicht_screen.dart';
+import 'package:wildrapport/screens/shared/my_interaction_history_screen.dart';
 import 'package:wildrapport/screens/logbook/saved_questionnaires_screen.dart';
 import 'package:wildrapport/screens/logbook/my_responses_screen.dart';
-import 'package:wildrapport/screens/logbook/waarneming_history_screen.dart';
-import 'package:wildrapport/screens/logbook/schademelding_history_screen.dart';
-import 'package:wildrapport/screens/logbook/verkeersongeval_history_screen.dart';
 
 class LogbookScreen extends StatelessWidget {
   const LogbookScreen({super.key});
+
+  void _openAllInteractions(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const MyInteractionHistoryScreen()),
+    );
+  }
 
   void _openMyResponses(BuildContext context) {
     Navigator.push(
@@ -59,30 +64,21 @@ class LogbookScreen extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: const [
+                      children: [
+                        
                         _ReportButton(
-                          label: 'Waarneming geschiedenis',
-                          route: WaarnemingHistoryScreen(),
+                          label: 'Mijn interacties',
+                          onTap: () => _openAllInteractions(context),
                         ),
-                        SizedBox(height: 12),
-                        _ReportButton(
-                          label: 'Schademelding logboek',
-                          route: SchademeldingHistoryScreen(),
-                        ),
-                        SizedBox(height: 12),
-                        _ReportButton(
-                          label: 'Verkeersongeval geschiedenis',
-                          route: VerkeersongevalHistoryScreen(),
-                        ),
-                        SizedBox(height: 12),
+                        const SizedBox(height: 12),
                         _ReportButton(
                           label: 'Mijn antwoorden',
-                          route: MyResponsesScreen(),
+                          onTap: () => _openMyResponses(context),
                         ),
-                        SizedBox(height: 12),
+                        const SizedBox(height: 12),
                         _ReportButton(
                           label: 'Vragenlijsten opgeslagen voor later',
-                          route: SavedQuestionnairesScreen(),
+                          onTap: () => _openSavedQuestionnaires(context),
                         ),
                       ],
                     ),
@@ -99,18 +95,15 @@ class LogbookScreen extends StatelessWidget {
 
 class _ReportButton extends StatelessWidget {
   final String label;
-  final Widget route;
-  const _ReportButton({required this.label, required this.route});
+  final VoidCallback onTap;
+  const _ReportButton({required this.label, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       height: 56,
       child: ElevatedButton(
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => route),
-        ),
+        onPressed: onTap,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.darkGreen,
           foregroundColor: Colors.white,

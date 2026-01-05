@@ -6,24 +6,23 @@ import 'package:wildrapport/constants/app_text_theme.dart';
 import 'package:wildrapport/screens/shared/overzicht_screen.dart';
 import 'package:wildrapport/utils/responsive_utils.dart';
 import 'package:wildrapport/models/api_models/questionaire.dart';
-import 'package:wildrapport/widgets/questionnaire/questionnaire_home_buttons.dart';
 
 class QuestionnaireHome extends StatelessWidget {
   final VoidCallback nextScreen;
   final int amountOfQuestions;
-  final String? questionnaireName;
-  final String? questionnaireDescription;
-  final String? interactionID;
-  final Questionnaire? questionnaire;
+  final String questionnaireName;
+  final String questionnaireDescription;
+  final String interactionID;
+  final Questionnaire questionnaire;
 
   const QuestionnaireHome({
     super.key,
     required this.nextScreen,
     required this.amountOfQuestions,
-    this.questionnaireName,
-    this.questionnaireDescription,
-    this.interactionID,
-    this.questionnaire,
+    required this.questionnaireName,
+    required this.questionnaireDescription,
+    required this.interactionID,
+    required this.questionnaire,
   });
 
   @override
@@ -32,6 +31,7 @@ class QuestionnaireHome extends StatelessWidget {
 
     return Stack(
       children: [
+        // Main content
         Padding(
           padding: EdgeInsets.symmetric(
             horizontal: responsive.wp(8),
@@ -40,39 +40,30 @@ class QuestionnaireHome extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (questionnaireName != null)
-                Text(
-                  questionnaireName!,
-                  textAlign: TextAlign.center,
-                  style: AppTextTheme.textTheme.titleLarge?.copyWith(
-                    fontSize: responsive.fontSize(24),
-                    color: Colors.black,
-                    fontFamily: 'Roboto',
-                    fontWeight: FontWeight.bold,
-                  ),
-                )
-              else
-                Text(
-                  "Wil je de natuur helpen door een paar vragen te beantwoorden?",
-                  textAlign: TextAlign.center,
-                  style: AppTextTheme.textTheme.titleLarge?.copyWith(
-                    fontSize: responsive.fontSize(20),
-                    color: Colors.black,
-                    fontFamily: 'Roboto',
-                  ),
+              // Questionnaire name
+              Text(
+                questionnaireName,
+                textAlign: TextAlign.center,
+                style: AppTextTheme.textTheme.titleLarge?.copyWith(
+                  fontSize: responsive.fontSize(24),
+                  color: Colors.black,
+                  fontFamily: 'Roboto',
+                  fontWeight: FontWeight.bold,
                 ),
+              ),
               SizedBox(height: responsive.spacing(16)),
-              if (questionnaireDescription != null && questionnaireDescription!.isNotEmpty)
-                Text(
-                  questionnaireDescription!,
-                  textAlign: TextAlign.center,
-                  style: AppTextTheme.textTheme.bodyLarge?.copyWith(
-                    fontSize: responsive.fontSize(16),
-                    color: Colors.black87,
-                    fontFamily: 'Roboto',
-                  ),
+              // Questionnaire description
+              Text(
+                questionnaireDescription,
+                textAlign: TextAlign.center,
+                style: AppTextTheme.textTheme.bodyLarge?.copyWith(
+                  fontSize: responsive.fontSize(16),
+                  color: Colors.black87,
+                  fontFamily: 'Roboto',
                 ),
-              if (questionnaireDescription != null) SizedBox(height: responsive.spacing(24)),
+              ),
+              SizedBox(height: responsive.spacing(24)),
+              // Question count
               Column(
                 children: [
                   Text(
@@ -95,6 +86,7 @@ class QuestionnaireHome extends StatelessWidget {
                 ],
               ),
               SizedBox(height: responsive.spacing(32)),
+              // Large "Start" button
               SizedBox(
                 width: responsive.wp(75),
                 height: responsive.hp(8),
@@ -123,26 +115,28 @@ class QuestionnaireHome extends StatelessWidget {
                 ),
               ),
               SizedBox(height: responsive.spacing(16)),
+              // "Save for Later" button - smaller and rounded
               SizedBox(
                 width: responsive.wp(60),
                 height: responsive.hp(6),
                 child: ElevatedButton(
                   onPressed: () async {
-                    if (interactionID != null && questionnaire != null) {
-                      await DraftsStore.saveDraft(
-                        DraftQuestionnaire(
-                          interactionID: interactionID!,
-                          savedAt: DateTime.now(),
-                          questionnaireJson: questionnaire!.toJson(),
-                        ),
-                      );
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Vragenlijst opgeslagen voor later')),
-                      );
-                    }
+                    // Save draft locally for later resume
+                    await DraftsStore.saveDraft(
+                      DraftQuestionnaire(
+                        interactionID: interactionID,
+                        savedAt: DateTime.now(),
+                        questionnaireJson: questionnaire.toJson(),
+                      ),
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Vragenlijst opgeslagen voor later')),
+                    );
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const OverzichtScreen()),
+                      MaterialPageRoute(
+                        builder: (context) => const OverzichtScreen(),
+                      ),
                     );
                   },
                   style: ElevatedButton.styleFrom(
@@ -170,6 +164,7 @@ class QuestionnaireHome extends StatelessWidget {
             ],
           ),
         ),
+        // Small close button in top-right corner
         Positioned(
           top: responsive.hp(2),
           right: responsive.wp(1.2),
@@ -263,4 +258,3 @@ class DraftsStore {
     await prefs.setStringList(_key, filtered);
   }
 }
-

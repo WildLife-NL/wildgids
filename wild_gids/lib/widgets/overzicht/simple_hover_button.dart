@@ -31,7 +31,8 @@ class _SimpleHoverButtonState extends State<SimpleHoverButton> {
   bool _pressed = false;
 
   void _setHover(bool value) {
-    if (!kIsWeb && defaultTargetPlatform != TargetPlatform.macOS &&
+    if (!kIsWeb &&
+        defaultTargetPlatform != TargetPlatform.macOS &&
         defaultTargetPlatform != TargetPlatform.windows &&
         defaultTargetPlatform != TargetPlatform.linux) {
       // On mobile platforms, ignore hover.
@@ -42,9 +43,10 @@ class _SimpleHoverButtonState extends State<SimpleHoverButton> {
 
   @override
   Widget build(BuildContext context) {
-  final bool active = _hovering || _pressed;
+    final bool active = _hovering || _pressed;
     final Color bg = active ? AppColors.darkGreen : widget.backgroundColor;
-    final Color txtColor = active ? Colors.white : (widget.textStyle?.color ?? Colors.black);
+    final Color txtColor =
+        active ? Colors.white : (widget.textStyle?.color ?? Colors.black);
 
     return MouseRegion(
       onEnter: (_) => _setHover(true),
@@ -66,11 +68,13 @@ class _SimpleHoverButtonState extends State<SimpleHoverButton> {
           alignment: Alignment.center,
           child: Text(
             widget.text,
-            style: widget.textStyle?.copyWith(color: txtColor) ?? TextStyle(
-              color: txtColor,
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-            ),
+            style:
+                widget.textStyle?.copyWith(color: txtColor) ??
+                TextStyle(
+                  color: txtColor,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
           ),
         ),
       ),

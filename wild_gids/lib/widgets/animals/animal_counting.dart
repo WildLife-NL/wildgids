@@ -1,18 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wildrapport/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
-import 'package:wildrapport/models/animal_waarneming_models/animal_gender_view_count_model.dart';
 import 'package:wildrapport/models/enums/animal_age.dart';
 import 'package:wildrapport/models/enums/animal_age_extensions.dart';
 import 'package:wildrapport/models/enums/animal_gender.dart';
-import 'package:wildrapport/models/animal_waarneming_models/view_count_model.dart';
 import 'package:wildrapport/widgets/overlay/error_overlay.dart';
 import 'package:wildrapport/widgets/toasts/snack_bar_with_progress.dart';
 import 'package:wildrapport/widgets/shared_ui_widgets/white_bulk_button.dart';
 import 'package:wildrapport/constants/app_colors.dart';
 import 'package:wildrapport/models/animal_waarneming_models/observed_animal_entry.dart';
 import 'package:wildrapport/models/enums/animal_condition.dart';
-
 
 class AnimalCounting extends StatefulWidget {
   final Function(String)? onAgeSelected;
@@ -28,8 +25,9 @@ class _AnimalCountingState extends State<AnimalCounting> {
   String? selectedAge;
   String? selectedGender;
   String? lastSelectedGender; // Add this to remember the last gender
-  int currentCount = 0;
+  int currentCount = 1; // Default to 1
   bool _forceRebuild = false;
+  late final FixedExtentScrollController _countController;
 
   AnimalAge _convertStringToAnimalAge(String ageString) {
     return AnimalAgeExtensions.fromApiString(ageString);
@@ -50,90 +48,119 @@ class _AnimalCountingState extends State<AnimalCounting> {
   @override
   void initState() {
     super.initState();
-  }
-
-void _validateAndAddToList(BuildContext context) {
-  // 1. Validate input first
-  List<String> errors = [];
-
-  if (selectedAge == null) {
-    errors.add('Selecteer een leeftijd');
-  }
-
-  if (selectedGender == null) {
-    errors.add('Selecteer een geslacht');
-  }
-
-  if (currentCount <= 0) {
-    errors.add('Voer een aantal groter dan 0 in');
-  }
-
-  if (errors.isNotEmpty) {
-    showDialog(
-      context: context,
-      builder: (context) => ErrorOverlay(messages: errors),
+    // Initialize the wheel controller with index matching value 1
+    _countController = FixedExtentScrollController(
+      initialItem: currentCount - 1,
     );
-    return;
   }
 
-  // 2. Get the manager + current sighting
-  final mgr = context.read<AnimalSightingReportingInterface>();
-  final sighting = mgr.getCurrentanimalSighting();
-  final currentAnimal = sighting?.animalSelected;
-
-  if (currentAnimal == null) {
-    // nothing selected? just bail
-    return;
+  @override
+  void dispose() {
+    _countController.dispose();
+    super.dispose();
   }
 
-  // 3. Convert UI strings -> enums
-  final AnimalAge ageEnum = _convertStringToAnimalAge(selectedAge!);
-  final AnimalGender genderEnum = _convertStringToAnimalGender(selectedGender!);
+  void _validateAndAddToList(BuildContext context) {
+    // 1. Validate input first
+    List<String> errors = [];
+    bool missingAge = selectedAge == null;
+    bool missingGender = selectedGender == null;
 
-  // We don't let the user pick condition yet in this screen,
-  // so fallback to whatever is on the selected animal,
-  // or just "other".
-  final AnimalCondition conditionEnum =
-      currentAnimal.condition ?? AnimalCondition.andere;
+    // If both are missing, show combined message
+    if (missingAge && missingGender) {
+      errors.add('Selecteer een leeftijd en geslacht');
+    } else {
+      // Show specific messages for what's missing
+      if (missingAge) {
+        errors.add('Selecteer een leeftijd');
+      }
+      if (missingGender) {
+        errors.add('Selecteer een geslacht');
+      }
+    }
 
-  // 4. Build one batch entry for the chosen combo
-  final entry = ObservedAnimalEntry(
-    age: ageEnum,
-    gender: genderEnum,
-    condition: conditionEnum,
-    count: currentCount,
-  );
+    if (currentCount <= 0) {
+      errors.add('Voer een aantal groter dan 0 in');
+    }
 
-  // 5. Save it in the manager
-  mgr.addObservedAnimal(entry);
+    if (errors.isNotEmpty) {
+      showDialog(
+        context: context,
+        builder: (context) => ErrorOverlay(messages: errors),
+      );
+      return;
+    }
 
-  // 6. Sync into the legacy AnimalSightingModel.animals
-  // so later screens + API transformer can still read it
-  mgr.syncObservedAnimalsToSighting();
+    // 2. Get the manager + current sighting
+    final mgr = context.read<AnimalSightingReportingInterface>();
+    final sighting = mgr.getCurrentanimalSighting();
+    final currentAnimal = sighting?.animalSelected;
 
-  // 7. Reset local UI so user can add another batch
-  setState(() {
-    // Remember last gender if you still want that UX
-    lastSelectedGender = selectedGender;
+    if (currentAnimal == null) {
+      // nothing selected? just bail
+      return;
+    }
 
-    selectedAge = null;
-    selectedGender = null;
-    currentCount = 0;
+    // 3. Convert UI strings -> enums
+    final AnimalAge ageEnum = _convertStringToAnimalAge(selectedAge!);
+    final AnimalGender genderEnum = _convertStringToAnimalGender(
+      selectedGender!,
+    );
 
-    // force rebuild trick stays if you still need it
-    _forceRebuild = !_forceRebuild;
-  });
+    // We don't let the user pick condition yet in this screen,
+    // so fallback to whatever is on the selected animal,
+    // or just "other".
+    final AnimalCondition conditionEnum =
+        currentAnimal.condition ?? AnimalCondition.andere;
 
-  // 8. Tell parent screen "we added something"
-  widget.onAddToList?.call();
+    // 4. Build one batch entry for the chosen combo
+    final entry = ObservedAnimalEntry(
+      age: ageEnum,
+      gender: genderEnum,
+      condition: conditionEnum,
+      count: currentCount,
+    );
 
-  // 9. Show success toast/snack
-  SnackBarWithProgress.show(
-    context: context,
-    message: 'Dier toegevoegd aan de lijst',
-  );
-}
+    // 5. Save it in the manager
+    mgr.addObservedAnimal(entry);
 
+    // 6. Sync into the legacy AnimalSightingModel.animals
+    // so later screens + API transformer can still read it
+    mgr.syncObservedAnimalsToSighting();
+
+    // 7. Reset local UI so user can add another batch
+    setState(() {
+      // Remember last gender if you still want that UX
+      lastSelectedGender = selectedGender;
+
+      selectedAge = null;
+      selectedGender = null;
+      currentCount = 1; // Reset to default 1
+
+      // force rebuild trick stays if you still need it
+      _forceRebuild = !_forceRebuild;
+    });
+    // Reset the wheel position to 1 as well (index 0)
+    try {
+      _countController.animateToItem(
+        0,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+      );
+    } catch (_) {
+      // In case controller isn't attached yet
+      _countController.jumpToItem(0);
+    }
+
+    // 8. Tell parent screen "we added something"
+    widget.onAddToList?.call();
+
+    // 9. Show success toast/snack
+    SnackBarWithProgress.show(
+      context: context,
+      message: 'Dier toegevoegd aan de lijst',
+    );
+  }
 
   void _handleAgeSelection(String age) {
     setState(() {
@@ -227,100 +254,106 @@ void _validateAndAddToList(BuildContext context) {
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 24,
-                        vertical: 2,
-                      ),
-                      child: Column(
-                        children: [
-                          // Header + instructional subtitle for the number picker
-                          Column(
-                            children: [
-                              _buildHeader('Kies een aantal'),
-                              const Text(
-                                'Scroll om een aantal te kiezen',
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 12,
-                                  fontFamily: 'Roboto',
-                                  fontWeight: FontWeight.normal,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          // Scrollable number picker like in the image
-                          Container(
-                            height: 120,
-                            width: 100,
-                            decoration: BoxDecoration(
-                              color: AppColors.offWhite,
-                              borderRadius: BorderRadius.circular(15),
-                              border: Border.all(
-                                color: AppColors.brown300,
-                                width: 2,
+                      vertical: 2,
+                    ),
+                    child: Column(
+                      children: [
+                        // Header + instructional subtitle for the number picker
+                        Column(
+                          children: [
+                            _buildHeader('Kies een aantal'),
+                            const Text(
+                              'Scroll om een aantal te kiezen',
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 12,
+                                fontFamily: 'Roboto',
+                                fontWeight: FontWeight.normal,
                               ),
                             ),
-                            child: ListWheelScrollView.useDelegate(
-                              controller: FixedExtentScrollController(initialItem: 0),
-                              itemExtent: 40,
-                              diameterRatio: 1.5,
-                              physics: const FixedExtentScrollPhysics(),
-                              onSelectedItemChanged: (index) {
-                                setState(() {
-                                  currentCount = index;
-                                });
-                              },
-                              childDelegate: ListWheelChildBuilderDelegate(
-                                builder: (context, index) {
-                                  final bool isSelected = index == currentCount;
-                                  return Center(
-                                    child: Container(
-                                      width: 70,
-                                      decoration: BoxDecoration(
-                                        color: isSelected
-                                            ? AppColors.brown300
-                                            : Colors.transparent,
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          '$index',
-                                          style: TextStyle(
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.bold,
-                                            color: isSelected
-                                                ? Colors.white
-                                                : Colors.black,
-                                            fontFamily: 'Roboto',
-                                          ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        // Scrollable number picker like in the image
+                        Container(
+                          height: 120,
+                          width: 100,
+                          decoration: BoxDecoration(
+                            color: AppColors.offWhite,
+                            borderRadius: BorderRadius.circular(15),
+                            border: Border.all(
+                              color: AppColors.brown300,
+                              width: 2,
+                            ),
+                          ),
+                          child: ListWheelScrollView.useDelegate(
+                            controller: _countController,
+                            itemExtent: 40,
+                            diameterRatio: 1.5,
+                            physics: const FixedExtentScrollPhysics(),
+                            onSelectedItemChanged: (index) {
+                              setState(() {
+                                currentCount = index + 1; // Values 1..100
+                              });
+                            },
+                            childDelegate: ListWheelChildBuilderDelegate(
+                              builder: (context, index) {
+                                final int value = index + 1;
+                                final bool isSelected = value == currentCount;
+                                return Center(
+                                  child: Container(
+                                    width: 70,
+                                    decoration: BoxDecoration(
+                                      color:
+                                          isSelected
+                                              ? AppColors.brown300
+                                              : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        '$value',
+                                        style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                          color:
+                                              isSelected
+                                                  ? Colors.white
+                                                  : Colors.black,
+                                          fontFamily: 'Roboto',
                                         ),
                                       ),
                                     ),
-                                  );
-                                },
-                                childCount: 101, // 0 to 100
-                              ),
+                                  ),
+                                );
+                              },
+                              childCount: 100, // 1 to 100
                             ),
                           ),
-                          const SizedBox(height: 12),
-                          SizedBox(
-                            width: 350,
-                            child: WhiteBulkButton(
-                              text: "Voeg toe aan de lijst",
-                              showIcon: false,
-                              height: 50,
-                              backgroundColor: AppColors.lightMintGreen100,
-                              borderColor: AppColors.lightGreen,
-                              // Ensure this button also uses Roboto/black and no drop shadow
-                              textStyle: const TextStyle(fontFamily: 'Roboto', color: Colors.black),
-                              showShadow: false,
-                              onPressed: () => _validateAndAddToList(context),
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: 350,
+                          child: WhiteBulkButton(
+                            text: "Voeg toe aan de lijst",
+                            showIcon: false,
+                            height: 50,
+                            backgroundColor: AppColors.lightMintGreen100,
+                            borderColor: AppColors.lightGreen,
+                            // Ensure this button also uses Roboto/black and no drop shadow
+                            textStyle: const TextStyle(
+                              fontFamily: 'Roboto',
+                              color: Colors.black,
                             ),
+                            showShadow: false,
+                            onPressed: () => _validateAndAddToList(context),
                           ),
-                          // Add extra padding at the bottom to ensure the button is visible
-                          SizedBox(height: 4),
-                        ],
-                      ),
+                        ),
+                        // Add extra padding at the bottom to ensure the button is visible
+                        SizedBox(height: 4),
+                      ],
                     ),
+                  ),
                 ],
               ),
             ),
@@ -358,8 +391,10 @@ void _validateAndAddToList(BuildContext context) {
         fontWeight: FontWeight.w500,
         textAlign: TextAlign.center,
         showIcon: false,
-        backgroundColor: isSelected ? AppColors.brown300 : AppColors.lightMintGreen100,
-        borderColor: isSelected ? AppColors.lightMintGreen100 : AppColors.brown300,
+        backgroundColor:
+            isSelected ? AppColors.brown300 : AppColors.lightMintGreen100,
+        borderColor:
+            isSelected ? AppColors.lightMintGreen100 : AppColors.brown300,
         hoverBackgroundColor: AppColors.brown300,
         hoverBorderColor: AppColors.lightMintGreen100,
         // Make the button text use Roboto and black, and remove drop shadows
@@ -382,8 +417,10 @@ void _validateAndAddToList(BuildContext context) {
         fontWeight: FontWeight.w500,
         textAlign: TextAlign.center,
         showIcon: false,
-        backgroundColor: isSelected ? AppColors.brown300 : AppColors.lightMintGreen100,
-        borderColor: isSelected ? AppColors.lightMintGreen100 : AppColors.brown300,
+        backgroundColor:
+            isSelected ? AppColors.brown300 : AppColors.lightMintGreen100,
+        borderColor:
+            isSelected ? AppColors.lightMintGreen100 : AppColors.brown300,
         hoverBackgroundColor: AppColors.brown300,
         hoverBorderColor: AppColors.lightMintGreen100,
         // Make the button text use Roboto and black, and remove drop shadows
@@ -392,84 +429,6 @@ void _validateAndAddToList(BuildContext context) {
         onPressed: () => _handleGenderSelection(text),
       ),
     );
-  }
-
-  bool _isAgeAlreadyAdded(String genderText, String ageText) {
-    final manager = context.read<AnimalSightingReportingInterface>();
-    final sighting = manager.getCurrentanimalSighting();
-    final selectedGender = _convertStringToAnimalGender(genderText);
-    final selectedAge = _convertStringToAnimalAge(ageText);
-
-    // Check in the animals list
-    final animals = sighting?.animals;
-    if (animals == null || animals.isEmpty) {
-      debugPrint('_isAgeAlreadyAdded: No animals in list');
-      return false;
-    }
-
-    // Check all animals in the list
-    for (final animal in animals) {
-      // Find the gender view count for the selected gender
-      final genderVC = animal.genderViewCounts.firstWhere(
-        (gvc) => gvc.gender == selectedGender,
-        orElse:
-            () => AnimalGenderViewCount(
-              gender: selectedGender,
-              viewCount: ViewCountModel(),
-            ),
-      );
-
-      // Check if this age is already added for this gender
-      bool hasCount = false;
-      switch (selectedAge) {
-        case AnimalAge.pasGeboren:
-          hasCount = (genderVC.viewCount.pasGeborenAmount > 0);
-          break;
-        case AnimalAge.onvolwassen:
-          hasCount = (genderVC.viewCount.onvolwassenAmount > 0);
-          break;
-        case AnimalAge.volwassen:
-          hasCount = (genderVC.viewCount.volwassenAmount > 0);
-          break;
-        case AnimalAge.onbekend:
-          hasCount = (genderVC.viewCount.unknownAmount > 0);
-          break;
-      }
-
-      if (hasCount) {
-        debugPrint(
-          '_isAgeAlreadyAdded: Found count for gender=$genderText, age=$ageText',
-        );
-        return true;
-      }
-    }
-
-    debugPrint(
-      '_isAgeAlreadyAdded: No count found for gender=$genderText, age=$ageText',
-    );
-    return false;
-  }
-
-  bool _areAllAgesFilledForGender(String genderText) {
-    final manager = context.read<AnimalSightingReportingInterface>();
-    final sighting = manager.getCurrentanimalSighting();
-    final selectedGender = _convertStringToAnimalGender(genderText);
-
-    final genderVC = sighting?.animalSelected?.genderViewCounts.firstWhere(
-      (gvc) => gvc.gender == selectedGender,
-      orElse:
-          () => AnimalGenderViewCount(
-            gender: selectedGender,
-            viewCount: ViewCountModel(),
-          ),
-    );
-
-    if (genderVC == null) return false;
-
-    return (genderVC.viewCount.pasGeborenAmount > 0) &&
-        (genderVC.viewCount.onvolwassenAmount > 0) &&
-        (genderVC.viewCount.volwassenAmount > 0) &&
-        (genderVC.viewCount.unknownAmount > 0);
   }
 
   List<Widget> _buildAgeButtonsWithSpacing() {
@@ -481,41 +440,12 @@ void _validateAndAddToList(BuildContext context) {
       AnimalAge.onbekend.label,
     ];
 
-    // Count visible and hidden buttons
-    int visibleCount = 0;
-
-    // Add visible buttons with spacing
+    // Always show all buttons - no filtering
     for (int i = 0; i < ageOptions.length; i++) {
-      // Check if this age is already added for the selected gender
-      bool disable = false;
-      if (selectedGender != null) {
-        disable = _isAgeAlreadyAdded(selectedGender!, ageOptions[i]);
-      } else {
-        disable =
-            _isAgeAlreadyAdded("Mannelijk", ageOptions[i]) ||
-            _isAgeAlreadyAdded("Vrouwelijk", ageOptions[i]) ||
-            _isAgeAlreadyAdded("Onbekend", ageOptions[i]);
+      if (i > 0) {
+        result.add(const SizedBox(height: 8)); // Add spacing between buttons
       }
-
-      // Only add visible buttons
-      if (!disable) {
-        if (visibleCount > 0) {
-          result.add(const SizedBox(height: 8)); // Add spacing between buttons
-        }
-        result.add(Flexible(child: _buildAgeButton(ageOptions[i])));
-        visibleCount++;
-      }
-    }
-
-    // Add SizedBoxes at the end to maintain consistent height
-    int hiddenCount = ageOptions.length - visibleCount;
-    for (int i = 0; i < hiddenCount; i++) {
-      if (result.isNotEmpty) {
-        result.add(const SizedBox(height: 8)); // Add spacing
-      }
-      result.add(
-        Flexible(child: SizedBox(height: 64.5)),
-      ); // Same height as buttons
+      result.add(Flexible(child: _buildAgeButton(ageOptions[i])));
     }
 
     return result;
@@ -525,33 +455,12 @@ void _validateAndAddToList(BuildContext context) {
     final List<Widget> result = [];
     final genderOptions = ["Mannelijk", "Vrouwelijk", "Onbekend"];
 
-    // Count visible and hidden buttons
-    int visibleCount = 0;
-
-    // Add visible buttons with spacing
+    // Always show all buttons - no filtering
     for (int i = 0; i < genderOptions.length; i++) {
-      // Check if all ages are filled for this gender
-      bool disable = _areAllAgesFilledForGender(genderOptions[i]);
-
-      // Only add visible buttons
-      if (!disable) {
-        if (visibleCount > 0) {
-          result.add(const SizedBox(height: 8)); // Add spacing between buttons
-        }
-        result.add(Flexible(child: _buildGenderButton(genderOptions[i])));
-        visibleCount++;
+      if (i > 0) {
+        result.add(const SizedBox(height: 8)); // Add spacing between buttons
       }
-    }
-
-    // Add SizedBoxes at the end to maintain consistent height
-    int hiddenCount = genderOptions.length - visibleCount;
-    for (int i = 0; i < hiddenCount; i++) {
-      if (result.isNotEmpty) {
-        result.add(const SizedBox(height: 8)); // Add spacing
-      }
-      result.add(
-        Flexible(child: SizedBox(height: 64.5)),
-      ); // Same height as buttons
+      result.add(Flexible(child: _buildGenderButton(genderOptions[i])));
     }
 
     // Add an extra SizedBox at the end for alignment with age column

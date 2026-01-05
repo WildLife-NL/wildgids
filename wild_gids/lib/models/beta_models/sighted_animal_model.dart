@@ -21,4 +21,3 @@ class SightedAnimal {
     sex: json['sex'] ?? '',
   );
 }
-

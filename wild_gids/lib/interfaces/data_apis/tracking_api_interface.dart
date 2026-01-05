@@ -19,11 +19,13 @@ class TrackingReadingResponse {
 
   factory TrackingReadingResponse.fromJson(Map<String, dynamic> json) {
     final location = json['location'] as Map<String, dynamic>;
-    final timestampStr = json['timestamp'] as String;
-    final parsed = DateTime.parse(timestampStr);
+    
+    String timestampStr = json['timestamp'] as String;
+    DateTime parsedTime = DateTime.parse(timestampStr);
+    
     return TrackingReadingResponse(
       userId: json['userID'] as String,
-      timestamp: parsed,
+      timestamp: parsedTime,
       latitude: (location['latitude'] as num).toDouble(),
       longitude: (location['longitude'] as num).toDouble(),
     );

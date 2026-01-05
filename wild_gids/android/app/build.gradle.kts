@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -13,6 +16,8 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        // Required by flutter_local_notifications to support Java 8+ APIs
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
@@ -20,7 +25,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.wildgids"
+        applicationId = "com.example.wildrapport"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -33,12 +38,33 @@ android {
         // Remove renderscript related configs as they're deprecated
     }
 
+    // Configure signing for proper in-place updates (same appId + same key)
+    // Will use release keystore if key.properties exists, else fall back to debug signing.
+    val keystorePropertiesFile = rootProject.file("key.properties")
+    val keystoreProperties = Properties()
+    val hasReleaseKeystore = keystorePropertiesFile.exists()
+    if (hasReleaseKeystore) {
+        keystoreProperties.load(keystorePropertiesFile.inputStream())
+    }
+
+    signingConfigs {
+        if (hasReleaseKeystore) {
+            create("release") {
+                storeFile = file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["storePassword"] as String
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+            }
+        }
+    }
+
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName(if (hasReleaseKeystore) "release" else "debug")
             isMinifyEnabled = true
+            isShrinkResources = false
             proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
+                getDefaultProguardFile("proguard-android.txt"),
                 "proguard-rules.pro"
             )
         }
@@ -59,4 +85,6 @@ flutter {
 dependencies {
     implementation("androidx.window:window:1.0.0")
     implementation("androidx.window:window-java:1.0.0")
+    // Core library desugaring to backport Java APIs on older Android versions
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 }

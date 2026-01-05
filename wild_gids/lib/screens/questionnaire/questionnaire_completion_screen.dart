@@ -33,20 +33,20 @@ class _QuestionnaireCompletionScreenState
     // Moves the deer from left (off-screen) to right (off-screen)
     _xPosition = Tween<double>(
       begin: -200, // Start off the left side
-      end: 500,    // Exit to the right (tune for screen width)
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.linear,
-    ));
+      end: 500, // Exit to the right (tune for screen width)
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.linear));
 
     // Creates a "jump arc"
     _yJump = TweenSequence([
-      TweenSequenceItem(tween: Tween(begin: 0.0, end: -100.0), weight: 50), // jump up
-      TweenSequenceItem(tween: Tween(begin: -100.0, end: 0.0), weight: 50), // fall down
-    ]).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
+      TweenSequenceItem(
+        tween: Tween(begin: 0.0, end: -100.0),
+        weight: 50,
+      ), // jump up
+      TweenSequenceItem(
+        tween: Tween(begin: -100.0, end: 0.0),
+        weight: 50,
+      ), // fall down
+    ]).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
     _controller.repeat(); // repeat jump cycle
   }
@@ -59,15 +59,15 @@ class _QuestionnaireCompletionScreenState
 
   void _navigateToOverview() {
     context.read<NavigationStateInterface>().pushAndRemoveUntil(
-          context,
-          OverzichtScreen(),
-        );
+      context,
+      OverzichtScreen(),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final bool isActive = _isHovered || _isPressed;
-    
+
     // Dynamically position deer higher on the screen
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
@@ -95,7 +95,7 @@ class _QuestionnaireCompletionScreenState
               );
             },
           ),
-          
+
           // Main content
           SafeArea(
             child: Center(
@@ -106,7 +106,7 @@ class _QuestionnaireCompletionScreenState
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     const Spacer(flex: 2),
-                    
+
                     // Thank you text
                     const Text(
                       'Bedankt.',
@@ -119,10 +119,10 @@ class _QuestionnaireCompletionScreenState
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
-                    
+
                     // Report sent text
                     const Text(
-                      'Rapport verzonden\nen succesvol afgerond.',
+                      'Gids verzonden\nen succesvol afgerond.',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w500,
@@ -133,7 +133,7 @@ class _QuestionnaireCompletionScreenState
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
-                    
+
                     // Subtitle text
                     const Text(
                       'U kunt deze bekijken in uw profiel.',
@@ -145,7 +145,7 @@ class _QuestionnaireCompletionScreenState
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 60),
-                    
+
                     // Button to go to overview
                     MouseRegion(
                       onEnter: (_) => setState(() => _isHovered = true),
@@ -164,7 +164,8 @@ class _QuestionnaireCompletionScreenState
                             vertical: 16,
                           ),
                           decoration: BoxDecoration(
-                            color: isActive ? AppColors.darkGreen : Colors.white,
+                            color:
+                                isActive ? AppColors.darkGreen : Colors.white,
                             border: Border.all(
                               color: AppColors.darkGreen,
                               width: 2,
@@ -177,7 +178,8 @@ class _QuestionnaireCompletionScreenState
                               fontSize: 20,
                               fontWeight: FontWeight.w600,
                               fontFamily: 'Roboto',
-                              color: isActive ? Colors.white : AppColors.darkGreen,
+                              color:
+                                  isActive ? Colors.white : AppColors.darkGreen,
                             ),
                           ),
                         ),

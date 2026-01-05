@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:wildrapport/widgets/questionnaire/questionnaire_white_button.dart';
+import 'package:wildrapport/utils/responsive_utils.dart';
 
 class QuestionnaireHomeButtons extends StatelessWidget {
   final Function() onOverslaanPressed;
@@ -15,36 +16,36 @@ class QuestionnaireHomeButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
-    final buttonWidth = screenSize.width * 0.8; // 80% of screen width
-    final buttonSpacing = screenSize.height * 0.02; // 2% of screen height
-    
+    final responsive = context.responsive;
+    final buttonWidth = responsive.wp(80); // 80% of screen width
+    final buttonSpacing = responsive.hp(2); // 2% of screen height
+
     return Center(
       child: Padding(
         padding: EdgeInsets.symmetric(
-          horizontal: screenSize.width * 0.05,
-          vertical: screenSize.height * 0.02,
+          horizontal: responsive.wp(5),
+          vertical: responsive.hp(2),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _buildButton(
               text: "Overslaan",
-              height: screenSize.height * 0.08, // Responsive height
+              height: responsive.hp(8), // Responsive height
               width: buttonWidth * 0.6, // 60% of the buttonWidth
               onPressed: onOverslaanPressed,
             ),
             SizedBox(height: buttonSpacing),
             _buildButton(
               text: "Bewaar voor later",
-              height: screenSize.height * 0.08,
+              height: responsive.hp(8),
               width: buttonWidth * 0.8, // 80% of the buttonWidth
               onPressed: onBewaarVoorLaterPressed,
             ),
             SizedBox(height: buttonSpacing),
             _buildButton(
               text: "Vragenlijst Openen",
-              height: screenSize.height * 0.09,
+              height: responsive.hp(9),
               width: buttonWidth, // Full buttonWidth
               onPressed: onVragenlijnstOpenenPressed,
             ),
@@ -68,6 +69,3 @@ class QuestionnaireHomeButtons extends StatelessWidget {
     );
   }
 }
-
-
-

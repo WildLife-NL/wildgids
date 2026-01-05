@@ -1,7 +1,6 @@
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:wildrapport/models/enums/location_type.dart';
 import 'package:wildrapport/providers/map_provider.dart';
 
 // Mock Position for testing
@@ -10,11 +9,7 @@ class MockPosition implements Position {
   final double lng;
   final DateTime time;
 
-  MockPosition({
-    required this.lat,
-    required this.lng,
-    required this.time,
-  });
+  MockPosition({required this.lat, required this.lng, required this.time});
 
   @override
   double get latitude => lat;
@@ -86,20 +81,23 @@ void main() {
       expect(mapProvider.isInitialized, isFalse);
     });
 
-    test('should create map controller when accessed before initialization', () {
-      // Act
-      final controller = mapProvider.mapController;
-      
-      // Assert
-      expect(controller, isA<MapController>());
-      // Note: Accessing the controller now sets isInitialized to true
-      expect(mapProvider.isInitialized, isTrue);
-    });
+    test(
+      'should create map controller when accessed before initialization',
+      () {
+        // Act
+        final controller = mapProvider.mapController;
+
+        // Assert
+        expect(controller, isA<MapController>());
+        // Note: Accessing the controller now sets isInitialized to true
+        expect(mapProvider.isInitialized, isTrue);
+      },
+    );
 
     test('should initialize map controller explicitly', () async {
       // Act
       await mapProvider.initialize();
-      
+
       // Assert
       expect(mapProvider.isInitialized, isTrue);
       expect(mapProvider.mapController, isA<MapController>());
@@ -110,10 +108,10 @@ void main() {
       // Arrange
       await mapProvider.initialize();
       final initialController = mapProvider.mapController;
-      
+
       // Act
       await mapProvider.initialize();
-      
+
       // Assert
       expect(mapProvider.mapController, equals(initialController));
     });
@@ -126,10 +124,10 @@ void main() {
         time: DateTime.now(),
       );
       const address = 'Amsterdam, Netherlands';
-      
+
       // Act
       await mapProvider.updatePosition(position, address);
-      
+
       // Assert
       expect(mapProvider.currentPosition, equals(position));
       expect(mapProvider.currentAddress, equals(address));
@@ -138,25 +136,28 @@ void main() {
       expect(mapProvider.isLoading, isFalse);
     });
 
-    test('should not update selected position if it is set to unknown', () async {
-      // Arrange
-      mapProvider.selectedAddress = LocationType.unknown.displayText;
-      final position = MockPosition(
-        lat: 52.3676,
-        lng: 4.9041,
-        time: DateTime.now(),
-      );
-      const address = 'Amsterdam, Netherlands';
-      
-      // Act
-      await mapProvider.updatePosition(position, address);
-      
-      // Assert
-      expect(mapProvider.currentPosition, equals(position));
-      expect(mapProvider.currentAddress, equals(address));
-      expect(mapProvider.selectedPosition, isNot(equals(position)));
-      expect(mapProvider.selectedAddress, equals(LocationType.unknown.displayText));
-    });
+    test(
+      'should not update selected position if it is set to unknown',
+      () async {
+        // Arrange
+        mapProvider.selectedAddress = '';
+        final position = MockPosition(
+          lat: 52.3676,
+          lng: 4.9041,
+          time: DateTime.now(),
+        );
+        const address = 'Amsterdam, Netherlands';
+
+        // Act
+        await mapProvider.updatePosition(position, address);
+
+        // Assert
+        expect(mapProvider.currentPosition, equals(position));
+        expect(mapProvider.currentAddress, equals(address));
+        expect(mapProvider.selectedPosition, isNot(equals(position)));
+        expect(mapProvider.selectedAddress, equals(''));
+      },
+    );
 
     test('should set selected location', () {
       // Arrange
@@ -166,10 +167,10 @@ void main() {
         time: DateTime.now(),
       );
       const address = 'Amsterdam, Netherlands';
-      
+
       // Act
       mapProvider.setSelectedLocation(position, address);
-      
+
       // Assert
       expect(mapProvider.selectedPosition, equals(position));
       expect(mapProvider.selectedAddress, equals(address));
@@ -178,13 +179,13 @@ void main() {
     test('should set loading state', () {
       // Act
       mapProvider.setLoading(true);
-      
+
       // Assert
       expect(mapProvider.isLoading, isTrue);
-      
+
       // Act again
       mapProvider.setLoading(false);
-      
+
       // Assert again
       expect(mapProvider.isLoading, isFalse);
     });
@@ -192,17 +193,12 @@ void main() {
     test('should handle dispose correctly', () {
       // Arrange
       mapProvider.initialize();
-      
+
       // Act
       mapProvider.dispose();
-      
+
       // Assert - no exceptions should be thrown
       expect(true, isTrue);
     });
   });
 }
-
-
-
-
-

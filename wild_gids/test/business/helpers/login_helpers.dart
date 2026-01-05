@@ -35,14 +35,16 @@ class TestHelpers {
 
   // Setup successful authentication
   static void setupSuccessfulAuthentication(MockAuthApiInterface mockAuthApi) {
-    when(mockAuthApi.authenticate(any, any)).thenAnswer(
-      (_) => Future.value(<String, dynamic>{}),
-    );
+    when(
+      mockAuthApi.authenticate(any, any),
+    ).thenAnswer((_) => Future.value(<String, dynamic>{}));
   }
 
   // Setup failed authentication
   static void setupFailedAuthentication(MockAuthApiInterface mockAuthApi) {
-    when(mockAuthApi.authenticate(any, any)).thenThrow(Exception('Failed to login'));
+    when(
+      mockAuthApi.authenticate(any, any),
+    ).thenThrow(Exception('Failed to login'));
   }
 
   // Setup successful authorization
@@ -51,9 +53,14 @@ class TestHelpers {
     MockProfileApiInterface mockProfileApi, {
     User? user,
   }) {
-    final mockUser = user ?? User(id: '123', email: 'test@example.com', name: 'Test User');
-    when(mockAuthApi.authorize(any, any)).thenAnswer((_) => Future.value(mockUser));
-    when(mockProfileApi.setProfileDataInDeviceStorage()).thenAnswer((_) => Future.value());
+    final mockUser =
+        user ?? User(id: '123', email: 'test@example.com', name: 'Test User');
+    when(
+      mockAuthApi.authorize(any, any),
+    ).thenAnswer((_) => Future.value(mockUser));
+    when(
+      mockProfileApi.setProfileDataInDeviceStorage(),
+    ).thenAnswer((_) => Future.value());
   }
 
   // Setup failed authorization

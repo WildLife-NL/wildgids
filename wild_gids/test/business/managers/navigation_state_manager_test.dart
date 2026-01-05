@@ -30,9 +30,7 @@ class MockHomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Home Screen')),
-    );
+    return const Scaffold(body: Center(child: Text('Home Screen')));
   }
 }
 
@@ -49,19 +47,19 @@ class TestableNavigationStateManager extends NavigationStateManager {
       clearApplicationState(context);
     });
   }
-  
+
   // Create a method to test controller disposal
   void testDispose() {
     final controller = TextEditingController(text: 'Test');
     bool wasDisposed = false;
-    
+
     controller.addListener(() {
       wasDisposed = true;
     });
-    
+
     // Add to internal list and dispose
     dispose();
-    
+
     // If dispose worked correctly, the controller should be disposed
     assert(wasDisposed == false, "Controller was not properly disposed");
   }
@@ -105,10 +103,12 @@ void main() {
               ),
             ],
             child: Builder(
-              builder: (context) => ElevatedButton(
-                onPressed: () => testableNavigationManager.resetToHome(context),
-                child: const Text('Reset to Home'),
-              ),
+              builder:
+                  (context) => ElevatedButton(
+                    onPressed:
+                        () => testableNavigationManager.resetToHome(context),
+                    child: const Text('Reset to Home'),
+                  ),
             ),
           ),
         ),
@@ -120,7 +120,7 @@ void main() {
 
       // Verify we navigated to MockHomeScreen
       expect(find.text('Home Screen'), findsOneWidget);
-      
+
       // Verify clearApplicationState was called (indirectly)
       verify(mockAnimalSightingManager.clearCurrentanimalSighting()).called(1);
       verify(mockAppStateProvider.resetApplicationState(any)).called(1);
@@ -140,10 +140,12 @@ void main() {
               ),
             ],
             child: Builder(
-              builder: (context) => ElevatedButton(
-                onPressed: () => navigationManager.clearApplicationState(context),
-                child: const Text('Clear State'),
-              ),
+              builder:
+                  (context) => ElevatedButton(
+                    onPressed:
+                        () => navigationManager.clearApplicationState(context),
+                    child: const Text('Clear State'),
+                  ),
             ),
           ),
         ),
@@ -163,13 +165,15 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Builder(
-            builder: (context) => ElevatedButton(
-              onPressed: () => navigationManager.pushAndRemoveUntil(
-                context, 
-                const MockScreen(),
-              ),
-              child: const Text('Navigate'),
-            ),
+            builder:
+                (context) => ElevatedButton(
+                  onPressed:
+                      () => navigationManager.pushAndRemoveUntil(
+                        context,
+                        const MockScreen(),
+                      ),
+                  child: const Text('Navigate'),
+                ),
           ),
         ),
       );
@@ -187,13 +191,15 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Builder(
-            builder: (context) => ElevatedButton(
-              onPressed: () => navigationManager.pushReplacementForward(
-                context, 
-                const MockScreen(),
-              ),
-              child: const Text('Navigate'),
-            ),
+            builder:
+                (context) => ElevatedButton(
+                  onPressed:
+                      () => navigationManager.pushReplacementForward(
+                        context,
+                        const MockScreen(),
+                      ),
+                  child: const Text('Navigate'),
+                ),
           ),
         ),
       );
@@ -211,13 +217,15 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Builder(
-            builder: (context) => ElevatedButton(
-              onPressed: () => navigationManager.pushReplacementBack(
-                context, 
-                const MockScreen(),
-              ),
-              child: const Text('Navigate'),
-            ),
+            builder:
+                (context) => ElevatedButton(
+                  onPressed:
+                      () => navigationManager.pushReplacementBack(
+                        context,
+                        const MockScreen(),
+                      ),
+                  child: const Text('Navigate'),
+                ),
           ),
         ),
       );
@@ -237,18 +245,20 @@ void main() {
           home: Navigator(
             onGenerateRoute: (settings) {
               return MaterialPageRoute(
-                builder: (context) => Scaffold(
-                  appBar: AppBar(title: const Text('Initial Screen')),
-                  body: Center(
-                    child: ElevatedButton(
-                      onPressed: () => navigationManager.pushForward(
-                        context, 
-                        const MockScreen(),
+                builder:
+                    (context) => Scaffold(
+                      appBar: AppBar(title: const Text('Initial Screen')),
+                      body: Center(
+                        child: ElevatedButton(
+                          onPressed:
+                              () => navigationManager.pushForward(
+                                context,
+                                const MockScreen(),
+                              ),
+                          child: const Text('Navigate'),
+                        ),
                       ),
-                      child: const Text('Navigate'),
                     ),
-                  ),
-                ),
               );
             },
           ),
@@ -264,14 +274,13 @@ void main() {
 
       // Verify we navigated to MockScreen
       expect(find.text('Mock Screen'), findsOneWidget);
-      
+
       // Tap the back button in the app bar
       await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();
-      
+
       // Verify we're back at the initial screen
       expect(find.text('Initial Screen'), findsOneWidget);
     });
   });
 }
-

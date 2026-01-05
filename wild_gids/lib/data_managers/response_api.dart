@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:wildrapport/data_managers/api_client.dart';
 import 'package:wildrapport/interfaces/data_apis/response_api_interface.dart';
+import 'package:wildrapport/models/api_models/my_response.dart';
 import 'dart:convert';
 
 class ResponseApi implements ResponseApiInterface {
@@ -15,46 +16,68 @@ class ResponseApi implements ResponseApiInterface {
   final yellowLog = '\x1B[93m';
 
   @override
-  Future<bool> addReponse(
+  Future<ResponseSubmissionResult> addReponse(
     String interactionID,
     String questionID,
     String? answerID,
     String? text,
   ) async {
     // Log the payload being sent
+    final trimmedText = text?.trim();
     final payload = {
       "answerID": answerID,
       "interactionID": interactionID,
       "questionID": questionID,
-      "text": text,
+      // Avoid sending empty strings; backend regexes often reject them
+      "text": (trimmedText == null || trimmedText.isEmpty) ? null : trimmedText,
     };
-    
     debugPrint("$yellowLog========================================");
     debugPrint("$yellowLog [ResponseApi]: SENDING RESPONSE TO BACKEND");
     debugPrint("$yellowLog [ResponseApi]: Endpoint: POST /response/");
     debugPrint("$yellowLog [ResponseApi]: InteractionID: $interactionID");
     debugPrint("$yellowLog [ResponseApi]: QuestionID: $questionID");
     debugPrint("$yellowLog [ResponseApi]: AnswerID: $answerID");
-    debugPrint("$yellowLog [ResponseApi]: Text: $text");
-    debugPrint("$yellowLog [ResponseApi]: Full Payload: $payload");
+    debugPrint("$yellowLog [ResponseApi]: Text: ${payload["text"]}");
+    debugPrint("$yellowLog [ResponseApi]: Text length: ${payload["text"]?.toString().length ?? 0}");
     debugPrint("$yellowLog========================================");
-    
-    http.Response response = await client.post('response/', payload, authenticated: true);
+
+    http.Response response = await client.post(
+      'response/',
+      payload,
+      authenticated: true,
+    );
 
     debugPrint("$yellowLog========================================");
     debugPrint("$yellowLog [ResponseApi]: BACKEND RESPONSE RECEIVED");
     debugPrint("$yellowLog [ResponseApi]: Status: ${response.statusCode}");
     debugPrint("$yellowLog [ResponseApi]: Body: ${response.body}");
     debugPrint("$yellowLog========================================");
-    
-    if (response.statusCode == HttpStatus.ok || response.statusCode == HttpStatus.created) {
-      debugPrint("$greenLog✓ [ResponseApi]: Response successfully submitted to backend!");
-      return true;
+
+    if (response.statusCode == HttpStatus.ok ||
+        response.statusCode == HttpStatus.created) {
+      debugPrint(
+        "$greenLog✓ [ResponseApi]: Response successfully submitted to backend!",
+      );
+      
+      // Check for conveyance in response body
+      Conveyance? conveyance;
+      try {
+        final Map<String, dynamic> responseBody = jsonDecode(response.body);
+        if (responseBody.containsKey('conveyance') && responseBody['conveyance'] != null) {
+          debugPrint("$yellowLog [ResponseApi]: 🔔 Conveyance detected in response!");
+          conveyance = Conveyance.fromJson(responseBody['conveyance']);
+          debugPrint("$yellowLog [ResponseApi]: Conveyance message: ${conveyance.messageText}");
+        }
+      } catch (e) {
+        debugPrint("$redLog [ResponseApi]: Error parsing conveyance: $e");
+      }
+      
+      return ResponseSubmissionResult(success: true, conveyance: conveyance);
     } else {
       debugPrint("$redLog✗ [ResponseApi]: FAILED to submit response!");
       debugPrint("$redLog [ResponseApi]: Status code: ${response.statusCode}");
       debugPrint("$redLog [ResponseApi]: Response body: ${response.body}");
-      return false;
+      return ResponseSubmissionResult(success: false);
     }
   }
 

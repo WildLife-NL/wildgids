@@ -12,7 +12,9 @@ import 'package:wildrapport/screens/logbook/logbook_screen.dart';
 class VerkeersongevalHistoryScreen extends StatelessWidget {
   const VerkeersongevalHistoryScreen({super.key});
 
-  bool _isAanrijding(MyInteraction interaction) => interaction.type.id == 3;
+  bool _isAanrijding(MyInteraction interaction) {
+    return interaction.type.id == 3;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +51,9 @@ class VerkeersongevalHistoryScreen extends StatelessWidget {
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(
-                      child: CircularProgressIndicator(color: AppColors.darkGreen),
+                      child: CircularProgressIndicator(
+                        color: AppColors.darkGreen,
+                      ),
                     );
                   }
                   if (snapshot.hasError) {
@@ -59,11 +63,19 @@ class VerkeersongevalHistoryScreen extends StatelessWidget {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: const [
-                            Icon(Icons.error_outline, color: Colors.red, size: 48),
+                            Icon(Icons.error_outline,
+                                color: Colors.red, size: 48),
                             SizedBox(height: 16),
-                            Text('Fout bij laden', style: TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                            Text(
+                              'Fout bij laden',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                              textAlign: TextAlign.center,
+                            ),
                             SizedBox(height: 8),
-                            Text('Kon verkeersongevallen niet laden. Probeer opnieuw.', textAlign: TextAlign.center),
+                            Text(
+                              'Kon verkeersongevallen niet laden. Probeer opnieuw.',
+                              textAlign: TextAlign.center,
+                            ),
                           ],
                         ),
                       ),
@@ -80,11 +92,19 @@ class VerkeersongevalHistoryScreen extends StatelessWidget {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: const [
-                            Icon(Icons.history, color: AppColors.darkGreen, size: 64),
+                            Icon(Icons.history,
+                                color: AppColors.darkGreen, size: 64),
                             SizedBox(height: 16),
-                            Text('Nog geen verkeersongevallen', style: TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                            Text(
+                              'Nog geen verkeersongevallen',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                              textAlign: TextAlign.center,
+                            ),
                             SizedBox(height: 8),
-                            Text('Na het indienen van een verkeersongeval wordt deze hier zichtbaar.', textAlign: TextAlign.center),
+                            Text(
+                              'Na het indienen van een verkeersongeval wordt deze hier zichtbaar.',
+                              textAlign: TextAlign.center,
+                            ),
                           ],
                         ),
                       ),
@@ -112,17 +132,23 @@ class _InteractionTile extends StatelessWidget {
   final MyInteraction interaction;
   const _InteractionTile({required this.interaction});
 
-  String _formatDateTime(DateTime dt) => DateFormat('dd MMM yyyy, HH:mm').format(dt);
+  String _formatDateTime(DateTime dt) =>
+      DateFormat('dd MMM yyyy, HH:mm').format(dt);
 
   @override
   Widget build(BuildContext context) {
-    final species = interaction.species.commonName.isNotEmpty ? interaction.species.commonName : interaction.species.name;
+    final species =
+        interaction.species.commonName.isNotEmpty
+            ? interaction.species.commonName
+            : interaction.species.name;
     final collision = interaction.reportOfCollision;
 
     return InkWell(
       onTap: () {
         Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => _DetailSheet(interaction: interaction)),
+          MaterialPageRoute(
+            builder: (_) => _DetailSheet(interaction: interaction),
+          ),
         );
       },
       child: Container(
@@ -132,7 +158,11 @@ class _InteractionTile extends StatelessWidget {
           color: const Color(0xFFF8FAF5),
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
           ],
           border: Border.all(color: Colors.grey.shade200),
         ),
@@ -142,20 +172,43 @@ class _InteractionTile extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(color: AppColors.darkGreen, borderRadius: BorderRadius.circular(20)),
-                  child: const Text('Dieraanrijding', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppColors.darkGreen,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    'Dieraanrijding',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
                 const Spacer(),
-                Text(_formatDateTime(interaction.moment), style: const TextStyle(color: Colors.grey)),
+                Text(
+                  _formatDateTime(interaction.moment),
+                  style: const TextStyle(color: Colors.grey),
+                ),
               ],
             ),
             const SizedBox(height: 12),
-            Text(species, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Color(0xFF5B3C1A))),
+            Text(
+              species,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF5B3C1A),
+              ),
+            ),
             const SizedBox(height: 12),
             Divider(color: Colors.grey.shade300, height: 1),
             const SizedBox(height: 12),
-            const Text('Aanrijding', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text(
+              'Aanrijding',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             if (collision != null) ...[
               const SizedBox(height: 6),
               Text('Dieren betrokken: ${collision.involvedAnimals.length}'),
@@ -168,7 +221,10 @@ class _InteractionTile extends StatelessWidget {
                 Icon(Icons.location_on, color: Colors.grey.shade600, size: 18),
                 const SizedBox(width: 6),
                 Text(
-                  formatFriendlyLocation(interaction.place.latitude, interaction.place.longitude),
+                  formatFriendlyLocation(
+                    interaction.place.latitude,
+                    interaction.place.longitude,
+                  ),
                   style: const TextStyle(color: Colors.grey),
                 ),
               ],
@@ -178,11 +234,21 @@ class _InteractionTile extends StatelessWidget {
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.grey.shade200)),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Vragenlijst: ${interaction.questionnaire!.name}', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF5B3C1A))),
+                    Text(
+                      'Vragenlijst: ${interaction.questionnaire!.name}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF5B3C1A),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -198,11 +264,15 @@ class _DetailSheet extends StatelessWidget {
   final MyInteraction interaction;
   const _DetailSheet({required this.interaction});
 
-  String _formatDateTime(DateTime dt) => DateFormat('dd MMM yyyy, HH:mm').format(dt);
+  String _formatDateTime(DateTime dt) =>
+      DateFormat('dd MMM yyyy, HH:mm').format(dt);
 
   @override
   Widget build(BuildContext context) {
-    final species = interaction.species.commonName.isNotEmpty ? interaction.species.commonName : interaction.species.name;
+    final species =
+        interaction.species.commonName.isNotEmpty
+            ? interaction.species.commonName
+            : interaction.species.name;
     final collision = interaction.reportOfCollision;
 
     return Scaffold(
@@ -225,36 +295,48 @@ class _DetailSheet extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(species, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                Text(
+                  species,
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
                 const SizedBox(height: 8),
                 Text(_formatDateTime(interaction.moment), textAlign: TextAlign.center),
                 const SizedBox(height: 12),
                 if (interaction.description.isNotEmpty) ...[
-                  const Text('Beschrijving:', style: TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                  Text('Beschrijving:', style: const TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.center),
                   const SizedBox(height: 4),
                   Text(interaction.description, textAlign: TextAlign.center),
                   const SizedBox(height: 12),
                 ],
-                const Text('Locatie:', style: TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                Text('Locatie:', style: const TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.center),
                 const SizedBox(height: 4),
-                Text(
-                  formatFriendlyLocation(interaction.place.latitude, interaction.place.longitude),
-                  textAlign: TextAlign.center,
-                ),
+                  Text(
+                    formatFriendlyLocation(
+                      interaction.place.latitude,
+                      interaction.place.longitude,
+                    ),
+                    style: const TextStyle(color: Colors.grey),
+                    textAlign: TextAlign.center,
+                  ),
+                const SizedBox(height: 12),
                 const SizedBox(height: 12),
                 if (interaction.species.category.isNotEmpty) ...[
-                  const Text('Dierencategorie:', style: TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                  Text('Dierencategorie:', style: const TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.center),
                   const SizedBox(height: 4),
                   Text(interaction.species.category, textAlign: TextAlign.center),
                   const SizedBox(height: 12),
                 ],
                 if (collision != null) ...[
-                  const Text('Aanrijdingsrapport:', style: TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                  Text('Aanrijdingsrapport:', style: const TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.center),
                   const SizedBox(height: 8),
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(8)),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
@@ -275,7 +357,10 @@ class _DetailSheet extends StatelessWidget {
                       child: Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(8)),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [

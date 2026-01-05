@@ -42,10 +42,12 @@ void main() {
   group('Send login code', () {
     test('should call authenticate and return true on success', () async {
       TestHelpers.setupSuccessfulAuthentication(mockAuthApi);
-      
+
       final result = await loginManager.sendLoginCode('test@example.com');
-      
-  verify(mockAuthApi.authenticate('Wild Rapport', 'test@example.com')).called(1);
+
+      verify(
+        mockAuthApi.authenticate('Wild Gids', 'test@example.com'),
+      ).called(1);
       expect(result, true);
     });
 
@@ -54,33 +56,42 @@ void main() {
         () => loginManager.sendLoginCode('invalid-email'),
         throwsA(isA<ValidationException>()),
       );
-      
+
       verifyNever(mockAuthApi.authenticate(any, any));
     });
 
     test('should throw Exception when authentication fails', () async {
       TestHelpers.setupFailedAuthentication(mockAuthApi);
-      
+
       expect(
         () => loginManager.sendLoginCode('test@example.com'),
         throwsA(isA<Exception>()),
       );
-      
-  verify(mockAuthApi.authenticate('Wild Rapport', 'test@example.com')).called(1);
+
+      verify(
+        mockAuthApi.authenticate('Wild Gids', 'test@example.com'),
+      ).called(1);
     });
   });
 
   group('Verify code', () {
     test('should call authorize and return user on success', () async {
-      final mockUser = User(id: '123', email: 'test@example.com', name: 'Test User');
+      final mockUser = User(
+        id: '123',
+        email: 'test@example.com',
+        name: 'Test User',
+      );
       TestHelpers.setupSuccessfulAuthorization(
-        mockAuthApi, 
+        mockAuthApi,
         mockProfileApi,
         user: mockUser,
       );
-      
-      final result = await loginManager.verifyCode('test@example.com', '123456');
-      
+
+      final result = await loginManager.verifyCode(
+        'test@example.com',
+        '123456',
+      );
+
       verify(mockAuthApi.authorize('test@example.com', '123456')).called(1);
       verify(mockProfileApi.setProfileDataInDeviceStorage()).called(1);
       expect(result, equals(mockUser));
@@ -88,12 +99,12 @@ void main() {
 
     test('should throw Exception when authorization fails', () async {
       TestHelpers.setupFailedAuthorization(mockAuthApi);
-      
+
       expect(
         () => loginManager.verifyCode('test@example.com', '123456'),
         throwsA(isA<Exception>()),
       );
-      
+
       verify(mockAuthApi.authorize('test@example.com', '123456')).called(1);
       verifyNever(mockProfileApi.setProfileDataInDeviceStorage());
     });
@@ -102,22 +113,26 @@ void main() {
   group('Resend code', () {
     test('should call authenticate and return true on success', () async {
       TestHelpers.setupSuccessfulAuthentication(mockAuthApi);
-      
+
       final result = await loginManager.resendCode('test@example.com');
-      
-  verify(mockAuthApi.authenticate('Wild Rapport', 'test@example.com')).called(1);
+
+      verify(
+        mockAuthApi.authenticate('Wild Gids', 'test@example.com'),
+      ).called(1);
       expect(result, true);
     });
 
     test('should throw Exception when authentication fails', () async {
       TestHelpers.setupFailedAuthentication(mockAuthApi);
-      
+
       expect(
         () => loginManager.resendCode('test@example.com'),
         throwsA(isA<Exception>()),
       );
-      
-  verify(mockAuthApi.authenticate('Wild Rapport', 'test@example.com')).called(1);
+
+      verify(
+        mockAuthApi.authenticate('Wild Rapport', 'test@example.com'),
+      ).called(1);
     });
   });
 
@@ -127,9 +142,9 @@ void main() {
       loginManager.addListener(() {
         listenerCalled = true;
       });
-      
+
       loginManager.setVerificationVisible(true);
-      
+
       expect(listenerCalled, true);
     });
 
@@ -138,9 +153,9 @@ void main() {
       loginManager.addListener(() {
         listenerCalled = true;
       });
-      
+
       loginManager.setError(true, 'Test error');
-      
+
       expect(listenerCalled, true);
     });
   });

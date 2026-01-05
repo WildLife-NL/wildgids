@@ -31,7 +31,10 @@ class InteractionResponse {
       name: 'No questionnaire',
       questions: const [],
     );
-    return InteractionResponse(questionnaire: placeholder, interactionID: interactionID);
+    return InteractionResponse(
+      questionnaire: placeholder,
+      interactionID: interactionID,
+    );
   }
   factory InteractionResponse.fromJson(Map<String, dynamic> json) =>
       InteractionResponse(

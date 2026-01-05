@@ -36,12 +36,15 @@ class SnackBarWithProgressBarContent extends StatelessWidget {
             child: TweenAnimationBuilder<double>(
               tween: Tween<double>(begin: 0, end: 1),
               duration: duration,
-              builder: (context, value, _) => LinearProgressIndicator(
-                value: value,
-                backgroundColor: Colors.transparent,
-                valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF34C759)),
-                minHeight: 4,
-              ),
+              builder:
+                  (context, value, _) => LinearProgressIndicator(
+                    value: value,
+                    backgroundColor: Colors.transparent,
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      Color(0xFF34C759),
+                    ),
+                    minHeight: 4,
+                  ),
             ),
           ),
         ],
