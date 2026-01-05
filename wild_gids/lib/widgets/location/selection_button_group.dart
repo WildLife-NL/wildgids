@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/constants/app_text_theme.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/white_bulk_button.dart';
-import 'package:wildrapport/utils/responsive_utils.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/constants/app_text_theme.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/white_bulk_button.dart';
+import 'package:wildgids/utils/responsive_utils.dart';
 // circle icon container no longer used here (buttons are text-only)
 
 class SelectionButtonGroup extends StatelessWidget {
@@ -65,7 +65,7 @@ class SelectionButtonGroup extends StatelessWidget {
     required double circleSize,
     required double arrowSize,
   }) {
-    // Icons and arrows removed per design — buttons should be text-only
+    // Icons and arrows removed per design â€” buttons should be text-only
     return WhiteBulkButton(
       text: text,
       leftWidget: null,
@@ -82,3 +82,4 @@ class SelectionButtonGroup extends StatelessWidget {
     );
   }
 }
+

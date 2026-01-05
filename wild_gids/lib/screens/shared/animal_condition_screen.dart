@@ -1,12 +1,12 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
+import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
 
-import 'package:wildrapport/screens/shared/overzicht_screen.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/bottom_app_bar.dart';
-import 'package:wildrapport/widgets/location/invisible_map_preloader.dart'; // ✅ import preloader
-import 'package:wildrapport/widgets/location/selection_button_group.dart';
+import 'package:wildgids/screens/shared/overzicht_screen.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/bottom_app_bar.dart';
+import 'package:wildgids/widgets/location/invisible_map_preloader.dart'; // âœ… import preloader
+import 'package:wildgids/widgets/location/selection_button_group.dart';
 
 class AnimalConditionScreen extends StatefulWidget {
   const AnimalConditionScreen({super.key});
@@ -112,3 +112,4 @@ class _AnimalConditionScreenState extends State<AnimalConditionScreen> {
     );
   }
 }
+

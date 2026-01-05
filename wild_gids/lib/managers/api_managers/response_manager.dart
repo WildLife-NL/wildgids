@@ -1,15 +1,14 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:wildrapport/interfaces/reporting/response_interface.dart';
-import 'package:wildrapport/interfaces/data_apis/response_api_interface.dart';
-import 'package:wildrapport/models/beta_models/response_model.dart';
-import 'package:wildrapport/models/api_models/my_response.dart';
-import 'package:wildrapport/providers/response_provider.dart';
-import 'package:wildrapport/utils/connection_checker.dart';
-import 'package:wildrapport/utils/notification_service.dart';
+import 'package:wildgids/interfaces/reporting/response_interface.dart';
+import 'package:wildgids/interfaces/data_apis/response_api_interface.dart';
+import 'package:wildgids/models/beta_models/response_model.dart';
+import 'package:wildgids/providers/response_provider.dart';
+import 'package:wildgids/utils/connection_checker.dart';
+import 'package:wildgids/utils/notification_service.dart';
 
 class ResponseManager implements ResponseInterface {
   ResponseApiInterface responseAPI;
@@ -49,7 +48,7 @@ class ResponseManager implements ResponseInterface {
     if (hasConnection) {
       await _trySendCachedData();
     } else {
-      debugPrint('No internet connection – future data will be cached.');
+      debugPrint('No internet connection â€“ future data will be cached.');
     }
   }
 
@@ -365,7 +364,7 @@ class ResponseManager implements ResponseInterface {
                 final messageText = result.conveyance!.messageText;
                 if (messageText != null && messageText.isNotEmpty) {
                   debugPrint(
-                    "$yellowLog [ResponseManager]: 🔔 Triggering notification for conveyance: $messageText",
+                    "$yellowLog [ResponseManager]: ðŸ”” Triggering notification for conveyance: $messageText",
                   );
                   try {
                     await NotificationService.instance.showConveyanceNotification(
@@ -479,3 +478,4 @@ class ResponseObject {
     return {'questionID': questionID, 'response': response.toJson()};
   }
 }
+

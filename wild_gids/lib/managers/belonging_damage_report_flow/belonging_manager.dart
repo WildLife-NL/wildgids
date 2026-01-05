@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:wildrapport/interfaces/data_apis/belonging_api_interface.dart';
-import 'package:wildrapport/interfaces/other/belonging_manager_interface.dart';
-import 'package:wildrapport/models/beta_models/belonging_model.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:wildgids/interfaces/data_apis/belonging_api_interface.dart';
+import 'package:wildgids/interfaces/other/belonging_manager_interface.dart';
+import 'package:wildgids/models/beta_models/belonging_model.dart';
 
 class BelongingManager implements BelongingManagerInterface {
   final BelongingApiInterface belongingApi;
@@ -28,3 +28,4 @@ class BelongingManager implements BelongingManagerInterface {
     }
   }
 }
+

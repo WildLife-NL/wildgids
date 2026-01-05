@@ -1,4 +1,4 @@
-import 'package:wildrapport/models/api_models/user.dart';
+﻿import 'package:wildgids/models/api_models/user.dart';
 
 abstract class AuthApiInterface {
   Future<Map<String, dynamic>> authenticate(
@@ -7,3 +7,4 @@ abstract class AuthApiInterface {
   );
   Future<User> authorize(String email, String code);
 }
+

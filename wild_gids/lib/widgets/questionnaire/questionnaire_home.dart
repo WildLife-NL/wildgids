@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/constants/app_text_theme.dart';
-import 'package:wildrapport/screens/shared/overzicht_screen.dart';
-import 'package:wildrapport/utils/responsive_utils.dart';
-import 'package:wildrapport/models/api_models/questionaire.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/constants/app_text_theme.dart';
+import 'package:wildgids/screens/shared/overzicht_screen.dart';
+import 'package:wildgids/utils/responsive_utils.dart';
+import 'package:wildgids/models/api_models/questionaire.dart';
 
 class QuestionnaireHome extends StatelessWidget {
   final VoidCallback nextScreen;
@@ -258,3 +258,4 @@ class DraftsStore {
     await prefs.setStringList(_key, filtered);
   }
 }
+

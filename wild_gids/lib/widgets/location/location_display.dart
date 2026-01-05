@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:wildrapport/utils/responsive_utils.dart';
+import 'package:wildgids/utils/responsive_utils.dart';
 
 class LocationDisplay extends StatefulWidget {
   final VoidCallback onLocationIconTap;
@@ -116,3 +116,4 @@ class _LocationDisplayState extends State<LocationDisplay>
     );
   }
 }
+

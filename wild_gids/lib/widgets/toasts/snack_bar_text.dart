@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:wildrapport/utils/responsive_utils.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:wildgids/utils/responsive_utils.dart';
 
 class SnackBarText extends StatelessWidget {
   final String message;
@@ -44,3 +44,4 @@ class SnackBarText extends StatelessWidget {
     );
   }
 }
+

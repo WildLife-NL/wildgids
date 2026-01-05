@@ -1,6 +1,6 @@
-import 'dart:collection';
-import 'package:wildrapport/interfaces/data_apis/detections_api_interface.dart';
-import 'package:wildrapport/models/api_models/detection_pin.dart';
+﻿import 'dart:collection';
+import 'package:wildgids/interfaces/data_apis/detections_api_interface.dart';
+import 'package:wildgids/models/api_models/detection_pin.dart';
 
 class DetectionPinsManager {
   final DetectionsApiInterface api;
@@ -39,3 +39,4 @@ class DetectionPinsManager {
     _cachedAt = null;
   }
 }
+

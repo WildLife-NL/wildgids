@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
-import 'package:wildrapport/interfaces/other/permission_interface.dart';
-import 'package:wildrapport/providers/app_state_provider.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:wildgids/interfaces/other/permission_interface.dart';
+import 'package:wildgids/providers/app_state_provider.dart';
 import 'package:provider/provider.dart';
 
 mixin PermissionChecker<T extends StatefulWidget> on State<T> {
@@ -82,3 +82,4 @@ mixin PermissionChecker<T extends StatefulWidget> on State<T> {
     _appStateProvider!.startLocationUpdates();
   }
 }
+

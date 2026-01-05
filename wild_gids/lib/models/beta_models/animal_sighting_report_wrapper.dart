@@ -1,6 +1,6 @@
-import 'package:wildrapport/interfaces/reporting/reportable_interface.dart';
-import 'package:wildrapport/models/animal_waarneming_models/animal_sighting_model.dart';
-import 'package:wildrapport/utils/sighting_api_transformer.dart';
+﻿import 'package:wildgids/interfaces/reporting/reportable_interface.dart';
+import 'package:wildgids/models/animal_waarneming_models/animal_sighting_model.dart';
+import 'package:wildgids/utils/sighting_api_transformer.dart';
 
 class AnimalSightingReportWrapper implements Reportable {
   final AnimalSightingModel sighting;
@@ -12,3 +12,4 @@ class AnimalSightingReportWrapper implements Reportable {
     return SightingApiTransformer.transformForApi(sighting);
   }
 }
+

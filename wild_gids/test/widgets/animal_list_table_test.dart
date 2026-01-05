@@ -1,13 +1,13 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:wildrapport/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
-import 'package:wildrapport/models/animal_waarneming_models/animal_model.dart';
-import 'package:wildrapport/models/animal_waarneming_models/animal_gender_view_count_model.dart';
-import 'package:wildrapport/models/animal_waarneming_models/animal_sighting_model.dart';
-import 'package:wildrapport/models/enums/animal_gender.dart';
-import 'package:wildrapport/models/animal_waarneming_models/view_count_model.dart';
-import 'package:wildrapport/widgets/animals/animal_list_table.dart';
+import 'package:wildgids/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
+import 'package:wildgids/models/animal_waarneming_models/animal_model.dart';
+import 'package:wildgids/models/animal_waarneming_models/animal_gender_view_count_model.dart';
+import 'package:wildgids/models/animal_waarneming_models/animal_sighting_model.dart';
+import 'package:wildgids/models/enums/animal_gender.dart';
+import 'package:wildgids/models/animal_waarneming_models/view_count_model.dart';
+import 'package:wildgids/widgets/animals/animal_list_table.dart';
 import 'package:provider/provider.dart';
 
 void main() {
@@ -228,3 +228,4 @@ class MockAnimalSightingManager implements AnimalSightingReportingInterface {
 }
 
 // Add this helper method to the test file
+

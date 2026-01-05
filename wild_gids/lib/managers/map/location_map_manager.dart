@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:wildrapport/interfaces/map/location_service_interface.dart';
-import 'package:wildrapport/interfaces/map/map_service_interface.dart';
-import 'package:wildrapport/interfaces/map/map_state_interface.dart';
+import 'package:wildgids/interfaces/map/location_service_interface.dart';
+import 'package:wildgids/interfaces/map/map_service_interface.dart';
+import 'package:wildgids/interfaces/map/map_state_interface.dart';
 
 class LocationMapManager
     implements
@@ -185,3 +185,4 @@ class LocationMapManager
     );
   }
 }
+

@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:wildrapport/constants/app_colors.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:wildgids/constants/app_colors.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/providers/app_state_provider.dart';
-import 'package:wildrapport/screens/profile/profile_screen.dart';
-import 'package:wildrapport/utils/responsive_utils.dart';
+import 'package:wildgids/providers/app_state_provider.dart';
+import 'package:wildgids/screens/profile/profile_screen.dart';
+import 'package:wildgids/utils/responsive_utils.dart';
 
 class CustomAppBar extends StatelessWidget {
   final IconData? leftIcon;
@@ -175,3 +175,4 @@ class CustomAppBar extends StatelessWidget {
     );
   }
 }
+

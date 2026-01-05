@@ -1,13 +1,13 @@
-import 'package:collection/collection.dart';
+﻿import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/models/api_models/questionaire.dart';
-import 'package:wildrapport/models/beta_models/response_model.dart';
-import 'package:wildrapport/providers/response_provider.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/bottom_app_bar.dart';
-import 'package:wildrapport/models/api_models/question.dart';
-import 'package:wildrapport/widgets/questionnaire/shared_white_background.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/models/api_models/questionaire.dart';
+import 'package:wildgids/models/beta_models/response_model.dart';
+import 'package:wildgids/providers/response_provider.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/bottom_app_bar.dart';
+import 'package:wildgids/models/api_models/question.dart';
+import 'package:wildgids/widgets/questionnaire/shared_white_background.dart';
 
 class QuestionnaireOpenResponse extends StatefulWidget {
   final Question question;
@@ -97,7 +97,7 @@ class _QuestionnaireOpenResponseState extends State<QuestionnaireOpenResponse> {
       _maxValue = int.parse(match.group(2)!);
 
       debugPrint(
-        '[QuestionnaireOpenResponse] ✅ Detected numeric range: $_minValue to $_maxValue',
+        '[QuestionnaireOpenResponse] âœ… Detected numeric range: $_minValue to $_maxValue',
       );
 
       // Ensure min is less than max
@@ -110,7 +110,7 @@ class _QuestionnaireOpenResponseState extends State<QuestionnaireOpenResponse> {
       _sliderValue = _minValue.toDouble();
     } else {
       debugPrint(
-        '[QuestionnaireOpenResponse] ❌ Format "$format" does not match numeric range pattern',
+        '[QuestionnaireOpenResponse] âŒ Format "$format" does not match numeric range pattern',
       );
       _isNumericRange = false;
     }
@@ -434,3 +434,4 @@ class _QuestionnaireOpenResponseState extends State<QuestionnaireOpenResponse> {
     );
   }
 }
+

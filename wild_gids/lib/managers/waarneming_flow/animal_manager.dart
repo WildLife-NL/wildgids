@@ -1,10 +1,10 @@
-import 'package:flutter/foundation.dart';
-import 'package:wildrapport/interfaces/waarneming_flow/animal_interface.dart';
-import 'package:wildrapport/models/animal_waarneming_models/animal_model.dart';
-import 'package:wildrapport/interfaces/data_apis/species_api_interface.dart';
-import 'package:wildrapport/interfaces/filters/filter_interface.dart';
-import 'package:wildrapport/models/enums/filter_type.dart';
-import 'package:wildrapport/models/enums/animal_category.dart';
+﻿import 'package:flutter/foundation.dart';
+import 'package:wildgids/interfaces/waarneming_flow/animal_interface.dart';
+import 'package:wildgids/models/animal_waarneming_models/animal_model.dart';
+import 'package:wildgids/interfaces/data_apis/species_api_interface.dart';
+import 'package:wildgids/interfaces/filters/filter_interface.dart';
+import 'package:wildgids/models/enums/filter_type.dart';
+import 'package:wildgids/models/enums/animal_category.dart';
 
 class AnimalManager
     implements
@@ -177,3 +177,4 @@ class AnimalManager
     return animals.where((a) => (a.category ?? '').toLowerCase() == category.toLowerCase()).toList();
   }
 }
+

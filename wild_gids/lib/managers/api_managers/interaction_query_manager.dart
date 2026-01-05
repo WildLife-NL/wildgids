@@ -1,6 +1,6 @@
-import 'dart:math' as math;
-import 'package:wildrapport/interfaces/data_apis/interaction_query_api_interface.dart';
-import 'package:wildrapport/models/api_models/interaction_query_result.dart';
+﻿import 'dart:math' as math;
+import 'package:wildgids/interfaces/data_apis/interaction_query_api_interface.dart';
+import 'package:wildgids/models/api_models/interaction_query_result.dart';
 
 /// Thin service that normalizes inputs (radius, time window)
 /// before delegating to the API.
@@ -39,9 +39,9 @@ class InteractionQueryManager {
   /// Convenience: derive a *rough* radius (in meters) from map zoom + latitude.
   /// Use half the screen width in pixels to estimate the visible radius.
   ///
-  /// `zoom`   – current map zoom (e.g., 5..18)
-  /// `lat`    – map center latitude (affects meters-per-pixel)
-  /// `widthPx`– screen width in pixels (defaults to 400 if unknown)
+  /// `zoom`   â€“ current map zoom (e.g., 5..18)
+  /// `lat`    â€“ map center latitude (affects meters-per-pixel)
+  /// `widthPx`â€“ screen width in pixels (defaults to 400 if unknown)
   ///
   /// Returns a clamped value in [250, 20000].
   int radiusFromZoom({
@@ -57,3 +57,4 @@ class InteractionQueryManager {
     return radius.clamp(250, 20000);
   }
 }
+

@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:wildrapport/interfaces/reporting/possesion_report_fields.dart';
-import 'package:wildrapport/interfaces/reporting/reportable_interface.dart';
-import 'package:wildrapport/models/beta_models/possesion_model.dart';
-import 'package:wildrapport/models/beta_models/report_location_model.dart';
-import 'package:wildrapport/models/beta_models/polygon_area_model.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:wildgids/interfaces/reporting/possesion_report_fields.dart';
+import 'package:wildgids/interfaces/reporting/reportable_interface.dart';
+import 'package:wildgids/models/beta_models/possesion_model.dart';
+import 'package:wildgids/models/beta_models/report_location_model.dart';
+import 'package:wildgids/models/beta_models/polygon_area_model.dart';
 
 class BelongingDamageReport implements Reportable, PossesionReportFields {
   final String? possesionDamageReportID;
@@ -18,10 +18,10 @@ class BelongingDamageReport implements Reportable, PossesionReportFields {
   final double impactedArea; // numeric value (already in correct unit)
 
   @override
-  final double currentImpactDamages; // estimatedDamage €
+  final double currentImpactDamages; // estimatedDamage â‚¬
 
   @override
-  final double estimatedTotalDamages; // estimatedLoss €
+  final double estimatedTotalDamages; // estimatedLoss â‚¬
 
   @override
   final String? description;
@@ -62,7 +62,7 @@ class BelongingDamageReport implements Reportable, PossesionReportFields {
     this.damageCategory,
   });
 
-  // ⬇⬇⬇ THIS IS THE IMPORTANT PART ⬇⬇⬇
+  // â¬‡â¬‡â¬‡ THIS IS THE IMPORTANT PART â¬‡â¬‡â¬‡
   // We now return EXACTLY what /interaction expects for a damage report (typeID: 2)
   @override
   Map<String, dynamic> toJson() {
@@ -80,12 +80,12 @@ class BelongingDamageReport implements Reportable, PossesionReportFields {
       throw StateError('impactValue must be > 0');
     }
 
-    // ✅ Use possesionName (free text) as per API schema
+    // âœ… Use possesionName (free text) as per API schema
     final String? belongingName = possesion.possesionName;
-    debugPrint("🔍 toJson: possesionName = '$belongingName'");
+    debugPrint("ðŸ” toJson: possesionName = '$belongingName'");
 
     if (belongingName == null || belongingName.trim().isEmpty) {
-      debugPrint("❌ toJson: belonging name is null or empty!");
+      debugPrint("âŒ toJson: belonging name is null or empty!");
       throw StateError(
         'belonging name is required - got: ${belongingName ?? "null"}',
       );
@@ -104,10 +104,10 @@ class BelongingDamageReport implements Reportable, PossesionReportFields {
         "longitude": userSelectedLocation!.longtitude,
       },
       "reportOfDamage": {
-        // ✅ Send the free text name as per API schema
+        // âœ… Send the free text name as per API schema
         "belonging": belongingName.trim(),
 
-        // ✅ ints (int64)
+        // âœ… ints (int64)
         "estimatedDamage": currentImpactDamages.round(),
         "estimatedLoss": estimatedTotalDamages.round(),
         "impactType": impactedAreaType, // "square-meters" | "units"
@@ -150,3 +150,4 @@ class BelongingDamageReport implements Reportable, PossesionReportFields {
         damageCategory: json["damageCategory"],
       );
 }
+

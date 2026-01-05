@@ -1,4 +1,4 @@
-import 'package:wildrapport/models/api_models/location.dart';
+﻿import 'package:wildgids/models/api_models/location.dart';
 
 class LivingLabs {
   String id;
@@ -37,3 +37,4 @@ class LivingLabs {
     };
   }
 }
+

@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:wildrapport/models/animal_waarneming_models/animal_sighting_model.dart';
-import 'package:wildrapport/models/beta_models/sighted_animal_model.dart';
-import 'package:wildrapport/models/enums/location_source.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:wildgids/models/animal_waarneming_models/animal_sighting_model.dart';
+import 'package:wildgids/models/beta_models/sighted_animal_model.dart';
+import 'package:wildgids/models/enums/location_source.dart';
 import 'dart:convert';
 
 class SightingApiTransformer {
@@ -33,7 +33,7 @@ class SightingApiTransformer {
           (loc) => loc.source == LocationSource.manual,
           orElse: () => throw StateError('At least one location (system or manual) is required'),
         );
-        debugPrint('⚠️ System location not available, using manual location as fallback');
+        debugPrint('âš ï¸ System location not available, using manual location as fallback');
         return manual;
       },
     );
@@ -158,3 +158,4 @@ class SightingApiTransformer {
     }
   }
 }
+

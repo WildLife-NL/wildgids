@@ -1,13 +1,13 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/data_managers/api_client.dart';
-import 'package:wildrapport/data_managers/my_interaction_api.dart';
-import 'package:wildrapport/models/api_models/my_interaction.dart';
-import 'package:wildrapport/utils/location_label.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
-import 'package:wildrapport/screens/logbook/logbook_screen.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/data_managers/api_client.dart';
+import 'package:wildgids/data_managers/my_interaction_api.dart';
+import 'package:wildgids/models/api_models/my_interaction.dart';
+import 'package:wildgids/utils/location_label.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
+import 'package:wildgids/screens/logbook/logbook_screen.dart';
 
 class SchademeldingHistoryScreen extends StatelessWidget {
   const SchademeldingHistoryScreen({super.key});
@@ -207,8 +207,8 @@ class _HistoryCard extends StatelessWidget {
               if (damage.impactType.isNotEmpty)
                 Text('Type impact: ${damage.impactType}'),
               Text('Impact waarde: ${damage.impactValue}'),
-              Text('Geschatte schade: €${damage.estimatedDamage}'),
-              Text('Geschat verlies: €${damage.estimatedLoss}'),
+              Text('Geschatte schade: â‚¬${damage.estimatedDamage}'),
+              Text('Geschat verlies: â‚¬${damage.estimatedLoss}'),
             ],
             const SizedBox(height: 12),
             Row(
@@ -366,10 +366,10 @@ class _DetailSheet extends StatelessWidget {
                         Text('Impact waarde: ${damage.impactValue}',
                             style: const TextStyle(fontSize: 12),
                             textAlign: TextAlign.center),
-                        Text('Geschatte schade: €${damage.estimatedDamage}',
+                        Text('Geschatte schade: â‚¬${damage.estimatedDamage}',
                             style: const TextStyle(fontSize: 12),
                             textAlign: TextAlign.center),
-                        Text('Geschat verlies: €${damage.estimatedLoss}',
+                        Text('Geschat verlies: â‚¬${damage.estimatedLoss}',
                             style: const TextStyle(fontSize: 12),
                             textAlign: TextAlign.center),
                       ],
@@ -384,3 +384,4 @@ class _DetailSheet extends StatelessWidget {
     );
   }
 }
+

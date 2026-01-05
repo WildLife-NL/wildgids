@@ -1,5 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:wildrapport/models/beta_models/report_location_model.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:wildgids/models/beta_models/report_location_model.dart';
 
 void main() {
   group('ReportLocation Model Tests', () {
@@ -184,3 +184,4 @@ void main() {
     });
   });
 }
+

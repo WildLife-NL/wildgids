@@ -1,4 +1,4 @@
-# WildRapport
+# Wild Gids
 
 A Flutter application for reporting and tracking wildlife sightings and interactions.
 
@@ -23,7 +23,7 @@ A Flutter application for reporting and tracking wildlife sightings and interact
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd wildrapport
+   cd wild_gids
    ```
 
 2. **Install dependencies**

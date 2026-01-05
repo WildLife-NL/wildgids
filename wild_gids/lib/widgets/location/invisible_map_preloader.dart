@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/providers/map_provider.dart';
+import 'package:wildgids/providers/map_provider.dart';
 
 class InvisibleMapPreloader extends StatelessWidget {
   const InvisibleMapPreloader({super.key});
@@ -34,3 +34,4 @@ class InvisibleMapPreloader extends StatelessWidget {
     );
   }
 }
+

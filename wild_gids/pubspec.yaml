@@ -1,4 +1,4 @@
-name: wildrapport
+name: wildgids
 description: "A new Flutter project."
 publish_to: 'none'
 version: 1.0.0+1
@@ -87,6 +87,8 @@ flutter:
     - assets/icons/deer.png
     - assets/icons/animals/
     - assets/animals/
+    - assets/black_icons_animal/
+    - assets/real_animal_pics_no_bg/
     - assets/icons/category/evenhoevigen.png
     - assets/icons/category/knaagdieren.png
     - assets/icons/category/roofdieren.png

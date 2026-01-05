@@ -1,7 +1,7 @@
-import 'dart:convert';
-import 'package:wildrapport/data_managers/api_client.dart';
-import 'package:wildrapport/interfaces/data_apis/interaction_query_api_interface.dart';
-import 'package:wildrapport/models/api_models/interaction_query_result.dart';
+﻿import 'dart:convert';
+import 'package:wildgids/data_managers/api_client.dart';
+import 'package:wildgids/interfaces/data_apis/interaction_query_api_interface.dart';
+import 'package:wildgids/models/api_models/interaction_query_result.dart';
 import 'package:flutter/foundation.dart';
 
 class InteractionQueryApi implements InteractionQueryApiInterface {
@@ -67,3 +67,4 @@ class InteractionQueryApi implements InteractionQueryApiInterface {
     throw Exception('Query failed (${res.statusCode}): ${res.body}');
   }
 }
+

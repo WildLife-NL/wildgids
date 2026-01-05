@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import 'package:wildrapport/interfaces/other/permission_interface.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/constants/app_text_theme.dart';
+import 'package:wildgids/interfaces/other/permission_interface.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/constants/app_text_theme.dart';
 
 class PermissionManager implements PermissionInterface {
   PermissionManager();
@@ -99,3 +99,4 @@ class PermissionManager implements PermissionInterface {
     // No longer needed as permissions are handled in the location flow
   }
 }
+

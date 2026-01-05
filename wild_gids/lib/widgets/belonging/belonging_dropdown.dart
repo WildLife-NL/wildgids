@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/providers/belonging_damage_report_provider.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/providers/belonging_damage_report_provider.dart';
 
 class BelongingDropdown extends StatefulWidget {
   final ValueChanged<String>? onChanged;
@@ -90,7 +90,7 @@ class _BelongingDropdownState extends State<BelongingDropdown> {
         "$yellowLog [PossesionDropdown]: external tap detected, closing overlay",
       );
       closeOverlay();
-      // ✅ Reset to false to prevent re-triggering
+      // âœ… Reset to false to prevent re-triggering
       formProvider.updateExpanded(false);
     }
   }
@@ -332,3 +332,4 @@ class _BelongingDropdownState extends State<BelongingDropdown> {
     );
   }
 }
+

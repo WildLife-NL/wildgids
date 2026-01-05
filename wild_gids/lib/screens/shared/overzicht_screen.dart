@@ -1,14 +1,15 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/widgets/overzicht/top_container.dart';
-import 'package:wildrapport/widgets/overzicht/action_buttons.dart';
-import 'package:wildrapport/screens/shared/rapporteren.dart';
-import 'package:wildrapport/screens/logbook/logbook_screen.dart';
-import 'package:wildrapport/providers/app_state_provider.dart';
-import 'package:wildrapport/screens/location/kaart_overview_screen.dart';
+import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/widgets/overzicht/top_container.dart';
+import 'package:wildgids/widgets/overzicht/action_buttons.dart';
+import 'package:wildgids/screens/shared/rapporteren.dart';
+import 'package:wildgids/screens/logbook/logbook_screen.dart';
+import 'package:wildgids/providers/app_state_provider.dart';
+import 'package:wildgids/screens/location/kaart_overview_screen.dart';
+import 'package:wildgids/screens/species/species_list_screen.dart';
 
 class OverzichtScreen extends StatefulWidget {
   const OverzichtScreen({super.key});
@@ -128,9 +129,23 @@ class _OverzichtScreenState extends State<OverzichtScreen> {
                               onPressed: () {
                                 context
                                     .read<NavigationStateInterface>()
-                                    .pushReplacementForward(
+                                    .pushForward(
                                       context,
                                       const KaartOverviewScreen(),
+                                    );
+                              },
+                            ),
+                            (
+                              text: 'Diersoorten',
+                              icon: Icons.pets,
+                              imagePath: null,
+                              key: Key('diersoorten_button'),
+                              onPressed: () {
+                                context
+                                    .read<NavigationStateInterface>()
+                                    .pushReplacementForward(
+                                      context,
+                                      const SpeciesListScreen(),
                                     );
                               },
                             ),
@@ -141,7 +156,7 @@ class _OverzichtScreenState extends State<OverzichtScreen> {
                               key: Key('rapporteren_button'),
                               onPressed: () {
                                 try {
-                                  navigationManager.pushReplacementForward(
+                                  navigationManager.pushForward(
                                     context,
                                     const Rapporteren(),
                                   );
@@ -163,7 +178,7 @@ class _OverzichtScreenState extends State<OverzichtScreen> {
                               key: Key('logboek_button'),
                               onPressed: () {
                                 try {
-                                  navigationManager.pushReplacementForward(
+                                  navigationManager.pushForward(
                                     context,
                                     const LogbookScreen(),
                                   );
@@ -219,3 +234,4 @@ class _OverzichtScreenState extends State<OverzichtScreen> {
     );
   }
 }
+

@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:wildrapport/models/enums/report_type.dart';
-import 'package:wildrapport/providers/app_state_provider.dart';
+import 'package:wildgids/models/enums/report_type.dart';
+import 'package:wildgids/providers/app_state_provider.dart';
 import '../business/mock_generator.mocks.dart';
 
 // Mock class for SightingReport to handle updateProperty
@@ -172,3 +172,4 @@ void main() {
     // or adding test-specific methods to the AppStateProvider
   });
 }
+

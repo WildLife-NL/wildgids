@@ -1,7 +1,7 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:wildrapport/data_managers/api_client.dart';
-import 'package:wildrapport/interfaces/data_apis/tracking_api_interface.dart';
+import 'package:wildgids/data_managers/api_client.dart';
+import 'package:wildgids/interfaces/data_apis/tracking_api_interface.dart';
 
 class TrackingApi implements TrackingApiInterface {
   final ApiClient client;
@@ -79,7 +79,7 @@ class TrackingApi implements TrackingApiInterface {
       // debugPrint('[TrackingApi] No message found in response');
     } catch (e) {
       debugPrint('[TrackingApi] Error parsing message: $e');
-      // Non-JSON or unexpected shape → no notice
+      // Non-JSON or unexpected shape â†’ no notice
     }
 
     return null; // success, but no message to show
@@ -104,3 +104,4 @@ class TrackingApi implements TrackingApiInterface {
     }
   }
 }
+

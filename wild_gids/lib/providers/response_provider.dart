@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:wildrapport/models/beta_models/response_model.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:wildgids/models/beta_models/response_model.dart';
 
 class ResponseProvider extends ChangeNotifier {
   String? answerID;
@@ -96,3 +96,4 @@ class ResponseProvider extends ChangeNotifier {
     responses = [];
   }
 }
+

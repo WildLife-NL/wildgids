@@ -1,5 +1,5 @@
-import 'package:wildrapport/models/ui_models/brown_button_model.dart';
-import 'package:wildrapport/constants/app_colors.dart';
+﻿import 'package:wildgids/models/ui_models/brown_button_model.dart';
+import 'package:wildgids/constants/app_colors.dart';
 
 class ButtonModelFactory {
   static BrownButtonModel createLoginButton({
@@ -29,3 +29,4 @@ class ButtonModelFactory {
     );
   }
 }
+

@@ -1,10 +1,10 @@
-import 'package:flutter_test/flutter_test.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:wildrapport/data_managers/api_client.dart';
-import 'package:wildrapport/data_managers/profile_api.dart';
+import 'package:wildgids/data_managers/api_client.dart';
+import 'package:wildgids/data_managers/profile_api.dart';
 import './flows/belonging_damage_flow.dart' as belonging_damage_flow;
 import './flows/waarneming_flow.dart' as waarneming_flow_flow;
 import 'package:flutter/foundation.dart';
@@ -41,3 +41,4 @@ void main() {
   belonging_damage_flow.runTests();
   waarneming_flow_flow.runTests();
 }
+

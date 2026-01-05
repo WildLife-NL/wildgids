@@ -1,5 +1,5 @@
-import 'package:wildrapport/models/api_models/living_labs.dart';
-import 'package:wildrapport/models/api_models/user.dart';
+﻿import 'package:wildgids/models/api_models/living_labs.dart';
+import 'package:wildgids/models/api_models/user.dart';
 
 class Experiment {
   String id;
@@ -78,3 +78,4 @@ class Experiment {
     };
   }
 }
+

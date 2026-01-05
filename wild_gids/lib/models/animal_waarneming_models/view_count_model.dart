@@ -1,4 +1,4 @@
-import 'package:wildrapport/models/enums/animal_age.dart';
+﻿import 'package:wildgids/models/enums/animal_age.dart';
 
 class ViewCountModel {
   int pasGeborenAmount;
@@ -34,3 +34,4 @@ class ViewCountModel {
     unknownAmount: json['unknownAmount'] ?? 0,
   );
 }
+

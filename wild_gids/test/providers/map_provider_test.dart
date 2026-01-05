@@ -1,7 +1,7 @@
-import 'package:flutter_map/flutter_map.dart';
+﻿import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:wildrapport/providers/map_provider.dart';
+import 'package:wildgids/providers/map_provider.dart';
 
 // Mock Position for testing
 class MockPosition implements Position {
@@ -202,3 +202,4 @@ void main() {
     });
   });
 }
+

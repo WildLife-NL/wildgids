@@ -1,4 +1,4 @@
-import 'package:wildrapport/models/api_models/my_response.dart';
+﻿import 'package:wildgids/models/api_models/my_response.dart';
 
 class ResponseSubmissionResult {
   final bool success;
@@ -18,3 +18,4 @@ abstract class ResponseApiInterface {
   /// Fetch responses for the current authenticated user
   Future<List<dynamic>> getMyResponsesRaw();
 }
+

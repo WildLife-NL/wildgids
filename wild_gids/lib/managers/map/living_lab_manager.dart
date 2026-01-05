@@ -1,6 +1,6 @@
-import 'package:latlong2/latlong.dart';
-import 'package:wildrapport/interfaces/location/living_lab_interface.dart';
-import 'package:wildrapport/models/ui_models/living_lab_area.dart';
+﻿import 'package:latlong2/latlong.dart';
+import 'package:wildgids/interfaces/location/living_lab_interface.dart';
+import 'package:wildgids/models/ui_models/living_lab_area.dart';
 
 class LivingLabManager implements LivingLabInterface {
   final List<LivingLabArea> _livingLabs = [
@@ -104,3 +104,4 @@ class LivingLabManager implements LivingLabInterface {
     return isInside;
   }
 }
+

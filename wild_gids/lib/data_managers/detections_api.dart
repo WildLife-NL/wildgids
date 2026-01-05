@@ -1,7 +1,7 @@
-import 'dart:convert';
-import 'package:wildrapport/data_managers/api_client.dart';
-import 'package:wildrapport/interfaces/data_apis/detections_api_interface.dart';
-import 'package:wildrapport/models/api_models/detection_pin.dart';
+﻿import 'dart:convert';
+import 'package:wildgids/data_managers/api_client.dart';
+import 'package:wildgids/interfaces/data_apis/detections_api_interface.dart';
+import 'package:wildgids/models/api_models/detection_pin.dart';
 
 class DetectionsApi implements DetectionsApiInterface {
   final ApiClient apiClient;
@@ -26,3 +26,4 @@ class DetectionsApi implements DetectionsApiInterface {
     throw Exception('Detections GET failed (${res.statusCode}): ${res.body}');
   }
 }
+

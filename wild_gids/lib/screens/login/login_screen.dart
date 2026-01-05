@@ -1,14 +1,14 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/constants/app_text_theme.dart';
-import 'package:wildrapport/models/factories/button_model_factory.dart';
-import 'package:wildrapport/screens/login/login_overlay.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/brown_button.dart';
-import 'package:wildrapport/widgets/login/verification_code_input.dart';
-import 'package:wildrapport/interfaces/other/login_interface.dart';
-import 'package:wildrapport/widgets/overlay/error_overlay.dart';
-import 'package:wildrapport/utils/responsive_utils.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/constants/app_text_theme.dart';
+import 'package:wildgids/models/factories/button_model_factory.dart';
+import 'package:wildgids/screens/login/login_overlay.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/brown_button.dart';
+import 'package:wildgids/widgets/login/verification_code_input.dart';
+import 'package:wildgids/interfaces/other/login_interface.dart';
+import 'package:wildgids/widgets/overlay/error_overlay.dart';
+import 'package:wildgids/utils/responsive_utils.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -303,3 +303,4 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
+

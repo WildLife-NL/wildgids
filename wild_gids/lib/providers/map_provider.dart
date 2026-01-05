@@ -1,19 +1,19 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 
 // R8
-import 'package:wildrapport/models/api_models/interaction_query_result.dart';
+import 'package:wildgids/models/api_models/interaction_query_result.dart';
 
 // R7
-import 'package:wildrapport/models/animal_waarneming_models/animal_pin.dart';
-import 'package:wildrapport/models/api_models/detection_pin.dart';
+import 'package:wildgids/models/animal_waarneming_models/animal_pin.dart';
+import 'package:wildgids/models/api_models/detection_pin.dart';
 
-import 'package:wildrapport/interfaces/data_apis/tracking_api_interface.dart'
+import 'package:wildgids/interfaces/data_apis/tracking_api_interface.dart'
     show TrackingApiInterface, TrackingNotice;
-import 'package:wildrapport/managers/api_managers/tracking_cache_manager.dart';
-import 'package:wildrapport/interfaces/data_apis/vicinity_api_interface.dart';
-import 'package:wildrapport/utils/notification_service.dart';
+import 'package:wildgids/managers/api_managers/tracking_cache_manager.dart';
+import 'package:wildgids/interfaces/data_apis/vicinity_api_interface.dart';
+import 'package:wildgids/utils/notification_service.dart';
 import 'dart:async';
 
 class MapProvider extends ChangeNotifier {
@@ -64,7 +64,7 @@ class MapProvider extends ChangeNotifier {
     // Prefer using the cache manager if available
     if (_trackingCacheManager != null) {
       debugPrint(
-        '[MapProvider] 📍 Sending tracking ping via cache manager: ${pos.latitude}, ${pos.longitude}',
+        '[MapProvider] ðŸ“ Sending tracking ping via cache manager: ${pos.latitude}, ${pos.longitude}',
       );
 
       try {
@@ -77,7 +77,7 @@ class MapProvider extends ChangeNotifier {
         if (notice != null) {
           _lastTrackingNotice = notice;
           debugPrint(
-            '[MapProvider] 🔔 Got tracking notice, calling notifyListeners()',
+            '[MapProvider] ðŸ”” Got tracking notice, calling notifyListeners()',
           );
           // Also show an OS-level notification on supported platforms
           final title =
@@ -87,17 +87,17 @@ class MapProvider extends ChangeNotifier {
           NotificationService.instance.show(title: title, body: notice.text);
           notifyListeners(); // if any UI wants to react to changes
           debugPrint(
-            '[MapProvider] ✓ tracking-reading OK; notice="${notice.text}"'
+            '[MapProvider] âœ“ tracking-reading OK; notice="${notice.text}"'
             ' sev=${notice.severity ?? '-'}',
           );
         } else {
           debugPrint(
-            '[MapProvider] ✓ tracking-reading cached or sent; no notice from backend',
+            '[MapProvider] âœ“ tracking-reading cached or sent; no notice from backend',
           );
         }
         return notice;
       } catch (e) {
-        debugPrint('[MapProvider] ❌ tracking-reading failed: $e');
+        debugPrint('[MapProvider] âŒ tracking-reading failed: $e');
         return null;
       }
     }
@@ -105,13 +105,13 @@ class MapProvider extends ChangeNotifier {
     // Fallback to direct API call if cache manager not available
     if (_trackingApi == null) {
       debugPrint(
-        '[MapProvider] ⚠️ TrackingApi not set - cannot send tracking ping',
+        '[MapProvider] âš ï¸ TrackingApi not set - cannot send tracking ping',
       );
       return null;
     }
 
     debugPrint(
-      '[MapProvider] 📍 Sending tracking ping for position: ${pos.latitude}, ${pos.longitude}',
+      '[MapProvider] ðŸ“ Sending tracking ping for position: ${pos.latitude}, ${pos.longitude}',
     );
 
     try {
@@ -124,7 +124,7 @@ class MapProvider extends ChangeNotifier {
       if (notice != null) {
         _lastTrackingNotice = notice;
         debugPrint(
-          '[MapProvider] 🔔 Got tracking notice, calling notifyListeners()',
+          '[MapProvider] ðŸ”” Got tracking notice, calling notifyListeners()',
         );
         // Also show an OS-level notification on supported platforms
         final title =
@@ -134,17 +134,17 @@ class MapProvider extends ChangeNotifier {
         NotificationService.instance.show(title: title, body: notice.text);
         notifyListeners(); // if any UI wants to react to changes
         debugPrint(
-          '[MapProvider] ✓ tracking-reading OK; notice="${notice.text}"'
+          '[MapProvider] âœ“ tracking-reading OK; notice="${notice.text}"'
           ' sev=${notice.severity ?? '-'}',
         );
       } else {
         debugPrint(
-          '[MapProvider] ✓ tracking-reading OK; no notice from backend',
+          '[MapProvider] âœ“ tracking-reading OK; no notice from backend',
         );
       }
       return notice;
     } catch (e) {
-      debugPrint('[MapProvider] ❌ tracking-reading failed: $e');
+      debugPrint('[MapProvider] âŒ tracking-reading failed: $e');
       return null;
     }
   }
@@ -311,12 +311,12 @@ class MapProvider extends ChangeNotifier {
   Future<void> loadAllPinsFromVicinity() async {
     if (_vicinityApi == null) {
       debugPrint(
-        '[MapProvider] ⚠️ VicinityApi not set - falling back to individual calls',
+        '[MapProvider] âš ï¸ VicinityApi not set - falling back to individual calls',
       );
       return;
     }
 
-    debugPrint('[MapProvider] 📍 Loading all pins from vicinity endpoint');
+    debugPrint('[MapProvider] ðŸ“ Loading all pins from vicinity endpoint');
 
     try {
       _animalPinsLoading = true;
@@ -344,7 +344,7 @@ class MapProvider extends ChangeNotifier {
       _interactionsLoading = false;
 
       debugPrint(
-        '[MapProvider] ✓ Vicinity loaded: '
+        '[MapProvider] âœ“ Vicinity loaded: '
         '${_animalPins.length} animals, '
         '${_detectionPins.length} detections, '
         '${_interactions.length} interactions',
@@ -442,7 +442,7 @@ class MapProvider extends ChangeNotifier {
         debugPrint('[MapProvider] Interaction notification skipped: $e');
       }
     } catch (e) {
-      debugPrint('[MapProvider] ❌ Vicinity load failed: $e');
+      debugPrint('[MapProvider] âŒ Vicinity load failed: $e');
       _animalPinsError = e.toString();
       _detectionPinsError = e.toString();
       _interactionsError = e.toString();
@@ -542,3 +542,4 @@ class MapProvider extends ChangeNotifier {
     super.dispose();
   }
 }
+

@@ -1,4 +1,4 @@
-import 'package:wildrapport/models/reports/base_report.dart';
+﻿import 'package:wildgids/models/reports/base_report.dart';
 
 class AnimalSightingReport extends BaseReport {
   AnimalSightingReport() : super('animalSightingen');
@@ -11,3 +11,4 @@ class AnimalSightingReport extends BaseReport {
   set observationDate(DateTime? value) =>
       updateProperty('observationDate', value);
 }
+

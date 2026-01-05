@@ -1,6 +1,6 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:wildrapport/models/animal_waarneming_models/view_count_model.dart';
-import 'package:wildrapport/models/enums/animal_age.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:wildgids/models/animal_waarneming_models/view_count_model.dart';
+import 'package:wildgids/models/enums/animal_age.dart';
 
 void main() {
   group('ViewCountModel', () {
@@ -224,3 +224,4 @@ void main() {
     });
   });
 }
+

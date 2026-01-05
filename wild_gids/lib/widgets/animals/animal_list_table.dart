@@ -1,14 +1,14 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
-import 'package:wildrapport/models/animal_waarneming_models/animal_gender_view_count_model.dart';
-import 'package:wildrapport/models/animal_waarneming_models/animal_model.dart';
-import 'package:wildrapport/models/animal_waarneming_models/animal_sighting_model.dart';
-import 'package:wildrapport/models/enums/animal_age.dart';
-import 'package:wildrapport/models/enums/animal_gender.dart';
-import 'package:wildrapport/models/animal_waarneming_models/view_count_model.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
+import 'package:wildgids/models/animal_waarneming_models/animal_gender_view_count_model.dart';
+import 'package:wildgids/models/animal_waarneming_models/animal_model.dart';
+import 'package:wildgids/models/animal_waarneming_models/animal_sighting_model.dart';
+import 'package:wildgids/models/enums/animal_age.dart';
+import 'package:wildgids/models/enums/animal_gender.dart';
+import 'package:wildgids/models/animal_waarneming_models/view_count_model.dart';
 
 class AnimalListTable extends StatefulWidget {
   const AnimalListTable({super.key});
@@ -433,10 +433,10 @@ class AnimalListTableState extends State<AnimalListTable> {
     String icon;
     switch (gender) {
       case AnimalGender.vrouwelijk:
-        icon = '♀';
+        icon = 'â™€';
         break;
       case AnimalGender.mannelijk:
-        icon = '♂';
+        icon = 'â™‚';
         break;
       case AnimalGender.onbekend:
         icon = '?';
@@ -652,3 +652,4 @@ class AnimalListTableState extends State<AnimalListTable> {
     manager.addListener(_handleStateChange);
   }
 }
+

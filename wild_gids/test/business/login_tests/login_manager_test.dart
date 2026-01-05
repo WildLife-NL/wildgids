@@ -1,8 +1,8 @@
-import 'package:flutter_test/flutter_test.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
-import 'package:wildrapport/exceptions/validation_exception.dart';
-import 'package:wildrapport/interfaces/other/login_interface.dart';
-import 'package:wildrapport/models/api_models/user.dart';
+import 'package:wildgids/exceptions/validation_exception.dart';
+import 'package:wildgids/interfaces/other/login_interface.dart';
+import 'package:wildgids/models/api_models/user.dart';
 import '../helpers/login_helpers.dart';
 import '../mock_generator.mocks.dart';
 
@@ -131,7 +131,7 @@ void main() {
       );
 
       verify(
-        mockAuthApi.authenticate('Wild Rapport', 'test@example.com'),
+        mockAuthApi.authenticate('Wild Gids', 'test@example.com'),
       ).called(1);
     });
   });
@@ -160,3 +160,4 @@ void main() {
     });
   });
 }
+

@@ -1,7 +1,7 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:wildrapport/models/beta_models/sighting_report_model.dart';
-import 'package:wildrapport/models/beta_models/report_location_model.dart';
-import 'package:wildrapport/models/beta_models/sighted_animal_model.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:wildgids/models/beta_models/sighting_report_model.dart';
+import 'package:wildgids/models/beta_models/report_location_model.dart';
+import 'package:wildgids/models/beta_models/sighted_animal_model.dart';
 
 void main() {
   group('SightingReport Model', () {
@@ -222,3 +222,4 @@ void main() {
     });
   });
 }
+

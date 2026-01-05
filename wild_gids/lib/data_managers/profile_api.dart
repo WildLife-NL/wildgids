@@ -1,12 +1,12 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
 
-import 'package:wildrapport/data_managers/api_client.dart';
-import 'package:wildrapport/interfaces/data_apis/profile_api_interface.dart';
-import 'package:wildrapport/models/beta_models/profile_model.dart';
+import 'package:wildgids/data_managers/api_client.dart';
+import 'package:wildgids/interfaces/data_apis/profile_api_interface.dart';
+import 'package:wildgids/models/beta_models/profile_model.dart';
 
 class ProfileApi implements ProfileApiInterface {
   final ApiClient client;
@@ -223,3 +223,4 @@ class ProfileApi implements ProfileApiInterface {
     }
   }
 }
+

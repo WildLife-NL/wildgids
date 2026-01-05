@@ -1,5 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:wildrapport/models/api_models/vicinity.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:wildgids/models/api_models/vicinity.dart';
 
 void main() {
   group('Vicinity Model Tests', () {
@@ -121,3 +121,4 @@ void main() {
     });
   });
 }
+

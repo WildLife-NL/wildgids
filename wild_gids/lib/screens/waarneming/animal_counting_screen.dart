@@ -1,12 +1,12 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
-import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
-import 'package:wildrapport/screens/waarneming/animal_list_overview_screen.dart';
-import 'package:wildrapport/screens/waarneming/animals_screen.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/bottom_app_bar.dart';
-import 'package:wildrapport/widgets/animals/animal_counting.dart';
+import 'package:wildgids/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
+import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
+import 'package:wildgids/screens/waarneming/animal_list_overview_screen.dart';
+import 'package:wildgids/screens/waarneming/animals_screen.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/bottom_app_bar.dart';
+import 'package:wildgids/widgets/animals/animal_counting.dart';
 
 class AnimalCountingScreen extends StatefulWidget {
   const AnimalCountingScreen({super.key});
@@ -115,3 +115,4 @@ class _AnimalCountingScreenState extends State<AnimalCountingScreen> {
     );
   }
 }
+

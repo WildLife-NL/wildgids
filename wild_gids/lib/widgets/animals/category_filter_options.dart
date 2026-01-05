@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/circle_icon_container.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/circle_icon_container.dart';
 
 class CategoryFilterOptions extends StatelessWidget {
   final List<Map<String, String>> items;
@@ -115,3 +115,4 @@ class CategoryFilterOptions extends StatelessWidget {
     );
   }
 }
+

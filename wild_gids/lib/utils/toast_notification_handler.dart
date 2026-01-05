@@ -1,5 +1,5 @@
-import 'package:wildrapport/widgets/toasts/snack_bar_with_progress_bar.dart';
-import 'package:wildrapport/utils/notification_service.dart';
+﻿import 'package:wildgids/widgets/toasts/snack_bar_with_progress_bar.dart';
+import 'package:wildgids/utils/notification_service.dart';
 
 class ToastNotificationHandler {
   static void sendToastNotification(
@@ -20,3 +20,4 @@ class ToastNotificationHandler {
     );
   }
 }
+

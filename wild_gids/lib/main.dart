@@ -1,64 +1,65 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/data_managers/response_api.dart';
-import 'package:wildrapport/data_managers/api_client.dart';
-import 'package:wildrapport/data_managers/auth_api.dart';
-import 'package:wildrapport/data_managers/interaction_api.dart';
-import 'package:wildrapport/data_managers/profile_api.dart';
-import 'package:wildrapport/data_managers/questionaire_api.dart';
-import 'package:wildrapport/data_managers/species_api.dart';
-import 'package:wildrapport/data_managers/vicinity_api.dart';
-import 'package:wildrapport/data_managers/tracking_api.dart';
-import 'package:wildrapport/managers/api_managers/tracking_cache_manager.dart';
-import 'package:wildrapport/interfaces/waarneming_flow/animal_interface.dart';
-import 'package:wildrapport/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
-import 'package:wildrapport/interfaces/data_apis/auth_api_interface.dart';
-import 'package:wildrapport/interfaces/data_apis/interaction_api_interface.dart';
-import 'package:wildrapport/interfaces/data_apis/species_api_interface.dart';
-import 'package:wildrapport/interfaces/filters/dropdown_interface.dart';
-import 'package:wildrapport/interfaces/filters/filter_interface.dart';
-import 'package:wildrapport/interfaces/reporting/interaction_interface.dart';
-import 'package:wildrapport/interfaces/location/location_screen_interface.dart';
-import 'package:wildrapport/interfaces/other/login_interface.dart';
-import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
-import 'package:wildrapport/interfaces/other/overzicht_interface.dart';
-import 'package:wildrapport/interfaces/other/permission_interface.dart';
-import 'package:wildrapport/interfaces/reporting/questionnaire_interface.dart';
-import 'package:wildrapport/interfaces/reporting/response_interface.dart';
-import 'package:wildrapport/interfaces/data_apis/response_api_interface.dart';
-import 'package:wildrapport/managers/waarneming_flow/animal_manager.dart';
-import 'package:wildrapport/managers/waarneming_flow/animal_sighting_reporting_manager.dart';
-import 'package:wildrapport/managers/api_managers/interaction_manager.dart';
-import 'package:wildrapport/managers/api_managers/response_manager.dart';
-import 'package:wildrapport/managers/filtering_system/dropdown_manager.dart';
-import 'package:wildrapport/managers/map/location_screen_manager.dart';
-import 'package:wildrapport/managers/other/login_manager.dart';
-import 'package:wildrapport/managers/state_managers/navigation_state_manager.dart';
-import 'package:wildrapport/managers/other/overzicht_manager.dart';
-import 'package:wildrapport/managers/permission/permission_manager.dart';
-import 'package:wildrapport/managers/other/questionnaire_manager.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/constants/app_text_theme.dart';
-import 'package:wildrapport/managers/filtering_system/filter_manager.dart';
-import 'package:wildrapport/config/app_config.dart';
+import 'package:wildgids/data_managers/response_api.dart';
+import 'package:wildgids/data_managers/api_client.dart';
+import 'package:wildgids/data_managers/auth_api.dart';
+import 'package:wildgids/data_managers/interaction_api.dart';
+import 'package:wildgids/data_managers/profile_api.dart';
+import 'package:wildgids/data_managers/questionaire_api.dart';
+import 'package:wildgids/data_managers/species_api.dart';
+import 'package:wildgids/data_managers/vicinity_api.dart';
+import 'package:wildgids/data_managers/tracking_api.dart';
+import 'package:wildgids/managers/api_managers/tracking_cache_manager.dart';
+import 'package:wildgids/interfaces/waarneming_flow/animal_interface.dart';
+import 'package:wildgids/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
+import 'package:wildgids/interfaces/data_apis/auth_api_interface.dart';
+import 'package:wildgids/interfaces/data_apis/interaction_api_interface.dart';
+import 'package:wildgids/interfaces/data_apis/species_api_interface.dart';
+import 'package:wildgids/interfaces/filters/dropdown_interface.dart';
+import 'package:wildgids/interfaces/filters/filter_interface.dart';
+import 'package:wildgids/interfaces/reporting/interaction_interface.dart';
+import 'package:wildgids/interfaces/location/location_screen_interface.dart';
+import 'package:wildgids/interfaces/other/login_interface.dart';
+import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
+import 'package:wildgids/interfaces/other/overzicht_interface.dart';
+import 'package:wildgids/interfaces/other/permission_interface.dart';
+import 'package:wildgids/interfaces/reporting/questionnaire_interface.dart';
+import 'package:wildgids/interfaces/reporting/response_interface.dart';
+import 'package:wildgids/interfaces/data_apis/response_api_interface.dart';
+import 'package:wildgids/managers/waarneming_flow/animal_manager.dart';
+import 'package:wildgids/managers/waarneming_flow/animal_sighting_reporting_manager.dart';
+import 'package:wildgids/managers/api_managers/interaction_manager.dart';
+import 'package:wildgids/managers/api_managers/response_manager.dart';
+import 'package:wildgids/managers/filtering_system/dropdown_manager.dart';
+import 'package:wildgids/managers/map/location_screen_manager.dart';
+import 'package:wildgids/managers/other/login_manager.dart';
+import 'package:wildgids/managers/state_managers/navigation_state_manager.dart';
+import 'package:wildgids/managers/other/overzicht_manager.dart';
+import 'package:wildgids/managers/permission/permission_manager.dart';
+import 'package:wildgids/managers/other/questionnaire_manager.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/constants/app_text_theme.dart';
+import 'package:wildgids/managers/filtering_system/filter_manager.dart';
+import 'package:wildgids/config/app_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:wildrapport/providers/app_state_provider.dart';
-import 'package:wildrapport/providers/map_provider.dart';
-import 'package:wildrapport/providers/response_provider.dart';
-import 'package:wildrapport/screens/login/login_screen.dart';
-import 'package:wildrapport/screens/shared/overzicht_screen.dart';
-import 'package:wildrapport/interfaces/data_apis/profile_api_interface.dart';
+import 'package:wildgids/providers/app_state_provider.dart';
+import 'package:wildgids/providers/map_provider.dart';
+import 'package:wildgids/providers/response_provider.dart';
+import 'package:wildgids/screens/login/login_screen.dart';
+import 'package:wildgids/screens/gate/location_gate_screen.dart';
+import 'package:wildgids/screens/shared/overzicht_screen.dart';
+import 'package:wildgids/interfaces/data_apis/profile_api_interface.dart';
 
-import 'package:wildrapport/data_managers/interaction_types_api.dart';
-import 'package:wildrapport/managers/api_managers/interaction_types_manager.dart';
+import 'package:wildgids/data_managers/interaction_types_api.dart';
+import 'package:wildgids/managers/api_managers/interaction_types_manager.dart';
 
-import 'package:wildrapport/providers/conveyance_provider.dart';
-import 'package:wildrapport/data_managers/conveyance_api.dart';
+import 'package:wildgids/providers/conveyance_provider.dart';
+import 'package:wildgids/data_managers/conveyance_api.dart';
 
-import 'package:wildrapport/utils/token_validator.dart';
-import 'package:wildrapport/utils/notification_service.dart';
+import 'package:wildgids/utils/token_validator.dart';
+import 'package:wildgids/utils/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -131,8 +132,9 @@ void main() async {
   prefs.setStringList('interaction_cache', []);
 
   final bool hasValidToken = await TokenValidator.hasValidToken();
-  final Widget initialScreen =
+    final Widget _nextScreen =
       hasValidToken ? const OverzichtScreen() : const LoginScreen();
+    final Widget initialScreen = LocationGateScreen(next: _nextScreen);
 
   runApp(
     MultiProvider(
@@ -248,3 +250,4 @@ class _MediaQueryWrapper extends StatelessWidget {
     );
   }
 }
+

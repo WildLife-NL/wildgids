@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
-import 'package:wildrapport/widgets/questionnaire/questionnaire_white_button.dart';
-import 'package:wildrapport/utils/responsive_utils.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:wildgids/widgets/questionnaire/questionnaire_white_button.dart';
+import 'package:wildgids/utils/responsive_utils.dart';
 
 class QuestionnaireHomeButtons extends StatelessWidget {
   final Function() onOverslaanPressed;
@@ -69,3 +69,4 @@ class QuestionnaireHomeButtons extends StatelessWidget {
     );
   }
 }
+

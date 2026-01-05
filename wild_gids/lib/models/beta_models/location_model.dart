@@ -1,4 +1,4 @@
-import 'package:wildrapport/models/enums/location_source.dart';
+﻿import 'package:wildgids/models/enums/location_source.dart';
 
 class LocationModel {
   final double? latitude;
@@ -69,3 +69,4 @@ class LocationModel {
     source: LocationSource.manual,
   );
 }
+

@@ -1,7 +1,7 @@
-import 'package:wildrapport/interfaces/filters/filter_interface.dart';
-import 'package:wildrapport/models/enums/filter_type.dart';
-import 'package:wildrapport/models/ui_models/brown_button_model.dart';
-import 'package:wildrapport/models/animal_waarneming_models/animal_model.dart';
+﻿import 'package:wildgids/interfaces/filters/filter_interface.dart';
+import 'package:wildgids/models/enums/filter_type.dart';
+import 'package:wildgids/models/ui_models/brown_button_model.dart';
+import 'package:wildgids/models/animal_waarneming_models/animal_model.dart';
 
 //Animal screen filter dropdown logic handeling
 
@@ -134,3 +134,4 @@ class FilterManager implements FilterInterface {
     }).toList();
   }
 }
+

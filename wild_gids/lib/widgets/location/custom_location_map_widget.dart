@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:wildrapport/managers/map/location_map_manager.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/providers/map_provider.dart';
-import 'package:wildrapport/widgets/location/location_data_card.dart';
+import 'package:wildgids/managers/map/location_map_manager.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/providers/map_provider.dart';
+import 'package:wildgids/widgets/location/location_data_card.dart';
 import 'package:provider/provider.dart';
 
 class CustomLocationMapScreen extends StatefulWidget {
@@ -239,7 +239,7 @@ class _CustomLocationMapScreenState extends State<CustomLocationMapScreen> {
               TileLayer(
                 urlTemplate:
                     _isSatelliteView ? _satelliteTileUrl : _standardTileUrl,
-                userAgentPackageName: 'com.wildrapport.app',
+                userAgentPackageName: 'com.wildgids.app',
               ),
               if (_currentPosition != null)
                 MarkerLayer(
@@ -351,3 +351,4 @@ class _CustomLocationMapScreenState extends State<CustomLocationMapScreen> {
     );
   }
 }
+

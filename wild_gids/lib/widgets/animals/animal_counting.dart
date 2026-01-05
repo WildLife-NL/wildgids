@@ -1,15 +1,15 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
-import 'package:wildrapport/models/enums/animal_age.dart';
-import 'package:wildrapport/models/enums/animal_age_extensions.dart';
-import 'package:wildrapport/models/enums/animal_gender.dart';
-import 'package:wildrapport/widgets/overlay/error_overlay.dart';
-import 'package:wildrapport/widgets/toasts/snack_bar_with_progress.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/white_bulk_button.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/models/animal_waarneming_models/observed_animal_entry.dart';
-import 'package:wildrapport/models/enums/animal_condition.dart';
+import 'package:wildgids/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
+import 'package:wildgids/models/enums/animal_age.dart';
+import 'package:wildgids/models/enums/animal_age_extensions.dart';
+import 'package:wildgids/models/enums/animal_gender.dart';
+import 'package:wildgids/widgets/overlay/error_overlay.dart';
+import 'package:wildgids/widgets/toasts/snack_bar_with_progress.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/white_bulk_button.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/models/animal_waarneming_models/observed_animal_entry.dart';
+import 'package:wildgids/models/enums/animal_condition.dart';
 
 class AnimalCounting extends StatefulWidget {
   final Function(String)? onAgeSelected;
@@ -473,3 +473,4 @@ class _AnimalCountingState extends State<AnimalCounting> {
     return result;
   }
 }
+

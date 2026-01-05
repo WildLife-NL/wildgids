@@ -1,6 +1,6 @@
-import 'package:wildrapport/interfaces/reporting/reportable_interface.dart';
-import 'package:wildrapport/models/beta_models/belonging_damage_report_model.dart';
-import 'package:wildrapport/utils/damage_report_api_transformer.dart';
+﻿import 'package:wildgids/interfaces/reporting/reportable_interface.dart';
+import 'package:wildgids/models/beta_models/belonging_damage_report_model.dart';
+import 'package:wildgids/utils/damage_report_api_transformer.dart';
 
 class BelongingDamageReportWrapper implements Reportable {
   final BelongingDamageReport report;
@@ -12,3 +12,4 @@ class BelongingDamageReportWrapper implements Reportable {
     return BelongingDamageApiTransformer.transformForApi(report);
   }
 }
+

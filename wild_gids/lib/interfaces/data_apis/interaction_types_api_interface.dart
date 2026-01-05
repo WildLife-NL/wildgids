@@ -1,5 +1,6 @@
-import 'package:wildrapport/models/api_models/interaction_type.dart';
+﻿import 'package:wildgids/models/api_models/interaction_type.dart';
 
 abstract class InteractionTypesApiInterface {
   Future<List<InteractionType>> getAllInteractionTypes();
 }
+

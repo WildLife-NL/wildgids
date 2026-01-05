@@ -1,6 +1,6 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:wildrapport/models/beta_models/belonging_damage_report_model.dart';
+import 'package:wildgids/models/beta_models/belonging_damage_report_model.dart';
 
 class BelongingDamageApiTransformer {
   static Map<String, dynamic> transformForApi(BelongingDamageReport report) {
@@ -67,7 +67,7 @@ class BelongingDamageApiTransformer {
         // API expects "square-meters" etc.
         "impactType": report.impactedAreaType,
 
-        // API expects the numeric value (m2 or converted ha→m2)
+        // API expects the numeric value (m2 or converted haâ†’m2)
         "impactValue": report.impactedArea,
       },
 
@@ -85,3 +85,4 @@ class BelongingDamageApiTransformer {
     return payload;
   }
 }
+

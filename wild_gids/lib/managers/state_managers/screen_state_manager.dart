@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/interfaces/state/screen_state_interface.dart';
-import 'package:wildrapport/providers/app_state_provider.dart';
+import 'package:wildgids/interfaces/state/screen_state_interface.dart';
+import 'package:wildgids/providers/app_state_provider.dart';
 
 /// Abstract base class to manage per-screen persistent state using AppStateProvider.
 abstract class ScreenStateManager<T extends StatefulWidget> extends State<T>
@@ -70,3 +70,4 @@ abstract class ScreenStateManager<T extends StatefulWidget> extends State<T>
     }
   }
 }
+

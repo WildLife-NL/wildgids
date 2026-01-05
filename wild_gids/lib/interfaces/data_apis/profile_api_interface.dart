@@ -1,4 +1,4 @@
-import 'package:wildrapport/models/beta_models/profile_model.dart';
+﻿import 'package:wildgids/models/beta_models/profile_model.dart';
 
 abstract class ProfileApiInterface {
   Future<void> setProfileDataInDeviceStorage();
@@ -11,3 +11,4 @@ abstract class ProfileApiInterface {
 
   Future<Profile> updateMyProfile(Profile updatedProfile);
 }
+

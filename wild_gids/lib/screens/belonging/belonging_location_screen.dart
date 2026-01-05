@@ -1,20 +1,20 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/interfaces/location/location_screen_interface.dart';
-import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
-import 'package:wildrapport/interfaces/reporting/belonging_damage_report_interface.dart';
-import 'package:wildrapport/models/beta_models/interaction_response_model.dart';
-import 'package:wildrapport/models/beta_models/report_location_model.dart';
-import 'package:wildrapport/providers/map_provider.dart';
-import 'package:wildrapport/providers/belonging_damage_report_provider.dart';
-import 'package:wildrapport/screens/shared/overzicht_screen.dart';
-import 'package:wildrapport/screens/questionnaire/questionnaire_screen.dart';
-import 'package:wildrapport/screens/belonging/belonging_damages_screen.dart';
-import 'package:wildrapport/utils/toast_notification_handler.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/bottom_app_bar.dart';
-import 'package:wildrapport/widgets/location/location_screen_ui_widget.dart';
-import 'package:wildrapport/widgets/location/permission_gate.dart';
+import 'package:wildgids/interfaces/location/location_screen_interface.dart';
+import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
+import 'package:wildgids/interfaces/reporting/belonging_damage_report_interface.dart';
+import 'package:wildgids/models/beta_models/interaction_response_model.dart';
+import 'package:wildgids/models/beta_models/report_location_model.dart';
+import 'package:wildgids/providers/map_provider.dart';
+import 'package:wildgids/providers/belonging_damage_report_provider.dart';
+import 'package:wildgids/screens/shared/overzicht_screen.dart';
+import 'package:wildgids/screens/questionnaire/questionnaire_screen.dart';
+import 'package:wildgids/screens/belonging/belonging_damages_screen.dart';
+import 'package:wildgids/utils/toast_notification_handler.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/bottom_app_bar.dart';
+import 'package:wildgids/widgets/location/location_screen_ui_widget.dart';
+import 'package:wildgids/widgets/location/permission_gate.dart';
 
 class BelongingLocationScreen extends StatefulWidget {
   const BelongingLocationScreen({super.key});
@@ -44,7 +44,7 @@ class _BelongingLocationScreenState extends State<BelongingLocationScreen> {
   void initState() {
     super.initState();
     debugPrint(
-      "$yellowLog[BelongingLocationScreen] 🔄 initState called\x1B[0m",
+      "$yellowLog[BelongingLocationScreen] ðŸ”„ initState called\x1B[0m",
     );
     _initializeScreen();
   }
@@ -53,7 +53,7 @@ class _BelongingLocationScreenState extends State<BelongingLocationScreen> {
     if (!mounted) return;
 
     debugPrint(
-      "$yellowLog[BelongingLocationScreen] 🔄 Initializing screen\x1B[0m",
+      "$yellowLog[BelongingLocationScreen] ðŸ”„ Initializing screen\x1B[0m",
     );
 
     try {
@@ -63,12 +63,12 @@ class _BelongingLocationScreenState extends State<BelongingLocationScreen> {
 
       if (!mapProvider.isInitialized) {
         debugPrint(
-          "$yellowLog[BelongingLocationScreen] 🔄 Initializing map provider\x1B[0m",
+          "$yellowLog[BelongingLocationScreen] ðŸ”„ Initializing map provider\x1B[0m",
         );
         await mapProvider.initialize();
       } else {
         debugPrint(
-          "$greenLog[BelongingLocationScreen] ✅ Map provider already initialized\x1B[0m",
+          "$greenLog[BelongingLocationScreen] âœ… Map provider already initialized\x1B[0m",
         );
       }
 
@@ -77,12 +77,12 @@ class _BelongingLocationScreenState extends State<BelongingLocationScreen> {
           _isInitialized = true;
         });
         debugPrint(
-          "$greenLog[BelongingLocationScreen] ✅ Screen initialized successfully\x1B[0m",
+          "$greenLog[BelongingLocationScreen] âœ… Screen initialized successfully\x1B[0m",
         );
       }
     } catch (e) {
       debugPrint(
-        "$redLog[BelongingLocationScreen] ❌ Error initializing screen: $e\x1B[0m",
+        "$redLog[BelongingLocationScreen] âŒ Error initializing screen: $e\x1B[0m",
       );
     }
   }
@@ -104,7 +104,7 @@ class _BelongingLocationScreenState extends State<BelongingLocationScreen> {
 
   Future<void> _handleNextPressed() async {
     debugPrint(
-      "$yellowLog[BelongingLocationScreen] 🔄 Next button pressed\x1B[0m",
+      "$yellowLog[BelongingLocationScreen] ðŸ”„ Next button pressed\x1B[0m",
     );
 
     // Cache providers before async calls
@@ -116,7 +116,7 @@ class _BelongingLocationScreenState extends State<BelongingLocationScreen> {
     if (!_isInitialized) {
       await _initializeScreen();
       if (!_isInitialized) {
-        _pendingSnackBarMessage = 'Scherm niet geïnitialiseerd';
+        _pendingSnackBarMessage = 'Scherm niet geÃ¯nitialiseerd';
         WidgetsBinding.instance.addPostFrameCallback(
           (_) => _handlePendingActions(),
         );
@@ -128,13 +128,13 @@ class _BelongingLocationScreenState extends State<BelongingLocationScreen> {
     Map<String, dynamic>? locationInfo;
     if (context.mounted) {
       debugPrint(
-        "$blueLog[BelongingLocationScreen] 📍 Fetching location with valid context\x1B[0m",
+        "$blueLog[BelongingLocationScreen] ðŸ“ Fetching location with valid context\x1B[0m",
       );
       debugPrint(
-        "$blueLog[BelongingLocationScreen] 📍 Map selected position: ${mapProvider.selectedPosition}\x1B[0m",
+        "$blueLog[BelongingLocationScreen] ðŸ“ Map selected position: ${mapProvider.selectedPosition}\x1B[0m",
       );
       debugPrint(
-        "$blueLog[BelongingLocationScreen] 📍 Map selected address: ${mapProvider.selectedAddress}\x1B[0m",
+        "$blueLog[BelongingLocationScreen] ðŸ“ Map selected address: ${mapProvider.selectedAddress}\x1B[0m",
       );
 
       try {
@@ -142,7 +142,7 @@ class _BelongingLocationScreenState extends State<BelongingLocationScreen> {
         locationInfo = await locationManager.getLocationAndDateTime(context);
       } catch (e, stackTrace) {
         debugPrint(
-          "$redLog[BelongingLocationScreen] ❌ Error fetching location: $e\x1B[0m",
+          "$redLog[BelongingLocationScreen] âŒ Error fetching location: $e\x1B[0m",
         );
         debugPrint(
           "$redLog[BelongingLocationScreen] Stack trace: $stackTrace\x1B[0m",
@@ -151,7 +151,7 @@ class _BelongingLocationScreenState extends State<BelongingLocationScreen> {
         // If the error is GPS-related but we have a selected position, use it anyway
         if (mapProvider.selectedPosition != null) {
           debugPrint(
-            "$yellowLog[BelongingLocationScreen] ⚠️ GPS error but using map selected position\x1B[0m",
+            "$yellowLog[BelongingLocationScreen] âš ï¸ GPS error but using map selected position\x1B[0m",
           );
           locationInfo = {
             'currentGpsLocation': {
@@ -180,7 +180,7 @@ class _BelongingLocationScreenState extends State<BelongingLocationScreen> {
       }
     } else {
       debugPrint(
-        "$redLog[BelongingLocationScreen] ⚠️ Widget unmounted, skipping location fetch\x1B[0m",
+        "$redLog[BelongingLocationScreen] âš ï¸ Widget unmounted, skipping location fetch\x1B[0m",
       );
       _pendingSnackBarMessage = 'Scherm niet langer beschikbaar';
       WidgetsBinding.instance.addPostFrameCallback(
@@ -190,7 +190,7 @@ class _BelongingLocationScreenState extends State<BelongingLocationScreen> {
     }
 
     debugPrint(
-      "\n$blueLog[BelongingLocationScreen] 📍 Location and DateTime Info:\x1B[0m",
+      "\n$blueLog[BelongingLocationScreen] ðŸ“ Location and DateTime Info:\x1B[0m",
     );
     debugPrint(
       "$blueLog[BelongingLocationScreen] Current GPS Location: ${locationInfo['currentGpsLocation']}\x1B[0m",
@@ -201,7 +201,7 @@ class _BelongingLocationScreenState extends State<BelongingLocationScreen> {
 
     if (locationInfo['selectedLocation'] == null) {
       debugPrint(
-        "$redLog[BelongingLocationScreen] ⚠️ No selected location found\x1B[0m",
+        "$redLog[BelongingLocationScreen] âš ï¸ No selected location found\x1B[0m",
       );
       _pendingSnackBarMessage = 'Selecteer een locatie op de kaart';
       WidgetsBinding.instance.addPostFrameCallback(
@@ -219,7 +219,7 @@ class _BelongingLocationScreenState extends State<BelongingLocationScreen> {
       );
       belongingManager.updateUserLocation(reportLocation);
       debugPrint(
-        "$greenLog[BelongingLocationScreen] ✅ Updated user location\x1B[0m",
+        "$greenLog[BelongingLocationScreen] âœ… Updated user location\x1B[0m",
       );
     }
 
@@ -231,7 +231,7 @@ class _BelongingLocationScreenState extends State<BelongingLocationScreen> {
       );
       belongingManager.updateSystemLocation(systemLocation);
       debugPrint(
-        "$greenLog[BelongingLocationScreen] ✅ Updated system location\x1B[0m",
+        "$greenLog[BelongingLocationScreen] âœ… Updated system location\x1B[0m",
       );
     }
 
@@ -240,7 +240,7 @@ class _BelongingLocationScreenState extends State<BelongingLocationScreen> {
       interactionResponseModel = await belongingManager.postInteraction();
     } catch (e) {
       debugPrint(
-        "$redLog[BelongingLocationScreen] ❌ Error posting interaction: $e\x1B[0m",
+        "$redLog[BelongingLocationScreen] âŒ Error posting interaction: $e\x1B[0m",
       );
       interactionResponseModel = null;
     }
@@ -317,3 +317,4 @@ class _BelongingLocationScreenState extends State<BelongingLocationScreen> {
     super.dispose();
   }
 }
+

@@ -1,16 +1,16 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/interfaces/waarneming_flow/animal_interface.dart';
-import 'package:wildrapport/interfaces/filters/dropdown_interface.dart';
-import 'package:wildrapport/interfaces/filters/filter_interface.dart';
-import 'package:wildrapport/managers/waarneming_flow/animal_manager.dart';
-import 'package:wildrapport/models/ui_models/brown_button_model.dart';
-import 'package:wildrapport/models/enums/dropdown_type.dart';
-import 'package:wildrapport/models/enums/filter_type.dart';
-import 'package:wildrapport/models/enums/location_type.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/brown_button.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/circle_icon_container.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/interfaces/waarneming_flow/animal_interface.dart';
+import 'package:wildgids/interfaces/filters/dropdown_interface.dart';
+import 'package:wildgids/interfaces/filters/filter_interface.dart';
+import 'package:wildgids/managers/waarneming_flow/animal_manager.dart';
+import 'package:wildgids/models/ui_models/brown_button_model.dart';
+import 'package:wildgids/models/enums/dropdown_type.dart';
+import 'package:wildgids/models/enums/filter_type.dart';
+import 'package:wildgids/models/enums/location_type.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/brown_button.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/circle_icon_container.dart';
 
 class DropdownManager implements DropdownInterface {
   final FilterInterface _filterManager;
@@ -351,3 +351,4 @@ class DropdownManager implements DropdownInterface {
     }
   }
 }
+

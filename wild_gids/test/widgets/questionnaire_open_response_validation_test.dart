@@ -228,7 +228,7 @@ Map<String, int>? _extractRange(String pattern) {
 String? _validateText(String text, String? regex) {
   // Skip validation for numeric range patterns (first!)
   // Sliders can return single digits like "1", "2", etc.
-  if (_isNumericRange(regex)) {
+  if (_isNumericRange(regex!)) {
     return null;
   }
 

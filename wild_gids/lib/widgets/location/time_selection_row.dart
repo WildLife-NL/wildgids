@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:wildrapport/widgets/location/time_picker_dialog.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/utils/responsive_utils.dart';
-import 'package:wildrapport/models/enums/date_time_type.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:wildgids/widgets/location/time_picker_dialog.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/utils/responsive_utils.dart';
+import 'package:wildgids/models/enums/date_time_type.dart';
 
 class TimeSelectionRow extends StatefulWidget {
   final Function(String) onOptionSelected;
@@ -369,4 +369,5 @@ class _TimeSelectionRowState extends State<TimeSelectionRow> {
     );
   }
 }
+
 

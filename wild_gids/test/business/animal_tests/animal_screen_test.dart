@@ -1,17 +1,17 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/interfaces/waarneming_flow/animal_interface.dart';
-import 'package:wildrapport/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
-import 'package:wildrapport/interfaces/filters/dropdown_interface.dart';
-import 'package:wildrapport/interfaces/filters/filter_interface.dart';
-import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
-import 'package:wildrapport/models/animal_waarneming_models/animal_model.dart';
-import 'package:wildrapport/models/animal_waarneming_models/animal_sighting_model.dart';
-import 'package:wildrapport/models/enums/report_type.dart';
-import 'package:wildrapport/providers/app_state_provider.dart';
-import 'package:wildrapport/screens/waarneming/animals_screen.dart';
+import 'package:wildgids/interfaces/waarneming_flow/animal_interface.dart';
+import 'package:wildgids/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
+import 'package:wildgids/interfaces/filters/dropdown_interface.dart';
+import 'package:wildgids/interfaces/filters/filter_interface.dart';
+import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
+import 'package:wildgids/models/animal_waarneming_models/animal_model.dart';
+import 'package:wildgids/models/animal_waarneming_models/animal_sighting_model.dart';
+import 'package:wildgids/models/enums/report_type.dart';
+import 'package:wildgids/providers/app_state_provider.dart';
+import 'package:wildgids/screens/waarneming/animals_screen.dart';
 import '../mock_generator.mocks.dart';
 
 void main() {
@@ -352,3 +352,4 @@ void main() {
     // Removed test: 'should display app bar with correct title'
   });
 }
+

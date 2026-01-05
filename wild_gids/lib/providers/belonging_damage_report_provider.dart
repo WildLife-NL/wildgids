@@ -1,12 +1,12 @@
-import 'package:flutter/material.dart';
-import 'package:wildrapport/models/beta_models/report_location_model.dart';
-import 'package:wildrapport/models/beta_models/polygon_area_model.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:wildgids/models/beta_models/report_location_model.dart';
+import 'package:wildgids/models/beta_models/polygon_area_model.dart';
 
 class BelongingDamageReportProvider extends ChangeNotifier {
   String impactedCrop = '';
   double currentDamage = 0;
   double expectedDamage = 0;
-  String impactedAreaType = 'vierkante meters'; // Default to m²
+  String impactedAreaType = 'vierkante meters'; // Default to mÂ²
   double? impactedArea;
   String description = '';
   String? suspectedSpeciesID;
@@ -18,14 +18,14 @@ class BelongingDamageReportProvider extends ChangeNotifier {
   ReportLocation? userLocation;
   bool expanded = false;
   String? inputErrorImpactArea;
-  String? selectedText = 'm²'; // Default display text
+  String? selectedText = 'mÂ²'; // Default display text
 
   // Map-based area reporting fields
   String damageCategory = 'crops'; // 'crops' or 'livestock'
   PolygonArea? polygonArea;
   int? livestockAmount;
 
-  // ── Backend-aligned aliases (safe, incremental) ────────────────────────────
+  // â”€â”€ Backend-aligned aliases (safe, incremental) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Use these names everywhere new code touches the provider.
   double get estimatedDamage => currentDamage;
   double get estimatedLoss => expectedDamage;
@@ -46,19 +46,19 @@ class BelongingDamageReportProvider extends ChangeNotifier {
   @Deprecated('Use setEstimatedLoss')
   void setExpectedDamage(double value) => setEstimatedLoss(value);
 
-  // ── API mapping helpers (UI -> API) ────────────────────────────────────────
-  // API wants impactType in {"square-meters","units"} and impactValue as int >= 1 (m² or units).
+  // â”€â”€ API mapping helpers (UI -> API) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // API wants impactType in {"square-meters","units"} and impactValue as int >= 1 (mÂ² or units).
   String get apiImpactType =>
       impactedAreaType == 'units' ? 'units' : 'square-meters';
 
   int? get apiImpactValueOrNull {
     if (impactedArea == null) return null;
 
-    // Convert hectares to m²; leave m² as-is; (future) 'units' unchanged.
+    // Convert hectares to mÂ²; leave mÂ² as-is; (future) 'units' unchanged.
     double raw = impactedArea!;
     switch (impactedAreaType) {
       case 'hectare':
-        raw = raw * 10000.0; // ha -> m²
+        raw = raw * 10000.0; // ha -> mÂ²
         break;
       case 'vierkante meters':
       case 'units':
@@ -149,7 +149,7 @@ class BelongingDamageReportProvider extends ChangeNotifier {
     // Store impacted area in square meters for accuracy and consistency
     impactedArea = area.calculateAreaInSquareMeters();
     impactedAreaType = 'vierkante meters';
-    selectedText = 'm²';
+    selectedText = 'mÂ²';
     notifyListeners();
   }
 
@@ -202,3 +202,4 @@ class BelongingDamageReportProvider extends ChangeNotifier {
     notifyListeners();
   }
 }
+

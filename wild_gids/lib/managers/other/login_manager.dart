@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
-import 'package:wildrapport/interfaces/data_apis/auth_api_interface.dart';
-import 'package:wildrapport/interfaces/data_apis/profile_api_interface.dart';
-import 'package:wildrapport/interfaces/other/login_interface.dart';
-import 'package:wildrapport/models/ui_models/brown_button_model.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/models/api_models/user.dart';
-import 'package:wildrapport/exceptions/validation_exception.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:wildgids/interfaces/data_apis/auth_api_interface.dart';
+import 'package:wildgids/interfaces/data_apis/profile_api_interface.dart';
+import 'package:wildgids/interfaces/other/login_interface.dart';
+import 'package:wildgids/models/ui_models/brown_button_model.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/models/api_models/user.dart';
+import 'package:wildgids/exceptions/validation_exception.dart';
 
 class LoginManager implements LoginInterface {
   final AuthApiInterface authApi;
@@ -169,3 +169,4 @@ class LoginManager implements LoginInterface {
     }
   }
 }
+

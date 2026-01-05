@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:wildrapport/interfaces/other/permission_interface.dart';
-import 'package:wildrapport/managers/permission/permission_manager.dart';
+import 'package:wildgids/interfaces/other/permission_interface.dart';
+import 'package:wildgids/managers/permission/permission_manager.dart';
 import '../mock_generator.mocks.dart';
 
 // Create a testable version of PermissionManager
@@ -181,3 +181,4 @@ void main() {
 
 // Mock BuildContext for testing
 class MockBuildContext extends Mock implements BuildContext {}
+

@@ -1,14 +1,14 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
-import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
-import 'package:wildrapport/providers/app_state_provider.dart';
-import 'package:wildrapport/screens/shared/rapporteren.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/bottom_app_bar.dart';
-import 'package:wildrapport/widgets/location/selection_button_group.dart';
-import 'package:wildrapport/screens/waarneming/animals_screen.dart';
+import 'package:wildgids/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
+import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
+import 'package:wildgids/providers/app_state_provider.dart';
+import 'package:wildgids/screens/shared/rapporteren.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/bottom_app_bar.dart';
+import 'package:wildgids/widgets/location/selection_button_group.dart';
+import 'package:wildgids/screens/waarneming/animals_screen.dart';
 
 class CategoryScreen extends StatefulWidget {
   const CategoryScreen({super.key});
@@ -166,3 +166,4 @@ class _CategoryScreenState extends State<CategoryScreen> {
     );
   }
 }
+

@@ -1,15 +1,15 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/interfaces/data_apis/profile_api_interface.dart';
-import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
-import 'package:wildrapport/interfaces/other/overzicht_interface.dart';
-import 'package:wildrapport/interfaces/other/permission_interface.dart';
-import 'package:wildrapport/providers/app_state_provider.dart';
-import 'package:wildrapport/screens/shared/overzicht_screen.dart';
-import 'package:wildrapport/widgets/overzicht/top_container.dart';
-import 'package:wildrapport/widgets/overzicht/action_buttons.dart';
+import 'package:wildgids/interfaces/data_apis/profile_api_interface.dart';
+import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
+import 'package:wildgids/interfaces/other/overzicht_interface.dart';
+import 'package:wildgids/interfaces/other/permission_interface.dart';
+import 'package:wildgids/providers/app_state_provider.dart';
+import 'package:wildgids/screens/shared/overzicht_screen.dart';
+import 'package:wildgids/widgets/overzicht/top_container.dart';
+import 'package:wildgids/widgets/overzicht/action_buttons.dart';
 import '../helpers/overzicht_helpers.dart';
 import '../mock_generator.mocks.dart';
 
@@ -156,3 +156,4 @@ void main() {
     });
   });
 }
+

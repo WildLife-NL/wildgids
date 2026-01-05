@@ -1,8 +1,8 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:wildrapport/data_managers/api_client.dart';
-import 'package:wildrapport/interfaces/data_apis/vicinity_api_interface.dart';
-import 'package:wildrapport/models/api_models/vicinity.dart';
+import 'package:wildgids/data_managers/api_client.dart';
+import 'package:wildgids/interfaces/data_apis/vicinity_api_interface.dart';
+import 'package:wildgids/models/api_models/vicinity.dart';
 
 class VicinityApi implements VicinityApiInterface {
   final ApiClient apiClient;
@@ -54,3 +54,4 @@ class VicinityApi implements VicinityApiInterface {
     throw Exception('Vicinity GET failed (${res.statusCode}): ${res.body}');
   }
 }
+

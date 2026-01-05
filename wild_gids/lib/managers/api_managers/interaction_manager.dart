@@ -1,15 +1,15 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:wildrapport/interfaces/data_apis/interaction_api_interface.dart';
-import 'package:wildrapport/interfaces/reporting/interaction_interface.dart';
-import 'package:wildrapport/interfaces/reporting/reportable_interface.dart';
-import 'package:wildrapport/models/beta_models/interaction_model.dart';
-import 'package:wildrapport/models/beta_models/interaction_response_model.dart';
-import 'package:wildrapport/models/enums/interaction_type.dart';
-import 'package:wildrapport/utils/connection_checker.dart';
+import 'package:wildgids/interfaces/data_apis/interaction_api_interface.dart';
+import 'package:wildgids/interfaces/reporting/interaction_interface.dart';
+import 'package:wildgids/interfaces/reporting/reportable_interface.dart';
+import 'package:wildgids/models/beta_models/interaction_model.dart';
+import 'package:wildgids/models/beta_models/interaction_response_model.dart';
+import 'package:wildgids/models/enums/interaction_type.dart';
+import 'package:wildgids/utils/connection_checker.dart';
 
 class InteractionManager implements InteractionInterface {
   final InteractionApiInterface interactionAPI;
@@ -45,7 +45,7 @@ class InteractionManager implements InteractionInterface {
     if (hasConnection) {
       await _trySendCachedData();
     } else {
-      debugPrint('No internet connection – future data will be cached.');
+      debugPrint('No internet connection â€“ future data will be cached.');
     }
   }
 
@@ -202,3 +202,4 @@ class InteractionManager implements InteractionInterface {
     await prefs.setStringList('interaction_cache', interactionJson);
   }
 }
+

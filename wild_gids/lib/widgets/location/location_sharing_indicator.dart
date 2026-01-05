@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/providers/app_state_provider.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/providers/app_state_provider.dart';
 
 /// A widget that displays a persistent visual indicator when location sharing is enabled.
 /// Shows a location icon with optional animated pulse effect.
@@ -141,3 +141,4 @@ class LocationSharingBadge extends StatelessWidget {
     );
   }
 }
+

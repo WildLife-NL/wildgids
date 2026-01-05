@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/interfaces/reporting/belonging_damage_report_interface.dart';
-import 'package:wildrapport/providers/belonging_damage_report_provider.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/interfaces/reporting/belonging_damage_report_interface.dart';
+import 'package:wildgids/providers/belonging_damage_report_provider.dart';
 import 'package:flutter/services.dart';
-import 'package:wildrapport/screens/belonging/area_selection_map.dart';
-import 'package:wildrapport/models/beta_models/polygon_area_model.dart';
+import 'package:wildgids/screens/belonging/area_selection_map.dart';
+import 'package:wildgids/models/beta_models/polygon_area_model.dart';
 
 class BelongingCropsDetails extends StatefulWidget {
   const BelongingCropsDetails({super.key});
@@ -34,13 +34,13 @@ class _BelongingCropsDetailsState extends State<BelongingCropsDetails> {
     final belongingDamageReportProvider =
         Provider.of<BelongingDamageReportProvider>(context, listen: false);
 
-    // STEP A: Legacy normalization — if old state stored 'hectare', convert to m²
+    // STEP A: Legacy normalization â€” if old state stored 'hectare', convert to mÂ²
     if (belongingDamageReportProvider.impactedAreaType == 'hectare' &&
         belongingDamageReportProvider.impactedArea != null) {
       final ha = belongingDamageReportProvider.impactedArea!;
       belongingDamageReportProvider.setImpactedAreaType('vierkante meters');
       belongingDamageReportProvider.updateSelectedText('m2');
-      belongingDamageReportProvider.setImpactedArea(ha * 10000); // ha -> m²
+      belongingDamageReportProvider.setImpactedArea(ha * 10000); // ha -> mÂ²
     }
 
     // Initialize controllers with proper text values
@@ -362,7 +362,7 @@ class _BelongingCropsDetailsState extends State<BelongingCropsDetails> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                // ── CONDITIONAL: CROPS - MAP AREA SELECTION ──────────────────
+                // â”€â”€ CONDITIONAL: CROPS - MAP AREA SELECTION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 if (belongingDamageReportProvider.damageCategory == 'crops')
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -451,7 +451,7 @@ class _BelongingCropsDetailsState extends State<BelongingCropsDetails> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Oppervlakte: ${belongingDamageReportProvider.polygonArea!.calculateAreaInSquareMeters().toStringAsFixed(0)} m²',
+                                        'Oppervlakte: ${belongingDamageReportProvider.polygonArea!.calculateAreaInSquareMeters().toStringAsFixed(0)} mÂ²',
                                         style: const TextStyle(
                                           color: Colors.white,
                                           fontSize: 16,
@@ -464,7 +464,7 @@ class _BelongingCropsDetailsState extends State<BelongingCropsDetails> {
                                         (belongingDamageReportProvider
                                                     .estimatedDamage >
                                                 0)
-                                            ? 'Kosten: € ${belongingDamageReportProvider.estimatedDamage.toStringAsFixed(2)}'
+                                            ? 'Kosten: â‚¬ ${belongingDamageReportProvider.estimatedDamage.toStringAsFixed(2)}'
                                             : 'Kosten:',
                                         style: const TextStyle(
                                           color: Colors.white,
@@ -479,7 +479,7 @@ class _BelongingCropsDetailsState extends State<BelongingCropsDetails> {
                       ],
                     ),
                   ),
-                // ── CONDITIONAL: LIVESTOCK - AMOUNT FIELD ───────────────────
+                // â”€â”€ CONDITIONAL: LIVESTOCK - AMOUNT FIELD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 if (belongingDamageReportProvider.damageCategory == 'livestock')
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -587,8 +587,8 @@ class _BelongingCropsDetailsState extends State<BelongingCropsDetails> {
                             decoration: InputDecoration(
                               filled: true,
                               fillColor: Colors.white,
-                              label: const Text('Bedrag in €'),
-                              prefixText: '€ ',
+                              label: const Text('Bedrag in â‚¬'),
+                              prefixText: 'â‚¬ ',
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12.0),
                                 borderSide: const BorderSide(
@@ -662,8 +662,8 @@ class _BelongingCropsDetailsState extends State<BelongingCropsDetails> {
                             decoration: InputDecoration(
                               filled: true,
                               fillColor: Colors.white,
-                              label: const Text('Bedrag in €'),
-                              prefixText: '€ ',
+                              label: const Text('Bedrag in â‚¬'),
+                              prefixText: 'â‚¬ ',
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12.0),
                                 borderSide: const BorderSide(
@@ -769,3 +769,4 @@ class _BelongingCropsDetailsState extends State<BelongingCropsDetails> {
     );
   }
 }
+

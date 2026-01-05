@@ -1,12 +1,12 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
-import 'package:wildrapport/interfaces/reporting/questionnaire_interface.dart';
-import 'package:wildrapport/interfaces/reporting/response_interface.dart';
-import 'package:wildrapport/models/api_models/questionaire.dart';
-import 'package:wildrapport/providers/response_provider.dart';
-import 'package:wildrapport/screens/questionnaire/questionnaire_completion_screen.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
+import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
+import 'package:wildgids/interfaces/reporting/questionnaire_interface.dart';
+import 'package:wildgids/interfaces/reporting/response_interface.dart';
+import 'package:wildgids/models/api_models/questionaire.dart';
+import 'package:wildgids/providers/response_provider.dart';
+import 'package:wildgids/screens/questionnaire/questionnaire_completion_screen.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
 
 class QuestionnaireScreen extends StatefulWidget {
   final Questionnaire questionnaire;
@@ -182,3 +182,4 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
     );
   }
 }
+

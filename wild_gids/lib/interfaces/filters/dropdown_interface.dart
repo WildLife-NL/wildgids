@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:wildrapport/models/enums/dropdown_type.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:wildgids/models/enums/dropdown_type.dart';
 
 abstract class DropdownInterface {
   Widget buildDropdown({
@@ -11,3 +11,4 @@ abstract class DropdownInterface {
     required BuildContext context,
   });
 }
+

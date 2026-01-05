@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:wildrapport/widgets/toasts/snack_bar_text.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:wildgids/widgets/toasts/snack_bar_text.dart';
 
 class SnackBarWithProgressBarContent extends StatelessWidget {
   final String message;
@@ -52,3 +52,4 @@ class SnackBarWithProgressBarContent extends StatelessWidget {
     );
   }
 }
+

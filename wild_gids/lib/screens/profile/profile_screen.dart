@@ -1,13 +1,13 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/providers/app_state_provider.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/providers/app_state_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:wildrapport/utils/responsive_utils.dart';
-import 'package:wildrapport/interfaces/data_apis/profile_api_interface.dart';
-import 'package:wildrapport/screens/profile/edit_profile_screen.dart';
-import 'package:wildrapport/models/beta_models/profile_model.dart';
-import 'package:wildrapport/widgets/location/location_sharing_indicator.dart';
+import 'package:wildgids/utils/responsive_utils.dart';
+import 'package:wildgids/interfaces/data_apis/profile_api_interface.dart';
+import 'package:wildgids/screens/profile/edit_profile_screen.dart';
+import 'package:wildgids/models/beta_models/profile_model.dart';
+import 'package:wildgids/widgets/location/location_sharing_indicator.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -353,7 +353,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 _infoRow(
                   context,
-                  label: 'E‑mail',
+                  label: 'Eâ€‘mail',
                   value: _profile?.email,
                 ),
                 if ((_profile?.postcode ?? '').isNotEmpty)
@@ -640,3 +640,4 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
+

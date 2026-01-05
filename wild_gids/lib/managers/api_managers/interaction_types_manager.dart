@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart';
-import 'package:wildrapport/interfaces/data_apis/interaction_types_api_interface.dart';
-import 'package:wildrapport/models/api_models/interaction_type.dart';
+﻿import 'package:flutter/foundation.dart';
+import 'package:wildgids/interfaces/data_apis/interaction_types_api_interface.dart';
+import 'package:wildgids/models/api_models/interaction_type.dart';
 
 class InteractionTypesManager {
   final InteractionTypesApiInterface _api;
@@ -30,3 +30,4 @@ class InteractionTypesManager {
     return null;
   }
 }
+

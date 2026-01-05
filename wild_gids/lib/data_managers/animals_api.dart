@@ -1,7 +1,7 @@
-import 'dart:convert';
-import 'package:wildrapport/data_managers/api_client.dart';
-import 'package:wildrapport/interfaces/data_apis/animals_api_interface.dart';
-import 'package:wildrapport/models/animal_waarneming_models/animal_pin.dart';
+﻿import 'dart:convert';
+import 'package:wildgids/data_managers/api_client.dart';
+import 'package:wildgids/interfaces/data_apis/animals_api_interface.dart';
+import 'package:wildgids/models/animal_waarneming_models/animal_pin.dart';
 
 class AnimalsApi implements AnimalsApiInterface {
   final ApiClient apiClient;
@@ -26,3 +26,4 @@ class AnimalsApi implements AnimalsApiInterface {
     throw Exception('Animals GET failed (${res.statusCode}): ${res.body}');
   }
 }
+

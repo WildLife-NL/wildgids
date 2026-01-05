@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/models/api_models/my_interaction.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/models/api_models/my_interaction.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
 import 'package:intl/intl.dart';
-import 'package:wildrapport/utils/location_label.dart';
+import 'package:wildgids/utils/location_label.dart';
 
 class InteractionDetailScreen extends StatelessWidget {
   final MyInteraction interaction;
@@ -243,7 +243,7 @@ class InteractionDetailScreen extends StatelessWidget {
       children: [
         _buildInfoRow('Intensiteit', report.intensity),
         _buildInfoRow('Urgentie', report.urgency),
-        _buildInfoRow('Geschatte schade', '€${report.estimatedDamage}'),
+        _buildInfoRow('Geschatte schade', 'â‚¬${report.estimatedDamage}'),
         const SizedBox(height: 8),
         const Text(
           'Betrokken dieren:',
@@ -298,8 +298,8 @@ class InteractionDetailScreen extends StatelessWidget {
         _buildInfoRow('Bezit', report.belonging),
         _buildInfoRow('Impact type', report.impactType),
         _buildInfoRow('Impact waarde', report.impactValue.toString()),
-        _buildInfoRow('Geschatte schade', '€${report.estimatedDamage}'),
-        _buildInfoRow('Geschat verlies', '€${report.estimatedLoss}'),
+        _buildInfoRow('Geschatte schade', 'â‚¬${report.estimatedDamage}'),
+        _buildInfoRow('Geschat verlies', 'â‚¬${report.estimatedLoss}'),
       ],
     );
   }
@@ -399,3 +399,4 @@ class InteractionDetailScreen extends StatelessWidget {
     );
   }
 }
+

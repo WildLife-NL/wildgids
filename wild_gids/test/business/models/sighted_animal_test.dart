@@ -1,5 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:wildrapport/models/beta_models/sighted_animal_model.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:wildgids/models/beta_models/sighted_animal_model.dart';
 
 void main() {
   group('SightedAnimal', () {
@@ -155,3 +155,4 @@ void main() {
     // If you need to test copyWith, you would need to add that method to the class
   });
 }
+

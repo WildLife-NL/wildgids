@@ -1,21 +1,21 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/interfaces/location/location_screen_interface.dart';
-import 'package:wildrapport/interfaces/map/location_service_interface.dart';
-import 'package:wildrapport/managers/map/location_screen_manager.dart';
-import 'package:wildrapport/managers/map/location_map_manager.dart';
-import 'package:wildrapport/models/enums/date_time_type.dart';
-import 'package:wildrapport/providers/app_state_provider.dart';
-import 'package:wildrapport/providers/map_provider.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/interfaces/location/location_screen_interface.dart';
+import 'package:wildgids/interfaces/map/location_service_interface.dart';
+import 'package:wildgids/managers/map/location_screen_manager.dart';
+import 'package:wildgids/managers/map/location_map_manager.dart';
+import 'package:wildgids/models/enums/date_time_type.dart';
+import 'package:wildgids/providers/app_state_provider.dart';
+import 'package:wildgids/providers/map_provider.dart';
 // Removed dropdown-based navigation; map navigation handled within preview widget
-import 'package:wildrapport/widgets/location/location_display.dart';
-import 'package:wildrapport/widgets/location/location_map_preview.dart';
-import 'package:wildrapport/screens/location/map_screen.dart';
-import 'package:wildrapport/widgets/location/custom_location_map_widget.dart';
-import 'package:wildrapport/screens/belonging/belonging_location_screen.dart';
-import 'package:wildrapport/widgets/location/time_selection_row.dart';
+import 'package:wildgids/widgets/location/location_display.dart';
+import 'package:wildgids/widgets/location/location_map_preview.dart';
+import 'package:wildgids/screens/location/map_screen.dart';
+import 'package:wildgids/widgets/location/custom_location_map_widget.dart';
+import 'package:wildgids/screens/belonging/belonging_location_screen.dart';
+import 'package:wildgids/widgets/location/time_selection_row.dart';
 import 'package:latlong2/latlong.dart';
 import 'dart:async';
 
@@ -339,3 +339,4 @@ class _LocationScreenUIWidgetState extends State<LocationScreenUIWidget> {
     );
   }
 }
+

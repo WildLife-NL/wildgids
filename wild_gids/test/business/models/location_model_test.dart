@@ -1,6 +1,6 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:wildrapport/models/beta_models/location_model.dart';
-import 'package:wildrapport/models/enums/location_source.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:wildgids/models/beta_models/location_model.dart';
+import 'package:wildgids/models/enums/location_source.dart';
 
 void main() {
   group('LocationModel', () {
@@ -74,3 +74,4 @@ void main() {
     });
   });
 }
+

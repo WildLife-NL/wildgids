@@ -1,20 +1,20 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:wildrapport/config/app_config.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/constants/app_text_theme.dart';
-import 'package:wildrapport/data_managers/profile_api.dart';
-import 'package:wildrapport/interfaces/other/login_interface.dart';
-import 'package:wildrapport/screens/shared/overzicht_screen.dart';
-import 'package:wildrapport/managers/other/login_manager.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/brown_button.dart';
-import 'package:wildrapport/models/api_models/user.dart';
+import 'package:wildgids/config/app_config.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/constants/app_text_theme.dart';
+import 'package:wildgids/data_managers/profile_api.dart';
+import 'package:wildgids/interfaces/other/login_interface.dart';
+import 'package:wildgids/screens/shared/overzicht_screen.dart';
+import 'package:wildgids/managers/other/login_manager.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/brown_button.dart';
+import 'package:wildgids/models/api_models/user.dart';
 import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/interfaces/data_apis/profile_api_interface.dart';
-import 'package:wildrapport/screens/terms/terms_screen.dart';
-import 'package:wildrapport/utils/responsive_utils.dart';
+import 'package:wildgids/interfaces/data_apis/profile_api_interface.dart';
+import 'package:wildgids/screens/terms/terms_screen.dart';
+import 'package:wildgids/utils/responsive_utils.dart';
 
 class VerificationCodeInput extends StatefulWidget {
   final VoidCallback onBack;
@@ -52,7 +52,7 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
 
   Future<void> _routeAfterLogin() async {
     try {
-      // Try Provider first, fall back to a local instance so we don’t crash
+      // Try Provider first, fall back to a local instance so we donâ€™t crash
       ProfileApiInterface profileApi;
       try {
         profileApi = context.read<ProfileApiInterface>();
@@ -125,7 +125,7 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
         }
       }
     } finally {
-      // if we didn’t navigate, stop the loader
+      // if we didnâ€™t navigate, stop the loader
       if (mounted && !navigated) {
         setState(() => isLoading = false);
       }
@@ -322,7 +322,7 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
         const Spacer(),
         BrownButton(
           model: LoginManager.createButtonModel(
-            text: 'Verifiëren',
+            text: 'VerifiÃ«ren',
             isLoginButton: true,
           ),
           onPressed: _verifyCode,
@@ -380,3 +380,4 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
     }
   }
 }
+

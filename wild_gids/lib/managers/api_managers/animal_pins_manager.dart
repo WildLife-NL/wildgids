@@ -1,6 +1,6 @@
-import 'dart:collection';
-import 'package:wildrapport/interfaces/data_apis/animals_api_interface.dart';
-import 'package:wildrapport/models/animal_waarneming_models/animal_pin.dart';
+﻿import 'dart:collection';
+import 'package:wildgids/interfaces/data_apis/animals_api_interface.dart';
+import 'package:wildgids/models/animal_waarneming_models/animal_pin.dart';
 
 class AnimalPinsManager {
   final AnimalsApiInterface api;
@@ -38,3 +38,4 @@ class AnimalPinsManager {
     _cachedAt = null;
   }
 }
+

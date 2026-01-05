@@ -1,5 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:wildrapport/models/beta_models/profile_model.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:wildgids/models/beta_models/profile_model.dart';
 
 void main() {
   group('ProfileModel', () {
@@ -141,3 +141,4 @@ void main() {
     });
   });
 }
+

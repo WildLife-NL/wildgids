@@ -1,5 +1,5 @@
-import 'package:wildrapport/models/animal_waarneming_models/animal_pin.dart';
-import 'package:wildrapport/models/api_models/interaction_query_result.dart';
+﻿import 'package:wildgids/models/animal_waarneming_models/animal_pin.dart';
+import 'package:wildgids/models/api_models/interaction_query_result.dart';
 
 extension InteractionToAnimalPin on InteractionQueryResult {
   AnimalPin toAnimalPin() {
@@ -12,3 +12,4 @@ extension InteractionToAnimalPin on InteractionQueryResult {
     );
   }
 }
+

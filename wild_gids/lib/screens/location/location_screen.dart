@@ -1,26 +1,26 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
-import 'package:wildrapport/interfaces/reporting/interaction_interface.dart';
-import 'package:wildrapport/interfaces/location/location_screen_interface.dart';
-import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
-import 'package:wildrapport/models/beta_models/animal_sighting_report_wrapper.dart';
+import 'package:wildgids/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
+import 'package:wildgids/interfaces/reporting/interaction_interface.dart';
+import 'package:wildgids/interfaces/location/location_screen_interface.dart';
+import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
+import 'package:wildgids/models/beta_models/animal_sighting_report_wrapper.dart';
 // Removed collision/damage report models as those flows are deprecated
-import 'package:wildrapport/models/beta_models/interaction_response_model.dart';
-import 'package:wildrapport/models/enums/interaction_type.dart';
-import 'package:wildrapport/models/enums/location_source.dart';
-import 'package:wildrapport/models/beta_models/location_model.dart';
-import 'package:wildrapport/providers/map_provider.dart';
-import 'package:wildrapport/screens/waarneming/animal_list_overview_screen.dart';
+import 'package:wildgids/models/beta_models/interaction_response_model.dart';
+import 'package:wildgids/models/enums/interaction_type.dart';
+import 'package:wildgids/models/enums/location_source.dart';
+import 'package:wildgids/models/beta_models/location_model.dart';
+import 'package:wildgids/providers/map_provider.dart';
+import 'package:wildgids/screens/waarneming/animal_list_overview_screen.dart';
 // Removed collision details screen import (flow deprecated)
-import 'package:wildrapport/screens/questionnaire/questionnaire_screen.dart';
-import 'package:wildrapport/screens/shared/overzicht_screen.dart';
-import 'package:wildrapport/utils/sighting_api_transformer.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/bottom_app_bar.dart';
-import 'package:wildrapport/widgets/location/location_screen_ui_widget.dart';
-import 'package:wildrapport/utils/toast_notification_handler.dart';
+import 'package:wildgids/screens/questionnaire/questionnaire_screen.dart';
+import 'package:wildgids/screens/shared/overzicht_screen.dart';
+import 'package:wildgids/utils/sighting_api_transformer.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/bottom_app_bar.dart';
+import 'package:wildgids/widgets/location/location_screen_ui_widget.dart';
+import 'package:wildgids/utils/toast_notification_handler.dart';
 
 class LocationScreen extends StatefulWidget {
   const LocationScreen({super.key});
@@ -141,7 +141,7 @@ class _LocationScreenState extends State<LocationScreen> {
       // reset map provider state for next run
       mapProvider.resetState();
 
-      // 🔴 4. CRUCIAL STEP FOR R4:
+      // ðŸ”´ 4. CRUCIAL STEP FOR R4:
       // Make sure the grouped animal batches from AnimalCounting
       // are copied into currentSighting.animals so the API transformer
       // can build reportOfSighting.involvedAnimals.
@@ -306,3 +306,4 @@ Future<InteractionResponse?> submitReport(
 }
 
 // Collision flow removed; only waarneming reporting is supported.
+

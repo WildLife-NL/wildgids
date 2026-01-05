@@ -1,6 +1,6 @@
-import 'package:flutter_test/flutter_test.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
-import 'package:wildrapport/models/animal_waarneming_models/animal_sighting_model.dart';
+import 'package:wildgids/models/animal_waarneming_models/animal_sighting_model.dart';
 import '../helpers/rapporteren_helpers.dart';
 import '../mock_generator.mocks.dart';
 
@@ -47,3 +47,4 @@ void main() {
     });
   });
 }
+

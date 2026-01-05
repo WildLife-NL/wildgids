@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/screens/profile/profile_screen.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/screens/profile/profile_screen.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class TopContainer extends StatefulWidget {
@@ -134,3 +134,4 @@ class _TopContainerState extends State<TopContainer> {
     );
   }
 }
+

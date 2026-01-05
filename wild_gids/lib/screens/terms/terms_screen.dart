@@ -1,12 +1,12 @@
-import 'package:wildrapport/widgets/shared_ui_widgets/white_bulk_button.dart';
+﻿import 'package:wildgids/widgets/shared_ui_widgets/white_bulk_button.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:wildrapport/interfaces/data_apis/profile_api_interface.dart';
-import 'package:wildrapport/models/beta_models/profile_model.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/screens/shared/overzicht_screen.dart';
-import 'package:wildrapport/utils/responsive_utils.dart';
+import 'package:wildgids/interfaces/data_apis/profile_api_interface.dart';
+import 'package:wildgids/models/beta_models/profile_model.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/screens/shared/overzicht_screen.dart';
+import 'package:wildgids/utils/responsive_utils.dart';
 
 class TermsScreen extends StatefulWidget {
   const TermsScreen({super.key});
@@ -226,3 +226,4 @@ class _TermsScreenState extends State<TermsScreen> {
     );
   }
 }
+

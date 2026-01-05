@@ -1,17 +1,15 @@
-import 'package:flutter/material.dart';
-import 'package:wildrapport/interfaces/data_apis/belonging_api_interface.dart';
-import 'package:wildrapport/interfaces/data_apis/interaction_api_interface.dart';
-import 'package:wildrapport/interfaces/reporting/interaction_interface.dart';
-import 'package:wildrapport/interfaces/reporting/belonging_damage_report_interface.dart';
-import 'package:wildrapport/models/beta_models/belonging_model.dart';
-import 'package:wildrapport/models/beta_models/interaction_response_model.dart';
-import 'package:wildrapport/models/beta_models/belonging_damage_report_model.dart';
-import 'package:wildrapport/models/beta_models/possesion_model.dart';
-import 'package:wildrapport/models/beta_models/report_location_model.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:wildgids/interfaces/data_apis/belonging_api_interface.dart';
+import 'package:wildgids/interfaces/data_apis/interaction_api_interface.dart';
+import 'package:wildgids/interfaces/reporting/interaction_interface.dart';
+import 'package:wildgids/interfaces/reporting/belonging_damage_report_interface.dart';
+import 'package:wildgids/models/beta_models/belonging_model.dart';
+import 'package:wildgids/models/beta_models/interaction_response_model.dart';
+import 'package:wildgids/models/beta_models/belonging_damage_report_model.dart';
+import 'package:wildgids/models/beta_models/report_location_model.dart';
 // Crop damage flow discontinued: no interaction types used here anymore
-import 'package:wildrapport/providers/map_provider.dart';
-import 'package:wildrapport/providers/belonging_damage_report_provider.dart';
-import 'package:wildrapport/widgets/belonging/belonging_crops_details.dart';
+import 'package:wildgids/providers/map_provider.dart';
+import 'package:wildgids/providers/belonging_damage_report_provider.dart';
 
 class BelongingDamageReportManager implements BelongingDamageReportInterface {
   final InteractionApiInterface interactionAPI;
@@ -64,7 +62,7 @@ class BelongingDamageReportManager implements BelongingDamageReportInterface {
       },
       {
         "ID": "aef8950b-c7aa-42c6-848e-1d72d0636a64",
-        "name": "Maïs",
+        "name": "MaÃ¯s",
         "category": "Gewassen",
       },
       {
@@ -187,26 +185,26 @@ class BelongingDamageReportManager implements BelongingDamageReportInterface {
   // String _normalize(String input) {
   //   return input
   //       .toLowerCase()
-  //       .replaceAll('ï', 'i')
-  //       .replaceAll('í', 'i')
-  //       .replaceAll('ì', 'i')
-  //       .replaceAll('î', 'i')
-  //       .replaceAll('ë', 'e')
-  //       .replaceAll('é', 'e')
-  //       .replaceAll('è', 'e')
-  //       .replaceAll('ê', 'e')
-  //       .replaceAll('á', 'a')
-  //       .replaceAll('à', 'a')
-  //       .replaceAll('ä', 'a')
-  //       .replaceAll('â', 'a')
-  //       .replaceAll('ó', 'o')
-  //       .replaceAll('ò', 'o')
-  //       .replaceAll('ö', 'o')
-  //       .replaceAll('ô', 'o')
-  //       .replaceAll('ü', 'u')
-  //       .replaceAll('ú', 'u')
-  //       .replaceAll('ù', 'u')
-  //       .replaceAll('û', 'u')
+  //       .replaceAll('Ã¯', 'i')
+  //       .replaceAll('Ã­', 'i')
+  //       .replaceAll('Ã¬', 'i')
+  //       .replaceAll('Ã®', 'i')
+  //       .replaceAll('Ã«', 'e')
+  //       .replaceAll('Ã©', 'e')
+  //       .replaceAll('Ã¨', 'e')
+  //       .replaceAll('Ãª', 'e')
+  //       .replaceAll('Ã¡', 'a')
+  //       .replaceAll('Ã ', 'a')
+  //       .replaceAll('Ã¤', 'a')
+  //       .replaceAll('Ã¢', 'a')
+  //       .replaceAll('Ã³', 'o')
+  //       .replaceAll('Ã²', 'o')
+  //       .replaceAll('Ã¶', 'o')
+  //       .replaceAll('Ã´', 'o')
+  //       .replaceAll('Ã¼', 'u')
+  //       .replaceAll('Ãº', 'u')
+  //       .replaceAll('Ã¹', 'u')
+  //       .replaceAll('Ã»', 'u')
   //       .trim();
   // }
 
@@ -267,7 +265,7 @@ class BelongingDamageReportManager implements BelongingDamageReportInterface {
   //   },
   //   {
   //     "ID": "aef8950b-c7aa-42c6-848e-1d72d0636a64",
-  //     "name": "Maïs",
+  //     "name": "MaÃ¯s",
   //     "category": "Gewassen"
   //   },
   //   {
@@ -277,6 +275,7 @@ class BelongingDamageReportManager implements BelongingDamageReportInterface {
   //   }
   // ];
 
-  // debugPrint('[BelongingDamageReportManager] 🔄 belongings loaded via fallback (${belongings.length} items)');
+  // debugPrint('[BelongingDamageReportManager] ðŸ”„ belongings loaded via fallback (${belongings.length} items)');
   // }
 }
+

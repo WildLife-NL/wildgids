@@ -1,4 +1,4 @@
-import 'package:wildrapport/models/enums/animal_gender.dart';
+﻿import 'package:wildgids/models/enums/animal_gender.dart';
 
 extension AnimalGenderExtensions on AnimalGender {
   /// UI label (Dutch)
@@ -25,3 +25,4 @@ extension AnimalGenderExtensions on AnimalGender {
     }
   }
 }
+

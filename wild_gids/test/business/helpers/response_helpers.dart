@@ -1,10 +1,10 @@
-import 'package:connectivity_plus/connectivity_plus.dart';
+﻿import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:mockito/mockito.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:wildrapport/interfaces/data_apis/response_api_interface.dart';
-import 'package:wildrapport/managers/api_managers/response_manager.dart';
-import 'package:wildrapport/models/beta_models/response_model.dart';
-import 'package:wildrapport/providers/response_provider.dart';
+import 'package:wildgids/interfaces/data_apis/response_api_interface.dart';
+import 'package:wildgids/managers/api_managers/response_manager.dart';
+import 'package:wildgids/models/beta_models/response_model.dart';
+import 'package:wildgids/providers/response_provider.dart';
 import '../mock_generator.mocks.dart';
 
 class ResponseHelpers {
@@ -88,3 +88,4 @@ class ResponseHelpers {
     ).thenAnswer((_) async => [ConnectivityResult.wifi]);
   }
 }
+

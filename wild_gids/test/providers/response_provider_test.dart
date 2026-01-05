@@ -1,6 +1,6 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:wildrapport/models/beta_models/response_model.dart';
-import 'package:wildrapport/providers/response_provider.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:wildgids/models/beta_models/response_model.dart';
+import 'package:wildgids/providers/response_provider.dart';
 
 void main() {
   late ResponseProvider responseProvider;
@@ -299,3 +299,4 @@ void main() {
     });
   });
 }
+

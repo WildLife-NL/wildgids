@@ -1,5 +1,5 @@
-import 'package:wildrapport/models/ui_models/brown_button_model.dart';
-import 'package:wildrapport/models/animal_waarneming_models/animal_model.dart';
+﻿import 'package:wildgids/models/ui_models/brown_button_model.dart';
+import 'package:wildgids/models/animal_waarneming_models/animal_model.dart';
 
 abstract class CategoryInterface {
   List<Map<String, String>> getAnimalCategories();
@@ -18,3 +18,4 @@ abstract class FilterInterface {
 
   List<AnimalModel> searchAnimals(List<AnimalModel> animals, String searchTerm);
 }
+

@@ -1,7 +1,7 @@
-import 'package:wildrapport/models/api_models/questionaire.dart';
-import 'package:wildrapport/models/api_models/experiment.dart';
-import 'package:wildrapport/models/api_models/interaction_type.dart' as api;
-import 'package:wildrapport/models/api_models/user.dart';
+﻿import 'package:wildgids/models/api_models/questionaire.dart';
+import 'package:wildgids/models/api_models/experiment.dart';
+import 'package:wildgids/models/api_models/interaction_type.dart' as api;
+import 'package:wildgids/models/api_models/user.dart';
 
 class InteractionResponse {
   Questionnaire questionnaire;
@@ -47,3 +47,4 @@ class InteractionResponse {
     "interactionID": interactionID,
   };
 }
+

@@ -1,7 +1,7 @@
 # Profile Deletion Feature Implementation
 
 ## Overview
-This document outlines the implementation of the profile deletion feature for the WildRapport application, which uses the WildlifeNL API endpoint `DELETE /profile/me/`.
+This document outlines the implementation of the profile deletion feature for the Wild Gids application, which uses the WildlifeNL API endpoint `DELETE /profile/me/`.
 
 ## API Endpoint
 - **Method**: DELETE

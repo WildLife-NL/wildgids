@@ -1,8 +1,8 @@
-import 'package:flutter_test/flutter_test.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:wildrapport/managers/api_managers/tracking_cache_manager.dart';
-import 'package:wildrapport/models/beta_models/tracking_reading_model.dart';
-import 'package:wildrapport/interfaces/data_apis/tracking_api_interface.dart';
+import 'package:wildgids/managers/api_managers/tracking_cache_manager.dart';
+import 'package:wildgids/models/beta_models/tracking_reading_model.dart';
+import 'package:wildgids/interfaces/data_apis/tracking_api_interface.dart';
 import 'dart:convert';
 
 /// Mock implementation of TrackingApiInterface for testing
@@ -77,7 +77,7 @@ void main() {
       // Verify all readings cached
       final cached = await cacheManager.getCachedReadings();
       expect(cached.length, 100);
-      print('✓ All 100 readings cached successfully\n');
+      print('âœ“ All 100 readings cached successfully\n');
     });
 
     test('should handle 1,000 cached readings', () async {
@@ -112,7 +112,7 @@ void main() {
       // Verify all readings cached
       final cached = await cacheManager.getCachedReadings();
       expect(cached.length, 1000);
-      print('✓ All 1,000 readings cached successfully\n');
+      print('âœ“ All 1,000 readings cached successfully\n');
     });
 
     test('should handle 10,000 cached readings', () async {
@@ -156,7 +156,7 @@ void main() {
       // Verify all readings cached
       final cached = await cacheManager.getCachedReadings();
       expect(cached.length, 10000);
-      print('✓ All 10,000 readings cached successfully\n');
+      print('âœ“ All 10,000 readings cached successfully\n');
     });
 
     test('should calculate storage for 100,000 readings (estimate)', () async {
@@ -222,7 +222,7 @@ void main() {
       );
 
       expect(cached.length, 5000);
-      print('✓ Retrieval successful\n');
+      print('âœ“ Retrieval successful\n');
     });
 
     test('should analyze JSON structure size', () async {
@@ -292,7 +292,7 @@ void main() {
 
         final cached = await cacheManager.getCachedReadings();
         expect(cached.length, readingsPerWeek);
-        print('✓ Successfully cached $readingsPerWeek readings\n');
+        print('âœ“ Successfully cached $readingsPerWeek readings\n');
       },
     );
 
@@ -338,7 +338,7 @@ void main() {
           }
         }
       } catch (e) {
-        print('⚠ Limit reached at $readingsCount readings');
+        print('âš  Limit reached at $readingsCount readings');
         print('Error: $e');
         limitReached = true;
       }
@@ -400,11 +400,11 @@ void main() {
         print('  Storage: ${storageMB.toStringAsFixed(2)} MB');
 
         if (storageMB < 1) {
-          print('  ✓ Safe - well within limits');
+          print('  âœ“ Safe - well within limits');
         } else if (storageMB < 2) {
-          print('  ⚠ Caution - approaching Android SharedPreferences limit');
+          print('  âš  Caution - approaching Android SharedPreferences limit');
         } else {
-          print('  ❌ Risky - exceeds typical SharedPreferences limit');
+          print('  âŒ Risky - exceeds typical SharedPreferences limit');
           print(
             '     Consider implementing cache size limits or using database',
           );
@@ -423,3 +423,4 @@ void main() {
     });
   });
 }
+

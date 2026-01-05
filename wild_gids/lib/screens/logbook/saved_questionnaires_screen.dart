@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
-import 'package:wildrapport/widgets/questionnaire/questionnaire_home.dart';
-import 'package:wildrapport/screens/questionnaire/questionnaire_screen.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
+import 'package:wildgids/widgets/questionnaire/questionnaire_home.dart';
+import 'package:wildgids/screens/questionnaire/questionnaire_screen.dart';
 
 class SavedQuestionnairesScreen extends StatelessWidget {
   const SavedQuestionnairesScreen({super.key});
@@ -119,3 +119,4 @@ class SavedQuestionnairesScreen extends StatelessWidget {
     );
   }
 }
+

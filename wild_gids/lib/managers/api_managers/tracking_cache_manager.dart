@@ -1,11 +1,11 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:wildrapport/interfaces/data_apis/tracking_api_interface.dart';
-import 'package:wildrapport/models/beta_models/tracking_reading_model.dart';
-import 'package:wildrapport/utils/connection_checker.dart';
+import 'package:wildgids/interfaces/data_apis/tracking_api_interface.dart';
+import 'package:wildgids/models/beta_models/tracking_reading_model.dart';
+import 'package:wildgids/utils/connection_checker.dart';
 
 /// Manages caching of location tracking readings when offline,
 /// and automatically retries sending them when connection is restored.
@@ -58,7 +58,7 @@ class TrackingCacheManager {
       await _trySendCachedReadings();
     } else {
       debugPrint(
-        '$yellowLog[TrackingCacheManager] No internet connection – tracking readings will be cached',
+        '$yellowLog[TrackingCacheManager] No internet connection â€“ tracking readings will be cached',
       );
     }
   }
@@ -300,3 +300,4 @@ class TrackingCacheManager {
     }
   }
 }
+

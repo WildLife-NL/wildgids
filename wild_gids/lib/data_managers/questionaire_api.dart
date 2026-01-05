@@ -1,10 +1,10 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 
-import 'package:wildrapport/data_managers/api_client.dart';
-import 'package:wildrapport/interfaces/data_apis/questionnaire_api_interface.dart';
-import 'package:wildrapport/models/api_models/questionaire.dart';
+import 'package:wildgids/data_managers/api_client.dart';
+import 'package:wildgids/interfaces/data_apis/questionnaire_api_interface.dart';
+import 'package:wildgids/models/api_models/questionaire.dart';
 
 class QuestionaireApi implements QuestionnaireApiInterface {
   final ApiClient client;
@@ -28,3 +28,4 @@ class QuestionaireApi implements QuestionnaireApiInterface {
     }
   }
 }
+

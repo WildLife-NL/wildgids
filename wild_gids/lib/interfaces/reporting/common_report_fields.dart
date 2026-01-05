@@ -1,4 +1,4 @@
-import 'package:wildrapport/models/beta_models/report_location_model.dart';
+﻿import 'package:wildgids/models/beta_models/report_location_model.dart';
 
 abstract class CommonReportFields {
   String? get suspectedSpeciesID;
@@ -8,3 +8,4 @@ abstract class CommonReportFields {
   DateTime? get userSelectedDateTime;
   DateTime get systemDateTime;
 }
+

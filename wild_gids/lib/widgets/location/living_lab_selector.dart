@@ -1,12 +1,12 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/providers/map_provider.dart';
-import 'package:wildrapport/screens/belonging/belonging_location_screen.dart';
-import 'package:wildrapport/widgets/location/livinglab_map_widget.dart';
-import 'package:wildrapport/screens/location/map_screen.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/providers/map_provider.dart';
+import 'package:wildgids/screens/belonging/belonging_location_screen.dart';
+import 'package:wildgids/widgets/location/livinglab_map_widget.dart';
+import 'package:wildgids/screens/location/map_screen.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/utils/responsive_utils.dart';
+import 'package:wildgids/utils/responsive_utils.dart';
 
 class LivingLabSelector extends StatefulWidget {
   final String currentLabName;
@@ -225,3 +225,4 @@ class _LivingLabSelectorState extends State<LivingLabSelector>
     );
   }
 }
+

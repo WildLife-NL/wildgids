@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/models/ui_models/brown_button_model.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/circle_icon_container.dart';
-import 'package:wildrapport/utils/responsive_utils.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/models/ui_models/brown_button_model.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/circle_icon_container.dart';
+import 'package:wildgids/utils/responsive_utils.dart';
 
 class BrownButton extends StatelessWidget {
   final BrownButtonModel? model;
@@ -150,3 +150,4 @@ class BrownButton extends StatelessWidget {
     }
   }
 }
+

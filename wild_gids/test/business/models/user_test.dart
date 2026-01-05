@@ -1,5 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:wildrapport/models/api_models/user.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:wildgids/models/api_models/user.dart';
 
 void main() {
   group('User', () {
@@ -89,3 +89,4 @@ void main() {
     });
   });
 }
+

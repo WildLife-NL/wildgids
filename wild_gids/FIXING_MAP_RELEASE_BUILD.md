@@ -87,7 +87,7 @@ Stack(
 
 **BEFORE (What was there originally):**
 ```proguard
--keep class com.example.wildrapport.** { *; }
+-keep class com.example.wildgids.** { *; }
 -keep class io.flutter.** { *; }
 -keep class io.flutter.plugins.** { *; }
 -keep class io.flutter.plugin.** { *; }
@@ -100,7 +100,7 @@ Stack(
 
 **AFTER (What we changed it to):**
 ```proguard
--keep class com.example.wildrapport.** { *; }
+-keep class com.example.wildgids.** { *; }
 -keep class io.flutter.** { *; }
 -keep class io.flutter.plugins.** { *; }
 -keep class io.flutter.plugin.** { *; }

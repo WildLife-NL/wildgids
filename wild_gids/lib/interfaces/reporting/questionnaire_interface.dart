@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:wildrapport/models/api_models/questionaire.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:wildgids/models/api_models/questionaire.dart';
 
 abstract class QuestionnaireInterface {
   Future<Questionnaire> getQuestionnaire();
@@ -11,3 +11,4 @@ abstract class QuestionnaireInterface {
     VoidCallback previousScreen,
   );
 }
+

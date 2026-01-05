@@ -1,10 +1,10 @@
-import 'package:connectivity_plus/connectivity_plus.dart';
+﻿import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:wildrapport/interfaces/reporting/interaction_interface.dart';
-import 'package:wildrapport/models/beta_models/interaction_model.dart';
-import 'package:wildrapport/models/enums/interaction_type.dart';
+import 'package:wildgids/interfaces/reporting/interaction_interface.dart';
+import 'package:wildgids/models/beta_models/interaction_model.dart';
+import 'package:wildgids/models/enums/interaction_type.dart';
 import '../mock_generator.mocks.dart';
 import '../helpers/interaction_helpers.dart';
 
@@ -258,3 +258,4 @@ void main() {
     });
   });
 }
+

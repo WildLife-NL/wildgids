@@ -1,4 +1,4 @@
-import 'package:wildrapport/models/enums/animal_age.dart';
+﻿import 'package:wildgids/models/enums/animal_age.dart';
 
 extension AnimalAgeExtensions on AnimalAge {
   /// Label to show in the UI (Dutch)
@@ -35,7 +35,7 @@ extension AnimalAgeExtensions on AnimalAge {
 
     final s = raw.trim().toLowerCase();
     const map = {
-      // backend → enum
+      // backend â†’ enum
       'infant': AnimalAge.pasGeboren,
       'adolescent': AnimalAge.onvolwassen,
       'adult': AnimalAge.volwassen,
@@ -57,3 +57,4 @@ extension AnimalAgeExtensions on AnimalAge {
     return map[s] ?? AnimalAge.onbekend;
   }
 }
+

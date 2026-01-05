@@ -1,14 +1,14 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:wildrapport/data_managers/api_client.dart';
-import 'package:wildrapport/interfaces/data_apis/interaction_api_interface.dart';
-import 'package:wildrapport/models/api_models/questionaire.dart';
-import 'package:wildrapport/models/beta_models/animal_sighting_report_wrapper.dart';
-import 'package:wildrapport/models/beta_models/interaction_model.dart';
-import 'package:wildrapport/models/beta_models/interaction_response_model.dart';
-import 'package:wildrapport/models/enums/interaction_type.dart';
+import 'package:wildgids/data_managers/api_client.dart';
+import 'package:wildgids/interfaces/data_apis/interaction_api_interface.dart';
+import 'package:wildgids/models/api_models/questionaire.dart';
+import 'package:wildgids/models/beta_models/animal_sighting_report_wrapper.dart';
+import 'package:wildgids/models/beta_models/interaction_model.dart';
+import 'package:wildgids/models/beta_models/interaction_response_model.dart';
+import 'package:wildgids/models/enums/interaction_type.dart';
 
 class InteractionApi implements InteractionApiInterface {
   final ApiClient client;
@@ -71,15 +71,15 @@ class InteractionApi implements InteractionApiInterface {
           debugPrint("$yellowLog${jsonEncode(questionnaireJson)}");
           
           // Detailed breakdown of questions and answers
-          debugPrint("$yellowLog════════════════════════════════════════");
+          debugPrint("$yellowLogâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•");
           debugPrint("$yellowLog[InteractionAPI]: DETAILED QUESTION ANALYSIS");
-          debugPrint("$yellowLog════════════════════════════════════════");
+          debugPrint("$yellowLogâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•");
           final questionsArray = questionnaireJson['questions'];
           if (questionsArray != null && questionsArray is List) {
-            debugPrint("$yellowLog📋 Total questions: ${questionsArray.length}");
+            debugPrint("$yellowLogðŸ“‹ Total questions: ${questionsArray.length}");
             for (int i = 0; i < questionsArray.length; i++) {
               final q = questionsArray[i];
-              debugPrint("$yellowLog────────────────────────────────────────");
+              debugPrint("$yellowLogâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€");
               debugPrint("$yellowLog[Q${i + 1}] ${q['text']}");
               debugPrint("$yellowLog    ID: ${q['ID']}");
               debugPrint("$yellowLog    allowMultipleResponse: ${q['allowMultipleResponse']}");
@@ -87,24 +87,24 @@ class InteractionApi implements InteractionApiInterface {
               
               final answers = q['answers'];
               if (answers != null && answers is List) {
-                debugPrint("$yellowLog    ✅ Has ${answers.length} answers:");
+                debugPrint("$yellowLog    âœ… Has ${answers.length} answers:");
                 for (int j = 0; j < answers.length; j++) {
                   final a = answers[j];
                   debugPrint("$yellowLog       [A${j + 1}] ${a['text']} (ID: ${a['ID']})");
                 }
               } else {
-                debugPrint("$yellowLog    ❌ NO ANSWERS PROVIDED by backend!");
+                debugPrint("$yellowLog    âŒ NO ANSWERS PROVIDED by backend!");
               }
             }
           }
-          debugPrint("$yellowLog════════════════════════════════════════");
+          debugPrint("$yellowLogâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•");
         }
         debugPrint("$yellowLog========================================");
 
         if (questionnaireJson == null) {
           // Graceful handling: not all interactions yield questionnaires.
           debugPrint(
-            "$yellowLog[InteractionAPI]: ▶ No questionnaire returned. Proceeding without questionnaire.",
+            "$yellowLog[InteractionAPI]: â–¶ No questionnaire returned. Proceeding without questionnaire.",
           );
           return InteractionResponse.empty(interactionID: interactionID);
         }
@@ -139,3 +139,4 @@ class InteractionApi implements InteractionApiInterface {
 
   // Removed fallback questionnaire fetch by hardcoded ID; questionnaires must come from backend response
 }
+

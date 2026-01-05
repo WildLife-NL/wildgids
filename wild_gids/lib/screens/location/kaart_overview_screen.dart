@@ -1,27 +1,26 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart' as fm;
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:wildrapport/providers/map_provider.dart';
-import 'package:wildrapport/providers/app_state_provider.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/widgets/overlay/encounter_message_overlay.dart';
-import 'package:wildrapport/managers/map/location_map_manager.dart';
-import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
-import 'package:wildrapport/screens/shared/overzicht_screen.dart';
-import 'package:wildrapport/screens/profile/profile_screen.dart';
-import 'package:wildrapport/widgets/map/interaction_detail_dialog.dart';
-import 'package:wildrapport/widgets/map/animal_detail_dialog.dart';
-import 'package:wildrapport/models/animal_waarneming_models/animal_pin.dart';
-import 'package:wildrapport/models/animal_waarneming_models/interaction_to_animal_pin.dart';
-import 'package:wildrapport/widgets/map/detection_detail_dialog.dart';
-import 'package:wildrapport/data_managers/tracking_api.dart';
-import 'package:wildrapport/interfaces/data_apis/tracking_api_interface.dart';
-import 'package:wildrapport/config/app_config.dart';
+import 'package:wildgids/providers/map_provider.dart';
+import 'package:wildgids/providers/app_state_provider.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/widgets/overlay/encounter_message_overlay.dart';
+import 'package:wildgids/managers/map/location_map_manager.dart';
+import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
+import 'package:wildgids/screens/shared/overzicht_screen.dart';
+import 'package:wildgids/screens/profile/profile_screen.dart';
+import 'package:wildgids/widgets/map/interaction_detail_dialog.dart';
+import 'package:wildgids/widgets/map/animal_detail_dialog.dart';
+import 'package:wildgids/models/animal_waarneming_models/animal_pin.dart';
+import 'package:wildgids/models/animal_waarneming_models/interaction_to_animal_pin.dart';
+import 'package:wildgids/widgets/map/detection_detail_dialog.dart';
+import 'package:wildgids/data_managers/tracking_api.dart';
+import 'package:wildgids/interfaces/data_apis/tracking_api_interface.dart';
+import 'package:wildgids/config/app_config.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:wildrapport/utils/notification_service.dart';
-import 'package:wildrapport/widgets/location/location_sharing_indicator.dart';
+import 'package:wildgids/widgets/location/location_sharing_indicator.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
@@ -51,7 +50,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
   double? _pendingZoom;
 
   // cache things we must clean up
-  late MapProvider _mp; // <— cached provider
+  late MapProvider _mp; // <â€” cached provider
   StreamSubscription<Position>? _posSub;
   VoidCallback? _mpListener;
   bool _listenerAttached = false;
@@ -176,7 +175,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     }
 
     _mpListener ??= () {
-      debugPrint('[Kaart] 📨 Listener triggered');
+      debugPrint('[Kaart] ðŸ“¨ Listener triggered');
       final n = _mp.lastTrackingNotice;
 
       if (n == null) {
@@ -213,7 +212,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
           if (!mounted) return;
 
           try {
-            debugPrint('[Kaart] 🎉 Showing message-style popup: "${n.text}"');
+            debugPrint('[Kaart] ðŸŽ‰ Showing message-style popup: "${n.text}"');
             showDialog(
               context: context,
               barrierDismissible: true,
@@ -228,14 +227,14 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                   ),
             );
           } catch (e) {
-            debugPrint('[Kaart] ❌ Failed to show tracking notice: $e');
+            debugPrint('[Kaart] âŒ Failed to show tracking notice: $e');
           }
         });
       });
     };
 
     if (!_listenerAttached) {
-      debugPrint('[Kaart] 🔗 Attaching listener to MapProvider');
+      debugPrint('[Kaart] ðŸ”— Attaching listener to MapProvider');
       _mp.addListener(_mpListener!);
       _listenerAttached = true;
     }
@@ -292,7 +291,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
       final ts = i < 3
           ? now.subtract(Duration(minutes: (i + 1) * 10)) // new (< 24h)
           : (i < 6
-              ? now.subtract(Duration(hours: (i - 2) * 6)) // within 24h–1w
+              ? now.subtract(Duration(hours: (i - 2) * 6)) // within 24hâ€“1w
               : now.subtract(Duration(days: 8 + i))); // > 1 week
 
       animals.add(
@@ -369,14 +368,14 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
       // use cached provider, not context.read(...)
       await _mp.updatePosition(pos, _mp.currentAddress);
 
-      // 🔔 Send tracking ping on position update - only if tracking is enabled
+      // ðŸ”” Send tracking ping on position update - only if tracking is enabled
       final appStateProvider = context.read<AppStateProvider>();
       if (appStateProvider.isLocationTrackingEnabled) {
-        debugPrint('[ME/live] 📡 Sending tracking ping for position update');
+        debugPrint('[ME/live] ðŸ“¡ Sending tracking ping for position update');
         final notice = await _mp.sendTrackingPingFromPosition(pos);
         if (notice != null) {
           debugPrint(
-            '[ME/live] 🔔 Received notice from tracking ping: "${notice.text}"',
+            '[ME/live] ðŸ”” Received notice from tracking ping: "${notice.text}"',
           );
           // Notice will be displayed via the MapProvider listener and popup dialog
         } else {
@@ -384,11 +383,11 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
         }
       } else {
         debugPrint(
-          '[ME/live] ⚠️ Skipping tracking ping - tracking disabled by user',
+          '[ME/live] âš ï¸ Skipping tracking ping - tracking disabled by user',
         );
       }
 
-      // ✅ keep center on user only when following AND tracking is enabled
+      // âœ… keep center on user only when following AND tracking is enabled
       if (_followUser &&
           appStateProvider.isLocationTrackingEnabled &&
           _mp.isInitialized) {
@@ -413,11 +412,11 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
 
     // Log all animals with JSON output
     debugPrint(
-      '═══════════════════════════════════════════════════════════════',
+      'â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•',
     );
     debugPrint('[ANIMALS] Total count: ${map.animalPins.length}');
     debugPrint(
-      '═══════════════════════════════════════════════════════════════',
+      'â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•',
     );
 
     for (int i = 0; i < map.animalPins.length; i++) {
@@ -440,7 +439,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
       }
     }
     debugPrint(
-      '═══════════════════════════════════════════════════════════════',
+      'â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•',
     );
   }
 
@@ -452,7 +451,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     // Ensure map controller exists before first render to avoid blank map on first open
     await map.initialize();
 
-    // 1) Get a position (cache → GPS)
+    // 1) Get a position (cache â†’ GPS)
     Position? pos = app.isLocationCacheValid ? app.cachedPosition : null;
     pos ??= await mgr.determinePosition();
 
@@ -491,20 +490,20 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     // 4) Send one tracking ping (R2) on first load - only if tracking is enabled
     final appStateProvider = context.read<AppStateProvider>();
     if (appStateProvider.isLocationTrackingEnabled) {
-      debugPrint('[Kaart/Bootstrap] 📡 Sending initial tracking ping');
+      debugPrint('[Kaart/Bootstrap] ðŸ“¡ Sending initial tracking ping');
       final initialNotice = await map.sendTrackingPingFromPosition(pos);
       if (initialNotice != null) {
         debugPrint(
-          '[Kaart/Bootstrap] 🔔 Initial ping returned notice: "${initialNotice.text}"',
+          '[Kaart/Bootstrap] ðŸ”” Initial ping returned notice: "${initialNotice.text}"',
         );
       } else {
         debugPrint('[Kaart/Bootstrap] Initial ping returned no notice');
       }
 
-      debugPrint('[Kaart/Bootstrap] ⏰ Starting periodic tracking (every 10s)');
+      debugPrint('[Kaart/Bootstrap] â° Starting periodic tracking (every 10s)');
       map.startTracking(interval: const Duration(seconds: 10));
     } else {
-      debugPrint('[Kaart/Bootstrap] ⚠️ Location tracking is disabled by user');
+      debugPrint('[Kaart/Bootstrap] âš ï¸ Location tracking is disabled by user');
       // Location tracking is optional, so we don't show a dialog
       // User can enable it later from profile settings if desired
     }
@@ -521,13 +520,13 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
           await map.loadAllPinsFromVicinity().timeout(
             const Duration(seconds: 15),
             onTimeout: () {
-              debugPrint('[Bootstrap] ⚠️ Vicinity API timeout after 15s');
+              debugPrint('[Bootstrap] âš ï¸ Vicinity API timeout after 15s');
               // Continue anyway - map will show without pins
               return;
             },
           );
         } catch (e) {
-          debugPrint('[Bootstrap] ❌ Failed to load vicinity data: $e');
+          debugPrint('[Bootstrap] âŒ Failed to load vicinity data: $e');
           // Continue anyway - map will show without pins
         }
 
@@ -541,11 +540,11 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
 
         // Log all animals with JSON output
         debugPrint(
-          '═══════════════════════════════════════════════════════════════',
+          'â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•',
         );
         debugPrint('[BOOTSTRAP ANIMALS] Total count: ${map.animalPins.length}');
         debugPrint(
-          '═══════════════════════════════════════════════════════════════',
+          'â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•',
         );
 
         for (int i = 0; i < map.animalPins.length; i++) {
@@ -568,14 +567,14 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
           }
         }
         debugPrint(
-          '═══════════════════════════════════════════════════════════════',
+          'â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•',
         );
 
         _queueFetch(); // keep in sync with pan/zoom
       } catch (_) {}
     });
 
-    // 6) Reverse-geocode address (don’t block UI)
+    // 6) Reverse-geocode address (donâ€™t block UI)
     try {
       final address = await mgr.getAddressFromPosition(pos);
       if (!mounted) return;
@@ -624,7 +623,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
       final newest = sorted.last.timestamp;
       final now = DateTime.now();
 
-      debugPrint('[TRACKING] 🔴 CRITICAL DATA:');
+      debugPrint('[TRACKING] ðŸ”´ CRITICAL DATA:');
       debugPrint('[TRACKING] Now: ${now.toIso8601String()}');
       debugPrint(
         '[TRACKING] Newest in DB: ${newest.toIso8601String()} (${now.difference(newest).inSeconds}s ago)',
@@ -1292,12 +1291,12 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                           children: [
                             fm.TileLayer(
                               urlTemplate: LocationMapManager.standardTileUrl,
-                              userAgentPackageName: 'com.wildrapport.app',
+                              userAgentPackageName: 'com.wildgids.app',
                               // Fetch fewer offscreen tiles to speed up first paint
                               keepBuffer: 1,
                             ),
 
-                            // ── ANIMALS ───────────────────────────────────────────────────────────────
+                            // â”€â”€ ANIMALS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                             _useClusters
                                 ? cl.MarkerClusterLayerWidget(
                                   options: cl.MarkerClusterLayerOptions(
@@ -1530,7 +1529,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                           .toList(),
                                 ),
 
-                            // ── DETECTIONS ────────────────────────────────────────────────────────────
+                            // â”€â”€ DETECTIONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                             _useClusters
                                 ? cl.MarkerClusterLayerWidget(
                                   options: cl.MarkerClusterLayerOptions(
@@ -1687,7 +1686,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                           .toList(),
                                 ),
 
-                            // ── CURRENT POSITION ─────────────────────────────────────────────────────
+                            // â”€â”€ CURRENT POSITION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                             // Only show user location pin if tracking is enabled
                             if (context
                                 .watch<AppStateProvider>()
@@ -1719,7 +1718,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                 },
                               ),
 
-                            // ── TRACKING HISTORY ─────────────────────────────────────────────────────
+                            // â”€â”€ TRACKING HISTORY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                             if (_showTrackingHistory &&
                                 _trackingHistory.isNotEmpty)
                               fm.PolylineLayer(
@@ -1759,7 +1758,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                     }).toList(),
                               ),
 
-                            // ── INTERACTIONS (keep this LAST so it receives taps first) ──────────────
+                            // â”€â”€ INTERACTIONS (keep this LAST so it receives taps first) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                             _useClusters
                                 ? cl.MarkerClusterLayerWidget(
                                   options: cl.MarkerClusterLayerOptions(
@@ -1966,7 +1965,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                           ],
                         ),
 
-                        // ── SCALE BAR ─────────────────────────────────────────────────────────────
+                        // â”€â”€ SCALE BAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                         Positioned(
                           left: 12,
                           bottom: 120,
@@ -2013,7 +2012,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                           ),
                         ),
 
-                        // ── ROTATE BUTTON ─────────────────────────────
+                        // â”€â”€ ROTATE BUTTON â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                         Positioned(
                           bottom: 56,
                           left: 12,
@@ -2033,7 +2032,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                           ),
                         ),
 
-                        // ── Tracking History button ─────────────────────────────────────────────────
+                        // â”€â”€ Tracking History button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                         Positioned(
                           left: 72,
                           bottom: 56,
@@ -2077,7 +2076,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                           ),
                         ),
 
-                        // ── Filter button ───────────────────────────────────────────────────────────
+                        // â”€â”€ Filter button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                         Positioned(
                           left: 132,
                           bottom: 56,
@@ -2093,7 +2092,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                           ),
                         ),
 
-                        // ── DEV: Mock pins button (env DEV_DEBUG_TOOLS) ────────────────────────────
+                        // â”€â”€ DEV: Mock pins button (env DEV_DEBUG_TOOLS) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                         if (_devDebugToolsEnabled)
                           Positioned(
                             left: 192,
@@ -2171,14 +2170,14 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                 ..clearSnackBars()
                 ..showSnackBar(
                   const SnackBar(
-                    content: Text('Zoeken naar je locatie…'),
+                    content: Text('Zoeken naar je locatieâ€¦'),
                     behavior: SnackBarBehavior.floating,
                     duration: Duration(seconds: 2),
                   ),
                 );
             }
 
-            // resolve fresh GPS + address in background (don’t block the jump)
+            // resolve fresh GPS + address in background (donâ€™t block the jump)
             Future(() async {
               Position? fresh;
               try {
@@ -2268,3 +2267,4 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     return _IconStyle(Colors.grey.shade600, 20.0);
   }
 }
+

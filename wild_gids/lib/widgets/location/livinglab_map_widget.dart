@@ -1,17 +1,17 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:wildrapport/interfaces/location/location_screen_interface.dart';
-import 'package:wildrapport/managers/map/location_map_manager.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/providers/app_state_provider.dart';
-import 'package:wildrapport/providers/map_provider.dart';
-import 'package:wildrapport/screens/location/location_screen.dart';
-import 'package:wildrapport/screens/belonging/belonging_location_screen.dart';
-import 'package:wildrapport/widgets/location/location_data_card.dart';
+import 'package:wildgids/interfaces/location/location_screen_interface.dart';
+import 'package:wildgids/managers/map/location_map_manager.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/providers/app_state_provider.dart';
+import 'package:wildgids/providers/map_provider.dart';
+import 'package:wildgids/screens/location/location_screen.dart';
+import 'package:wildgids/screens/belonging/belonging_location_screen.dart';
+import 'package:wildgids/widgets/location/location_data_card.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
+import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
 
 class LivingLabMapScreen extends StatefulWidget {
   final String labName;
@@ -350,7 +350,7 @@ class _LivingLabMapScreenState extends State<LivingLabMapScreen> {
                           _isSatelliteView
                               ? _satelliteTileUrl
                               : _standardTileUrl,
-                      userAgentPackageName: 'com.wildrapport.app',
+                      userAgentPackageName: 'com.wildgids.app',
                     ),
                     PolygonLayer(
                       polygons: [
@@ -689,3 +689,4 @@ class _LivingLabMapScreenState extends State<LivingLabMapScreen> {
     return null;
   }
 }
+

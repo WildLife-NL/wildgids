@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
-import 'package:wildrapport/screens/shared/overzicht_screen.dart';
-import 'package:wildrapport/screens/shared/my_interaction_history_screen.dart';
-import 'package:wildrapport/screens/logbook/saved_questionnaires_screen.dart';
-import 'package:wildrapport/screens/logbook/my_responses_screen.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
+import 'package:wildgids/screens/shared/overzicht_screen.dart';
+import 'package:wildgids/screens/shared/my_interaction_history_screen.dart';
+import 'package:wildgids/screens/logbook/saved_questionnaires_screen.dart';
+import 'package:wildgids/screens/logbook/my_responses_screen.dart';
 
 class LogbookScreen extends StatelessWidget {
   const LogbookScreen({super.key});
@@ -113,3 +113,4 @@ class _ReportButton extends StatelessWidget {
     );
   }
 }
+

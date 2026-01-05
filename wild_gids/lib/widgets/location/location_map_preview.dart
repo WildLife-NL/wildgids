@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart' as flutter_map;
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/providers/map_provider.dart';
+import 'package:wildgids/providers/map_provider.dart';
 import 'package:lottie/lottie.dart';
-import 'package:wildrapport/utils/responsive_utils.dart';
+import 'package:wildgids/utils/responsive_utils.dart';
 
 class LocationMapPreview extends StatelessWidget {
   const LocationMapPreview({super.key});
@@ -67,7 +67,7 @@ class LocationMapPreview extends StatelessWidget {
                     flutter_map.TileLayer(
                       urlTemplate:
                           'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                      userAgentPackageName: 'com.wildrapport.app',
+                      userAgentPackageName: 'com.wildgids.app',
                     ),
                     flutter_map.MarkerLayer(
                       markers: [
@@ -94,3 +94,4 @@ class LocationMapPreview extends StatelessWidget {
     );
   }
 }
+

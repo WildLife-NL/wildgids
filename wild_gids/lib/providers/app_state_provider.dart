@@ -1,12 +1,12 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:wildrapport/managers/map/location_map_manager.dart';
-import 'package:wildrapport/models/beta_models/sighting_report_model.dart';
-import 'package:wildrapport/models/enums/report_type.dart';
+import 'package:wildgids/managers/map/location_map_manager.dart';
+import 'package:wildgids/models/beta_models/sighting_report_model.dart';
+import 'package:wildgids/models/enums/report_type.dart';
 import 'package:geolocator/geolocator.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:wildrapport/screens/login/login_screen.dart';
+import 'package:wildgids/screens/login/login_screen.dart';
 
 class AppStateProvider with ChangeNotifier {
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -82,7 +82,7 @@ class AppStateProvider with ChangeNotifier {
 
   void initializeReport(ReportType reportType) {
     debugPrint(
-      '\x1B[36m[AppStateProvider] 🔷 Initializing report with type: $reportType\x1B[0m',
+      '\x1B[36m[AppStateProvider] ðŸ”· Initializing report with type: $reportType\x1B[0m',
     );
     _currentReportType = reportType;
     final report = SightingReport(
@@ -92,7 +92,7 @@ class AppStateProvider with ChangeNotifier {
 
     _activeReports['currentReport'] = report;
     debugPrint(
-      '\x1B[36m[AppStateProvider] 🔷 Report initialized. Current type: $_currentReportType\x1B[0m',
+      '\x1B[36m[AppStateProvider] ðŸ”· Report initialized. Current type: $_currentReportType\x1B[0m',
     );
     notifyListeners();
   }
@@ -240,3 +240,4 @@ class AppStateProvider with ChangeNotifier {
     );
   }
 }
+

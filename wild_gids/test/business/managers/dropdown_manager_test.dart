@@ -1,14 +1,14 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/interfaces/waarneming_flow/animal_interface.dart';
-import 'package:wildrapport/interfaces/filters/filter_interface.dart';
-import 'package:wildrapport/managers/filtering_system/dropdown_manager.dart';
-import 'package:wildrapport/models/ui_models/brown_button_model.dart';
-import 'package:wildrapport/models/enums/dropdown_type.dart';
-import 'package:wildrapport/models/enums/filter_type.dart';
-import 'package:wildrapport/models/enums/location_type.dart';
+import 'package:wildgids/interfaces/waarneming_flow/animal_interface.dart';
+import 'package:wildgids/interfaces/filters/filter_interface.dart';
+import 'package:wildgids/managers/filtering_system/dropdown_manager.dart';
+import 'package:wildgids/models/ui_models/brown_button_model.dart';
+import 'package:wildgids/models/enums/dropdown_type.dart';
+import 'package:wildgids/models/enums/filter_type.dart';
+import 'package:wildgids/models/enums/location_type.dart';
 
 // Generate mock classes
 class MockFilterInterface extends Mock implements FilterInterface {}
@@ -240,3 +240,4 @@ void main() {
     });
   });
 }
+

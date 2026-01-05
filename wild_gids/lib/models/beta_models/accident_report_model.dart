@@ -1,7 +1,7 @@
-import 'package:wildrapport/interfaces/reporting/common_report_fields.dart';
-import 'package:wildrapport/interfaces/reporting/reportable_interface.dart';
-import 'package:wildrapport/models/beta_models/report_location_model.dart';
-import 'package:wildrapport/models/beta_models/sighted_animal_model.dart';
+﻿import 'package:wildgids/interfaces/reporting/common_report_fields.dart';
+import 'package:wildgids/interfaces/reporting/reportable_interface.dart';
+import 'package:wildgids/models/beta_models/report_location_model.dart';
+import 'package:wildgids/models/beta_models/sighted_animal_model.dart';
 
 class AccidentReport implements Reportable, CommonReportFields {
   String? accidentReportID;
@@ -68,3 +68,4 @@ class AccidentReport implements Reportable, CommonReportFields {
     urgency: json["urgency"],
   );
 }
+

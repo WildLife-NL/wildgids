@@ -1,12 +1,12 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/data_managers/api_client.dart';
-import 'package:wildrapport/data_managers/response_api.dart';
-import 'package:wildrapport/models/api_models/my_response.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
-import 'package:wildrapport/managers/api_managers/response_manager.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/data_managers/api_client.dart';
+import 'package:wildgids/data_managers/response_api.dart';
+import 'package:wildgids/models/api_models/my_response.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
+import 'package:wildgids/managers/api_managers/response_manager.dart';
 
 class MyResponsesScreen extends StatefulWidget {
   const MyResponsesScreen({super.key});
@@ -259,3 +259,4 @@ class _ResponseTile extends StatelessWidget {
     );
   }
 }
+

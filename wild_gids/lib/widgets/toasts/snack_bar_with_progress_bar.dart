@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/widgets/toasts/snack_bar_with_progress_bar_content.dart';
-import 'package:wildrapport/utils/responsive_utils.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/widgets/toasts/snack_bar_with_progress_bar_content.dart';
+import 'package:wildgids/utils/responsive_utils.dart';
 
 class SnackBarWithProgressBar {
   static void show({
@@ -30,3 +30,4 @@ class SnackBarWithProgressBar {
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 }
+

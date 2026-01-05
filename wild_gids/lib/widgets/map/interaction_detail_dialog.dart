@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/models/api_models/interaction_query_result.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/models/api_models/interaction_query_result.dart';
 import 'package:intl/intl.dart';
 
 /// A detailed dialog for displaying interaction information from the map.
@@ -461,3 +461,4 @@ class InteractionDetailDialog extends StatelessWidget {
     }
   }
 }
+

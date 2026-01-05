@@ -1,6 +1,6 @@
-import 'package:flutter_test/flutter_test.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
-import 'package:wildrapport/interfaces/other/overzicht_interface.dart';
+import 'package:wildgids/interfaces/other/overzicht_interface.dart';
 import '../helpers/overzicht_helpers.dart';
 import '../mock_generator.mocks.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -114,3 +114,4 @@ Future<String> _getUserNameFromPrefs() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   return prefs.getString("userName") ?? "John Doe";
 }
+

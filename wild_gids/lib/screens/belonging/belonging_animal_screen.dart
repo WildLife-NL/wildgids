@@ -1,15 +1,15 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/interfaces/waarneming_flow/animal_interface.dart';
-import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
-import 'package:wildrapport/interfaces/other/permission_interface.dart';
-import 'package:wildrapport/models/animal_waarneming_models/animal_model.dart';
-import 'package:wildrapport/providers/belonging_damage_report_provider.dart';
-import 'package:wildrapport/screens/belonging/belonging_damages_screen.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/bottom_app_bar.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/widgets/animals/scrollable_animal_grid.dart';
+import 'package:wildgids/interfaces/waarneming_flow/animal_interface.dart';
+import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
+import 'package:wildgids/interfaces/other/permission_interface.dart';
+import 'package:wildgids/models/animal_waarneming_models/animal_model.dart';
+import 'package:wildgids/providers/belonging_damage_report_provider.dart';
+import 'package:wildgids/screens/belonging/belonging_damages_screen.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/bottom_app_bar.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/widgets/animals/scrollable_animal_grid.dart';
 
 class BelongingAnimalScreen extends StatefulWidget {
   final String appBarTitle;
@@ -351,3 +351,4 @@ class _BelongingAnimalScreenState extends State<BelongingAnimalScreen> {
     );
   }
 }
+

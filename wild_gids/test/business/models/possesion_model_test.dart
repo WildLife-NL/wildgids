@@ -1,5 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:wildrapport/models/beta_models/possesion_model.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:wildgids/models/beta_models/possesion_model.dart';
 
 void main() {
   group('Possesion Model Tests', () {
@@ -163,3 +163,4 @@ void main() {
     });
   });
 }
+

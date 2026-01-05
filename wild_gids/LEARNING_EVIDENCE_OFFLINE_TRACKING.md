@@ -2,7 +2,7 @@
 
 ## What
 
-Our app lets users track their location while using WildRapport, even when they don't have an internet connection. For each tracking session, we need to store location readings with their exact timestamps.
+Our app lets users track their location while using Wild Gids, even when they don't have an internet connection. For each tracking session, we need to store location readings with their exact timestamps.
 
 The backend API requires, for every location reading, three things:
 
@@ -446,4 +446,4 @@ This implementation ensures that:
 ✅ Failed readings are retried
 ✅ Cache persists across app restarts
 
-The system follows the same pattern as the existing `ResponseManager` for consistency with the WildRapport codebase.
+The system follows the same pattern as the existing `ResponseManager` for consistency with the Wild Gids codebase.

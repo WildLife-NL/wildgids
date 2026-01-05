@@ -1,14 +1,14 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter_map/flutter_map.dart' as fm;
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:wildrapport/models/beta_models/polygon_area_model.dart';
+import 'package:wildgids/models/beta_models/polygon_area_model.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/providers/belonging_damage_report_provider.dart';
-import 'package:wildrapport/constants/app_colors.dart';
+import 'package:wildgids/providers/belonging_damage_report_provider.dart';
+import 'package:wildgids/constants/app_colors.dart';
 // Draggable plugin removed due to dependency issues; implementing tap-to-move editing instead.
-import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
 import 'package:intl/intl.dart';
 
 class AreaSelectionMap extends StatefulWidget {
@@ -306,7 +306,7 @@ class _AreaSelectionMapState extends State<AreaSelectionMap> {
                     fm.TileLayer(
                       urlTemplate:
                           'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                      userAgentPackageName: 'com.wildrapport.app',
+                      userAgentPackageName: 'com.wildgids.app',
                     ),
                     // Current location marker
                     if (_currentLocation != null)
@@ -474,7 +474,7 @@ class _AreaSelectionMapState extends State<AreaSelectionMap> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              'Oppervlakte: ${areaFmt.format(PolygonArea(points: _polygonPoints).calculateAreaInSquareMeters())} m²',
+                              'Oppervlakte: ${areaFmt.format(PolygonArea(points: _polygonPoints).calculateAreaInSquareMeters())} mÂ²',
                               style: const TextStyle(
                                 color: Colors.white70,
                                 fontSize: 12,
@@ -613,8 +613,8 @@ class _AreaSelectionMapState extends State<AreaSelectionMap> {
                             icon: const Icon(Icons.euro),
                             label: Text(
                               _unitPricePerM2 == null
-                                  ? 'Prijs instellen (€/m²)'
-                                  : 'Prijs: €${_formatPrice(_unitPricePerM2!)}/m²',
+                                  ? 'Prijs instellen (â‚¬/mÂ²)'
+                                  : 'Prijs: â‚¬${_formatPrice(_unitPricePerM2!)}/mÂ²',
                             ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.lightMintGreen,
@@ -683,7 +683,7 @@ class _AreaSelectionMapState extends State<AreaSelectionMap> {
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           ),
           Text(
-            '€ ${NumberFormat('#,##0.00', 'nl_NL').format(total)}',
+            'â‚¬ ${NumberFormat('#,##0.00', 'nl_NL').format(total)}',
             style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
@@ -706,12 +706,12 @@ class _AreaSelectionMapState extends State<AreaSelectionMap> {
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          title: const Text('Prijs per m²'),
+          title: const Text('Prijs per mÂ²'),
           content: TextField(
             controller: controller,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: const InputDecoration(
-              prefixText: '€ ',
+              prefixText: 'â‚¬ ',
               hintText: 'bijv. 2,50',
             ),
           ),
@@ -775,3 +775,4 @@ class _AreaSelectionMapState extends State<AreaSelectionMap> {
         : formattedInt;
   }
 }
+

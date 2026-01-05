@@ -1,6 +1,6 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:wildrapport/models/api_models/living_labs.dart';
-import 'package:wildrapport/models/api_models/location.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:wildgids/models/api_models/living_labs.dart';
+import 'package:wildgids/models/api_models/location.dart';
 
 void main() {
   group('LivingLabs', () {
@@ -140,3 +140,4 @@ void main() {
     });
   });
 }
+

@@ -1,4 +1,4 @@
-import 'package:wildrapport/models/api_models/answer.dart';
+﻿import 'package:wildgids/models/api_models/answer.dart';
 
 class Question {
   String id;
@@ -51,3 +51,4 @@ class Question {
     };
   }
 }
+

@@ -1,4 +1,4 @@
-import 'package:wildrapport/models/api_models/interaction_query_result.dart';
+﻿import 'package:wildgids/models/api_models/interaction_query_result.dart';
 
 abstract class InteractionQueryApiInterface {
   Future<List<InteractionQueryResult>> queryInteractions({
@@ -9,3 +9,4 @@ abstract class InteractionQueryApiInterface {
     DateTime? momentBefore,
   });
 }
+

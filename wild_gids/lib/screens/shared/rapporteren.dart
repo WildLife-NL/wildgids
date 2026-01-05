@@ -1,19 +1,19 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
-import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
-import 'package:wildrapport/models/enums/report_type.dart';
-import 'package:wildrapport/providers/app_state_provider.dart';
-import 'package:wildrapport/providers/map_provider.dart';
+import 'package:wildgids/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
+import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
+import 'package:wildgids/models/enums/report_type.dart';
+import 'package:wildgids/providers/app_state_provider.dart';
+import 'package:wildgids/providers/map_provider.dart';
 
-import 'package:wildrapport/screens/shared/overzicht_screen.dart';
-import 'package:wildrapport/screens/waarneming/animals_screen.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
-import 'package:wildrapport/widgets/location/invisible_map_preloader.dart';
-import 'package:wildrapport/widgets/questionnaire/report_button.dart';
-import 'package:wildrapport/managers/api_managers/interaction_types_manager.dart';
-import 'package:wildrapport/models/api_models/interaction_type.dart';
-import 'package:wildrapport/utils/responsive_utils.dart';
+import 'package:wildgids/screens/shared/overzicht_screen.dart';
+import 'package:wildgids/screens/waarneming/animals_screen.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
+import 'package:wildgids/widgets/location/invisible_map_preloader.dart';
+import 'package:wildgids/widgets/questionnaire/report_button.dart';
+import 'package:wildgids/managers/api_managers/interaction_types_manager.dart';
+import 'package:wildgids/models/api_models/interaction_type.dart';
+import 'package:wildgids/utils/responsive_utils.dart';
 
 class Rapporteren extends StatefulWidget {
   const Rapporteren({super.key});
@@ -227,3 +227,4 @@ class _RapporterenState extends State<Rapporteren> {
     );
   }
 }
+

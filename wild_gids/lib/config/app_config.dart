@@ -1,5 +1,5 @@
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:wildrapport/data_managers/api_client.dart';
+﻿import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:wildgids/data_managers/api_client.dart';
 
 class AppConfig {
   ApiClient apiClient = ApiClient('');
@@ -11,3 +11,4 @@ class AppConfig {
   }
   AppConfig(this.apiClient);
 }
+

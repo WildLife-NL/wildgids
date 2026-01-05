@@ -1,15 +1,15 @@
-import 'package:flutter_test/flutter_test.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
-import 'package:wildrapport/managers/other/questionnaire_manager.dart';
-import 'package:wildrapport/models/api_models/experiment.dart';
-import 'package:wildrapport/models/api_models/interaction_type.dart';
-import 'package:wildrapport/models/api_models/questionaire.dart';
-import 'package:wildrapport/models/api_models/question.dart';
-import 'package:wildrapport/models/api_models/answer.dart';
-import 'package:wildrapport/models/api_models/user.dart';
-import 'package:wildrapport/widgets/questionnaire/questionnaire_home.dart';
-import 'package:wildrapport/widgets/questionnaire/questionnaire_multiple_choice.dart';
-import 'package:wildrapport/widgets/questionnaire/questionnaire_open_response.dart';
+import 'package:wildgids/managers/other/questionnaire_manager.dart';
+import 'package:wildgids/models/api_models/experiment.dart';
+import 'package:wildgids/models/api_models/interaction_type.dart';
+import 'package:wildgids/models/api_models/questionaire.dart';
+import 'package:wildgids/models/api_models/question.dart';
+import 'package:wildgids/models/api_models/answer.dart';
+import 'package:wildgids/models/api_models/user.dart';
+import 'package:wildgids/widgets/questionnaire/questionnaire_home.dart';
+import 'package:wildgids/widgets/questionnaire/questionnaire_multiple_choice.dart';
+import 'package:wildgids/widgets/questionnaire/questionnaire_open_response.dart';
 import '../../business/mock_generator.mocks.dart';
 
 void main() {
@@ -402,3 +402,4 @@ void main() {
     );
   });
 }
+

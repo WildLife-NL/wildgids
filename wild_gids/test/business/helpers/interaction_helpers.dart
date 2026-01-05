@@ -1,14 +1,14 @@
-import 'package:connectivity_plus/connectivity_plus.dart';
+﻿import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:mockito/mockito.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:wildrapport/interfaces/data_apis/interaction_api_interface.dart';
-import 'package:wildrapport/interfaces/reporting/interaction_interface.dart';
-import 'package:wildrapport/managers/api_managers/interaction_manager.dart';
-import 'package:wildrapport/models/api_models/experiment.dart';
-import 'package:wildrapport/models/api_models/interaction_type.dart';
-import 'package:wildrapport/models/api_models/questionaire.dart';
-import 'package:wildrapport/models/api_models/user.dart';
-import 'package:wildrapport/models/beta_models/interaction_response_model.dart';
+import 'package:wildgids/interfaces/data_apis/interaction_api_interface.dart';
+import 'package:wildgids/interfaces/reporting/interaction_interface.dart';
+import 'package:wildgids/managers/api_managers/interaction_manager.dart';
+import 'package:wildgids/models/api_models/experiment.dart';
+import 'package:wildgids/models/api_models/interaction_type.dart';
+import 'package:wildgids/models/api_models/questionaire.dart';
+import 'package:wildgids/models/api_models/user.dart';
+import 'package:wildgids/models/beta_models/interaction_response_model.dart';
 import '../mock_generator.mocks.dart';
 
 class InteractionHelpers {
@@ -114,3 +114,4 @@ class InteractionHelpers {
     );
   }
 }
+

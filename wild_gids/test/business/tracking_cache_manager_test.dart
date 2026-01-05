@@ -1,10 +1,10 @@
-import 'package:flutter_test/flutter_test.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
-import 'package:wildrapport/managers/api_managers/tracking_cache_manager.dart';
-import 'package:wildrapport/models/beta_models/tracking_reading_model.dart';
-import 'package:wildrapport/interfaces/data_apis/tracking_api_interface.dart';
-import 'package:wildrapport/utils/connection_checker.dart';
+import 'package:wildgids/managers/api_managers/tracking_cache_manager.dart';
+import 'package:wildgids/models/beta_models/tracking_reading_model.dart';
+import 'package:wildgids/interfaces/data_apis/tracking_api_interface.dart';
+import 'package:wildgids/utils/connection_checker.dart';
 
 /// Mock implementation of TrackingApiInterface for testing
 class MockTrackingApi implements TrackingApiInterface {
@@ -237,3 +237,4 @@ void main() {
     });
   });
 }
+

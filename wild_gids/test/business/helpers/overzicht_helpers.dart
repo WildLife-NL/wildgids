@@ -1,7 +1,7 @@
-import 'package:mockito/mockito.dart';
+﻿import 'package:mockito/mockito.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:wildrapport/interfaces/other/overzicht_interface.dart';
-import 'package:wildrapport/managers/other/overzicht_manager.dart';
+import 'package:wildgids/interfaces/other/overzicht_interface.dart';
+import 'package:wildgids/managers/other/overzicht_manager.dart';
 import '../mock_generator.mocks.dart';
 
 class OverzichtHelpers {
@@ -81,3 +81,4 @@ class OverzichtHelpers {
     ).thenThrow(Exception("Failed to load user data"));
   }
 }
+

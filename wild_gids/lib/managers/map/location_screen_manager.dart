@@ -1,13 +1,13 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:wildrapport/interfaces/location/location_screen_interface.dart';
-import 'package:wildrapport/interfaces/map/location_service_interface.dart';
-import 'package:wildrapport/managers/map/location_map_manager.dart';
-import 'package:wildrapport/models/enums/location_type.dart';
-import 'package:wildrapport/models/enums/date_time_type.dart';
+import 'package:wildgids/interfaces/location/location_screen_interface.dart';
+import 'package:wildgids/interfaces/map/location_service_interface.dart';
+import 'package:wildgids/managers/map/location_map_manager.dart';
+import 'package:wildgids/models/enums/location_type.dart';
+import 'package:wildgids/models/enums/date_time_type.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/providers/map_provider.dart';
-import 'package:wildrapport/providers/app_state_provider.dart';
+import 'package:wildgids/providers/map_provider.dart';
+import 'package:wildgids/providers/app_state_provider.dart';
 
 class LocationScreenManager implements LocationScreenInterface {
   final bool _isLocationDropdownExpanded = false;
@@ -160,3 +160,4 @@ class LocationScreenManager implements LocationScreenInterface {
     }
   }
 }
+

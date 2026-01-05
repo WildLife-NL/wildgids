@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:wildrapport/constants/app_colors.dart';
+import 'package:wildgids/constants/app_colors.dart';
 
 class SimpleHoverButton extends StatefulWidget {
   final String text;
@@ -81,3 +81,4 @@ class _SimpleHoverButtonState extends State<SimpleHoverButton> {
     );
   }
 }
+

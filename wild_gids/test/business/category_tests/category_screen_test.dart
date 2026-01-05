@@ -1,16 +1,16 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
-import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
-import 'package:wildrapport/models/animal_waarneming_models/animal_sighting_model.dart';
-import 'package:wildrapport/models/enums/animal_category.dart';
-import 'package:wildrapport/models/enums/report_type.dart';
-import 'package:wildrapport/providers/app_state_provider.dart';
-import 'package:wildrapport/screens/shared/category_screen.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
+import 'package:wildgids/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
+import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
+import 'package:wildgids/models/animal_waarneming_models/animal_sighting_model.dart';
+import 'package:wildgids/models/enums/animal_category.dart';
+import 'package:wildgids/models/enums/report_type.dart';
+import 'package:wildgids/providers/app_state_provider.dart';
+import 'package:wildgids/screens/shared/category_screen.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
 
 import '../mock_generator.mocks.dart';
 
@@ -125,3 +125,4 @@ void main() {
     verify(mockNavigationInterface.pushAndRemoveUntil(any, any)).called(1);
   });
 }
+

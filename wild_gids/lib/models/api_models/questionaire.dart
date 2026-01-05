@@ -1,6 +1,6 @@
-import 'package:wildrapport/models/api_models/experiment.dart';
-import 'package:wildrapport/models/api_models/interaction_type.dart';
-import 'package:wildrapport/models/api_models/question.dart';
+﻿import 'package:wildgids/models/api_models/experiment.dart';
+import 'package:wildgids/models/api_models/interaction_type.dart';
+import 'package:wildgids/models/api_models/question.dart';
 
 class Questionnaire {
   String id;
@@ -50,3 +50,4 @@ class Questionnaire {
     };
   }
 }
+

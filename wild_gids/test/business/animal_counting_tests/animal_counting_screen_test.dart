@@ -1,21 +1,21 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
-import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
-import 'package:wildrapport/models/animal_waarneming_models/animal_gender_view_count_model.dart';
-import 'package:wildrapport/models/animal_waarneming_models/animal_model.dart';
-import 'package:wildrapport/models/animal_waarneming_models/animal_sighting_model.dart';
-import 'package:wildrapport/models/enums/animal_gender.dart';
-import 'package:wildrapport/models/enums/report_type.dart';
-import 'package:wildrapport/models/animal_waarneming_models/view_count_model.dart';
+import 'package:wildgids/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
+import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
+import 'package:wildgids/models/animal_waarneming_models/animal_gender_view_count_model.dart';
+import 'package:wildgids/models/animal_waarneming_models/animal_model.dart';
+import 'package:wildgids/models/animal_waarneming_models/animal_sighting_model.dart';
+import 'package:wildgids/models/enums/animal_gender.dart';
+import 'package:wildgids/models/enums/report_type.dart';
+import 'package:wildgids/models/animal_waarneming_models/view_count_model.dart';
 
-import 'package:wildrapport/providers/app_state_provider.dart';
-import 'package:wildrapport/screens/waarneming/animal_counting_screen.dart';
+import 'package:wildgids/providers/app_state_provider.dart';
+import 'package:wildgids/screens/waarneming/animal_counting_screen.dart';
 import '../mock_generator.mocks.dart';
-import 'package:wildrapport/models/enums/animal_age.dart';
-import 'package:wildrapport/models/enums/animal_age_extensions.dart';
+import 'package:wildgids/models/enums/animal_age.dart';
+import 'package:wildgids/models/enums/animal_age_extensions.dart';
 
 void main() {
   late MockNavigationStateInterface mockNavigationManager;
@@ -187,3 +187,4 @@ void main() {
     });
   });
 }
+

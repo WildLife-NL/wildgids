@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 // white_bulk_button isn't used here anymore; keep import removed
-import 'package:wildrapport/widgets/overzicht/simple_hover_button.dart';
+import 'package:wildgids/widgets/overzicht/simple_hover_button.dart';
 // circle icons are not used in this overview variant
-import 'package:wildrapport/constants/app_colors.dart';
+import 'package:wildgids/constants/app_colors.dart';
 
 class ActionButtons extends StatelessWidget {
   final List<
@@ -116,3 +116,4 @@ class ActionButtons extends StatelessWidget {
     return button;
   }
 }
+

@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:wildrapport/data_managers/conveyance_api.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:wildgids/data_managers/conveyance_api.dart';
 
 class ConveyanceProvider extends ChangeNotifier {
   final ConveyanceApi api;
@@ -27,3 +27,4 @@ class ConveyanceProvider extends ChangeNotifier {
     notifyListeners();
   }
 }
+

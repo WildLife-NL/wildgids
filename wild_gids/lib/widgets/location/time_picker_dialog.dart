@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:wildrapport/constants/app_colors.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:wildgids/constants/app_colors.dart';
 import 'package:flutter/services.dart';
-import 'package:wildrapport/utils/responsive_utils.dart';
+import 'package:wildgids/utils/responsive_utils.dart';
 
 class TimeInputFormatter extends TextInputFormatter {
   @override
@@ -310,3 +310,4 @@ class _CustomTimePickerDialogState extends State<CustomTimePickerDialog> {
     );
   }
 }
+

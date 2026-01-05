@@ -1,9 +1,9 @@
-import 'package:flutter_test/flutter_test.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
-import 'package:wildrapport/interfaces/reporting/reportable_interface.dart';
-import 'package:wildrapport/models/beta_models/interaction_model.dart';
-import 'package:wildrapport/models/enums/interaction_type.dart';
-import 'package:wildrapport/models/beta_models/report_factory.dart';
+import 'package:wildgids/interfaces/reporting/reportable_interface.dart';
+import 'package:wildgids/models/beta_models/interaction_model.dart';
+import 'package:wildgids/models/enums/interaction_type.dart';
+import 'package:wildgids/models/beta_models/report_factory.dart';
 import '../mock_generator.mocks.dart';
 
 class MockSightingReport extends Mock implements Reportable {}
@@ -238,3 +238,4 @@ void main() {
     // Removing test for timestamp as it's not defined in the Interaction class
   });
 }
+

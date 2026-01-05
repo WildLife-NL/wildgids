@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/managers/state_managers/screen_state_manager.dart';
-import 'package:wildrapport/providers/app_state_provider.dart';
+import 'package:wildgids/managers/state_managers/screen_state_manager.dart';
+import 'package:wildgids/providers/app_state_provider.dart';
 import '../mock_generator.mocks.dart';
 
 // Test widget
@@ -210,3 +210,4 @@ void main() {
     });
   });
 }
+

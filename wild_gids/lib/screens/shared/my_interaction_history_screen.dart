@@ -1,16 +1,15 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/data_managers/my_interaction_api.dart';
-import 'package:wildrapport/data_managers/api_client.dart';
-import 'package:wildrapport/models/api_models/my_interaction.dart';
-import 'package:wildrapport/utils/location_label.dart';
-import 'package:wildrapport/screens/logbook/logbook_screen.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/data_managers/my_interaction_api.dart';
+import 'package:wildgids/data_managers/api_client.dart';
+import 'package:wildgids/models/api_models/my_interaction.dart';
+import 'package:wildgids/utils/location_label.dart';
+import 'package:wildgids/screens/logbook/logbook_screen.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
 import 'package:intl/intl.dart';
-import 'package:wildrapport/screens/shared/interaction_detail_screen.dart';
-import 'package:wildrapport/managers/api_managers/interaction_types_manager.dart';
-import 'package:wildrapport/models/api_models/interaction_type.dart';
+import 'package:wildgids/screens/shared/interaction_detail_screen.dart';
+// Removed filter dependencies
 
 class MyInteractionHistoryScreen extends StatefulWidget {
   const MyInteractionHistoryScreen({super.key});
@@ -23,9 +22,7 @@ class MyInteractionHistoryScreen extends StatefulWidget {
 class _MyInteractionHistoryScreenState
     extends State<MyInteractionHistoryScreen> {
   late Future<List<MyInteraction>> _interactionsFuture;
-  String _selectedFilterLabel = 'Alle';
-  int? _selectedTypeId; // null => All
-  List<InteractionType> _types = const [];
+  // Filter removed: show all interactions unfiltered
 
   @override
   void initState() {
@@ -33,22 +30,6 @@ class _MyInteractionHistoryScreenState
     final apiClient = context.read<ApiClient>();
     final myInteractionApi = MyInteractionApi(apiClient);
     _interactionsFuture = myInteractionApi.getMyInteractions();
-
-    // Fetch interaction types for dynamic filter options
-    _fetchTypes();
-  }
-
-  Future<void> _fetchTypes() async {
-    try {
-      final typesManager = context.read<InteractionTypesManager>();
-      final fetched = await typesManager.ensureFetched();
-      if (!mounted) return;
-      setState(() {
-        _types = fetched;
-      });
-    } catch (_) {
-      // Keep empty list on failure
-    }
   }
 
   @override
@@ -76,62 +57,7 @@ class _MyInteractionHistoryScreenState
               userIconScale: 1.15,
               useFixedText: true,
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: Row(
-                children: [
-                  const Icon(Icons.filter_list, size: 20, color: Colors.black54),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.darkGreen, width: 1.5),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: _selectedFilterLabel,
-                          items: [
-                            const DropdownMenuItem(
-                              value: 'Alle',
-                              child: Text('Alle'),
-                            ),
-                            ..._types.map(
-                              (t) => DropdownMenuItem(
-                                value: t.name,
-                                child: Text(t.name),
-                              ),
-                            ),
-                          ],
-                          onChanged: (val) {
-                            if (val == null) return;
-                            setState(() {
-                              _selectedFilterLabel = val;
-                              if (val == 'Alle') {
-                                _selectedTypeId = null;
-                              } else {
-                                final match = _types.firstWhere(
-                                  (t) => t.name == val,
-                                  orElse: () => InteractionType(
-                                    id: -1,
-                                    name: val,
-                                    description: '',
-                                  ),
-                                );
-                                _selectedTypeId = match.id >= 0 ? match.id : null;
-                              }
-                            });
-                          },
-                          isExpanded: true,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            // Filter UI removed
             Expanded(
               child: FutureBuilder<List<MyInteraction>>(
                 future: _interactionsFuture,
@@ -199,8 +125,7 @@ class _MyInteractionHistoryScreenState
                       ),
                     );
                   } else {
-                    final all = snapshot.data!;
-                    final interactions = _applyFilter(all);
+                    final interactions = snapshot.data!;
                     return ListView.builder(
                       padding: const EdgeInsets.all(16.0),
                       itemCount: interactions.length,
@@ -220,10 +145,7 @@ class _MyInteractionHistoryScreenState
     );
   }
 
-  List<MyInteraction> _applyFilter(List<MyInteraction> items) {
-    if (_selectedTypeId == null) return items; // All
-    return items.where((i) => i.type.id == _selectedTypeId).toList();
-  }
+  // No filtering: all interactions are shown
 }
 
 class _InteractionCard extends StatelessWidget {
@@ -279,7 +201,7 @@ class _InteractionCard extends StatelessWidget {
             style: const TextStyle(fontSize: 12),
           ),
           Text(
-            'Geschatte schade: €${report.estimatedDamage}',
+            'Geschatte schade: â‚¬${report.estimatedDamage}',
             style: const TextStyle(fontSize: 12),
           ),
         ],
@@ -429,3 +351,4 @@ class _InteractionCard extends StatelessWidget {
     );
   }
 }
+

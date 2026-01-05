@@ -1,13 +1,13 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/interfaces/other/permission_interface.dart';
-import 'package:wildrapport/interfaces/state/navigation_state_interface.dart';
-import 'package:wildrapport/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
-import 'package:wildrapport/screens/location/location_screen.dart';
-import 'package:wildrapport/screens/waarneming/animal_list_overview_screen.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/app_bar.dart';
-import 'package:wildrapport/widgets/shared_ui_widgets/bottom_app_bar.dart';
-import 'package:wildrapport/constants/app_colors.dart';
+import 'package:wildgids/interfaces/other/permission_interface.dart';
+import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
+import 'package:wildgids/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
+import 'package:wildgids/screens/location/location_screen.dart';
+import 'package:wildgids/screens/waarneming/animal_list_overview_screen.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/bottom_app_bar.dart';
+import 'package:wildgids/constants/app_colors.dart';
 
 class CollisionDetailsScreen extends StatefulWidget {
   const CollisionDetailsScreen({super.key});
@@ -369,3 +369,4 @@ class _CollisionDetailsScreenState extends State<CollisionDetailsScreen> {
     );
   }
 }
+

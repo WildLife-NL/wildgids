@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
-import 'package:wildrapport/interfaces/data_apis/questionnaire_api_interface.dart';
-import 'package:wildrapport/interfaces/reporting/questionnaire_interface.dart';
-import 'package:wildrapport/models/api_models/questionaire.dart';
-import 'package:wildrapport/widgets/questionnaire/questionnaire_home.dart';
-import 'package:wildrapport/widgets/questionnaire/questionnaire_multiple_choice.dart';
-import 'package:wildrapport/widgets/questionnaire/questionnaire_open_response.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:wildgids/interfaces/data_apis/questionnaire_api_interface.dart';
+import 'package:wildgids/interfaces/reporting/questionnaire_interface.dart';
+import 'package:wildgids/models/api_models/questionaire.dart';
+import 'package:wildgids/widgets/questionnaire/questionnaire_home.dart';
+import 'package:wildgids/widgets/questionnaire/questionnaire_multiple_choice.dart';
+import 'package:wildgids/widgets/questionnaire/questionnaire_open_response.dart';
 
 class QuestionnaireManager implements QuestionnaireInterface {
   final QuestionnaireApiInterface questionnaireAPI;
@@ -42,18 +42,18 @@ class QuestionnaireManager implements QuestionnaireInterface {
     final int length = questionnaire.questions!.length;
 
     // Debug: Log the raw questionnaire data from backend
-    debugPrint("════════════════════════════════════════════════════════════════");
-    debugPrint("[QuestionnaireManager] 📋 QUESTIONNAIRE DETAILS FROM BACKEND");
-    debugPrint("────────────────────────────────────────────────────────────────");
+    debugPrint("â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•");
+    debugPrint("[QuestionnaireManager] ðŸ“‹ QUESTIONNAIRE DETAILS FROM BACKEND");
+    debugPrint("â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€");
     debugPrint("Questionnaire ID: ${questionnaire.id}");
     debugPrint("Questionnaire Name: ${questionnaire.name}");
     debugPrint("Interaction Type: ${questionnaire.interactionType.name}");
     debugPrint("Total Questions: ${questionnaire.questions?.length ?? 0}");
-    debugPrint("════════════════════════════════════════════════════════════════");
+    debugPrint("â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•");
 
     if (questionnaire.questions != null) {
       for (final (index, question) in questionnaire.questions!.indexed) {
-        debugPrint("═══════════════════════════════════════════════");
+        debugPrint("â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•");
         debugPrint("Question ${index + 1}: ${question.text}");
         debugPrint("Question ID: ${question.id}");
         debugPrint("Description: ${question.description}");
@@ -69,7 +69,7 @@ class QuestionnaireManager implements QuestionnaireInterface {
             debugPrint("    Answer Text: ${ans.text}");
           }
         } else {
-          debugPrint("❌ Answers: NULL or EMPTY - Backend did not provide answer choices");
+          debugPrint("âŒ Answers: NULL or EMPTY - Backend did not provide answer choices");
         }
         debugPrint("Open Response Format: '${question.openResponseFormat}'");
         debugPrint("index: $index");
@@ -80,9 +80,9 @@ class QuestionnaireManager implements QuestionnaireInterface {
         }
 
         // Decision logic:
-        // 1. If question has predefined answers → Multiple Choice (radio/checkbox)
-        // 2. If allowOpenResponse is true → Open Response (text field or slider based on format)
-        // 3. Otherwise → Multiple Choice
+        // 1. If question has predefined answers â†’ Multiple Choice (radio/checkbox)
+        // 2. If allowOpenResponse is true â†’ Open Response (text field or slider based on format)
+        // 3. Otherwise â†’ Multiple Choice
 
         final bool hasAnswers =
             question.answers != null && question.answers!.isNotEmpty;
@@ -90,19 +90,19 @@ class QuestionnaireManager implements QuestionnaireInterface {
             question.allowOpenResponse && !hasAnswers;
 
         debugPrint(
-          "🔍 Decision: hasAnswers=$hasAnswers, needsOpenResponse=$needsOpenResponse",
+          "ðŸ” Decision: hasAnswers=$hasAnswers, needsOpenResponse=$needsOpenResponse",
         );
 
         // Warning: Question claims to allow multiple responses but has no answers
         if (question.allowMultipleResponse && !hasAnswers) {
           debugPrint(
-            "⚠️  WARNING: allowMultipleResponse=true but no answers provided by backend. "
+            "âš ï¸  WARNING: allowMultipleResponse=true but no answers provided by backend. "
             "Question will render as open response instead.",
           );
         }
 
         if (needsOpenResponse) {
-          debugPrint("✅ Using QuestionnaireOpenResponse widget");
+          debugPrint("âœ… Using QuestionnaireOpenResponse widget");
           // Open response: could be text field or slider depending on openResponseFormat
           questionnaireWidgets.add(
             QuestionnaireOpenResponse(
@@ -115,7 +115,7 @@ class QuestionnaireManager implements QuestionnaireInterface {
             ),
           );
         } else {
-          debugPrint("✅ Using QuestionnaireMultipleChoice widget");
+          debugPrint("âœ… Using QuestionnaireMultipleChoice widget");
           // Multiple choice: radio buttons or checkboxes
           questionnaireWidgets.add(
             QuestionnaireMultipleChoice(
@@ -128,9 +128,10 @@ class QuestionnaireManager implements QuestionnaireInterface {
             ),
           );
         }
-        debugPrint("═══════════════════════════════════════════════");
+        debugPrint("â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•");
       }
     }
     return questionnaireWidgets;
   }
 }
+

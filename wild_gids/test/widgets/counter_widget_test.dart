@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:wildrapport/widgets/animals/counter_widget.dart';
+import 'package:wildgids/widgets/animals/counter_widget.dart';
 
 void main() {
   group('CounterWidget Tests', () {
@@ -68,7 +68,7 @@ void main() {
       await tester.pump();
 
       // Then decrement back to 0
-      await tester.tap(find.text("−"));
+      await tester.tap(find.text("âˆ’"));
       await tester.pump();
 
       expect(newCount, 0);
@@ -91,7 +91,7 @@ void main() {
         ),
       );
 
-      await tester.tap(find.text("−"));
+      await tester.tap(find.text("âˆ’"));
       await tester.pump();
 
       // Should still be 0, not -1
@@ -99,3 +99,4 @@ void main() {
     });
   });
 }
+

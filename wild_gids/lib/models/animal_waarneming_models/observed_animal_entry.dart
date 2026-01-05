@@ -1,9 +1,9 @@
-import 'package:wildrapport/models/enums/animal_age.dart';
-import 'package:wildrapport/models/enums/animal_gender.dart';
-import 'package:wildrapport/models/enums/animal_condition.dart';
-import 'package:wildrapport/models/enums/animal_age_extensions.dart';
-import 'package:wildrapport/models/enums/animal_gender_extensions.dart';
-import 'package:wildrapport/models/enums/animal_condition_extensions.dart';
+﻿import 'package:wildgids/models/enums/animal_age.dart';
+import 'package:wildgids/models/enums/animal_gender.dart';
+import 'package:wildgids/models/enums/animal_condition.dart';
+import 'package:wildgids/models/enums/animal_age_extensions.dart';
+import 'package:wildgids/models/enums/animal_gender_extensions.dart';
+import 'package:wildgids/models/enums/animal_condition_extensions.dart';
 
 class ObservedAnimalEntry {
   final AnimalAge age;
@@ -29,3 +29,4 @@ class ObservedAnimalEntry {
     };
   }
 }
+

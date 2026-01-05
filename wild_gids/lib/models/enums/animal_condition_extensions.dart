@@ -1,4 +1,4 @@
-import 'package:wildrapport/models/enums/animal_condition.dart';
+﻿import 'package:wildgids/models/enums/animal_condition.dart';
 
 extension AnimalConditionExtensions on AnimalCondition {
   /// Label shown to the user (Dutch UI)
@@ -33,3 +33,4 @@ extension AnimalConditionExtensions on AnimalCondition {
     }
   }
 }
+

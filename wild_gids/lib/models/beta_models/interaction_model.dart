@@ -1,5 +1,5 @@
-import 'package:wildrapport/interfaces/reporting/reportable_interface.dart';
-import 'package:wildrapport/models/beta_models/report_factory.dart';
+﻿import 'package:wildgids/interfaces/reporting/reportable_interface.dart';
+import 'package:wildgids/models/beta_models/report_factory.dart';
 import '../enums/interaction_type.dart';
 
 class Interaction {
@@ -41,3 +41,4 @@ class Interaction {
     );
   }
 }
+

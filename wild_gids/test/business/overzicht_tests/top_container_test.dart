@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
-import 'package:wildrapport/interfaces/other/overzicht_interface.dart';
-import 'package:wildrapport/widgets/overzicht/top_container.dart';
+import 'package:wildgids/interfaces/other/overzicht_interface.dart';
+import 'package:wildgids/widgets/overzicht/top_container.dart';
 
 //This approach:
 //Finds the TopContainer widget
@@ -92,3 +92,4 @@ void main() {
     });
   });
 }
+

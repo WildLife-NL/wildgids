@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:wildrapport/interfaces/other/overzicht_interface.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:wildgids/interfaces/other/overzicht_interface.dart';
 
 class OverzichtManager implements OverzichtInterface {
   final List<VoidCallback> _listeners = [];
@@ -46,3 +46,4 @@ class OverzichtManager implements OverzichtInterface {
     }
   }
 }
+

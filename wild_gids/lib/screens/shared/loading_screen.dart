@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'package:wildrapport/constants/app_colors.dart';
-import 'package:wildrapport/constants/asset_preloader.dart';
-import 'package:wildrapport/utils/responsive_utils.dart';
+import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/constants/asset_preloader.dart';
+import 'package:wildgids/utils/responsive_utils.dart';
 
 class LoadingScreen extends StatefulWidget {
   final VoidCallback? onLoadingComplete;
@@ -89,3 +89,4 @@ class _LoadingScreenState extends State<LoadingScreen>
     );
   }
 }
+

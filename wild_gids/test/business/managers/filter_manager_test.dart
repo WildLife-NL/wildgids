@@ -1,8 +1,8 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:wildrapport/interfaces/filters/filter_interface.dart';
-import 'package:wildrapport/managers/filtering_system/filter_manager.dart';
-import 'package:wildrapport/models/animal_waarneming_models/animal_model.dart';
-import 'package:wildrapport/models/enums/filter_type.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:wildgids/interfaces/filters/filter_interface.dart';
+import 'package:wildgids/managers/filtering_system/filter_manager.dart';
+import 'package:wildgids/models/animal_waarneming_models/animal_model.dart';
+import 'package:wildgids/models/enums/filter_type.dart';
 
 void main() {
   late FilterInterface filterManager;
@@ -255,3 +255,4 @@ void main() {
     });
   });
 }
+
