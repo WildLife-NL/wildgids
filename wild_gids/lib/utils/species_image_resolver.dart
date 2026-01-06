@@ -22,6 +22,8 @@ class SpeciesImageResolver {
     'konik': 'Konikpaard',
     'konikpaard': 'Konikpaard',
     'shetland pony': 'Shetland_pony',
+    'pony': 'Shetland_pony',
+    'ponys': 'Shetland_pony',
     'galloway': 'Galloway',
     'wisent': 'Wisent',
     'tauros': 'Tauros',

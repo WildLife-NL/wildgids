@@ -2053,10 +2053,8 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                         strokeWidth: 2,
                                       ),
                                     )
-                                    : Icon(
-                                      _showTrackingHistory
-                                          ? Icons.timeline
-                                          : Icons.history,
+                                    : const Icon(
+                                      Icons.timeline,
                                       color: Colors.white,
                                     ),
                             onPressed:
