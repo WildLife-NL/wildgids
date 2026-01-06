@@ -958,7 +958,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                     children: [
                                       Expanded(
                                         child: Text(
-                                          'Filter Map Icons',
+                                          'Kaartpictogrammen filteren',
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
                                             color: Colors.white,
@@ -1016,7 +1016,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                   ),
                                 ),
                                 _buildFilterCheckbox(
-                                  'New (< 24 hours)',
+                                  'Nieuw (< 24 uur)',
                                   _showAnimalsNew,
                                   (v) => setDialogState(
                                     () => setState(
@@ -1026,7 +1026,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                   Icons.fiber_new,
                                 ),
                                 _buildFilterCheckbox(
-                                  'Recent (24h - 1 week)',
+                                  'Recent (24u - 1 week)',
                                   _showAnimalsMedium,
                                   (v) => setDialogState(
                                     () => setState(
@@ -1036,7 +1036,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                   Icons.access_time,
                                 ),
                                 _buildFilterCheckbox(
-                                  'Old (> 1 week)',
+                                  'Oud (> 1 week)',
                                   _showAnimalsOld,
                                   (v) => setDialogState(
                                     () => setState(
@@ -1071,7 +1071,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                   ),
                                 ),
                                 _buildFilterCheckbox(
-                                  'New (< 24 hours)',
+                                  'Nieuw (< 24 uur)',
                                   _showDetectionsNew,
                                   (v) => setDialogState(
                                     () => setState(
@@ -1081,7 +1081,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                   Icons.fiber_new,
                                 ),
                                 _buildFilterCheckbox(
-                                  'Recent (24h - 1 week)',
+                                  'Recent (24u - 1 week)',
                                   _showDetectionsMedium,
                                   (v) => setDialogState(
                                     () => setState(
@@ -1091,7 +1091,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                   Icons.access_time,
                                 ),
                                 _buildFilterCheckbox(
-                                  'Old (> 1 week)',
+                                  'Oud (> 1 week)',
                                   _showDetectionsOld,
                                   (v) => setDialogState(
                                     () => setState(
@@ -1126,7 +1126,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                   ),
                                 ),
                                 _buildFilterCheckbox(
-                                  'New (< 24 hours)',
+                                  'Nieuw (< 24 uur)',
                                   _showInteractionsNew,
                                   (v) => setDialogState(
                                     () => setState(
@@ -1136,7 +1136,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                   Icons.fiber_new,
                                 ),
                                 _buildFilterCheckbox(
-                                  'Recent (24h - 1 week)',
+                                  'Recent (24u - 1 week)',
                                   _showInteractionsMedium,
                                   (v) => setDialogState(
                                     () => setState(
@@ -1146,7 +1146,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                   Icons.access_time,
                                 ),
                                 _buildFilterCheckbox(
-                                  'Old (> 1 week)',
+                                  'Oud (> 1 week)',
                                   _showInteractionsOld,
                                   (v) => setDialogState(
                                     () => setState(
@@ -1182,7 +1182,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                             });
                                           });
                                         },
-                                        child: const Text('Alles resetten'),
+                                        child: const Text('Alles herstellen'),
                                       ),
                                     ),
                                   ],

@@ -322,7 +322,7 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
         const Spacer(),
         BrownButton(
           model: LoginManager.createButtonModel(
-            text: 'VerifiÃ«ren',
+            text: 'Verifieren',
             isLoginButton: true,
           ),
           onPressed: _verifyCode,

@@ -430,16 +430,16 @@ class AnimalListTableState extends State<AnimalListTable> {
   }
 
   Widget _buildHeaderCell(AnimalGender gender) {
-    String icon;
+    String label;
     switch (gender) {
       case AnimalGender.vrouwelijk:
-        icon = 'â™€';
+        label = 'Femail';
         break;
       case AnimalGender.mannelijk:
-        icon = 'â™‚';
+        label = 'Male';
         break;
       case AnimalGender.onbekend:
-        icon = '?';
+        label = '?';
         break;
     }
 
@@ -451,8 +451,8 @@ class AnimalListTableState extends State<AnimalListTable> {
         decoration: const BoxDecoration(color: Colors.white),
         child: Center(
           child: Text(
-            icon,
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            label,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
         ),
       ),

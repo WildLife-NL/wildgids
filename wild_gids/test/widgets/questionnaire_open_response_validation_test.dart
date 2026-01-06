@@ -226,9 +226,14 @@ Map<String, int>? _extractRange(String pattern) {
 }
 
 String? _validateText(String text, String? regex) {
+  // No regex means no validation
+  if (regex == null) {
+    return null;
+  }
+
   // Skip validation for numeric range patterns (first!)
   // Sliders can return single digits like "1", "2", etc.
-  if (_isNumericRange(regex!)) {
+  if (_isNumericRange(regex)) {
     return null;
   }
 
@@ -242,8 +247,8 @@ String? _validateText(String text, String? regex) {
     return null;
   }
 
-  // No regex means no validation
-  if (regex == null || regex.isEmpty) {
+  // Empty regex means no validation
+  if (regex.isEmpty) {
     return null;
   }
 

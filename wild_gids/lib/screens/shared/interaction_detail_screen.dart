@@ -14,6 +14,38 @@ class InteractionDetailScreen extends StatelessWidget {
     return DateFormat('dd MMM yyyy, HH:mm').format(dateTime);
   }
 
+  String _localizeType(String type) {
+    switch (type.toLowerCase()) {
+      case 'sighting':
+        return 'Waarneming';
+      case 'damage':
+        return 'Schade';
+      case 'collision':
+        return 'Aanrijding';
+      default:
+        return type;
+    }
+  }
+
+  String _localizeBehaviour(String behaviour) {
+    // Very basic mapping to Dutch; fallback to original text
+    final lower = behaviour.toLowerCase();
+    if (lower.contains('nocturnal')) return 'Nachtactief';
+    if (lower.contains('diurnal')) return 'Dagactief';
+    if (lower.contains('omnivore')) return 'Alleseter';
+    if (lower.contains('herbivore')) return 'Planteneter';
+    if (lower.contains('carnivore')) return 'Vleeseter';
+    return behaviour;
+  }
+
+  String _localizeAdvice(String advice) {
+    final lower = advice.toLowerCase();
+    if (lower.contains('keep distance')) return 'Houd afstand';
+    if (lower.contains('do not feed')) return 'Niet voeren';
+    if (lower.contains('report to authorities')) return 'Meld bij autoriteiten';
+    return advice;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -54,7 +86,7 @@ class InteractionDetailScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        interaction.type.name,
+                        _localizeType(interaction.type.name),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 14,
@@ -89,10 +121,10 @@ class InteractionDetailScreen extends StatelessWidget {
                         if (interaction.species.behaviour.isNotEmpty)
                           _buildInfoRow(
                             'Gedrag',
-                            interaction.species.behaviour,
+                            _localizeBehaviour(interaction.species.behaviour),
                           ),
                         if (interaction.species.advice.isNotEmpty)
-                          _buildInfoRow('Advies', interaction.species.advice),
+                          _buildInfoRow('Advies', _localizeAdvice(interaction.species.advice)),
                         if (interaction.species.roleInNature.isNotEmpty)
                           _buildInfoRow(
                             'Rol in de natuur',
@@ -166,7 +198,6 @@ class InteractionDetailScreen extends StatelessWidget {
                       title: 'Gebruiker',
                       children: [
                         _buildInfoRow('Naam', interaction.user.name),
-                        _buildInfoRow('ID', interaction.user.id),
                       ],
                     ),
 
