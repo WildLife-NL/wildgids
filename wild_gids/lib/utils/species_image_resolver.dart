@@ -9,11 +9,11 @@ class SpeciesImageResolver {
     'ree': 'ree',
     'damhert': 'Damhert',
     'edelhert': 'Edelhert',
-    'bever': 'Bever',
+    'bever': 'bever',
     'eekhoorn': 'eekhoorn',
     'konijn': 'konijn',
     'haas': 'haas',
-    'das': 'Das',
+    'das': 'das',
     'steenmarter': 'steenmarter',
     'boommarter': 'Boommarter',
     'bunzing': 'Bunzing',
@@ -49,11 +49,11 @@ class SpeciesImageResolver {
 
   // Map canonical base to the exact filename base used in real_animal_pics_no_bg
   static final Map<String, String> _realFileBase = {
-    'Bever': 'bever',
+    'bever': 'bever',
     'Boommarter': 'Boommarter',
     'Bunzing': 'Bunzing',
     'Damhert': 'Damhert',
-    'Das': 'das',
+    'das': 'das',
     'Edelhert': 'Edelhert',
     'eekhoorn': 'eekhoorn',
     'egel': 'egel',

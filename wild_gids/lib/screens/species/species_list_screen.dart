@@ -370,13 +370,26 @@ class _SpeciesList extends StatelessWidget {
               final path = clicked
                   ? SpeciesImageResolver.realForCommonName(commonName)
                   : SpeciesImageResolver.drawingForCommonName(commonName);
-              if (path == null) return const Icon(Icons.pets, color: Colors.white, size: 28);
+              if (path == null) {
+                final fallback = SpeciesImageResolver.drawingForCommonName(commonName);
+                if (fallback != null) {
+                  return Padding(
+                    padding: const EdgeInsets.all(6.0),
+                    child: Image.asset(fallback, fit: BoxFit.contain),
+                  );
+                }
+                return const Icon(Icons.pets, color: Colors.white, size: 28);
+              }
               return Padding(
                 padding: const EdgeInsets.all(6.0),
                 child: Image.asset(
                   path,
                   fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => const Icon(Icons.pets, color: Colors.white, size: 28),
+                  errorBuilder: (_, __, ___) {
+                    final fallback = SpeciesImageResolver.drawingForCommonName(commonName);
+                    if (fallback != null) return Image.asset(fallback, fit: BoxFit.contain);
+                    return const Icon(Icons.pets, color: Colors.white, size: 28);
+                  },
                 ),
               );
             },
@@ -410,6 +423,46 @@ class _SpeciesDetailScreenState extends State<SpeciesDetailScreen> {
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  void _showImageViewer(BuildContext context, String path) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Sluiten',
+      barrierColor: Colors.black87,
+      transitionDuration: const Duration(milliseconds: 200),
+      pageBuilder: (ctx, animation, secondaryAnimation) {
+        return GestureDetector(
+          onTap: () => Navigator.of(ctx).pop(),
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: InteractiveViewer(
+                  panEnabled: true,
+                  minScale: 0.8,
+                  maxScale: 5.0,
+                  child: Center(
+                    child: Image.asset(
+                      path,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 24,
+                right: 24,
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white, size: 28),
+                  onPressed: () => Navigator.of(ctx).pop(),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -463,16 +516,18 @@ class _SpeciesDetailScreenState extends State<SpeciesDetailScreen> {
                         height: 72,
                         color: Colors.white.withOpacity(0.2),
                         child: FutureBuilder<bool>(
-                            future: SpeciesClickTracker.isClicked(species.id),
-                            builder: (context, snapshot) {
-                              final clicked = snapshot.data ?? false;
-                              final path = clicked
-                                  ? SpeciesImageResolver.realForCommonName(species.commonName)
-                                  : headerImageDrawing;
-                              if (path == null) {
-                                return const Center(child: Icon(Icons.pets, color: Colors.white, size: 36));
-                              }
-                              return Padding(
+                          future: SpeciesClickTracker.isClicked(species.id),
+                          builder: (context, snapshot) {
+                            final clicked = snapshot.data ?? false;
+                            final path = clicked
+                                ? SpeciesImageResolver.realForCommonName(species.commonName)
+                                : headerImageDrawing;
+                            if (path == null) {
+                              return const Center(child: Icon(Icons.pets, color: Colors.white, size: 36));
+                            }
+                            return GestureDetector(
+                              onTap: () => _showImageViewer(context, path),
+                              child: Padding(
                                 padding: const EdgeInsets.all(6.0),
                                 child: Image.asset(
                                   path,
@@ -481,9 +536,10 @@ class _SpeciesDetailScreenState extends State<SpeciesDetailScreen> {
                                     child: Icon(Icons.pets, color: Colors.white, size: 36),
                                   ),
                                 ),
-                              );
-                            },
-                          )
+                              ),
+                            );
+                          },
+                        )
                       ),
                     ),
                   ),
