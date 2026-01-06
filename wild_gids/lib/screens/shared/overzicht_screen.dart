@@ -9,6 +9,7 @@ import 'package:wildgids/screens/shared/rapporteren.dart';
 import 'package:wildgids/screens/logbook/logbook_screen.dart';
 import 'package:wildgids/providers/app_state_provider.dart';
 import 'package:wildgids/screens/location/kaart_overview_screen.dart';
+import 'package:wildgids/screens/game/animals_quiz_screen.dart';
 import 'package:wildgids/screens/species/species_list_screen.dart';
 
 class OverzichtScreen extends StatefulWidget {
@@ -66,14 +67,14 @@ class _OverzichtScreenState extends State<OverzichtScreen> {
     final navigationManager = context.read<NavigationStateInterface>();
     final screenSize = MediaQuery.of(context).size;
 
-    final double topContainerHeight = (screenSize.height * 0.4).clamp(
-      180.0,
-      300.0,
+    final double topContainerHeight = (screenSize.height * 0.36).clamp(
+      170.0,
+      280.0,
     );
     final double welcomeFontSize = (screenSize.width * 0.045).clamp(14.0, 24.0);
     final double usernameFontSize = (screenSize.width * 0.06).clamp(18.0, 28.0);
-    final double buttonHeight = (screenSize.height * 0.08).clamp(48.0, 64.0);
-    final double spacing = (screenSize.height * 0.02).clamp(8.0, 24.0);
+    final double buttonHeight = (screenSize.height * 0.07).clamp(44.0, 56.0);
+    final double spacing = (screenSize.height * 0.018).clamp(6.0, 18.0);
     final double iconSize = (screenSize.width * 0.14).clamp(28.0, 56.0);
     final double buttonFontSize = (screenSize.width * 0.045).clamp(14.0, 22.0);
 
@@ -118,7 +119,8 @@ class _OverzichtScreenState extends State<OverzichtScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        SizedBox(height: spacing * 3.8),
+                        // Move buttons higher by reducing top spacer
+                        SizedBox(height: spacing * 2.0),
                         ActionButtons(
                           buttons: [
                             (
@@ -132,6 +134,20 @@ class _OverzichtScreenState extends State<OverzichtScreen> {
                                     .pushForward(
                                       context,
                                       const KaartOverviewScreen(),
+                                    );
+                              },
+                            ),
+                            (
+                              text: 'Dierenquiz',
+                              icon: Icons.quiz,
+                              imagePath: null,
+                              key: Key('dierenquiz_button'),
+                              onPressed: () {
+                                context
+                                    .read<NavigationStateInterface>()
+                                    .pushForward(
+                                      context,
+                                      const AnimalsQuizScreen(),
                                     );
                               },
                             ),
@@ -204,13 +220,14 @@ class _OverzichtScreenState extends State<OverzichtScreen> {
                             ),
                           ],
                           iconSize: iconSize,
-                          verticalPadding: spacing / 2,
-                          horizontalPadding: spacing,
-                          buttonSpacing: spacing * 3,
+                          verticalPadding: spacing / 3,
+                          horizontalPadding: spacing * 0.8,
+                          // slightly more spacing between buttons
+                          buttonSpacing: spacing * 2,
                           buttonHeight: buttonHeight,
                           buttonFontSize: buttonFontSize,
                         ),
-                        SizedBox(height: spacing * 1.5),
+                        SizedBox(height: spacing),
                       ],
                     ),
                   ),
