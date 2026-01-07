@@ -1,6 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:wildgids/constants/mock_location.dart';
 
 // R8
 import 'package:wildgids/models/api_models/interaction_query_result.dart';
@@ -484,14 +485,15 @@ class MapProvider extends ChangeNotifier {
   /// Falls back to getting a new fix if needed.
   Future<void> _sendTrackingNow() async {
     try {
-      final pos =
-          currentPosition ??
-          await Geolocator.getCurrentPosition(
-            locationSettings: const LocationSettings(
-              accuracy: LocationAccuracy.medium,
-              timeLimit: Duration(seconds: 7),
-            ),
-          );
+      final pos = currentPosition ??
+          (MockLocation.enabled
+              ? MockLocation.position()
+              : await Geolocator.getCurrentPosition(
+                  locationSettings: const LocationSettings(
+                    accuracy: LocationAccuracy.medium,
+                    timeLimit: Duration(seconds: 7),
+                  ),
+                ));
       await sendTrackingPingFromPosition(pos);
     } catch (e) {
       debugPrint('[MapProvider] tracking ping skipped: $e');

@@ -4,6 +4,7 @@ import 'package:wildgids/managers/map/location_map_manager.dart';
 import 'package:wildgids/models/beta_models/sighting_report_model.dart';
 import 'package:wildgids/models/enums/report_type.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:wildgids/constants/mock_location.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wildgids/screens/login/login_screen.dart';
@@ -124,12 +125,14 @@ class AppStateProvider with ChangeNotifier {
 
   Future<void> updateLocationCache() async {
     try {
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          timeLimit: Duration(seconds: 5),
-        ),
-      );
+      final position = MockLocation.enabled
+          ? MockLocation.position()
+          : await Geolocator.getCurrentPosition(
+              locationSettings: const LocationSettings(
+                accuracy: LocationAccuracy.high,
+                timeLimit: Duration(seconds: 5),
+              ),
+            );
 
       final locationService = LocationMapManager();
       final address = await locationService.getAddressFromPosition(position);

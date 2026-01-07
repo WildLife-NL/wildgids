@@ -21,6 +21,7 @@ import 'package:wildgids/interfaces/data_apis/tracking_api_interface.dart';
 import 'package:wildgids/config/app_config.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:wildgids/widgets/location/location_sharing_indicator.dart';
+import 'package:wildgids/constants/mock_location.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
@@ -128,6 +129,8 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
               fm.InteractiveFlag.rotate, // Enable rotation
         ),
         onMapEvent: (evt) {
+          // Ignore events until the map reports ready to avoid null camera errors
+          if (!_mapReady) return;
           final mp = context.read<MapProvider>();
           final currentZoom = mp.mapController.camera.zoom;
           final isProgrammatic = evt.source == fm.MapEventSource.mapController;
@@ -343,6 +346,23 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
   }
 
   void _startFollowingMe() {
+    // Use a local provider reference to avoid using late _mp before it's set
+    final mp = context.read<MapProvider>();
+    // If mocking is enabled, set a fixed position and skip live updates
+    if (MockLocation.enabled) {
+      final pos = MockLocation.position();
+      // Update provider with mocked position
+      mp.updatePosition(pos, mp.currentAddress);
+      // Center map on mocked position if initialized
+      if (_mapReady && mp.isInitialized) {
+        final z = mp.mapController.camera.zoom;
+        mp.mapController.move(LatLng(pos.latitude, pos.longitude), z);
+      } else {
+        _pendingCenter = LatLng(pos.latitude, pos.longitude);
+        _pendingZoom = _initialZoom;
+      }
+      return;
+    }
     const settings = LocationSettings(
       accuracy: LocationAccuracy.best,
       distanceFilter: 5,
@@ -365,8 +385,8 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
         '${pos.longitude.toStringAsFixed(6)}  acc=$accStr m',
       );
 
-      // use cached provider, not context.read(...)
-      await _mp.updatePosition(pos, _mp.currentAddress);
+      // Update provider with the latest position
+      await mp.updatePosition(pos, mp.currentAddress);
 
       // ðŸ”” Send tracking ping on position update - only if tracking is enabled
       final appStateProvider = context.read<AppStateProvider>();
@@ -390,9 +410,9 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
       // âœ… keep center on user only when following AND tracking is enabled
       if (_followUser &&
           appStateProvider.isLocationTrackingEnabled &&
-          _mp.isInitialized) {
-        final z = _mp.mapController.camera.zoom;
-        _mp.mapController.move(LatLng(pos.latitude, pos.longitude), z);
+          mp.isInitialized) {
+        final z = mp.mapController.camera.zoom;
+        mp.mapController.move(LatLng(pos.latitude, pos.longitude), z);
       }
     });
   }
@@ -884,7 +904,8 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
   void _applyPendingCamera() {
     if (!_mapReady || _pendingCenter == null || _pendingZoom == null) return;
     try {
-      _mp.mapController.move(_pendingCenter!, _pendingZoom!);
+      final mp = context.read<MapProvider>();
+      mp.mapController.move(_pendingCenter!, _pendingZoom!);
       _nudgeMapToTriggerTiles();
     } catch (e) {
       debugPrint('[Map] Failed to apply pending camera: $e');
@@ -893,16 +914,17 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
 
   // Some devices delay tile requests until the first manual interaction; tiny nudge forces tiles to start loading immediately
   void _nudgeMapToTriggerTiles() {
-    if (!_mp.isInitialized) return;
-    final cam = _mp.mapController.camera;
+    final mp = context.read<MapProvider>();
+    if (!mp.isInitialized) return;
+    final cam = mp.mapController.camera;
     final LatLng c = cam.center;
     const double delta = 0.000001; // ~0.1 m, invisible but triggers refresh
     try {
-      _mp.mapController.move(
+      mp.mapController.move(
         LatLng(c.latitude + delta, c.longitude + delta),
         cam.zoom,
       );
-      _mp.mapController.move(c, cam.zoom);
+      mp.mapController.move(c, cam.zoom);
     } catch (e) {
       debugPrint('[Map] Nudge failed: $e');
     }
@@ -2158,10 +2180,15 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
             target ??= await Geolocator.getLastKnownPosition();
 
             if (target != null) {
-              mp.mapController.move(
-                LatLng(target.latitude, target.longitude),
-                currentZoom,
-              );
+              if (_mapReady && mp.isInitialized) {
+                mp.mapController.move(
+                  LatLng(target.latitude, target.longitude),
+                  currentZoom,
+                );
+              } else {
+                _pendingCenter = LatLng(target.latitude, target.longitude);
+                _pendingZoom = currentZoom;
+              }
             } else {
               if (!mounted) return;
               ScaffoldMessenger.of(context)
@@ -2203,10 +2230,15 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
               }
 
               if (_followUser && appStateProvider.isLocationTrackingEnabled) {
-                mp.mapController.move(
-                  LatLng(fresh.latitude, fresh.longitude),
-                  currentZoom,
-                );
+                if (_mapReady && mp.isInitialized) {
+                  mp.mapController.move(
+                    LatLng(fresh.latitude, fresh.longitude),
+                    currentZoom,
+                  );
+                } else {
+                  _pendingCenter = LatLng(fresh.latitude, fresh.longitude);
+                  _pendingZoom = currentZoom;
+                }
               }
               _queueFetch();
             });

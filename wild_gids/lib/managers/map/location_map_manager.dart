@@ -6,6 +6,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:wildgids/interfaces/map/location_service_interface.dart';
 import 'package:wildgids/interfaces/map/map_service_interface.dart';
 import 'package:wildgids/interfaces/map/map_state_interface.dart';
+import 'package:wildgids/constants/mock_location.dart';
 
 class LocationMapManager
     implements
@@ -80,6 +81,10 @@ class LocationMapManager
   @override
   Future<Position?> determinePosition() async {
     try {
+      if (MockLocation.enabled) {
+        // Return mocked position when enabled, bypassing real services.
+        return MockLocation.position();
+      }
       if (!await Geolocator.isLocationServiceEnabled()) {
         debugPrint('Location services are disabled');
         return null;

@@ -66,12 +66,7 @@ flutter:
     - assets/loaders/loading_paw.json
     - assets/LogoWildlifeNL.png
     - assets/LogoHeadWildlifeNL.png
-    - assets/wolf.png
-    - assets/fox.png
-    - assets/marten.png
-    - assets/deer.png
-    - assets/beer.png
-    - assets/tiger.png
+    # Removed non-existent root-level animal PNGs (use assets/animals/)
     - assets/gifs/login.gif
     - assets/gifs/thankyou.gif
     - assets/icons/marked_earth.png
@@ -89,9 +84,8 @@ flutter:
     - assets/animals/
     - assets/black_icons_animal/
     - assets/real_animal_pics_no_bg/
-    - assets/icons/category/evenhoevigen.png
-    - assets/icons/category/knaagdieren.png
-    - assets/icons/category/roofdieren.png
+    # Use correct casing for Category folder
+    - assets/icons/Category/
     - assets/icons/questionnaire/arrow.png
     - assets/icons/questionnaire/arrow_forward.png
     - assets/icons/questionnaire/save.png
@@ -107,7 +101,7 @@ flutter:
     - assets/icons/possesion/gewassen/tulip_2.svg
     - assets/icons/possesion/gewassen/wheat.svg
     - assets/location/location_icon.png
-    - assets/
+    # Avoid bundling entire assets/ directory to reduce size
     - .env
 
   fonts:
