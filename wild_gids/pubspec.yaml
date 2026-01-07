@@ -66,10 +66,7 @@ flutter:
     - assets/loaders/loading_paw.json
     - assets/LogoWildlifeNL.png
     - assets/LogoHeadWildlifeNL.png
-<<<<<<< HEAD
-    # Removed non-existent root-level animal PNGs (use assets/animals/)
-=======
->>>>>>> 03b378f7e900f70203908487610cca43c6b2bfd4
+  # Removed non-existent root-level animal PNGs (use assets/animals/)
     - assets/gifs/login.gif
     - assets/gifs/thankyou.gif
     - assets/icons/marked_earth.png
@@ -104,10 +101,7 @@ flutter:
     - assets/icons/possesion/gewassen/tulip_2.svg
     - assets/icons/possesion/gewassen/wheat.svg
     - assets/location/location_icon.png
-<<<<<<< HEAD
-    # Avoid bundling entire assets/ directory to reduce size
-=======
->>>>>>> 03b378f7e900f70203908487610cca43c6b2bfd4
+  # Avoid bundling entire assets/ directory to reduce size
     - .env
 
   fonts:
