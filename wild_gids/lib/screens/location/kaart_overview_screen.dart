@@ -2175,6 +2175,25 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
             // Preserve current zoom level
             final currentZoom = mp.mapController.camera.zoom;
 
+            // If mocking is enabled, center to the mocked Utrecht position and skip real GPS
+            if (MockLocation.enabled) {
+              final pos = MockLocation.position();
+              if (_mapReady && mp.isInitialized) {
+                mp.mapController.move(
+                  LatLng(pos.latitude, pos.longitude),
+                  currentZoom,
+                );
+              } else {
+                _pendingCenter = LatLng(pos.latitude, pos.longitude);
+                _pendingZoom = currentZoom;
+              }
+              await mp.resetToCurrentLocation(pos, 'Mock locatie');
+              // Optionally send a tracking ping using the mocked position
+              await mp.sendTrackingPingFromPosition(pos);
+              _queueFetch();
+              return;
+            }
+
             // pick a quick target
             Position? target = mp.currentPosition ?? mp.selectedPosition;
             target ??= await Geolocator.getLastKnownPosition();
