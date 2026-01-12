@@ -1,4 +1,5 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_map/flutter_map.dart' as fm;
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
@@ -203,6 +204,12 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
       }
       _lastNoticeKey = key;
 
+      // On mobile, do not show in-map overlays; rely on OS notifications only
+      if (!kIsWeb) {
+        debugPrint('[Kaart] Skipping in-map overlay on mobile platforms');
+        return;
+      }
+
       debugPrint('[Kaart] Scheduling popup dialog to show');
 
       // Schedule the dialog to show after the current frame completes
@@ -215,7 +222,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
           if (!mounted) return;
 
           try {
-            debugPrint('[Kaart] ðŸŽ‰ Showing message-style popup: "${n.text}"');
+            debugPrint('[Kaart] ðŸŽ‰ Showing message-style popup: "${n.text}" (web only)');
             showDialog(
               context: context,
               barrierDismissible: true,
@@ -331,7 +338,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
         ..clearSnackBars()
         ..showSnackBar(
           const SnackBar(
-            content: Text('Testmelding verstuurd (overlay + notificatie)'),
+            content: Text('Testmelding verstuurd (notificatie)'),
             duration: Duration(seconds: 2),
           ),
         );
