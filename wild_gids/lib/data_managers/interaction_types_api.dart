@@ -15,8 +15,16 @@ class InteractionTypesApi implements InteractionTypesApiInterface {
     // empty list on non-200/204 responses.
     const path = 'interactionTypes/';
     try {
-      final res = await apiClient.get(path, authenticated: true);
+      // First try authenticated (if token exists, header will be included).
+      var res = await apiClient.get(path, authenticated: true);
       debugPrint('[InteractionTypesApi] GET $path => ${res.statusCode}');
+      if (res.statusCode == 401 || res.statusCode == 403) {
+        // If unauthorized, retry without auth in case the endpoint allows anonymous access.
+        debugPrint('[InteractionTypesApi] Unauthorized, retrying without auth');
+        res = await apiClient.get(path, authenticated: false);
+        debugPrint('[InteractionTypesApi] (retry) GET $path => ${res.statusCode}');
+      }
+
       if (res.statusCode == 200) {
         final body = res.body.trim();
         if (body.isEmpty) return const [];

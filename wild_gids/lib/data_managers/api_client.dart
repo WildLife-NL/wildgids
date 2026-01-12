@@ -88,7 +88,12 @@ class ApiClient {
     if (authenticated) {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString(_tokenKey);
-      defaultHeaders[HttpHeaders.authorizationHeader] = 'Bearer $token';
+      // Only include Authorization header if we actually have a token.
+      // Some endpoints allow anonymous access, and sending "Bearer null"
+      // or an empty token may cause unintended 401s.
+      if (token != null && token.isNotEmpty) {
+        defaultHeaders[HttpHeaders.authorizationHeader] = 'Bearer $token';
+      }
     }
     if (headers != null) {
       defaultHeaders.addAll(headers);
