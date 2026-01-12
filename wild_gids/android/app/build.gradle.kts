@@ -50,6 +50,11 @@ android {
                 storePassword = keystoreProperties["storePassword"] as String
                 keyAlias = keystoreProperties["keyAlias"] as String
                 keyPassword = keystoreProperties["keyPassword"] as String
+                // Ensure compatibility with older Android versions/installers
+                // by enabling both v1 and v2/v3 signing schemes.
+                enableV1Signing = true
+                enableV2Signing = true
+                enableV3Signing = true
             }
         }
     }
@@ -57,8 +62,9 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName(if (hasReleaseKeystore) "release" else "debug")
-            isMinifyEnabled = true
-            isShrinkResources = true
+            // Keep release build simple to avoid packaging issues during install
+            isMinifyEnabled = false
+            isShrinkResources = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android.txt"),
                 "proguard-rules.pro"
