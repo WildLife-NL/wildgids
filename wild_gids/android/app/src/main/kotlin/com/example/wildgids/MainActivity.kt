@@ -1,4 +1,4 @@
-package com.example.wildrapport
+package com.example.wildgids
 
 import io.flutter.embedding.android.FlutterActivity
 import android.os.Bundle
