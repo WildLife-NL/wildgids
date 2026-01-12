@@ -215,9 +215,10 @@ class _SpeciesTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      onPressed: () async {
-        await SpeciesClickTracker.markClicked(species.id);
-        await Navigator.of(context).push(
+          onPressed: () async {
+            await SpeciesClickTracker.markClicked(species.id);
+            if (!context.mounted) return;
+            await Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => SpeciesDetailScreen(species: species)),
         );
         if (onChanged != null) onChanged!();
@@ -304,6 +305,7 @@ class _SpeciesList extends StatelessWidget {
           child: InkWell(
             onTap: () async {
               await SpeciesClickTracker.markClicked(s.id);
+              if (!context.mounted) return;
               await Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => SpeciesDetailScreen(species: s)),
               );
@@ -362,7 +364,7 @@ class _SpeciesList extends StatelessWidget {
         height: 56,
         color: AppColors.darkGreen,
         child: Container(
-          decoration: BoxDecoration(color: Colors.white.withOpacity(0.12), borderRadius: BorderRadius.circular(8)),
+          decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
           child: FutureBuilder<bool>(
             future: SpeciesClickTracker.isClicked(speciesId),
             builder: (context, snapshot) {
@@ -514,7 +516,7 @@ class _SpeciesDetailScreenState extends State<SpeciesDetailScreen> {
                       child: Container(
                         width: 72,
                         height: 72,
-                        color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                         child: FutureBuilder<bool>(
                           future: SpeciesClickTracker.isClicked(species.id),
                           builder: (context, snapshot) {
