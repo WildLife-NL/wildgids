@@ -83,13 +83,20 @@ class _AnimalsScreenState extends State<AnimalsScreen>
         category: _selectedCategory == 'Alle' ? null : _selectedCategory,
       );
 
+      // Filter out the placeholder/unknown entry from the selection list
+      final filtered = animals.where((a) {
+        final name = a.animalName.trim().toLowerCase();
+        final id = (a.animalId ?? '').trim().toLowerCase();
+        return name != 'onbekend' && id != 'unknown';
+      }).toList();
+
       debugPrint(
-        '[AnimalsScreen] Successfully loaded ${animals.length} animals',
+        '[AnimalsScreen] Successfully loaded ${animals.length} animals (showing ${filtered.length} after filtering unknown)',
       );
 
       if (mounted) {
         setState(() {
-          _animals = animals;
+          _animals = filtered;
           _isLoading = false;
         });
       }
