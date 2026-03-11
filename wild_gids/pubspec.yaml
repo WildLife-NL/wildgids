@@ -101,6 +101,7 @@ flutter:
     - assets/icons/possesion/gewassen/tulip_2.svg
     - assets/icons/possesion/gewassen/wheat.svg
     - assets/location/location_icon.png
+    - assets/icons/nav-bar/
   # Avoid bundling entire assets/ directory to reduce size
     - .env
 
