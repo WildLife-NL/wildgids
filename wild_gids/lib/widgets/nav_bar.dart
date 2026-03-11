@@ -14,61 +14,88 @@ class CustomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 80,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
+    final screenWidth = MediaQuery.of(context).size.width;
+    
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        // Shadow circle behind the nav bar
+        Positioned(
+          bottom: 45, // Position it behind where the button floats
+          left: screenWidth / 2 - 35,
+          child: Container(
+            width: 70,
+            height: 70,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.08),
+                  blurRadius: 10,
+                  spreadRadius: 0,
+                ),
+              ],
+            ),
           ),
-        ],
-      ),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          // Bottom nav bar items
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildNavItem(
-                tab: NavTab.soorten,
-                iconPath: 'assets/icons/nav-bar/soorten.svg',
-                selectedIconPath: 'assets/icons/nav-bar/soorten-selected.svg',
-                label: 'Soorten',
-              ),
-              _buildNavItem(
-                tab: NavTab.rapporten,
-                iconPath: 'assets/icons/nav-bar/rapporten.svg',
-                selectedIconPath: 'assets/icons/nav-bar/rapport-selected.svg',
-                label: 'Rapporten',
-              ),
-              // Empty space for center button
-              const SizedBox(width: 60),
-              _buildNavItem(
-                tab: NavTab.logboek,
-                iconPath: 'assets/icons/nav-bar/logboek.svg',
-                selectedIconPath: 'assets/icons/nav-bar/logboek-selected.svg',
-                label: 'LogBoek',
-              ),
-              _buildNavItem(
-                tab: NavTab.instellingen,
-                iconPath: 'assets/icons/nav-bar/settings.svg',
-                selectedIconPath: 'assets/icons/nav-bar/settings-selected.svg',
-                label: 'Instellingen',
+        ),
+        // Main nav bar
+        Container(
+          height: 80,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, -2),
               ),
             ],
           ),
-          // Center floating button
-          Positioned(
-            top: -20,
-            left: MediaQuery.of(context).size.width / 2 - 30,
-            child: _buildCenterButton(),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // Bottom nav bar items
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildNavItem(
+                    tab: NavTab.soorten,
+                    iconPath: 'assets/icons/nav-bar/soorten.svg',
+                    selectedIconPath: 'assets/icons/nav-bar/soorten-selected.svg',
+                    label: 'Soorten',
+                  ),
+                  _buildNavItem(
+                    tab: NavTab.rapporten,
+                    iconPath: 'assets/icons/nav-bar/rapporten.svg',
+                    selectedIconPath: 'assets/icons/nav-bar/rapport-selected.svg',
+                    label: 'Rapporten',
+                  ),
+                  // Empty space for center button
+                  const SizedBox(width: 60),
+                  _buildNavItem(
+                    tab: NavTab.logboek,
+                    iconPath: 'assets/icons/nav-bar/logboek.svg',
+                    selectedIconPath: 'assets/icons/nav-bar/logboek-selected.svg',
+                    label: 'LogBoek',
+                  ),
+                  _buildNavItem(
+                    tab: NavTab.instellingen,
+                    iconPath: 'assets/icons/nav-bar/settings.svg',
+                    selectedIconPath: 'assets/icons/nav-bar/settings-selected.svg',
+                    label: 'Instellingen',
+                  ),
+                ],
+              ),
+              // Center floating button
+              Positioned(
+                top: -25,
+                left: MediaQuery.of(context).size.width / 2 - 35,
+                child: _buildCenterButton(),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -140,18 +167,15 @@ class CustomNavBar extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 60,
-            height: 60,
+            width: 70,
+            height: 70,
             decoration: BoxDecoration(
               color: isSelected ? const Color(0xFF37A904) : const Color(0xFF8FBC8F),
               shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+              border: Border.all(
+                color: Colors.white,
+                width: 8,
+              ),
             ),
             child: Padding(
               padding: const EdgeInsets.all(15.0),
