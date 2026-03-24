@@ -1,7 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:wildgids/constants/mock_location.dart';
+import 'package:wildgids/managers/map/living_lab_manager.dart';
 
 // R8
 import 'package:wildgids/models/api_models/interaction_query_result.dart';
@@ -18,6 +20,7 @@ import 'package:wildgids/utils/notification_service.dart';
 import 'dart:async';
 
 class MapProvider extends ChangeNotifier {
+  final LivingLabManager _livingLabManager = LivingLabManager();
   TrackingApiInterface? _trackingApi;
   TrackingCacheManager? _trackingCacheManager;
   // ===== Location state =====
@@ -62,6 +65,15 @@ class MapProvider extends ChangeNotifier {
 
   /// Call this to send the user's current GPS location to the backend.
   Future<TrackingNotice?> sendTrackingPingFromPosition(Position pos) async {
+    if (!_livingLabManager.isLocationInAnyLivingLab(
+      LatLng(pos.latitude, pos.longitude),
+    )) {
+      debugPrint(
+        '[MapProvider] Skipping tracking ping outside living lab: ${pos.latitude}, ${pos.longitude}',
+      );
+      return null;
+    }
+
     // Prefer using the cache manager if available
     if (_trackingCacheManager != null) {
       debugPrint(
