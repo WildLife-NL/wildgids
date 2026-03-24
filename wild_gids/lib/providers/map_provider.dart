@@ -1,7 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:wildgids/constants/mock_location.dart';
+import 'package:wildgids/managers/map/living_lab_manager.dart';
 
 // R8
 import 'package:wildgids/models/api_models/interaction_query_result.dart';
@@ -18,6 +20,8 @@ import 'package:wildgids/utils/notification_service.dart';
 import 'dart:async';
 
 class MapProvider extends ChangeNotifier {
+  final LivingLabManager _livingLabManager = LivingLabManager();
+  static const double _maxVicinityDistanceMeters = 10000; // 10 km
   TrackingApiInterface? _trackingApi;
   TrackingCacheManager? _trackingCacheManager;
   // ===== Location state =====
@@ -62,6 +66,15 @@ class MapProvider extends ChangeNotifier {
 
   /// Call this to send the user's current GPS location to the backend.
   Future<TrackingNotice?> sendTrackingPingFromPosition(Position pos) async {
+    if (!_livingLabManager.isLocationInAnyLivingLab(
+      LatLng(pos.latitude, pos.longitude),
+    )) {
+      debugPrint(
+        '[MapProvider] Skipping tracking ping outside living lab: ${pos.latitude}, ${pos.longitude}',
+      );
+      return null;
+    }
+
     // Prefer using the cache manager if available
     if (_trackingCacheManager != null) {
       debugPrint(
@@ -330,22 +343,28 @@ class MapProvider extends ChangeNotifier {
 
       final vicinity = await _vicinityApi!.getMyVicinity();
 
+      final filteredAnimals = _filterNearbyAnimals(vicinity.animals);
+      final filteredDetections = _filterNearbyDetections(vicinity.detections);
+      final filteredInteractions = _filterNearbyInteractions(
+        vicinity.interactions,
+      );
+
       _animalPins
         ..clear()
-        ..addAll(vicinity.animals);
+        ..addAll(filteredAnimals);
       _detectionPins
         ..clear()
-        ..addAll(vicinity.detections);
+        ..addAll(filteredDetections);
       _interactions
         ..clear()
-        ..addAll(vicinity.interactions);
+        ..addAll(filteredInteractions);
 
       _animalPinsLoading = false;
       _detectionPinsLoading = false;
       _interactionsLoading = false;
 
       debugPrint(
-        '[MapProvider] âœ“ Vicinity loaded: '
+        '[MapProvider] âœ“ Vicinity loaded (after distance filter): '
         '${_animalPins.length} animals, '
         '${_detectionPins.length} detections, '
         '${_interactions.length} interactions',
@@ -542,6 +561,50 @@ class MapProvider extends ChangeNotifier {
   void dispose() {
     _trackingTimer?.cancel();
     super.dispose();
+  }
+
+  List<AnimalPin> _filterNearbyAnimals(List<AnimalPin> animals) {
+    final origin = currentPosition;
+    if (origin == null) return animals;
+    return animals.where((animal) {
+      final distance = Geolocator.distanceBetween(
+        origin.latitude,
+        origin.longitude,
+        animal.lat,
+        animal.lon,
+      );
+      return distance <= _maxVicinityDistanceMeters;
+    }).toList();
+  }
+
+  List<DetectionPin> _filterNearbyDetections(List<DetectionPin> detections) {
+    final origin = currentPosition;
+    if (origin == null) return detections;
+    return detections.where((detection) {
+      final distance = Geolocator.distanceBetween(
+        origin.latitude,
+        origin.longitude,
+        detection.lat,
+        detection.lon,
+      );
+      return distance <= _maxVicinityDistanceMeters;
+    }).toList();
+  }
+
+  List<InteractionQueryResult> _filterNearbyInteractions(
+    List<InteractionQueryResult> interactions,
+  ) {
+    final origin = currentPosition;
+    if (origin == null) return interactions;
+    return interactions.where((interaction) {
+      final distance = Geolocator.distanceBetween(
+        origin.latitude,
+        origin.longitude,
+        interaction.lat,
+        interaction.lon,
+      );
+      return distance <= _maxVicinityDistanceMeters;
+    }).toList();
   }
 }
 

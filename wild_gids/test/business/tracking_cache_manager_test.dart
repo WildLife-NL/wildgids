@@ -1,8 +1,11 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'package:wildgids/interfaces/location/living_lab_interface.dart';
 import 'package:wildgids/managers/api_managers/tracking_cache_manager.dart';
 import 'package:wildgids/models/beta_models/tracking_reading_model.dart';
+import 'package:wildgids/models/ui_models/living_lab_area.dart';
 import 'package:wildgids/interfaces/data_apis/tracking_api_interface.dart';
 import 'package:wildgids/utils/connection_checker.dart';
 
@@ -35,6 +38,24 @@ class MockTrackingApi implements TrackingApiInterface {
   }
 }
 
+class TestLivingLabManager implements LivingLabInterface {
+  final bool allowAll;
+
+  TestLivingLabManager({required this.allowAll});
+
+  @override
+  List<LivingLabArea> getAllLivingLabs() => [];
+
+  @override
+  LivingLabArea? getLivingLabById(String id) => null;
+
+  @override
+  LivingLabArea? getLivingLabByLocation(LatLng location) => null;
+
+  @override
+  bool isLocationInAnyLivingLab(LatLng location) => allowAll;
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -46,7 +67,10 @@ void main() {
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
       mockApi = MockTrackingApi();
-      cacheManager = TrackingCacheManager(trackingApi: mockApi);
+      cacheManager = TrackingCacheManager(
+        trackingApi: mockApi,
+        livingLabManager: TestLivingLabManager(allowAll: true),
+      );
 
       // Mock ConnectionChecker to control internet availability in tests
       ConnectionChecker.setHasInternetConnection =
@@ -234,6 +258,25 @@ void main() {
         expect(cached[i].longitude, 5.0 + i * 0.1);
         expect(cached[i].timestampUtc, timestamps[i]);
       }
+    });
+
+    test('should skip reading outside living labs', () async {
+      cacheManager = TrackingCacheManager(
+        trackingApi: mockApi,
+        livingLabManager: TestLivingLabManager(allowAll: false),
+      );
+      mockApi.shouldFail = false;
+      mockHasInternet = true;
+
+      await cacheManager.sendOrCacheReading(
+        lat: 52.0,
+        lon: 5.0,
+        timestampUtc: DateTime.utc(2025, 11, 20, 12, 0, 0),
+      );
+
+      expect(mockApi.sentReadings.length, 0);
+      final cached = await cacheManager.getCachedReadings();
+      expect(cached.length, 0);
     });
   });
 }

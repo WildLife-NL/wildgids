@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
@@ -60,6 +61,62 @@ class _OverzichtScreenState extends State<OverzichtScreen> {
     setState(() {
       userName = prefs.getString("userName") ?? "Joe Doe";
     });
+  }
+
+  Future<bool> _isLocationReady() async {
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return false;
+
+    final permission = await Geolocator.checkPermission();
+    return permission == LocationPermission.whileInUse ||
+        permission == LocationPermission.always;
+  }
+
+  Future<void> _showLocationRequiredPopup() async {
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Locatie vereist'),
+            content: const Text(
+              'U moet locatie delen om deze functie te gebruiken.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Sluiten'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  await Geolocator.openAppSettings();
+                  if (!context.mounted) return;
+                  Navigator.of(context).pop();
+                },
+                child: const Text('App-instellingen'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  await Geolocator.openLocationSettings();
+                  if (!context.mounted) return;
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Locatie-instellingen'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  Future<void> _runWithLocationGate(VoidCallback onAllowed) async {
+    final isReady = await _isLocationReady();
+    if (!isReady) {
+      await _showLocationRequiredPopup();
+      return;
+    }
+    onAllowed();
   }
 
   @override
@@ -129,12 +186,14 @@ class _OverzichtScreenState extends State<OverzichtScreen> {
                               imagePath: null,
                               key: Key('rapporten_kaart_button'),
                               onPressed: () {
-                                context
-                                    .read<NavigationStateInterface>()
-                                    .pushForward(
-                                      context,
-                                      const KaartOverviewScreen(),
-                                    );
+                                _runWithLocationGate(() {
+                                  context
+                                      .read<NavigationStateInterface>()
+                                      .pushForward(
+                                        context,
+                                        const KaartOverviewScreen(),
+                                      );
+                                });
                               },
                             ),
                             (
@@ -143,12 +202,14 @@ class _OverzichtScreenState extends State<OverzichtScreen> {
                               imagePath: null,
                               key: Key('dierenquiz_button'),
                               onPressed: () {
-                                context
-                                    .read<NavigationStateInterface>()
-                                    .pushForward(
-                                      context,
-                                      const AnimalsQuizScreen(),
-                                    );
+                                _runWithLocationGate(() {
+                                  context
+                                      .read<NavigationStateInterface>()
+                                      .pushForward(
+                                        context,
+                                        const AnimalsQuizScreen(),
+                                      );
+                                });
                               },
                             ),
                             (
@@ -157,12 +218,14 @@ class _OverzichtScreenState extends State<OverzichtScreen> {
                               imagePath: null,
                               key: Key('diersoorten_button'),
                               onPressed: () {
-                                context
-                                    .read<NavigationStateInterface>()
-                                    .pushReplacementForward(
-                                      context,
-                                      const SpeciesListScreen(),
-                                    );
+                                _runWithLocationGate(() {
+                                  context
+                                      .read<NavigationStateInterface>()
+                                      .pushReplacementForward(
+                                        context,
+                                        const SpeciesListScreen(),
+                                      );
+                                });
                               },
                             ),
                             (
@@ -171,20 +234,22 @@ class _OverzichtScreenState extends State<OverzichtScreen> {
                               imagePath: null,
                               key: Key('rapporteren_button'),
                               onPressed: () {
-                                try {
-                                  navigationManager.pushForward(
-                                    context,
-                                    const Rapporteren(),
-                                  );
-                                } catch (e) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Er is een fout opgetreden bij het navigeren',
+                                _runWithLocationGate(() {
+                                  try {
+                                    navigationManager.pushForward(
+                                      context,
+                                      const Rapporteren(),
+                                    );
+                                  } catch (e) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Er is een fout opgetreden bij het navigeren',
+                                        ),
                                       ),
-                                    ),
-                                  );
-                                }
+                                    );
+                                  }
+                                });
                               },
                             ),
                             (
@@ -193,20 +258,22 @@ class _OverzichtScreenState extends State<OverzichtScreen> {
                               imagePath: null,
                               key: Key('logboek_button'),
                               onPressed: () {
-                                try {
-                                  navigationManager.pushForward(
-                                    context,
-                                    const LogbookScreen(),
-                                  );
-                                } catch (e) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Er is een fout opgetreden bij het navigeren',
+                                _runWithLocationGate(() {
+                                  try {
+                                    navigationManager.pushForward(
+                                      context,
+                                      const LogbookScreen(),
+                                    );
+                                  } catch (e) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Er is een fout opgetreden bij het navigeren',
+                                        ),
                                       ),
-                                    ),
-                                  );
-                                }
+                                    );
+                                  }
+                                });
                               },
                             ),
                             (

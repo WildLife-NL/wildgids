@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wildgids/constants/app_colors.dart';
 import 'package:wildgids/providers/app_state_provider.dart';
@@ -132,7 +132,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               // Location Tracking label
               Center(
                 child: Text(
-                  'Locatie delen',
+                  'Locatie delen (verplicht)',
                   style: TextStyle(
                     color: AppColors.offWhite,
                     fontSize: responsive.fontSize(16),
@@ -195,11 +195,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       SizedBox(width: responsive.wp(2)),
                       GestureDetector(
-                        onTap: () async {
-                          await appStateProvider.setLocationTrackingEnabled(
-                            false,
-                          );
-                        },
+                        onTap: null,
                         child: Container(
                           width: responsive.wp(25),
                           padding: EdgeInsets.symmetric(
@@ -214,7 +210,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     ? AppColors.offWhite
                                     : Colors.transparent,
                             border: Border.all(
-                              color: AppColors.offWhite,
+                              color: AppColors.offWhite.withValues(alpha: 0.45),
                               width: responsive.sp(0.2),
                             ),
                           ),
@@ -225,7 +221,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 color:
                                     !locationTrackingEnabled
                                         ? AppColors.darkGreen
-                                        : AppColors.offWhite,
+                                        : AppColors.offWhite.withValues(alpha: 0.45),
                                 fontWeight: FontWeight.w600,
                                 fontSize: responsive.fontSize(14),
                               ),
@@ -239,6 +235,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
 
               SizedBox(height: responsive.spacing(16)),
+
+              Center(
+                child: Text(
+                  'Locatietracking is verplicht om WildGids te gebruiken.',
+                  style: TextStyle(
+                    color: AppColors.offWhite.withValues(alpha: 0.9),
+                    fontSize: responsive.fontSize(12),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+
+              SizedBox(height: responsive.spacing(12)),
 
               // Location sharing status indicator
               Center(
