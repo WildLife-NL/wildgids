@@ -65,5 +65,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-release-apk
+          name: app-release-apk-wildgids
           path: wild_gids/build/app/outputs/flutter-apk/app-release.apk
