@@ -1,10 +1,11 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:wildgids/config/app_config.dart';
 import 'package:wildgids/constants/app_colors.dart';
 import 'package:wildgids/constants/app_text_theme.dart';
 import 'package:wildgids/data_managers/profile_api.dart';
 import 'package:wildgids/interfaces/other/login_interface.dart';
+import 'package:wildgids/screens/gate/location_gate_screen.dart';
 import 'package:wildgids/screens/shared/overzicht_screen.dart';
 import 'package:wildgids/managers/other/login_manager.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/brown_button.dart';
@@ -65,7 +66,9 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
 
       if (profile.reportAppTerms == true) {
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const OverzichtScreen()),
+          MaterialPageRoute(
+            builder: (_) => const LocationGateScreen(next: OverzichtScreen()),
+          ),
           (_) => false,
         );
       } else {
@@ -78,7 +81,9 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
       // If anything goes wrong, keep the OLD behavior: go to Overzicht
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const OverzichtScreen()),
+        MaterialPageRoute(
+          builder: (_) => const LocationGateScreen(next: OverzichtScreen()),
+        ),
         (_) => false,
       );
     }

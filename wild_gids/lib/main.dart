@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
@@ -132,9 +132,10 @@ void main() async {
   prefs.setStringList('interaction_cache', []);
 
   final bool hasValidToken = await TokenValidator.hasValidToken();
-    final Widget _nextScreen =
-      hasValidToken ? const OverzichtScreen() : const LoginScreen();
-    final Widget initialScreen = LocationGateScreen(next: _nextScreen);
+  final Widget initialScreen =
+      hasValidToken
+          ? const LocationGateScreen(next: OverzichtScreen())
+          : const LoginScreen();
 
   runApp(
     MultiProvider(
