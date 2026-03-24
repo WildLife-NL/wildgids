@@ -62,7 +62,7 @@ class _TopContainerState extends State<TopContainer> {
       final yy = buildNumber.substring(2, 4);
       final mm = buildNumber.substring(4, 6);
       final dd = buildNumber.substring(6, 8);
-      return '$yy.$mm.$dd';
+      return 'v$yy.$mm.$dd';
     }
 
     // Example: 260303 -> 26.03.03
@@ -70,7 +70,7 @@ class _TopContainerState extends State<TopContainer> {
       final yy = buildNumber.substring(0, 2);
       final mm = buildNumber.substring(2, 4);
       final dd = buildNumber.substring(4, 6);
-      return '$yy.$mm.$dd';
+      return 'v$yy.$mm.$dd';
     }
 
     if (buildNumber.isNotEmpty) {
