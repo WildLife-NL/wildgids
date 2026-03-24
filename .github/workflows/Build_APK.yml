@@ -1,0 +1,62 @@
+name: Build APK
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-apk:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Create .env
+        run: |
+          echo "DEV_BASE_URL=${{ secrets.API_KEY }}" > .env
+          echo "DEV_DEBUG_TOOLS=false" >> .env
+      - name: Set version build number to today
+        run: |
+          TODAY=$(date +%Y%m%d)
+          CURRENT_VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}')
+          NAME_PART=$(echo "$CURRENT_VERSION" | cut -d '+' -f1)
+          NEW_VERSION="${NAME_PART}+${TODAY}"
+          sed -i "s/^version: .*/version: ${NEW_VERSION}/" pubspec.yaml
+          echo "New version: ${NEW_VERSION}"
+      - name: Commit updated pubspec version
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pubspec.yaml
+          git commit -m "Set version to today's date" || echo "No changes to commit"
+          git push
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build APK
+        run: flutter build apk --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
