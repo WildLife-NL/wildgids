@@ -12,6 +12,10 @@ jobs:
     permissions:
       contents: write
 
+    defaults:
+      run:
+        working-directory: ./wild_gids
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -34,6 +38,10 @@ jobs:
         run: |
           echo "DEV_BASE_URL=${{ secrets.API_KEY }}" > .env
           echo "DEV_DEBUG_TOOLS=false" >> .env
+
+      - name: Install dependencies
+        run: flutter pub get
+
       - name: Set version build number to today
         run: |
           TODAY=$(date +%Y%m%d)
@@ -42,6 +50,7 @@ jobs:
           NEW_VERSION="${NAME_PART}+${TODAY}"
           sed -i "s/^version: .*/version: ${NEW_VERSION}/" pubspec.yaml
           echo "New version: ${NEW_VERSION}"
+
       - name: Commit updated pubspec version
         run: |
           git config user.name "github-actions[bot]"
@@ -49,8 +58,6 @@ jobs:
           git add pubspec.yaml
           git commit -m "Set version to today's date" || echo "No changes to commit"
           git push
-      - name: Install dependencies
-        run: flutter pub get
 
       - name: Build APK
         run: flutter build apk --release
@@ -59,4 +66,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-release-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: wild_gids/build/app/outputs/flutter-apk/app-release.apk
