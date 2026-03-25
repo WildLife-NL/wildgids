@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter_map/flutter_map.dart' as fm;
 import 'package:latlong2/latlong.dart';
@@ -32,7 +32,7 @@ class _AreaSelectionMapState extends State<AreaSelectionMap> {
   List<LatLng> _polygonPoints = [];
   bool _isDrawing = false;
   bool _isGpsRecording = false;
-  List<LatLng> _gpsTrack = [];
+  final List<LatLng> _gpsTrack = [];
   final List<LatLng> _recentPositions = [];
   final int _smoothingWindow = 5;
   final double _accuracyThresholdM =
@@ -210,7 +210,7 @@ class _AreaSelectionMapState extends State<AreaSelectionMap> {
       }
 
       final pos = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.best,
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.best),
       );
       final here = LatLng(pos.latitude, pos.longitude);
       if (!mounted) return;
@@ -276,7 +276,7 @@ class _AreaSelectionMapState extends State<AreaSelectionMap> {
           SafeArea(
             bottom: false,
             child: CustomAppBar(
-              leftIcon: Icons.arrow_back_ios,
+              leftIcon: null,
               centerText: 'Selecteer beschadigd gebied',
               rightIcon: null,
               showUserIcon: true,
@@ -335,7 +335,7 @@ class _AreaSelectionMapState extends State<AreaSelectionMap> {
                         circles: [
                           fm.CircleMarker(
                             point: _currentLocation!,
-                            color: Colors.blue.withOpacity(0.12),
+                            color: Colors.blue.withValues(alpha: 0.12),
                             borderStrokeWidth: 1,
                             useRadiusInMeter: true,
                             radius:
@@ -349,7 +349,7 @@ class _AreaSelectionMapState extends State<AreaSelectionMap> {
                         polygons: [
                           fm.Polygon(
                             points: _polygonPoints,
-                            color: Colors.blue.withOpacity(0.3),
+                            color: Colors.blue.withValues(alpha: 0.3),
                             borderStrokeWidth: 2,
                             borderColor: Colors.blue,
                           ),
@@ -361,7 +361,7 @@ class _AreaSelectionMapState extends State<AreaSelectionMap> {
                         polylines: [
                           fm.Polyline(
                             points: _gpsTrack,
-                            color: Colors.blue.withOpacity(0.6),
+                            color: Colors.blue.withValues(alpha: 0.6),
                             strokeWidth: 2.0,
                           ),
                         ],
@@ -373,7 +373,7 @@ class _AreaSelectionMapState extends State<AreaSelectionMap> {
                               return fm.CircleMarker(
                                 point: p,
                                 radius: 3,
-                                color: Colors.blue.withOpacity(0.8),
+                                color: Colors.blue.withValues(alpha: 0.8),
                                 borderColor: Colors.white,
                                 borderStrokeWidth: 1,
                                 useRadiusInMeter: false,
@@ -442,7 +442,7 @@ class _AreaSelectionMapState extends State<AreaSelectionMap> {
                   left: 0,
                   right: 0,
                   child: Container(
-                    color: AppColors.darkGreen.withOpacity(0.95),
+                    color: AppColors.darkGreen.withValues(alpha: 0.95),
                     padding: const EdgeInsets.fromLTRB(16, 20, 16, 44),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -470,7 +470,7 @@ class _AreaSelectionMapState extends State<AreaSelectionMap> {
                               vertical: 8,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.1),
+                              color: Colors.white.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -553,8 +553,9 @@ class _AreaSelectionMapState extends State<AreaSelectionMap> {
                                 onPressed: () {
                                   setState(() {
                                     _editPinsMode = !_editPinsMode;
-                                    if (!_editPinsMode)
+                                    if (!_editPinsMode) {
                                       _selectedPointIndex = null;
+                                    }
                                   });
                                 },
                                 icon: Icon(
@@ -672,7 +673,7 @@ class _AreaSelectionMapState extends State<AreaSelectionMap> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.12),
+        color: Colors.white.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(

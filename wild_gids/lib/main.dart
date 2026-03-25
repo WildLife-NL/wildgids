@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
@@ -49,7 +49,7 @@ import 'package:wildgids/providers/map_provider.dart';
 import 'package:wildgids/providers/response_provider.dart';
 import 'package:wildgids/screens/login/login_screen.dart';
 import 'package:wildgids/screens/gate/location_gate_screen.dart';
-import 'package:wildgids/screens/shared/overzicht_screen.dart';
+import 'package:wildgids/screens/location/kaart_overview_screen.dart';
 import 'package:wildgids/interfaces/data_apis/profile_api_interface.dart';
 
 import 'package:wildgids/data_managers/interaction_types_api.dart';
@@ -69,6 +69,7 @@ void main() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
   final appStateProvider = AppStateProvider();
   final prefs = await SharedPreferences.getInstance();
@@ -132,9 +133,10 @@ void main() async {
   prefs.setStringList('interaction_cache', []);
 
   final bool hasValidToken = await TokenValidator.hasValidToken();
-    final Widget _nextScreen =
-      hasValidToken ? const OverzichtScreen() : const LoginScreen();
-    final Widget initialScreen = LocationGateScreen(next: _nextScreen);
+  final Widget initialScreen =
+      hasValidToken
+          ? const LocationGateScreen(next: KaartOverviewScreen())
+          : const LoginScreen();
 
   runApp(
     MultiProvider(

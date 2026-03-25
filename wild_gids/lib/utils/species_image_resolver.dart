@@ -88,6 +88,6 @@ class SpeciesImageResolver {
     if (base == null) return null;
     final realBase = _realFileBase[base];
     if (realBase == null) return null;
-    return '$_realDir/real_${realBase}.png';
+    return '$_realDir/real_$realBase.png';
   }
 }

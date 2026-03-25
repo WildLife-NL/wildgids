@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:wildgids/managers/map/location_map_manager.dart';
 import 'package:wildgids/models/beta_models/sighting_report_model.dart';
@@ -161,8 +161,8 @@ class AppStateProvider with ChangeNotifier {
   Future<void> loadLocationTrackingPreference() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-        _isLocationTrackingEnabled =
-          prefs.getBool('location_tracking_enabled') ?? false;
+      _isLocationTrackingEnabled = true;
+      await prefs.setBool('location_tracking_enabled', true);
       debugPrint(
         '[AppStateProvider] Loaded location tracking preference: $_isLocationTrackingEnabled',
       );
@@ -171,7 +171,7 @@ class AppStateProvider with ChangeNotifier {
       debugPrint(
         '[AppStateProvider] Failed to load location tracking preference: $e',
       );
-      _isLocationTrackingEnabled = false; // Default to disabled
+      _isLocationTrackingEnabled = true;
     }
   }
 
@@ -179,11 +179,16 @@ class AppStateProvider with ChangeNotifier {
   Future<void> setLocationTrackingEnabled(bool enabled) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('location_tracking_enabled', enabled);
-      _isLocationTrackingEnabled = enabled;
-      debugPrint(
-        '[AppStateProvider] Location tracking ${enabled ? "enabled" : "disabled"}',
-      );
+      // Tracking is mandatory for app usage; never persist disabled state.
+      await prefs.setBool('location_tracking_enabled', true);
+      _isLocationTrackingEnabled = true;
+      if (!enabled) {
+        debugPrint(
+          '[AppStateProvider] Disable request ignored: location tracking is mandatory',
+        );
+      } else {
+        debugPrint('[AppStateProvider] Location tracking enabled');
+      }
       notifyListeners();
     } catch (e) {
       debugPrint(

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wildgids/constants/app_colors.dart';
 import 'package:wildgids/providers/app_state_provider.dart';
@@ -120,7 +120,7 @@ class LocationSharingBadge extends StatelessWidget {
           height: badgeSize,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: AppColors.darkGreen.withOpacity(0.2),
+            color: AppColors.darkGreen.withValues(alpha: 0.2),
             border: Border.all(
               color: AppColors.darkGreen,
               width: 1.5,

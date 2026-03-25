@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:wildgids/constants/app_colors.dart';
 import 'package:wildgids/utils/responsive_utils.dart';
 
@@ -28,7 +28,7 @@ class EncounterMessageOverlay extends StatelessWidget {
     return GestureDetector(
       onTap: () => Navigator.of(context).pop(),
       child: Material(
-        color: Colors.black.withOpacity(0.28),
+        color: Colors.black.withValues(alpha: 0.28),
         child: Center(
           child: GestureDetector(
             onTap: () {},
@@ -44,7 +44,7 @@ class EncounterMessageOverlay extends StatelessWidget {
                   vertical: responsive.hp(1.2),
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.lightMintGreen.withOpacity(0.95),
+                  color: AppColors.lightMintGreen.withValues(alpha: 0.95),
                   borderRadius: BorderRadius.circular(responsive.sp(1.75)),
                   border: Border.all(
                     color: AppColors.darkGreen,

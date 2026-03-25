@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
@@ -40,7 +40,7 @@ class _CustomLocationMapScreenState extends State<CustomLocationMapScreen> {
   LatLng? _markedLocation;
   String _markedAddress = '';
   bool _isLoading = true;
-  bool _isSatelliteView = false;
+  final bool _isSatelliteView = false;
 
   @override
   void initState() {

@@ -1,8 +1,8 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
 import 'package:wildgids/constants/app_colors.dart';
-import 'package:wildgids/screens/shared/overzicht_screen.dart';
+import 'package:wildgids/screens/location/kaart_overview_screen.dart';
 
 class QuestionnaireCompletionScreen extends StatefulWidget {
   const QuestionnaireCompletionScreen({super.key});
@@ -60,7 +60,7 @@ class _QuestionnaireCompletionScreenState
   void _navigateToOverview() {
     context.read<NavigationStateInterface>().pushAndRemoveUntil(
       context,
-      OverzichtScreen(),
+      const KaartOverviewScreen(),
     );
   }
 
