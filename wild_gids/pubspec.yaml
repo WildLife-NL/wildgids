@@ -1,7 +1,7 @@
 name: wildgids
 description: "A new Flutter project."
 publish_to: 'none'
-version: 1.0.0+20260324
+version: 1.0.0+20260325
 
 environment:
   sdk: ^3.7.0
