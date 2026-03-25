@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:wildgids/constants/app_colors.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
@@ -36,7 +36,7 @@ class SavedQuestionnairesScreen extends StatelessWidget {
                   if (snap.connectionState != ConnectionState.done) {
                     return const Center(child: CircularProgressIndicator());
                   }
-                  final drafts = (snap.data ?? const <DraftQuestionnaire>[]) as List<DraftQuestionnaire>;
+                  final drafts = snap.data ?? const <DraftQuestionnaire>[];
                   if (drafts.isEmpty) {
                     return Center(
                       child: ConstrainedBox(

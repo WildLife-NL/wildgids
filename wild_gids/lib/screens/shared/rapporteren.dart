@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wildgids/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
 import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
@@ -6,14 +6,19 @@ import 'package:wildgids/models/enums/report_type.dart';
 import 'package:wildgids/providers/app_state_provider.dart';
 import 'package:wildgids/providers/map_provider.dart';
 
-import 'package:wildgids/screens/shared/overzicht_screen.dart';
+import 'package:wildgids/screens/location/kaart_overview_screen.dart';
 import 'package:wildgids/screens/waarneming/animals_screen.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
 import 'package:wildgids/widgets/location/invisible_map_preloader.dart';
 import 'package:wildgids/widgets/questionnaire/report_button.dart';
 import 'package:wildgids/managers/api_managers/interaction_types_manager.dart';
 import 'package:wildgids/models/api_models/interaction_type.dart';
+import 'package:wildgids/models/enums/nav_tab.dart';
+import 'package:wildgids/screens/logbook/logbook_screen.dart';
+import 'package:wildgids/screens/profile/profile_screen.dart';
+import 'package:wildgids/screens/species/species_list_screen.dart';
 import 'package:wildgids/utils/responsive_utils.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/custom_nav_bar.dart';
 
 class Rapporteren extends StatefulWidget {
   const Rapporteren({super.key});
@@ -117,9 +122,24 @@ class _RapporterenState extends State<Rapporteren> {
     }
   }
 
-  void _handleBackNavigation(BuildContext context) {
+  void _onTabSelected(NavTab tab) {
     final navigationManager = context.read<NavigationStateInterface>();
-    navigationManager.pushAndRemoveUntil(context, const OverzichtScreen());
+    switch (tab) {
+      case NavTab.zones:
+        navigationManager.pushReplacementForward(context, const SpeciesListScreen());
+        break;
+      case NavTab.rapporten:
+        return;
+      case NavTab.kaart:
+        navigationManager.pushReplacementForward(context, const KaartOverviewScreen());
+        break;
+      case NavTab.logboek:
+        navigationManager.pushReplacementForward(context, const LogbookScreen());
+        break;
+      case NavTab.profile:
+        navigationManager.pushReplacementForward(context, const ProfileScreen());
+        break;
+    }
   }
 
   @override
@@ -133,12 +153,11 @@ class _RapporterenState extends State<Rapporteren> {
           SafeArea(
             bottom: false,
             child: CustomAppBar(
-              leftIcon: Icons.arrow_back_ios_new,
+              leftIcon: null,
               centerText: 'Rapporteren',
               rightIcon: null,
               showUserIcon: true,
               useFixedText: true,
-              onLeftIconPressed: () => _handleBackNavigation(context),
               onRightIconPressed: () {},
               // make title and arrow black and larger for this screen - more on smaller screens
               iconColor: Colors.black,
@@ -223,6 +242,13 @@ class _RapporterenState extends State<Rapporteren> {
             ),
           ),
         ],
+      ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: CustomNavBar(
+          currentTab: NavTab.rapporten,
+          onTabSelected: _onTabSelected,
+        ),
       ),
     );
   }

@@ -49,7 +49,7 @@ import 'package:wildgids/providers/map_provider.dart';
 import 'package:wildgids/providers/response_provider.dart';
 import 'package:wildgids/screens/login/login_screen.dart';
 import 'package:wildgids/screens/gate/location_gate_screen.dart';
-import 'package:wildgids/screens/shared/overzicht_screen.dart';
+import 'package:wildgids/screens/location/kaart_overview_screen.dart';
 import 'package:wildgids/interfaces/data_apis/profile_api_interface.dart';
 
 import 'package:wildgids/data_managers/interaction_types_api.dart';
@@ -69,6 +69,7 @@ void main() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
   final appStateProvider = AppStateProvider();
   final prefs = await SharedPreferences.getInstance();
@@ -134,7 +135,7 @@ void main() async {
   final bool hasValidToken = await TokenValidator.hasValidToken();
   final Widget initialScreen =
       hasValidToken
-          ? const LocationGateScreen(next: OverzichtScreen())
+          ? const LocationGateScreen(next: KaartOverviewScreen())
           : const LoginScreen();
 
   runApp(

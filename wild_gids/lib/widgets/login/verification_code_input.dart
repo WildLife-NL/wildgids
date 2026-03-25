@@ -6,7 +6,7 @@ import 'package:wildgids/constants/app_text_theme.dart';
 import 'package:wildgids/data_managers/profile_api.dart';
 import 'package:wildgids/interfaces/other/login_interface.dart';
 import 'package:wildgids/screens/gate/location_gate_screen.dart';
-import 'package:wildgids/screens/shared/overzicht_screen.dart';
+import 'package:wildgids/screens/location/kaart_overview_screen.dart';
 import 'package:wildgids/managers/other/login_manager.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/brown_button.dart';
 import 'package:wildgids/models/api_models/user.dart';
@@ -67,7 +67,7 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
       if (profile.reportAppTerms == true) {
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(
-            builder: (_) => const LocationGateScreen(next: OverzichtScreen()),
+            builder: (_) => const LocationGateScreen(next: KaartOverviewScreen()),
           ),
           (_) => false,
         );
@@ -78,11 +78,11 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
         );
       }
     } catch (e) {
-      // If anything goes wrong, keep the OLD behavior: go to Overzicht
+      // If anything goes wrong, keep fallback behavior: go to map flow
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(
-          builder: (_) => const LocationGateScreen(next: OverzichtScreen()),
+          builder: (_) => const LocationGateScreen(next: KaartOverviewScreen()),
         ),
         (_) => false,
       );
@@ -125,7 +125,9 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
           verifiedUser = null;
         });
         if (context.mounted) {
-          for (var c in controllers) c.clear();
+          for (var c in controllers) {
+            c.clear();
+          }
           focusNodes[0].requestFocus();
         }
       }

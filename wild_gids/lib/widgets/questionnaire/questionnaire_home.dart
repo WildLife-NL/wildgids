@@ -1,9 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wildgids/constants/app_colors.dart';
 import 'package:wildgids/constants/app_text_theme.dart';
-import 'package:wildgids/screens/shared/overzicht_screen.dart';
+import 'package:wildgids/screens/location/kaart_overview_screen.dart';
 import 'package:wildgids/utils/responsive_utils.dart';
 import 'package:wildgids/models/api_models/questionaire.dart';
 
@@ -129,13 +129,14 @@ class QuestionnaireHome extends StatelessWidget {
                         questionnaireJson: questionnaire.toJson(),
                       ),
                     );
+                    if (!context.mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Vragenlijst opgeslagen voor later')),
                     );
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const OverzichtScreen(),
+                        builder: (context) => const KaartOverviewScreen(),
                       ),
                     );
                   },
@@ -173,7 +174,7 @@ class QuestionnaireHome extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const OverzichtScreen(),
+                  builder: (context) => const KaartOverviewScreen(),
                 ),
               );
             },

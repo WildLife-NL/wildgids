@@ -10,8 +10,10 @@ import 'package:wildgids/screens/shared/rapporteren.dart';
 import 'package:wildgids/screens/logbook/logbook_screen.dart';
 import 'package:wildgids/providers/app_state_provider.dart';
 import 'package:wildgids/screens/location/kaart_overview_screen.dart';
-import 'package:wildgids/screens/game/animals_quiz_screen.dart';
+import 'package:wildgids/screens/profile/profile_screen.dart';
 import 'package:wildgids/screens/species/species_list_screen.dart';
+import 'package:wildgids/models/enums/nav_tab.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/custom_nav_bar.dart';
 
 class OverzichtScreen extends StatefulWidget {
   const OverzichtScreen({super.key});
@@ -23,6 +25,7 @@ class OverzichtScreen extends StatefulWidget {
 class _OverzichtScreenState extends State<OverzichtScreen> {
   String userName = "Joe Doe";
   String reportButtonLabel = 'Rapporteren';
+  NavTab _currentTab = NavTab.zones;
 
   @override
   void initState() {
@@ -119,6 +122,52 @@ class _OverzichtScreenState extends State<OverzichtScreen> {
     onAllowed();
   }
 
+  void _onTabSelected(NavTab tab) {
+    if (tab == _currentTab) return;
+    setState(() => _currentTab = tab);
+
+    switch (tab) {
+      case NavTab.zones:
+        _runWithLocationGate(() {
+          context.read<NavigationStateInterface>().pushReplacementForward(
+            context,
+            const SpeciesListScreen(),
+          );
+        });
+        break;
+      case NavTab.rapporten:
+        _runWithLocationGate(() {
+          context.read<NavigationStateInterface>().pushReplacementForward(
+            context,
+            const Rapporteren(),
+          );
+        });
+        break;
+      case NavTab.kaart:
+        _runWithLocationGate(() {
+          context.read<NavigationStateInterface>().pushReplacementForward(
+            context,
+            const KaartOverviewScreen(),
+          );
+        });
+        break;
+      case NavTab.logboek:
+        _runWithLocationGate(() {
+          context.read<NavigationStateInterface>().pushReplacementForward(
+            context,
+            const LogbookScreen(),
+          );
+        });
+        break;
+      case NavTab.profile:
+        context.read<NavigationStateInterface>().pushReplacementForward(
+          context,
+          const ProfileScreen(),
+        );
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final navigationManager = context.read<NavigationStateInterface>();
@@ -135,13 +184,17 @@ class _OverzichtScreenState extends State<OverzichtScreen> {
     final double iconSize = (screenSize.width * 0.14).clamp(28.0, 56.0);
     final double buttonFontSize = (screenSize.width * 0.045).clamp(14.0, 22.0);
 
-    return WillPopScope(
-      onWillPop: () async {
-        // Prevent back button from doing anything - user is on home screen
-        return false;
-      },
+    return PopScope(
+      canPop: false,
       child: Scaffold(
         backgroundColor: AppColors.lightMintGreen,
+        bottomNavigationBar: SafeArea(
+          top: false,
+          child: CustomNavBar(
+            currentTab: _currentTab,
+            onTabSelected: _onTabSelected,
+          ),
+        ),
         body: LayoutBuilder(
           builder: (context, constraints) {
             final double estimatedContentHeight =
@@ -192,22 +245,6 @@ class _OverzichtScreenState extends State<OverzichtScreen> {
                                       .pushForward(
                                         context,
                                         const KaartOverviewScreen(),
-                                      );
-                                });
-                              },
-                            ),
-                            (
-                              text: 'Dierenquiz',
-                              icon: Icons.quiz,
-                              imagePath: null,
-                              key: Key('dierenquiz_button'),
-                              onPressed: () {
-                                _runWithLocationGate(() {
-                                  context
-                                      .read<NavigationStateInterface>()
-                                      .pushForward(
-                                        context,
-                                        const AnimalsQuizScreen(),
                                       );
                                 });
                               },

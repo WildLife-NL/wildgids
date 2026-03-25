@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:wildgids/models/animal_waarneming_models/animal_model.dart';
 import 'package:wildgids/constants/app_colors.dart';
 
@@ -25,12 +25,12 @@ class AnimalTile extends StatelessWidget {
         ).copyWith(
           // Use the app's brown300 color for hover/pressed overlay so the
           // photo container highlights with 0xFFEBC4A6 as requested.
-          overlayColor: MaterialStateProperty.resolveWith<Color?>((states) {
-            if (states.contains(MaterialState.hovered)) {
-              return AppColors.brown300.withOpacity(0.12);
+          overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
+            if (states.contains(WidgetState.hovered)) {
+              return AppColors.brown300.withValues(alpha: 0.12);
             }
-            if (states.contains(MaterialState.pressed)) {
-              return AppColors.brown300.withOpacity(0.18);
+            if (states.contains(WidgetState.pressed)) {
+              return AppColors.brown300.withValues(alpha: 0.18);
             }
             return null;
           }),
