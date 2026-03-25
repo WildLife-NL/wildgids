@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'package:wildgids/data_managers/api_client.dart';
 import 'package:wildgids/interfaces/data_apis/interaction_query_api_interface.dart';
 import 'package:wildgids/models/api_models/interaction_query_result.dart';
@@ -61,8 +61,9 @@ class InteractionQueryApi implements InteractionQueryApiInterface {
     }
 
     if (res.statusCode == 204 || res.statusCode == 404) return const [];
-    if (res.statusCode == 401)
+    if (res.statusCode == 401) {
       throw Exception('Unauthorized (401) on /interactions/query/');
+    }
 
     throw Exception('Query failed (${res.statusCode}): ${res.body}');
   }

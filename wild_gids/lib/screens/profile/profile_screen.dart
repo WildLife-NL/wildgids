@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
+import 'package:wildgids/models/enums/nav_tab.dart';
 import 'package:wildgids/providers/app_state_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wildgids/utils/responsive_utils.dart';
 import 'package:wildgids/interfaces/data_apis/profile_api_interface.dart';
+import 'package:wildgids/screens/location/kaart_overview_screen.dart';
+import 'package:wildgids/screens/logbook/logbook_screen.dart';
 import 'package:wildgids/screens/profile/edit_profile_screen.dart';
+import 'package:wildgids/screens/shared/rapporteren.dart';
+import 'package:wildgids/screens/species/species_list_screen.dart';
 import 'package:wildgids/models/beta_models/profile_model.dart';
 import 'package:wildgids/widgets/location/location_sharing_indicator.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/custom_nav_bar.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -21,6 +28,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Profile? _profile;
   bool _loadingProfile = true;
 
+  void _onTabSelected(NavTab tab) {
+    final navigationManager = context.read<NavigationStateInterface>();
+    switch (tab) {
+      case NavTab.zones:
+        navigationManager.pushReplacementForward(context, const SpeciesListScreen());
+        break;
+      case NavTab.rapporten:
+        navigationManager.pushReplacementForward(context, const Rapporteren());
+        break;
+      case NavTab.kaart:
+        navigationManager.pushReplacementForward(context, const KaartOverviewScreen());
+        break;
+      case NavTab.logboek:
+        navigationManager.pushReplacementForward(context, const LogbookScreen());
+        break;
+      case NavTab.profile:
+        return;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -28,12 +55,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _loadUserData() async {
+    final profileApi = context.read<ProfileApiInterface>();
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
     setState(() {
       _userName = prefs.getString('userName') ?? 'User';
     });
     try {
-      final profileApi = context.read<ProfileApiInterface>();
       final profile = await profileApi.fetchMyProfile();
       if (!mounted) return;
       setState(() {
@@ -68,12 +96,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 padding: EdgeInsets.only(top: responsive.hp(1)),
                 child: Row(
                   children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back_ios_new),
-                      color: AppColors.offWhite,
-                      iconSize: responsive.sp(3),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
+                    SizedBox(width: responsive.wp(12)),
                     Expanded(
                       child: Center(
                         child: Text(
@@ -277,7 +300,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     TextButton(
-                      onPressed: () => _confirmLogout(context),
+                      onPressed: _confirmLogout,
                       style: TextButton.styleFrom(
                         foregroundColor: AppColors.offWhite,
                         padding: EdgeInsets.symmetric(
@@ -291,7 +314,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: const Text('Afmelden'),
                     ),
                     TextButton(
-                      onPressed: () => _confirmDelete(context),
+                      onPressed: _confirmDelete,
                       style: TextButton.styleFrom(
                         foregroundColor: Colors.redAccent,
                         padding: EdgeInsets.symmetric(
@@ -309,6 +332,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ],
           ),
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: CustomNavBar(
+          currentTab: NavTab.profile,
+          onTabSelected: _onTabSelected,
         ),
       ),
     );
@@ -339,7 +369,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               TextButton(
-                onPressed: () => _handleEditProfile(context),
+                onPressed: _handleEditProfile,
                 style: TextButton.styleFrom(
                   foregroundColor: AppColors.lightMintGreen,
                   textStyle: TextStyle(fontSize: responsive.fontSize(14)),
@@ -429,7 +459,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Future<void> _handleEditProfile(BuildContext context) async {
+  Future<void> _handleEditProfile() async {
     try {
       final profileApi = context.read<ProfileApiInterface>();
       final currentProfile = await profileApi.fetchMyProfile();
@@ -464,7 +494,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  void _confirmLogout(BuildContext context) {
+  void _confirmLogout() {
     final responsive = context.responsive;
     showDialog(
       context: context,
@@ -485,6 +515,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           TextButton(
             onPressed: () async {
               Navigator.of(ctx).pop();
+              if (!mounted) return;
               final appStateProvider = context.read<AppStateProvider>();
               await appStateProvider.logout();
             },
@@ -495,7 +526,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void _confirmDelete(BuildContext context) {
+  void _confirmDelete() {
     final responsive = context.responsive;
     showDialog(
       context: context,
@@ -545,108 +576,5 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _filledButton(
-    BuildContext context,
-    String text, {
-    required VoidCallback onPressed,
-  }) {
-    final responsive = context.responsive;
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        style: ButtonStyle(
-          // default background: light mint; on hover/pressed: light green
-          backgroundColor: MaterialStateProperty.resolveWith<Color?>((states) {
-            if (states.contains(MaterialState.hovered) ||
-                states.contains(MaterialState.pressed)) {
-              return AppColors.lightGreen; // 0xFF1F4A14
-            }
-            return AppColors.lightMintGreen; // 0xFFF1F5F2
-          }),
-          // default text: black; on hover/pressed: offWhite
-          foregroundColor: MaterialStateProperty.resolveWith<Color?>((states) {
-            if (states.contains(MaterialState.hovered) ||
-                states.contains(MaterialState.pressed)) {
-              return AppColors.offWhite;
-            }
-            return AppColors.black;
-          }),
-          padding: MaterialStateProperty.all(
-            EdgeInsets.symmetric(vertical: responsive.hp(1.75)),
-          ),
-          shape: MaterialStateProperty.all(
-            RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(responsive.sp(3)),
-            ),
-          ),
-          textStyle: MaterialStateProperty.all(
-            TextStyle(fontSize: responsive.fontSize(16)),
-          ),
-          // small elevation to match flat look; keep default elevation on press
-          elevation: MaterialStateProperty.resolveWith<double?>((states) {
-            if (states.contains(MaterialState.pressed)) return 2.0;
-            return 0.0;
-          }),
-        ),
-        onPressed: onPressed,
-        child: Text(text),
-      ),
-    );
-  }
-
-  Widget _outlinedButton(
-    BuildContext context,
-    String text, {
-    required VoidCallback onPressed,
-  }) {
-    final responsive = context.responsive;
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton(
-        style: ButtonStyle(
-          backgroundColor: MaterialStateProperty.resolveWith<Color?>((states) {
-            if (states.contains(MaterialState.hovered) ||
-                states.contains(MaterialState.pressed)) {
-              return AppColors.lightGreen;
-            }
-            return AppColors.lightMintGreen;
-          }),
-          foregroundColor: MaterialStateProperty.resolveWith<Color?>((states) {
-            if (states.contains(MaterialState.hovered) ||
-                states.contains(MaterialState.pressed)) {
-              return AppColors.offWhite;
-            }
-            return AppColors.black;
-          }),
-          side: MaterialStateProperty.resolveWith<BorderSide?>((states) {
-            if (states.contains(MaterialState.hovered) ||
-                states.contains(MaterialState.pressed)) {
-              return BorderSide(
-                color: AppColors.lightGreen,
-                width: responsive.sp(0.2),
-              );
-            }
-            return BorderSide(
-              color: AppColors.lightMintGreen,
-              width: responsive.sp(0.2),
-            );
-          }),
-          padding: MaterialStateProperty.all(
-            EdgeInsets.symmetric(vertical: responsive.hp(1.75)),
-          ),
-          shape: MaterialStateProperty.all(
-            RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(responsive.sp(3)),
-            ),
-          ),
-          textStyle: MaterialStateProperty.all(
-            TextStyle(fontSize: responsive.fontSize(16)),
-          ),
-        ),
-        onPressed: onPressed,
-        child: Text(text),
-      ),
-    );
-  }
 }
 

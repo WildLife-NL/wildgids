@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wildgids/interfaces/location/location_screen_interface.dart';
 import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
@@ -7,7 +7,7 @@ import 'package:wildgids/models/beta_models/interaction_response_model.dart';
 import 'package:wildgids/models/beta_models/report_location_model.dart';
 import 'package:wildgids/providers/map_provider.dart';
 import 'package:wildgids/providers/belonging_damage_report_provider.dart';
-import 'package:wildgids/screens/shared/overzicht_screen.dart';
+import 'package:wildgids/screens/location/kaart_overview_screen.dart';
 import 'package:wildgids/screens/questionnaire/questionnaire_screen.dart';
 import 'package:wildgids/screens/belonging/belonging_damages_screen.dart';
 import 'package:wildgids/utils/toast_notification_handler.dart';
@@ -259,7 +259,7 @@ class _BelongingLocationScreenState extends State<BelongingLocationScreen> {
         interactionID: interactionResponseModel.interactionID,
       );
     } else {
-      _pendingNavigationScreen = const OverzichtScreen();
+      _pendingNavigationScreen = const KaartOverviewScreen();
     }
 
     WidgetsBinding.instance.addPostFrameCallback(

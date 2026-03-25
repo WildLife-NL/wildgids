@@ -1,8 +1,7 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:wildgids/constants/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:wildgids/providers/app_state_provider.dart';
-import 'package:wildgids/screens/profile/profile_screen.dart';
 import 'package:wildgids/utils/responsive_utils.dart';
 
 class CustomAppBar extends StatelessWidget {
@@ -65,9 +64,6 @@ class CustomAppBar extends StatelessWidget {
 
     // Calculate responsive icon size
     final double finalIconSize = responsive.sp(2.8) * iconScale;
-    // Slightly larger profile/person glyph by default (configurable)
-    final double userIconSize = finalIconSize * userIconScale;
-
     final double topPadding = responsive.hp(topPaddingFraction * 100);
 
     return Padding(
@@ -143,29 +139,8 @@ class CustomAppBar extends StatelessWidget {
                         ),
                       ),
                     )
-                  else if (showUserIcon)
-                    Padding(
-                      padding: EdgeInsets.only(
-                        right: responsive.wp(8), // 8% of screen width
-                        bottom: responsive.hp(0.8), // nudge slightly upward
-                      ),
-                      child: GestureDetector(
-                        onTap:
-                            onUserIconPressed ??
-                            () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => const ProfileScreen(),
-                                ),
-                              );
-                            },
-                        child: Icon(
-                          Icons.person,
-                          color: iconColor ?? AppColors.brown,
-                          size: userIconSize,
-                        ),
-                      ),
-                    ),
+                  else
+                    SizedBox(width: responsive.wp(8)),
                 ],
               ),
             ),

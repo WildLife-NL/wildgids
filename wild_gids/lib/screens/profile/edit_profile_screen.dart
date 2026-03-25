@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wildgids/constants/app_colors.dart';
 import 'package:wildgids/interfaces/data_apis/profile_api_interface.dart';
@@ -174,12 +174,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 padding: EdgeInsets.only(top: responsive.hp(1)),
                 child: Row(
                   children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back_ios_new),
-                      color: AppColors.offWhite,
-                      iconSize: responsive.sp(3),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
+                    SizedBox(width: responsive.wp(12)),
                     Expanded(
                       child: Center(
                         child: Text(
@@ -259,28 +254,28 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         width: double.infinity,
                         child: ElevatedButton(
                           style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.resolveWith<Color?>(
+                            backgroundColor: WidgetStateProperty.resolveWith<Color?>(
                               (states) {
-                                if (states.contains(MaterialState.hovered) ||
-                                    states.contains(MaterialState.pressed)) {
+                                if (states.contains(WidgetState.hovered) ||
+                                    states.contains(WidgetState.pressed)) {
                                   return AppColors.lightGreen;
                                 }
                                 return AppColors.lightMintGreen;
                               },
                             ),
-                            foregroundColor: MaterialStateProperty.resolveWith<Color?>(
+                            foregroundColor: WidgetStateProperty.resolveWith<Color?>(
                               (states) {
-                                if (states.contains(MaterialState.hovered) ||
-                                    states.contains(MaterialState.pressed)) {
+                                if (states.contains(WidgetState.hovered) ||
+                                    states.contains(WidgetState.pressed)) {
                                   return AppColors.offWhite;
                                 }
                                 return AppColors.black;
                               },
                             ),
-                            padding: MaterialStateProperty.all(
+                            padding: WidgetStateProperty.all(
                               EdgeInsets.symmetric(vertical: responsive.hp(1.75)),
                             ),
-                            shape: MaterialStateProperty.all(
+                            shape: WidgetStateProperty.all(
                               RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(responsive.sp(3)),
                               ),

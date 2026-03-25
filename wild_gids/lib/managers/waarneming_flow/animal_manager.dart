@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 import 'package:wildgids/interfaces/waarneming_flow/animal_interface.dart';
 import 'package:wildgids/models/animal_waarneming_models/animal_model.dart';
 import 'package:wildgids/interfaces/data_apis/species_api_interface.dart';
@@ -62,8 +62,11 @@ class AnimalManager
     if (name.contains('damhert') || name.contains('fallow')) return 'assets/animals/damhert.png';
     if (name.contains('edelhert') || name.contains('red deer')) return 'assets/animals/edelhert.png';
     if (name.contains('hert')) return 'assets/animals/edelhert.png';
-    if (name.contains('zwijn') || name.contains('wild zwijn') || name.contains('boar'))
+    if (name.contains('zwijn') ||
+        name.contains('wild zwijn') ||
+        name.contains('boar')) {
       return 'assets/animals/wild zwijn.png';
+    }
     if (name.contains('bever') || name.contains('beaver')) return 'assets/animals/bever.png';
     if (name.contains('eekhoorn') || name.contains('squirrel')) return 'assets/animals/eekhoorn.png';
     if (name.contains('egel') || name.contains('hedgehog')) return 'assets/animals/egel.png';
@@ -157,6 +160,7 @@ class AnimalManager
   }
 
   /// Returns unique backend categories derived from species data.
+  @override
   Future<List<String>> getBackendCategories() async {
     // Prefer cached animals to avoid extra API call
     final animals = _cachedAnimals ?? await getAnimals();
@@ -171,6 +175,7 @@ class AnimalManager
   }
 
   /// Filter animals by a backend-provided category name. Null or empty returns all.
+  @override
   Future<List<AnimalModel>> getAnimalsByBackendCategory({String? category}) async {
     final animals = await getAnimals();
     if (category == null || category.isEmpty || category == 'Alle') return animals;

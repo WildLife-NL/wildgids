@@ -6,7 +6,12 @@ import 'package:wildgids/constants/app_colors.dart';
 import 'package:wildgids/utils/species_click_tracker.dart';
 import 'package:wildgids/utils/species_image_resolver.dart';
 import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
-import 'package:wildgids/screens/shared/overzicht_screen.dart';
+import 'package:wildgids/screens/location/kaart_overview_screen.dart';
+import 'package:wildgids/models/enums/nav_tab.dart';
+import 'package:wildgids/screens/logbook/logbook_screen.dart';
+import 'package:wildgids/screens/profile/profile_screen.dart';
+import 'package:wildgids/screens/shared/rapporteren.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/custom_nav_bar.dart';
 
 // Image resolution now handled by SpeciesImageResolver + SpeciesClickTracker
 
@@ -24,6 +29,26 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
   bool _isGridView = true;
   final TextEditingController _searchController = TextEditingController();
 
+  void _onTabSelected(NavTab tab) {
+    final nav = context.read<NavigationStateInterface>();
+    switch (tab) {
+      case NavTab.zones:
+        return;
+      case NavTab.rapporten:
+        nav.pushReplacementForward(context, const Rapporteren());
+        break;
+      case NavTab.kaart:
+        nav.pushReplacementForward(context, const KaartOverviewScreen());
+        break;
+      case NavTab.logboek:
+        nav.pushReplacementForward(context, const LogbookScreen());
+        break;
+      case NavTab.profile:
+        nav.pushReplacementForward(context, const ProfileScreen());
+        break;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -35,15 +60,6 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
-          onPressed: () {
-            // Go back to Overzicht explicitly to avoid black screen from empty stack
-            final nav = context.read<NavigationStateInterface>();
-            nav.pushAndRemoveUntil(context, const OverzichtScreen());
-          },
-          tooltip: 'Terug',
-        ),
         title: const Text('Soorten', style: TextStyle(color: Colors.black)),
         centerTitle: true,
         backgroundColor: AppColors.lightMintGreen,
@@ -125,6 +141,13 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
             ],
           );
         },
+      ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: CustomNavBar(
+          currentTab: NavTab.zones,
+          onTabSelected: _onTabSelected,
+        ),
       ),
     );
   }
@@ -490,7 +513,7 @@ class _SpeciesDetailScreenState extends State<SpeciesDetailScreen> {
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  // Back button on the left
+                  // Back button on the left for detail screen
                   Align(
                     alignment: Alignment.centerLeft,
                     child: IconButton(

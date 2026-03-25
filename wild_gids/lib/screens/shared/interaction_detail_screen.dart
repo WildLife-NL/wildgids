@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:wildgids/constants/app_colors.dart';
 import 'package:wildgids/models/api_models/my_interaction.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
@@ -55,7 +55,7 @@ class InteractionDetailScreen extends StatelessWidget {
         child: Column(
           children: [
             CustomAppBar(
-              leftIcon: Icons.arrow_back_ios,
+              leftIcon: null,
               centerText: 'Interactie Details',
               rightIcon: null,
               showUserIcon: true,
@@ -224,7 +224,7 @@ class InteractionDetailScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),

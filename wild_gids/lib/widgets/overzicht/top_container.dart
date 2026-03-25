@@ -124,7 +124,7 @@ class _TopContainerState extends State<TopContainer> {
                       _version,
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: AppColors.offWhite.withOpacity(0.7),
+                        color: AppColors.offWhite.withValues(alpha: 0.7),
                         fontSize: widget.welcomeFontSize * 0.7,
                         fontWeight: FontWeight.w400,
                       ),
