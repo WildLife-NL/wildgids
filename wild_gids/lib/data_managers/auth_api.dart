@@ -55,7 +55,13 @@ class AuthApi implements AuthApiInterface {
     if (response.statusCode == HttpStatus.ok) {
       debugPrint("Code Succesfully Verified!");
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString('bearer_token', json!["token"]);
+      final token = json!["token"];
+      debugPrint("[AuthApi] Token received from backend: $token");
+      await prefs.setString('bearer_token', token);
+      debugPrint("[AuthApi] Token saved to SharedPreferences");
+      // Verify it was saved
+      final savedToken = prefs.getString('bearer_token');
+      debugPrint("[AuthApi] Verification - token in storage: ${savedToken == token ? "✓ MATCHES" : "✗ MISMATCH"}");
       debugPrint("Code stored in shared prefrences");
       debugPrint(json.toString());
       User user = User.fromJson(json);

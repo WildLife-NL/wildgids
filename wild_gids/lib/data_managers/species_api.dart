@@ -14,11 +14,17 @@ class SpeciesApi implements SpeciesApiInterface {
   @override
   Future<List<Species>> getAllSpecies() async {
     try {
+      debugPrint('[SpeciesApi] Fetching species from species/ endpoint...');
       final response = await client.get('species/', authenticated: true);
+      debugPrint('[SpeciesApi] Response status: ${response.statusCode}');
+      debugPrint('[SpeciesApi] Response body: ${response.body}');
 
       if (response.statusCode == HttpStatus.ok) {
         final json = jsonDecode(response.body) as List;
-        return json.map((e) => Species.fromJson(e)).toList();
+        debugPrint('[SpeciesApi] Successfully parsed ${json.length} species');
+        final species = json.map((e) => Species.fromJson(e)).toList();
+        debugPrint('[SpeciesApi] Converted to AnimalModel objects: ${species.length}');
+        return species;
       }
 
       throw Exception('API Error: ${response.statusCode} - ${response.body}');

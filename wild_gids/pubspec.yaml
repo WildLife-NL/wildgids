@@ -78,6 +78,8 @@ flutter:
     - assets/icons/rapporteren/accident_icon.png
     - assets/icons/accident.png
     - assets/icons/binoculars.png
+    - assets/icons/binoculars-filled.svg
+    - assets/icons/map-pic.jpg
     - assets/icons/agriculture.png
     - assets/icons/deer.png
     - assets/icons/animals/

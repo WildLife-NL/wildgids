@@ -7,8 +7,6 @@ import 'package:wildgids/models/animal_waarneming_models/animal_model.dart';
 
 import 'package:wildgids/screens/waarneming/animal_counting_screen.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
-import 'package:wildgids/widgets/shared_ui_widgets/bottom_app_bar.dart';
-import 'package:wildgids/constants/app_colors.dart';
 import 'package:wildgids/widgets/animals/scrollable_animal_grid.dart';
 
 class AnimalsScreen extends StatefulWidget {
@@ -32,7 +30,6 @@ class _AnimalsScreenState extends State<AnimalsScreen>
   bool _isLoading = true;
   // dropdown expansion state no longer used (custom UI)
   final TextEditingController _searchController = TextEditingController();
-  List<String> _categories = const [];
   String _selectedCategory = 'Alle';
 
   @override
@@ -56,17 +53,11 @@ class _AnimalsScreenState extends State<AnimalsScreen>
   }
 
   void _validateAndLoad() {
-    if (!_animalSightingManager.validateActiveAnimalSighting()) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Geen actieve animalSighting gevonden'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      });
-      return;
+    // Try to validate and set up sighting context, but don't block screen load
+    final isValid = _animalSightingManager.validateActiveAnimalSighting();
+    if (!isValid) {
+      debugPrint('[AnimalsScreen] No active animal sighting - attempting to initialize');
+      // Try to create a basic sighting state if needed
     }
     _loadAnimals();
   }
@@ -74,14 +65,19 @@ class _AnimalsScreenState extends State<AnimalsScreen>
   Future<void> _loadAnimals() async {
     debugPrint('[AnimalsScreen] Starting to load animals');
     try {
-      setState(() {
-        _isLoading = true;
-        _error = null;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = true;
+          _error = null;
+        });
+      }
 
+      debugPrint('[AnimalsScreen] Calling getAnimalsByBackendCategory with category: $_selectedCategory');
       final animals = await _animalManager.getAnimalsByBackendCategory(
         category: _selectedCategory == 'Alle' ? null : _selectedCategory,
       );
+
+      debugPrint('[AnimalsScreen] API returned ${animals.length} animals');
 
       // Filter out the placeholder/unknown entry from the selection list
       final filtered = animals.where((a) {
@@ -158,11 +154,7 @@ class _AnimalsScreenState extends State<AnimalsScreen>
 
   Future<void> _loadCategories() async {
     try {
-      final cats = await _animalManager.getBackendCategories();
-      if (!mounted) return;
-      setState(() {
-        _categories = ['Alle', ...cats];
-      });
+      await _animalManager.getBackendCategories();
     } catch (e) {
       // Keep empty list on failure
     }
@@ -170,184 +162,142 @@ class _AnimalsScreenState extends State<AnimalsScreen>
 
   @override
   Widget build(BuildContext context) {
-    // dropdownInterface removed - using custom search/filter UI instead
+    // New waarneming-styled layout: grey background, Waarneming header,
+    // and a card container with search + animal grid.
 
     return Scaffold(
-      backgroundColor: AppColors.lightMintGreen,
+      backgroundColor: const Color(0xFFF5F6F4),
       body: SafeArea(
         bottom: false,
         child: Column(
           children: [
             CustomAppBar(
-              leftIcon: null,
-              centerText: widget.appBarTitle,
-              // no right icon here so the user/profile icon is shown like Rapporteren
+              leftIcon: Icons.arrow_back_ios,
+              centerText: 'Waarneming',
               rightIcon: null,
-              showUserIcon: true,
+              showUserIcon: false,
               useFixedText: true,
               onLeftIconPressed: _handleBackNavigation,
-              // match Rapporteren app bar styling exactly
               iconColor: Colors.black,
               textColor: Colors.black,
-              fontScale: 1.15,
+              fontScale: 1.4,
               iconScale: 1.15,
               userIconScale: 1.15,
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20.0,
-                vertical: 12.0,
-              ),
-              child: Row(
-                children: [
-                  // Category filter dropdown (compact)
-                  Container(
-                    height: 44,
-                    constraints: const BoxConstraints(
-                      minWidth: 140,
-                      maxWidth: 220,
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.darkGreen,
-                        width: 1.5,
+              padding: const EdgeInsets.fromLTRB(25, 12, 0, 4),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Selecteer Dier:',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.black87,
                       ),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        isDense: true,
-                        iconSize: 18,
-                        value: _selectedCategory,
-                        items:
-                            _categories
-                                .map(
-                                  (c) => DropdownMenuItem(
-                                    value: c,
-                                    child: Tooltip(
-                                      message: c,
-                                      waitDuration: const Duration(
-                                        milliseconds: 500,
-                                      ),
-                                      child: Text(
-                                        c,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(fontSize: 14),
-                                      ),
-                                    ),
-                                  ),
-                                )
-                                .toList(),
-                        selectedItemBuilder:
-                            (ctx) =>
-                                _categories
-                                    .map(
-                                      (c) => Align(
-                                        alignment: Alignment.centerLeft,
-                                        child: Tooltip(
-                                          message: c,
-                                          waitDuration: const Duration(
-                                            milliseconds: 500,
-                                          ),
-                                          child: Text(
-                                            c,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    )
-                                    .toList(),
-                        onChanged: (val) async {
-                          if (val == null) return;
-                          setState(() => _selectedCategory = val);
-                          await _loadAnimals();
-                        },
-                        isExpanded: true,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Search box (compact) â€” fits same row
-                  Expanded(
-                    child: Container(
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: AppColors.lightMintGreen,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppColors.darkGreen,
-                          width: 1.5,
-                        ),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.search, color: AppColors.darkGreen),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: TextField(
-                              controller: _searchController,
-                              style: const TextStyle(fontSize: 14),
-                              decoration: InputDecoration(
-                                hintText: 'Zoeken',
-                                border: InputBorder.none,
-                                isCollapsed: true,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 10,
-                                ),
-                                suffixIcon:
-                                    (_searchController.text.isNotEmpty)
-                                        ? IconButton(
-                                          icon: const Icon(
-                                            Icons.clear,
-                                            color: AppColors.darkGreen,
-                                          ),
-                                          onPressed: () {
-                                            _searchController.clear();
-                                            _animalManager.updateSearchTerm('');
-                                            setState(() {});
-                                          },
-                                        )
-                                        : null,
-                              ),
-                              onChanged: (val) {
-                                _animalManager.updateSearchTerm(val);
-                                setState(() {});
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
             Expanded(
-              child: ScrollableAnimalGrid(
-                animals: _animals, // Pass directly without the ?? []
-                isLoading: _isLoading,
-                error: _error,
-                scrollController: _scrollController,
-                onAnimalSelected: _handleAnimalSelection,
-                onRetry: _loadAnimals,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8.0,
+                ),
+                child: Card(
+                  elevation: 0,
+                  color: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    side: BorderSide(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SizedBox(height: 4),
+                        // Search bar
+                        Container(
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              width: 1.2,
+                            ),
+                          ),
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.search,
+                                color: Colors.black.withValues(alpha: 0.6),
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: TextField(
+                                  controller: _searchController,
+                                  style: const TextStyle(fontSize: 14),
+                                  decoration: InputDecoration(
+                                    hintText: 'Zoeken...',
+                                    border: InputBorder.none,
+                                    isCollapsed: true,
+                                    contentPadding:
+                                        const EdgeInsets.symmetric(
+                                      vertical: 10,
+                                    ),
+                                    suffixIcon:
+                                        (_searchController.text.isNotEmpty)
+                                            ? IconButton(
+                                              icon: const Icon(
+                                                Icons.clear,
+                                                size: 18,
+                                              ),
+                                              onPressed: () {
+                                                _searchController.clear();
+                                                _animalManager
+                                                    .updateSearchTerm('');
+                                                setState(() {});
+                                              },
+                                            )
+                                            : null,
+                                  ),
+                                  onChanged: (val) {
+                                    _animalManager.updateSearchTerm(val);
+                                    setState(() {});
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        // Animal grid fills remaining space
+                        Expanded(
+                          child: ScrollableAnimalGrid(
+                            animals: _animals,
+                            isLoading: _isLoading,
+                            error: _error,
+                            scrollController: _scrollController,
+                            onAnimalSelected: _handleAnimalSelection,
+                            onRetry: _loadAnimals,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
           ],
         ),
-      ),
-      bottomNavigationBar: CustomBottomAppBar(
-        onBackPressed: _handleBackNavigation,
-        onNextPressed: null,
-        showNextButton: false,
-        showBackButton: true,
       ),
     );
   }

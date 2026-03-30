@@ -64,7 +64,7 @@ class AssetPreloader {
       'assets/animals/konikpaard.png',
       'assets/animals/shetland pony.png',
       'assets/animals/exmoor pony.png',
-      'assets/animals/tauros.png',
+      'assets/animals/taurus.png',
       'assets/animals/europese nerts.png',
       'assets/animals/woelrat.png',
       'assets/animals/goudjakhals.png',
@@ -85,5 +85,12 @@ class AssetPreloader {
 
     // Wait for all images to be cached
     await Future.wait(precacheFutures);
+  }
+
+  String? _assetForCommonName(String? commonName) {
+    if (commonName == null || commonName.isEmpty) return null;
+    final name = commonName.toLowerCase();
+
+    debugPrint('[AnimalManager] Looking for image for: $commonName (lowercased: $name)');
   }
 }

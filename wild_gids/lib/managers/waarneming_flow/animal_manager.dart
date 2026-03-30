@@ -24,11 +24,20 @@ class AnimalManager
   Future<List<AnimalModel>> getAnimals({AnimalCategory? category}) async {
     try {
       if (_cachedAnimals != null) {
+        debugPrint('[AnimalManager] Returning cached animals: ${_cachedAnimals!.length}');
         return _getFilteredAnimals(_cachedAnimals!);
       }
 
+      debugPrint('[AnimalManager] Fetching fresh species from API...');
       final species = await _speciesApi.getAllSpecies();
-      debugPrint('[AnimalManager] species fetched: ${species.length}');
+      debugPrint('[AnimalManager] Raw species fetched: ${species.length}');
+      
+      if (species.isEmpty) {
+        debugPrint('[AnimalManager] WARNING: API returned empty species list');
+      } else {
+        debugPrint('[AnimalManager] Sample species: ${species.take(3).map((s) => '${s.commonName} (${s.id})').join(", ")}');
+      }
+      
       _cachedAnimals = species
           .map(
             (s) => AnimalModel(
@@ -41,9 +50,11 @@ class AnimalManager
           )
           .toList();
 
+      debugPrint('[AnimalManager] Converted to ${_cachedAnimals!.length} AnimalModels');
       return _getFilteredAnimals(_cachedAnimals!);
-    } catch (e) {
-      debugPrint('[AnimalManager] Error fetching animals: $e');
+    } catch (e, stackTrace) {
+      debugPrint('[AnimalManager] ERROR in getAnimals(): $e');
+      debugPrint('[AnimalManager] Stack trace: $stackTrace');
       return [];
     }
   }
@@ -53,6 +64,8 @@ class AnimalManager
   String? _assetForCommonName(String? commonName) {
     if (commonName == null || commonName.isEmpty) return null;
     final name = commonName.toLowerCase();
+    
+    debugPrint('[AnimalManager] Looking for image for: "$commonName" (normalized: "$name")');
 
     // Use curated animal photos under assets/animals
     if (name.contains('wolf')) return 'assets/animals/wolf.png';
@@ -81,7 +94,7 @@ class AnimalManager
     if (name.contains('konik') || name.contains('konikpaard')) return 'assets/animals/konikpaard.png';
     if (name.contains('shetland') || name.contains('pony')) return 'assets/animals/shetland pony.png';
     if (name.contains('exmoor')) return 'assets/animals/exmoor pony.png';
-    if (name.contains('tauros')) return 'assets/animals/tauros.png';
+    if (name.contains('tauros') || name.contains('taurus')) return 'assets/animals/taurus.png';
     if (name.contains('europese nerts') || name.contains('european mink')) return 'assets/animals/europese nerts.png';
     if (name.contains('woelrat') || name.contains('vole')) return 'assets/animals/woelrat.png';
     if (name.contains('goudjakhals') || name.contains('golden jackal')) return 'assets/animals/goudjakhals.png';
@@ -89,6 +102,7 @@ class AnimalManager
     if (name.contains('konijn') || name.contains('rabbit')) return 'assets/animals/konijn.png';
 
     // No matching icon available in animals folder
+    debugPrint('[AnimalManager] No image found for: "$commonName"');
     return null;
   }
 
