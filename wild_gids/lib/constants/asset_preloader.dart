@@ -86,11 +86,4 @@ class AssetPreloader {
     // Wait for all images to be cached
     await Future.wait(precacheFutures);
   }
-
-  String? _assetForCommonName(String? commonName) {
-    if (commonName == null || commonName.isEmpty) return null;
-    final name = commonName.toLowerCase();
-
-    debugPrint('[AnimalManager] Looking for image for: $commonName (lowercased: $name)');
-  }
 }

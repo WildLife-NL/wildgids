@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart' as fm;
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
+import 'package:wildgids/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
 import 'package:wildgids/managers/map/location_map_manager.dart';
 import 'package:wildgids/screens/waarneming/animals_screen.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
@@ -84,28 +85,24 @@ class _LocationDateTimeScreenState extends State<LocationDateTimeScreen> {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: initialTime,
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF37A904), // header background & selected
-              onPrimary: Colors.white, // header/selected text color
-              onSurface: Colors.black, // body text color
-              secondary: Color(0xFF37A904), // AM/PM & accents
-            ),
-            timePickerTheme: TimePickerThemeData(
-              dayPeriodBorderSide: BorderSide(
-                color: const Color.fromARGB(255, 0, 0, 0).withValues(alpha: 0.3),
-                width: 1.0,
+      builder: (BuildContext context, Widget? child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: const ColorScheme.light(
+                primary: Color(0xFF37A904), // header background & selected
+                onPrimary: Colors.white, // header/selected text color
+                onSurface: Colors.black, // body text color
+              ),
+              textButtonTheme: TextButtonThemeData(
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFF37A904), // buttons
+                ),
               ),
             ),
-            textButtonTheme: TextButtonThemeData(
-              style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFF37A904), // buttons
-              ),
-            ),
+            child: child!,
           ),
-          child: child!,
         );
       },
     );
@@ -125,8 +122,11 @@ class _LocationDateTimeScreenState extends State<LocationDateTimeScreen> {
 
   void _onNextPressed() {
     final navigationManager = context.read<NavigationStateInterface>();
+    final sightingManager = context.read<AnimalSightingReportingInterface>();
 
-    // TODO: Save selected location and date/time into app state
+    // Save selected date/time into app state
+    sightingManager.updateDateTime(_selectedDateTime);
+    
     debugPrint(
       '[LocationDateTime] Next with location: ${widget.selectedLocation.latitude}, ${widget.selectedLocation.longitude} and datetime: $_selectedDateTime',
     );
@@ -184,7 +184,7 @@ class _LocationDateTimeScreenState extends State<LocationDateTimeScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                     side: BorderSide(
-                      color: Colors.black.withValues(alpha: 0.3),
+                      color: const Color(0xFF999999),
                       width: 1,
                     ),
                   ),
@@ -301,8 +301,7 @@ class _LocationDateTimeScreenState extends State<LocationDateTimeScreen> {
                                       const SizedBox(width: 8),
                                       Expanded(
                                         child: Text(
-                                          // TODO: Replace with real reverse-geocoded address
-                                          'Geselecteerde locatie',
+                                          '${widget.selectedLocation.latitude.toStringAsFixed(2)}, ${widget.selectedLocation.longitude.toStringAsFixed(2)}',
                                           style: Theme.of(context)
                                               .textTheme
                                               .bodyMedium

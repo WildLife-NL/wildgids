@@ -5,7 +5,7 @@ import 'package:wildgids/interfaces/waarneming_flow/animal_sighting_reporting_in
 import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
 import 'package:wildgids/models/animal_waarneming_models/animal_model.dart';
 
-import 'package:wildgids/screens/waarneming/animal_counting_screen.dart';
+import 'package:wildgids/screens/waarneming/animal_aantal_screen.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
 import 'package:wildgids/widgets/animals/scrollable_animal_grid.dart';
 
@@ -28,8 +28,7 @@ class _AnimalsScreenState extends State<AnimalsScreen>
   List<AnimalModel>? _animals;
   String? _error;
   bool _isLoading = true;
-  // dropdown expansion state no longer used (custom UI)
-  final TextEditingController _searchController = TextEditingController();
+  List<String> _categories = ['Alle'];
   String _selectedCategory = 'Alle';
 
   @override
@@ -43,10 +42,6 @@ class _AnimalsScreenState extends State<AnimalsScreen>
     _animalManager = context.read<AnimalManagerInterface>();
     _animalSightingManager = context.read<AnimalSightingReportingInterface>();
     _navigationManager = context.read<NavigationStateInterface>();
-    // Ensure search is reset when (re)entering this screen
-    _searchController.text = '';
-    _searchController.addListener(() => setState(() {}));
-    _animalManager.updateSearchTerm('');
     _animalManager.addListener(_handleStateChange);
     _validateAndLoad();
     _loadCategories();
@@ -115,11 +110,7 @@ class _AnimalsScreenState extends State<AnimalsScreen>
     debugPrint('[AnimalsScreen] Disposing screen');
     _scrollController.dispose();
     _animationController.dispose();
-    _searchController.dispose();
-    // Remove listener BEFORE clearing search term to prevent setState on disposed widget
     _animalManager.removeListener(_handleStateChange);
-    // Clear any lingering search term so future visits show all animals
-    _animalManager.updateSearchTerm('');
     super.dispose();
   }
 
@@ -137,7 +128,7 @@ class _AnimalsScreenState extends State<AnimalsScreen>
       _animalManager,
     );
 
-    _navigationManager.pushForward(context, AnimalCountingScreen());
+    _navigationManager.pushForward(context, const AnimalAantalScreen());
   }
 
   void _handleBackNavigation() {
@@ -154,9 +145,14 @@ class _AnimalsScreenState extends State<AnimalsScreen>
 
   Future<void> _loadCategories() async {
     try {
-      await _animalManager.getBackendCategories();
+      final categories = await _animalManager.getBackendCategories();
+      if (mounted) {
+        setState(() {
+          _categories = ['Alle', ...categories];
+        });
+      }
     } catch (e) {
-      // Keep empty list on failure
+      debugPrint('[AnimalsScreen] Error loading categories: $e');
     }
   }
 
@@ -210,7 +206,7 @@ class _AnimalsScreenState extends State<AnimalsScreen>
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                     side: BorderSide(
-                      color: Colors.black.withValues(alpha: 0.3),
+                      color: const Color(0xFF999999),
                       width: 1,
                     ),
                   ),
@@ -219,65 +215,85 @@ class _AnimalsScreenState extends State<AnimalsScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const SizedBox(height: 4),
-                        // Search bar
+                        const SizedBox(height: 8),
+                        // Category Filter Label
+                        Padding(
+                          padding: const EdgeInsets.only(left: 4.0, bottom: 8.0),
+                          child: Text(
+                            'Categorie',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black54,
+                            ),
+                          ),
+                        ),
+                        // Category Filter Dropdown
                         Container(
-                          height: 48,
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
+                            borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: Colors.black.withValues(alpha: 0.2),
+                              color: Colors.black.withValues(alpha: 0.15),
                               width: 1.2,
                             ),
                           ),
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.search,
+                          child: Theme(
+                            data: Theme.of(context).copyWith(
+                              highlightColor: Color(0xFFE8ECE6),
+                              splashColor:  Color(0xFFE8ECE6),
+                            ),
+                            child: DropdownButton<String>(
+                              value: _selectedCategory,
+                              isExpanded: true,
+                              underline: const SizedBox(),
+                              borderRadius: BorderRadius.circular(12),
+                              elevation: 8,
+                              dropdownColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16.0,
+                                vertical: 5.0,
+                              ),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black87,
+                              ),
+                              icon: Icon(
+                                Icons.keyboard_arrow_down,
                                 color: Colors.black.withValues(alpha: 0.6),
-                                size: 20,
+                                size: 24,
                               ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: TextField(
-                                  controller: _searchController,
-                                  style: const TextStyle(fontSize: 14),
-                                  decoration: InputDecoration(
-                                    hintText: 'Zoeken...',
-                                    border: InputBorder.none,
-                                    isCollapsed: true,
-                                    contentPadding:
-                                        const EdgeInsets.symmetric(
-                                      vertical: 10,
+                              items: _categories
+                                  .map((category) => DropdownMenuItem<String>(
+                                    value: category,
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8.0,
+                                        vertical: 8.0,
+                                      ),
+                                      child: Text(
+                                        category,
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
                                     ),
-                                    suffixIcon:
-                                        (_searchController.text.isNotEmpty)
-                                            ? IconButton(
-                                              icon: const Icon(
-                                                Icons.clear,
-                                                size: 18,
-                                              ),
-                                              onPressed: () {
-                                                _searchController.clear();
-                                                _animalManager
-                                                    .updateSearchTerm('');
-                                                setState(() {});
-                                              },
-                                            )
-                                            : null,
-                                  ),
-                                  onChanged: (val) {
-                                    _animalManager.updateSearchTerm(val);
-                                    setState(() {});
-                                  },
-                                ),
-                              ),
-                            ],
+                                  ))
+                                  .toList(),
+                            onChanged: (value) {
+                              if (value != null) {
+                                setState(() {
+                                  _selectedCategory = value;
+                                });
+                                _loadAnimals();
+                              }
+                            },
                           ),
-                        ),
+                            ),
+                          ),
                         const SizedBox(height: 16),
                         // Animal grid fills remaining space
                         Expanded(

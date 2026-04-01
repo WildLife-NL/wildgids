@@ -3,7 +3,10 @@ import 'package:flutter_map/flutter_map.dart' as fm;
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
+import 'package:wildgids/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
 import 'package:wildgids/managers/map/location_map_manager.dart';
+import 'package:wildgids/models/beta_models/location_model.dart';
+import 'package:wildgids/models/enums/location_source.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
 import 'package:wildgids/screens/waarneming/location_datetime_screen.dart';
 
@@ -47,8 +50,18 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
 
   void _onSelectPressed() {
     if (_selectedLocation != null) {
-      // TODO: Save location to app state
+      // Save location to app state
+      final sightingManager = context.read<AnimalSightingReportingInterface>();
       final navigationManager = context.read<NavigationStateInterface>();
+      
+      final location = LocationModel(
+        latitude: _selectedLocation!.latitude,
+        longitude: _selectedLocation!.longitude,
+        source: LocationSource.manual,
+      );
+      
+      sightingManager.updateLocation(location);
+      
       debugPrint(
         '[LocationSelection] Selected location: ${_selectedLocation!.latitude}, ${_selectedLocation!.longitude}',
       );
@@ -117,7 +130,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                   side: BorderSide(
-                    color: Colors.black.withValues(alpha: 0.3),
+                    color: const Color(0xFF999999),
                     width: 1,
                   ),
                 ),

@@ -36,7 +36,7 @@ class SavedQuestionnairesScreen extends StatelessWidget {
                   if (snap.connectionState != ConnectionState.done) {
                     return const Center(child: CircularProgressIndicator());
                   }
-                  final drafts = (snap.data ?? const <DraftQuestionnaire>[]) as List<DraftQuestionnaire>;
+                  final drafts = snap.data ?? const <DraftQuestionnaire>[];
                   if (drafts.isEmpty) {
                     return Center(
                       child: ConstrainedBox(

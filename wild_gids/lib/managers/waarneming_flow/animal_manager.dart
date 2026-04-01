@@ -64,8 +64,6 @@ class AnimalManager
   String? _assetForCommonName(String? commonName) {
     if (commonName == null || commonName.isEmpty) return null;
     final name = commonName.toLowerCase();
-    
-    debugPrint('[AnimalManager] Looking for image for: "$commonName" (normalized: "$name")');
 
     // Use curated animal photos under assets/animals
     if (name.contains('wolf')) return 'assets/animals/wolf.png';
@@ -102,7 +100,6 @@ class AnimalManager
     if (name.contains('konijn') || name.contains('rabbit')) return 'assets/animals/konijn.png';
 
     // No matching icon available in animals folder
-    debugPrint('[AnimalManager] No image found for: "$commonName"');
     return null;
   }
 
@@ -174,13 +171,17 @@ class AnimalManager
   Future<List<String>> getBackendCategories() async {
     // Prefer cached animals to avoid extra API call
     final animals = _cachedAnimals ?? await getAnimals();
+    debugPrint('[AnimalManager] getBackendCategories: Processing ${animals.length} animals');
     final set = <String>{};
     for (final a in animals) {
       final c = a.category?.trim();
-      if (c != null && c.isNotEmpty) set.add(c);
+      if (c != null && c.isNotEmpty) {
+        set.add(c);
+        debugPrint('[AnimalManager] Found category: "$c" from animal: ${a.animalName}');
+      }
     }
     final list = set.toList()..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-    debugPrint('[AnimalManager] categories fetched: ${list.length}');
+    debugPrint('[AnimalManager] Final categories: $list (${list.length} unique)');
     return list;
   }
 

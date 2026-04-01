@@ -47,6 +47,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wildgids/providers/app_state_provider.dart';
 import 'package:wildgids/providers/map_provider.dart';
 import 'package:wildgids/providers/response_provider.dart';
+import 'package:wildgids/providers/submitted_sightings_provider.dart';
 import 'package:wildgids/screens/login/login_screen.dart';
 import 'package:wildgids/screens/gate/location_gate_screen.dart';
 import 'package:wildgids/screens/shared/overzicht_screen.dart';
@@ -102,6 +103,8 @@ void main() async {
   final conveyanceApi = ConveyanceApi(apiClient);
   final conveyanceProvider = ConveyanceProvider(conveyanceApi);
 
+  final submittedSightingsProvider = SubmittedSightingsProvider();
+
   mapProvider.setVicinityApi(vicinityApi);
 
   // Interaction types: fetch/display names for UI
@@ -142,6 +145,9 @@ void main() async {
         ChangeNotifierProvider<AppStateProvider>.value(value: appStateProvider),
         ChangeNotifierProvider<MapProvider>.value(value: mapProvider),
         ChangeNotifierProvider<ResponseProvider>.value(value: responseProvider),
+        ChangeNotifierProvider<SubmittedSightingsProvider>.value(
+          value: submittedSightingsProvider,
+        ),
         ChangeNotifierProvider<ConveyanceProvider>.value(
           value: conveyanceProvider,
         ),

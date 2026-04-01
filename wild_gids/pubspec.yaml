@@ -83,6 +83,7 @@ flutter:
     - assets/icons/agriculture.png
     - assets/icons/deer.png
     - assets/icons/animals/
+    - assets/animals/PNG/
     - assets/animals/
     - assets/black_icons_animal/
     - assets/real_animal_pics_no_bg/

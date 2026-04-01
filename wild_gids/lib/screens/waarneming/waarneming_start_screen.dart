@@ -41,7 +41,7 @@ class WaarnemmingStartScreen extends StatelessWidget {
                   Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color.fromARGB(60, 0, 0, 0)!, width: 1),
+                      border: Border.all(color: const Color.fromARGB(60, 0, 0, 0), width: 1),
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(16),

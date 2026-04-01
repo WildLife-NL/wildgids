@@ -1,6 +1,5 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:wildgids/models/animal_waarneming_models/animal_model.dart';
-import 'package:wildgids/constants/app_colors.dart';
 
 class AnimalTile extends StatefulWidget {
   final AnimalModel animal;
@@ -13,7 +12,6 @@ class AnimalTile extends StatefulWidget {
 }
 
 class _AnimalTileState extends State<AnimalTile> {
-  bool _imageLoaded = false;
   bool _imageError = false;
 
   @override
@@ -117,10 +115,6 @@ class _AnimalTileState extends State<AnimalTile> {
       image: AssetImage(widget.animal.animalImagePath!),
       fit: BoxFit.cover,
       frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-        if (wasSynchronouslyLoaded) {
-          _imageLoaded = true;
-          return child;
-        }
         return AnimatedOpacity(
           opacity: frame == null ? 0 : 1,
           duration: const Duration(milliseconds: 500),
