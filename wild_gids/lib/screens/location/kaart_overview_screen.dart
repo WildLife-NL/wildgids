@@ -47,8 +47,6 @@ class KaartOverviewScreen extends StatefulWidget {
 
 class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     with TickerProviderStateMixin {
-  static const double _mapControlsBottom = 120.0;
-  static const double _scaleBarBottom = 184.0;
   // Approximate zoom level where the visible scale reaches ~500 km.
   static const double _minMapZoom = 5.0;
   // Approximate zoom level where the visible scale reaches ~50 m.
@@ -269,6 +267,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
   void dispose() {
     _debounce?.cancel();
     _posSub?.cancel();
+    _mp.setOnTrackingDisabledByTimeWindow(null);
     if (_listenerAttached && _mpListener != null) {
       _mp.removeListener(_mpListener!);
     }
@@ -482,6 +481,13 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     final map = context.read<MapProvider>();
     final app = context.read<AppStateProvider>();
     final mgr = _location; // LocationMapManager
+
+    map.setOnTrackingDisabledByTimeWindow(() async {
+      if (!mounted) return;
+      if (app.isLocationTrackingEnabled) {
+        await app.setLocationTrackingEnabled(false);
+      }
+    });
 
     // Ensure map controller exists before first render to avoid blank map on first open
     await map.initialize();
@@ -906,9 +912,9 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
       500000,
     ];
 
-    // Pick the candidate closest to a readable bar width around ~100px.
+    // Pick the candidate closest to a readable bar width around ~150px.
     // This keeps the label correct across both meter and large kilometer ranges.
-    const targetWidthPx = 100.0;
+    const targetWidthPx = 150.0;
     double chosenMeters = candidates.first.toDouble();
     double chosenWidth = chosenMeters / metersPerPixel;
     double bestDistance = (chosenWidth - targetWidthPx).abs();
@@ -2028,39 +2034,21 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                       }).toList(),
                                 ),
                           ],
-                          nonRotatedChildren: [
-                            Align(
-                              alignment: Alignment.bottomRight,
-                              child: Padding(
-                                padding: const EdgeInsets.only(right: 10, bottom: 90),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 2,
-                                  ),
-                                  color: Colors.white.withValues(alpha: 0.8),
-                                  child: const Text(
-                                    '© OpenStreetMap · Carto',
-                                    style: TextStyle(fontSize: 10),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                          nonRotatedChildren: const [],
                         ),
 
                         // â”€â”€ SCALE BAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                         Positioned(
                           left: 12,
-                          bottom: _scaleBarBottom,
+                          bottom: 44,
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 10,
-                              vertical: 8,
+                              vertical: 7,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.transparent,
-                              borderRadius: BorderRadius.circular(8),
+                              color: Colors.grey.shade400.withValues(alpha: 0.78),
+                              borderRadius: BorderRadius.circular(14),
                               boxShadow: const [
                                 BoxShadow(
                                   color: Colors.black26,
@@ -2076,18 +2064,19 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                 Text(
                                   _scaleBarLabel,
                                   style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
                                   ),
                                 ),
                                 const SizedBox(height: 6),
                                 SizedBox(
                                   width: _scaleBarWidth,
-                                  height: 6,
+                                  height: 3,
                                   child: DecoratedBox(
                                     decoration: BoxDecoration(
-                                      color: Colors.black,
-                                      borderRadius: BorderRadius.circular(3),
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(2),
                                     ),
                                   ),
                                 ),
@@ -2096,94 +2085,113 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                           ),
                         ),
 
-                        // â”€â”€ Tracking History button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                         Positioned(
-                          left: 12,
-                          bottom: _mapControlsBottom,
-                          child: FloatingActionButton(
-                            heroTag: 'tracking_history_btn',
-                            mini: true,
-                            backgroundColor:
-                                _showTrackingHistory
-                                    ? Colors.blue
-                                    : AppColors.darkGreen,
-                            onPressed:
-                                _loadingTrackingHistory
-                                    ? null
-                                    : () {
+                          top: 90,
+                          right: 14,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF222222),
+                              borderRadius: BorderRadius.circular(26),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.22),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: SizedBox(
+                              width: 56,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    tooltip: 'Volgen',
+                                    onPressed: () {
                                       if (_showTrackingHistory) {
-                                        // Toggle off
                                         setState(() {
                                           _showTrackingHistory = false;
+                                          _followUser = !_followUser;
                                         });
                                       } else {
-                                        // Load and show
                                         _loadTrackingHistory();
                                       }
                                     },
-                            child:
-                                _loadingTrackingHistory
-                                    ? const SizedBox(
-                                      width: 24,
-                                      height: 24,
-                                      child: CircularProgressIndicator(
-                                        color: Colors.white,
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                    : const Icon(
-                                      Icons.timeline,
-                                      color: Colors.white,
+                                    icon: Icon(
+                                      Icons.directions_walk,
+                                      color:
+                                          _followUser
+                                              ? const Color(0xFF37A904)
+                                              : Colors.white,
                                     ),
-                          ),
-                        ),
-
-                        // â”€â”€ Filter button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-                        Positioned(
-                          left: 72,
-                          bottom: _mapControlsBottom,
-                          child: FloatingActionButton(
-                            heroTag: 'filter_btn',
-                            mini: true,
-                            backgroundColor: AppColors.darkGreen,
-                            child: const Icon(
-                              Icons.filter_list,
-                              color: Colors.white,
-                            ),
-                            onPressed: () => _showFilterDialog(context),
-                          ),
-                        ),
-
-                        // â”€â”€ DEV: Mock pins button (env DEV_DEBUG_TOOLS) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-                        if (_devDebugToolsEnabled)
-                          Positioned(
-                            left: 132,
-                            bottom: _mapControlsBottom,
-                            child: FloatingActionButton(
-                              heroTag: 'dev_mock_btn',
-                              mini: true,
-                              backgroundColor: Colors.black87,
-                              tooltip: 'Plaats testdieren op de kaart',
-                              onPressed: _injectMockPins,
-                              child: const Icon(
-                                Icons.bug_report,
-                                color: Colors.white,
+                                  ),
+                                  Container(
+                                    width: 30,
+                                    height: 1,
+                                    color: Colors.white.withValues(alpha: 0.2),
+                                  ),
+                                  GestureDetector(
+                                    onLongPress: () => _showFilterDialog(context),
+                                    child: IconButton(
+                                      tooltip: 'Mijn locatie',
+                                      onPressed: () async {
+                                        final mp = context.read<MapProvider>();
+                                        final target =
+                                            mp.currentPosition ?? mp.selectedPosition;
+                                        if (target == null || !mp.isInitialized) return;
+                                        mp.mapController.move(
+                                          LatLng(target.latitude, target.longitude),
+                                          mp.mapController.camera.zoom,
+                                        );
+                                      },
+                                      icon: const Icon(
+                                        Icons.my_location,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
+                        ),
+                        Positioned(
+                          right: 6,
+                          bottom: 6,
+                          child: IgnorePointer(
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  '© OpenTopoMap',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.black.withValues(alpha: 0.55),
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '© OpenStreetMap contributors',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.black.withValues(alpha: 0.55),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                         if (_devDebugToolsEnabled)
                           Positioned(
-                            left: 192,
-                            bottom: _mapControlsBottom,
-                            child: FloatingActionButton(
-                              heroTag: 'dev_notice_btn',
-                              mini: true,
-                              backgroundColor: Colors.deepPurple,
-                              tooltip: 'Stuur testmelding',
-                              onPressed: _emitDevTrackingNotice,
+                            top: 210,
+                            right: 20,
+                            child: GestureDetector(
+                              onTap: _injectMockPins,
+                              onLongPress: _emitDevTrackingNotice,
                               child: const Icon(
-                                Icons.notifications_active,
-                                color: Colors.white,
+                                Icons.bug_report,
+                                color: Colors.black54,
+                                size: 20,
                               ),
                             ),
                           ),
@@ -2191,125 +2199,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                     ),
                   ),
                 ),
-        floatingActionButton: Padding(
-          padding: const EdgeInsets.only(bottom: 64.0),
-          child: FloatingActionButton(
-            tooltip: 'Center on me',
-            backgroundColor: AppColors.darkGreen,
-            child: const Icon(Icons.my_location, color: Colors.white),
-            onPressed: () async {
-            final mp = context.read<MapProvider>();
-            final appStateProvider = context.read<AppStateProvider>();
-            debugPrint('[FAB] tapped');
-
-            // Check if location tracking is enabled
-            if (!appStateProvider.isLocationTrackingEnabled) {
-              if (!mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Locatie delen is uitgeschakeld'),
-                  duration: Duration(seconds: 2),
-                ),
-              );
-              return;
-            }
-
-            _followUser = true;
-
-            // Preserve current zoom level
-            final currentZoom = mp.mapController.camera.zoom;
-
-            // If mocking is enabled, center to the mocked Utrecht position and skip real GPS
-            if (MockLocation.enabled) {
-              final pos = MockLocation.position();
-              if (_mapReady && mp.isInitialized) {
-                mp.mapController.move(
-                  LatLng(pos.latitude, pos.longitude),
-                  currentZoom,
-                );
-              } else {
-                _pendingCenter = LatLng(pos.latitude, pos.longitude);
-                _pendingZoom = currentZoom;
-              }
-              await mp.resetToCurrentLocation(pos, 'Mock locatie');
-              // Optionally send a tracking ping using the mocked position
-              await mp.sendTrackingPingFromPosition(pos);
-              _queueFetch();
-              return;
-            }
-
-            // pick a quick target
-            Position? target = mp.currentPosition ?? mp.selectedPosition;
-            target ??= await Geolocator.getLastKnownPosition();
-
-            if (target != null) {
-              if (_mapReady && mp.isInitialized) {
-                mp.mapController.move(
-                  LatLng(target.latitude, target.longitude),
-                  currentZoom,
-                );
-              } else {
-                _pendingCenter = LatLng(target.latitude, target.longitude);
-                _pendingZoom = currentZoom;
-              }
-            } else {
-              if (!context.mounted) return;
-              ScaffoldMessenger.of(context)
-                ..clearSnackBars()
-                ..showSnackBar(
-                  const SnackBar(
-                    content: Text('Zoeken naar je locatieâ€¦'),
-                    behavior: SnackBarBehavior.floating,
-                    duration: Duration(seconds: 2),
-                  ),
-                );
-            }
-
-            // resolve fresh GPS + address in background (donâ€™t block the jump)
-            Future(() async {
-              Position? fresh;
-              try {
-                fresh = await Geolocator.getCurrentPosition(
-                  locationSettings: const LocationSettings(
-                    accuracy: LocationAccuracy.high,
-                  ),
-                ).timeout(const Duration(seconds: 2));
-              } catch (_) {}
-
-              fresh ??= target;
-              if (fresh == null || !mounted) return;
-
-              String address = mp.currentAddress;
-              try {
-                final a = await _location.getAddressFromPosition(fresh);
-                if (a.trim().isNotEmpty) address = a;
-              } catch (e) {
-                debugPrint('[FAB] Reverse geocoding failed: $e');
-              }
-
-              await mp.resetToCurrentLocation(fresh, address);
-
-              // Only send tracking ping if tracking is enabled
-              if (appStateProvider.isLocationTrackingEnabled) {
-                await mp.sendTrackingPingFromPosition(fresh);
-              }
-
-              if (_followUser && appStateProvider.isLocationTrackingEnabled) {
-                if (_mapReady && mp.isInitialized) {
-                  mp.mapController.move(
-                    LatLng(fresh.latitude, fresh.longitude),
-                    currentZoom,
-                  );
-                } else {
-                  _pendingCenter = LatLng(fresh.latitude, fresh.longitude);
-                  _pendingZoom = currentZoom;
-                }
-              }
-              _queueFetch();
-            });
-            },
-          ),
-        ),
+        floatingActionButton: null,
         bottomNavigationBar: SafeArea(
           top: false,
           child: CustomNavBar(

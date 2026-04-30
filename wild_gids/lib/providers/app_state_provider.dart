@@ -161,8 +161,7 @@ class AppStateProvider with ChangeNotifier {
   Future<void> loadLocationTrackingPreference() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      _isLocationTrackingEnabled = true;
-      await prefs.setBool('location_tracking_enabled', true);
+      _isLocationTrackingEnabled = prefs.getBool('location_tracking_enabled') ?? true;
       debugPrint(
         '[AppStateProvider] Loaded location tracking preference: $_isLocationTrackingEnabled',
       );
@@ -179,16 +178,11 @@ class AppStateProvider with ChangeNotifier {
   Future<void> setLocationTrackingEnabled(bool enabled) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      // Tracking is mandatory for app usage; never persist disabled state.
-      await prefs.setBool('location_tracking_enabled', true);
-      _isLocationTrackingEnabled = true;
-      if (!enabled) {
-        debugPrint(
-          '[AppStateProvider] Disable request ignored: location tracking is mandatory',
-        );
-      } else {
-        debugPrint('[AppStateProvider] Location tracking enabled');
-      }
+      await prefs.setBool('location_tracking_enabled', enabled);
+      _isLocationTrackingEnabled = enabled;
+      debugPrint(
+        '[AppStateProvider] Location tracking ${enabled ? "enabled" : "disabled"}',
+      );
       notifyListeners();
     } catch (e) {
       debugPrint(

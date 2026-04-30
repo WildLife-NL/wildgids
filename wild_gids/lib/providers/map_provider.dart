@@ -36,6 +36,7 @@ class MapProvider extends ChangeNotifier {
   Timer? _trackingTimer;
   bool _isTracking = false;
   Duration _trackingInterval = const Duration(minutes: 5);
+  Future<void> Function()? _onTrackingDisabledByTimeWindow;
 
   bool get isTracking => _isTracking;
   Duration get trackingInterval => _trackingInterval;
@@ -64,8 +65,27 @@ class MapProvider extends ChangeNotifier {
     _trackingCacheManager = manager;
   }
 
+  void setOnTrackingDisabledByTimeWindow(Future<void> Function()? callback) {
+    _onTrackingDisabledByTimeWindow = callback;
+  }
+
+  bool _isInTrackingPauseWindow(DateTime now) {
+    return now.hour == 0;
+  }
+
   /// Call this to send the user's current GPS location to the backend.
   Future<TrackingNotice?> sendTrackingPingFromPosition(Position pos) async {
+    if (_isInTrackingPauseWindow(DateTime.now())) {
+      debugPrint(
+        '[MapProvider] Skipping tracking ping between 00:00 and 01:00; disabling location sharing',
+      );
+      stopTracking();
+      if (_onTrackingDisabledByTimeWindow != null) {
+        await _onTrackingDisabledByTimeWindow!.call();
+      }
+      return null;
+    }
+
     if (!_livingLabManager.isLocationInAnyLivingLab(
       LatLng(pos.latitude, pos.longitude),
     )) {
