@@ -121,7 +121,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           ),
           // Card container with map + instructions
           SizedBox(
-            height: MediaQuery.of(context).size.height * 0.75, // 75% of screen
+            height: MediaQuery.of(context).size.height * 0.68, // percentage of screen height
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 2, 16, 16),
               child: Card(
