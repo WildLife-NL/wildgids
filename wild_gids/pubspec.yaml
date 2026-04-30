@@ -105,6 +105,7 @@ flutter:
     - assets/icons/possesion/gewassen/wheat.svg
     - assets/location/location_icon.png
     - assets/icons/nav-bar/
+    - assets/images/color-animals/
   # Avoid bundling entire assets/ directory to reduce size
     - .env
 

@@ -1,8 +1,8 @@
 class SpeciesImageResolver {
-  static const String _blackIconsDir = 'assets/black_icons_animal';
+  static const String _colorAnimalsDir = 'assets/images/color-animals';
   static const String _realDir = 'assets/real_animal_pics_no_bg';
 
-  // Canonical base names used by both directories (case-sensitive as per files)
+  // Map API/common names → canonical base name
   static final Map<String, String> _base = {
     'vos': 'vos',
     'wolf': 'wolf',
@@ -40,54 +40,94 @@ class SpeciesImageResolver {
     'zwijn': 'Wild_Zwijn',
   };
 
-  static String _normalize(String? name) => (name ?? '').trim().toLowerCase();
-
-  // Not-clicked => return black icon
-  static String? drawingForCommonName(String? commonName) {
-    final base = _base[_normalize(commonName)];
-    if (base == null) return null;
-    return '$_blackIconsDir/${base}_black_icon-removebg-preview.png';
-  }
-
-  // Map canonical base to the exact filename base used in real_animal_pics_no_bg
-  static final Map<String, String> _realFileBase = {
+  // Map canonical base → actual filename (LOWERCASE!)
+  static final Map<String, String> _colorFileBase = {
+    'Galloway': 'galloway',
+    'Hooglander': 'hooglander',
+    'Damhert': 'damhert',
+    'Europese_Nerts': 'europesenerts',
+    'Bunzing': 'bunzing',
+    'Wisent': 'wisent',
+    'Goudjakhals': 'goudjakhals',
+    'Edelhert': 'edelhert',
+    'Konikpaard': 'konikpaard',
+    'wilde_kat': 'wildkat',
+    'Boommarter': 'boommarter',
+    'Hermelijn': 'hermelijn',
+    'Wild_Zwijn': 'wildzwijn',
+    'Taurus': 'taurus',
     'bever': 'bever',
-    'Boommarter': 'Boommarter',
-    'Bunzing': 'Bunzing',
-    'Damhert': 'Damhert',
     'das': 'das',
-    'Edelhert': 'Edelhert',
     'eekhoorn': 'eekhoorn',
     'egel': 'egel',
-    'Europese_Nerts': 'Europese_Nerts',
+    'haas': 'haas',
+    'konijn': 'konijn',
+    'otter': 'otter',
+    'ree': 'ree',
+    'steenmarter': 'steenmarter',
+    'vos': 'vos',
+    'wezel': 'wezel',
+    'wolf': 'wolf',
+    'woelrat': 'woelrat',
+    'Shetland_pony': 'shetlandpony',
+    'Exmoor_Pony': 'exmoorpony',
+
+  };
+
+  // Real image mapping (keep as-is mostly)
+  static final Map<String, String> _realFileBase = {
+    'bever': 'bever',
+    'Boommarter': 'boommarter',
+    'Bunzing': 'bunzing',
+    'Damhert': 'damhert',
+    'das': 'das',
+    'Edelhert': 'edelhert',
+    'eekhoorn': 'eekhoorn',
+    'egel': 'egel',
+    'Europese_Nerts': 'europese_Nerts',
     'Exmoor_Pony': 'Exmoor_Pony',
-    'Galloway': 'Galloway',
+    'Galloway': 'galloway',
     'Goudjakhals': 'Goudjakhals',
     'haas': 'haas',
     'Hermelijn': 'Hermelijn',
     'Hooglander': 'Hooglander',
     'konijn': 'konijn',
-    'Konikpaard': 'Konikpaard',
+    'Konikpaard': 'konikpaard',
     'otter': 'otter',
     'ree': 'ree',
-    'Shetland_pony': 'Shetland_pony',
+    'Shetland_pony': 'shetland_pony',
     'steenmarter': 'steenmarter',
-    'Tauros': 'Tauros',
+    'Tauros': 'taurus',
     'vos': 'vos',
     'wezel': 'wezel',
     'wilde_kat': 'wilde_kat',
-    'Wild_Zwijn': 'Wild_Zwijn',
-    'Wisent': 'Wisen', // real folder uses Wisen
+    'Wild_Zwijn': 'wild_zwijn',
+    'Wisent': 'wisen', // intentional (your folder naming)
     'wolf': 'wolf',
-    // Intentionally omit entries that have no real image (e.g., 'woelrat') to trigger paw fallback
   };
 
-  // Clicked => return real photo if available; otherwise null so UI shows paw
+  static String _normalize(String? name) =>
+      (name ?? '').trim().toLowerCase();
+
+  /// Used in grid (initial hidden/preview state)
+  static String? drawingForCommonName(String? commonName) {
+    final base = _base[_normalize(commonName)];
+    if (base == null) return null;
+
+    final colorBase = _colorFileBase[base];
+    if (colorBase == null) return null;
+
+    return '$_colorAnimalsDir/$colorBase.png';
+  }
+
+    /// Used after clicking (real photo)
   static String? realForCommonName(String? commonName) {
     final base = _base[_normalize(commonName)];
     if (base == null) return null;
+
     final realBase = _realFileBase[base];
     if (realBase == null) return null;
-    return '$_realDir/real_${realBase}.png';
+
+    return '$_realDir/real_$realBase.png';
   }
 }
