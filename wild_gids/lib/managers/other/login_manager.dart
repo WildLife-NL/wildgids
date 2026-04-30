@@ -28,10 +28,10 @@ class LoginManager implements LoginInterface {
   @override
   String? validateEmail(String? email) {
     if (email == null || email.trim().isEmpty) {
-      return 'Voer een e-mailadres in';
+      return 'Voer een emailadres in';
     }
     if (!_emailRegex.hasMatch(email.trim())) {
-      return 'Voer een geldig e-mailadres in';
+      return 'Voer een geldig emailadres in';
     }
     return null;
   }

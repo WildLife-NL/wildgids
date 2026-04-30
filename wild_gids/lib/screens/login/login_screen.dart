@@ -81,7 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
           } else if (e.toString().contains('Unauthorized') ||
               e.toString().contains('401')) {
             userFriendlyMessage =
-                'Ongeldige inloggegevens. Controleer uw e-mailadres en probeer het opnieuw.';
+                'Ongeldige inloggegevens. Controleer uw emailadres en probeer het opnieuw.';
           }
 
           _pendingErrorMessage = userFriendlyMessage;
@@ -192,7 +192,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Text(
-                            'Voer uw e-mailadres in',
+                            'Voer uw emailadres in',
                             textAlign: TextAlign.center,
                             style: AppTextTheme.textTheme.titleMedium?.copyWith(
                               fontSize: ru.adaptiveFont(
@@ -236,7 +236,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               minLines: 1,
                               maxLines: null,
                               decoration: InputDecoration(
-                                hintText: 'e-mailadres',
+                                hintText: 'emailadres',
                                 hintStyle: TextStyle(
                                   color: Colors.grey,
                                   fontSize: ru.fontSize(14),

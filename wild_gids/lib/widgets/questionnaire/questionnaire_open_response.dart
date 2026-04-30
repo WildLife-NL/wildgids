@@ -186,7 +186,7 @@ class _QuestionnaireOpenResponseState extends State<QuestionnaireOpenResponse> {
         } else if (format.contains('[a-zA-Z]')) {
           errorMsg += ' (alleen letters)';
         } else if (format.contains('@')) {
-          errorMsg += ' (e-mailadres)';
+          errorMsg += ' (emailadres)';
         }
 
         return errorMsg;
