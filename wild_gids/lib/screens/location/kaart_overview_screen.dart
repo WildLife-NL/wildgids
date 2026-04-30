@@ -26,6 +26,7 @@ import 'package:wildgids/config/app_config.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/custom_nav_bar.dart';
 import 'package:wildgids/constants/mock_location.dart';
+import 'package:wildgids/constants/location_sharing_config.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
@@ -540,8 +541,11 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
         debugPrint('[Kaart/Bootstrap] Initial ping returned no notice');
       }
 
-      debugPrint('[Kaart/Bootstrap] â° Starting periodic tracking (every 10s)');
-      map.startTracking(interval: const Duration(seconds: 10));
+      debugPrint(
+        '[Kaart/Bootstrap] Starting periodic tracking '
+        '(every ${LocationSharingConfig.updateInterval.inMinutes} minutes)',
+      );
+      map.startTracking(interval: LocationSharingConfig.updateInterval);
     } else {
       debugPrint('[Kaart/Bootstrap] âš ï¸ Location tracking is disabled by user');
       // Location tracking is optional, so we don't show a dialog

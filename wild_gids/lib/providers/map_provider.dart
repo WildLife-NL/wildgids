@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:wildgids/constants/mock_location.dart';
+import 'package:wildgids/constants/location_sharing_config.dart';
 import 'package:wildgids/managers/map/living_lab_manager.dart';
 
 // R8
@@ -35,7 +36,7 @@ class MapProvider extends ChangeNotifier {
 
   Timer? _trackingTimer;
   bool _isTracking = false;
-  Duration _trackingInterval = const Duration(minutes: 5);
+  Duration _trackingInterval = LocationSharingConfig.updateInterval;
   Future<void> Function()? _onTrackingDisabledByTimeWindow;
 
   bool get isTracking => _isTracking;
