@@ -1,4 +1,6 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'dart:math' as math;
+
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wildgids/constants/app_colors.dart';
 import 'package:wildgids/providers/app_state_provider.dart';
@@ -21,6 +23,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Profile? _profile;
   bool _loadingProfile = true;
 
+
   @override
   void initState() {
     super.initState();
@@ -29,12 +32,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
+
+    if (!mounted) return;
     setState(() {
       _userName = prefs.getString('userName') ?? 'User';
     });
+
     try {
       final profileApi = context.read<ProfileApiInterface>();
       final profile = await profileApi.fetchMyProfile();
+
       if (!mounted) return;
       setState(() {
         _profile = profile;
@@ -53,369 +60,336 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final responsive = context.responsive;
     final appStateProvider = context.watch<AppStateProvider>();
-    final locationTrackingEnabled = appStateProvider.isLocationTrackingEnabled;
+    final fs = responsive.fontSize;
+
+    final email = _profile?.email ?? '—';
 
     return Scaffold(
-      backgroundColor: AppColors.darkGreen,
+      backgroundColor: AppColors.backgroundLight,
       body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: responsive.wp(4)),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Top bar with back button and title (moved slightly down)
-              Padding(
-                padding: EdgeInsets.only(top: responsive.hp(1)),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back_ios_new),
-                      color: AppColors.offWhite,
-                      iconSize: responsive.sp(3),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                    Expanded(
-                      child: Center(
-                        child: Text(
-                          'Profiel',
-                          style: TextStyle(
-                            color: AppColors.offWhite,
-                            fontSize: responsive.fontSize(24),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final horizontalPad = responsive.wp(3.5).clamp(10.0, 18.0);
+            final cardW = math.min(
+              540.0,
+              constraints.maxWidth - horizontalPad * 2,
+            );
+
+            return Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: horizontalPad,
+                vertical: 4,
+              ),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: cardW),
+                  child: Card(
+                    color: Colors.white,
+                    elevation: 0,
+                    shadowColor: Colors.black26,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                      side: BorderSide(
+                        color: AppColors.borderDefault,
+                        width: 1,
                       ),
                     ),
-                    // keep space to the right so title is centered
-                    SizedBox(width: responsive.wp(12)),
-                  ],
-                ),
-              ),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const SizedBox(height: 12),
 
-              SizedBox(height: responsive.spacing(36)),
-
-              // Avatar + name
-              Row(
-                children: [
-                  Container(
-                    width: responsive.sp(8),
-                    height: responsive.sp(8),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppColors.offWhite,
-                    ),
-                    child: Center(
-                      child: Icon(Icons.person, size: responsive.sp(5)),
-                    ),
-                  ),
-                  SizedBox(width: responsive.wp(3.5)),
-                  Expanded(
-                    child: Text(
-                      _userName,
-                      style: TextStyle(
-                        color: AppColors.offWhite,
-                        fontSize: responsive.fontSize(16),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              SizedBox(height: responsive.spacing(24)),
-
-              // Profile info section with inline update action
-              _buildProfileInfoSection(context),
-
-              SizedBox(height: responsive.spacing(32)),
-
-              // Location Tracking label
-              Center(
-                child: Text(
-                  'Locatie delen',
-                  style: TextStyle(
-                    color: AppColors.offWhite,
-                    fontSize: responsive.fontSize(16),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-
-              SizedBox(height: responsive.spacing(12)),
-
-              // On/Off segmented style
-              Center(
-                child: Container(
-                  padding: EdgeInsets.all(responsive.sp(0.5)),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(responsive.sp(3)),
-                    color: Colors.transparent,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      GestureDetector(
-                        onTap: () async {
-                          await appStateProvider.setLocationTrackingEnabled(
-                            true,
-                          );
-                        },
-                        child: Container(
-                          width: responsive.wp(25),
-                          padding: EdgeInsets.symmetric(
-                            vertical: responsive.hp(1),
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(
-                              responsive.sp(2.5),
-                            ),
-                            color:
-                                locationTrackingEnabled
-                                    ? AppColors.offWhite
-                                    : Colors.transparent,
-                            border: Border.all(
-                              color: AppColors.offWhite,
-                              width: responsive.sp(0.2),
-                            ),
-                          ),
-                          child: Center(
-                            child: Text(
-                              'Aan',
-                              style: TextStyle(
-                                color:
-                                    locationTrackingEnabled
-                                        ? AppColors.darkGreen
-                                        : AppColors.offWhite,
-                                fontWeight: FontWeight.w600,
-                                fontSize: responsive.fontSize(14),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: IconButton(
+                                icon: const Icon(Icons.arrow_back_ios_new),
+                                color: Colors.grey.shade900,
+                                onPressed: () => Navigator.of(context).pop(),
                               ),
                             ),
                           ),
-                        ),
-                      ),
-                      SizedBox(width: responsive.wp(2)),
-                      GestureDetector(
-                        onTap: () async {
-                          await appStateProvider.setLocationTrackingEnabled(
-                            false,
-                          );
-                        },
-                        child: Container(
-                          width: responsive.wp(25),
-                          padding: EdgeInsets.symmetric(
-                            vertical: responsive.hp(1),
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(
-                              responsive.sp(2.5),
-                            ),
-                            color:
-                                !locationTrackingEnabled
-                                    ? AppColors.offWhite
-                                    : Colors.transparent,
-                            border: Border.all(
-                              color: AppColors.offWhite,
-                              width: responsive.sp(0.2),
-                            ),
-                          ),
-                          child: Center(
-                            child: Text(
-                              'Uit',
-                              style: TextStyle(
-                                color:
-                                    !locationTrackingEnabled
-                                        ? AppColors.darkGreen
-                                        : AppColors.offWhite,
-                                fontWeight: FontWeight.w600,
-                                fontSize: responsive.fontSize(14),
+
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 18),
+                            child: Card(
+                              color: AppColors.backgroundLight,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                side: BorderSide(
+                                  color: Colors.grey.shade300,
+                                  width: 1,
+                                ),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 24,
+                                  horizontal: 20,
+                                ),
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        CircleAvatar(
+                                          radius: 36,
+                                          backgroundColor:
+                                              Colors.grey.shade200,
+                                          child: Icon(
+                                            Icons.person,
+                                            size: 40,
+                                            color: AppColors.darkCharcoal,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 16),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                _userName,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: TextStyle(
+                                                  fontSize: fs(18),
+                                                  fontWeight: FontWeight.w700,
+                                                  color: Colors.grey.shade900,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                _loadingProfile ? '…' : email,
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: TextStyle(
+                                                  fontSize: fs(11),
+                                                  color: Colors.grey.shade600,
+                                                  height: 1.25,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 20),
+                                    FilledButton(
+                                      onPressed: _loadingProfile
+                                          ? null
+                                          : () => _handleEditProfile(context),
+                                      style: FilledButton.styleFrom(
+                                        backgroundColor: Colors.white,
+                                        foregroundColor: Colors.grey.shade900,
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 12,
+                                        ),
+                                        minimumSize:
+                                            const Size.fromHeight(48),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(26),
+                                          side: BorderSide(
+                                            color: Colors.grey.shade300,
+                                            width: 1.5,
+                                          ),
+                                        ),
+                                      ),
+                                      child: Text(
+                                        'Profiel bewerken',
+                                        style: TextStyle(fontSize: fs(15)),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
-                        ),
+
+                          const SizedBox(height: 20),
+
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 18),
+                            child: Text(
+                              'Voorkeuren',
+                              style: TextStyle(
+                                fontSize: fs(12),
+                                color: Colors.grey.shade600,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 6),
+
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 18),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: Colors.grey.shade300,
+                                ),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Column(
+                                children: [
+                                  SwitchListTile(
+                                    contentPadding:
+                                        const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 4,
+                                    ),
+                                    title: Text(
+                                      'Locatie delen',
+                                      style: TextStyle(
+                                        fontSize: fs(15),
+                                        color: Colors.grey.shade900,
+                                      ),
+                                    ),
+                                    value: appStateProvider
+                                        .isLocationTrackingEnabled,
+                                    activeThumbColor: Colors.white,
+                                    activeTrackColor: AppColors.primaryGreen,
+                                    onChanged: (enabled) async {
+                                      await appStateProvider
+                                          .setLocationTrackingEnabled(enabled);
+                                    },
+                                  ),
+                                  Divider(
+                                    height: 1,
+                                    color: Colors.grey.shade300,
+                                  ),
+                                  const Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 12,
+                                    ),
+                                    child: LocationSharingIndicator(
+                                      showLabel: true,
+                                      iconSize: 18,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 18),
+                            child: Card(
+                              color: AppColors.backgroundLight,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                side: BorderSide(
+                                  color: Colors.grey.shade300,
+                                  width: 1,
+                                ),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 24,
+                                  horizontal: 20,
+                                ),
+                                child: FilledButton(
+                                  onPressed: () => _confirmLogout(context),
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    foregroundColor: Colors.grey.shade900,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                    minimumSize: const Size.fromHeight(48),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(26),
+                                      side: BorderSide(
+                                        color: Colors.grey.shade300,
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'Uitloggen',
+                                    style: TextStyle(fontSize: fs(15)),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 18),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Text(
+                                  'Account verwijderen',
+                                  style: TextStyle(
+                                    fontSize: fs(16),
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.grey.shade900,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Je gegevens gaan permanent verloren; dit kan niet ongedaan worden.',
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: fs(12),
+                                    color: Colors.grey.shade600,
+                                    height: 1.25,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                FilledButton(
+                                  onPressed: () => _confirmDelete(context),
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor:
+                                        const Color.fromARGB(136, 255, 230, 232),
+                                    foregroundColor:
+                                        AppColors.error,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                    minimumSize: const Size.fromHeight(44),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(26),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'Account verwijderen',
+                                    style: TextStyle(
+                                      fontSize: fs(14),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
-
-              SizedBox(height: responsive.spacing(16)),
-
-              // Location sharing status indicator
-              Center(
-                child: LocationSharingIndicator(
-                  showLabel: true,
-                  iconSize: 18,
-                ),
-              ),
-
-              SizedBox(height: responsive.spacing(24)),
-
-              // Scrollable content (without destructive/secondary actions)
-              Expanded(
-                child: SingleChildScrollView(
-                  child: const SizedBox.shrink(),
-                ),
-              ),
-
-              // Less prominent actions at the bottom
-              Padding(
-                padding: EdgeInsets.only(
-                  left: responsive.wp(4),
-                  right: responsive.wp(4),
-                  bottom: responsive.hp(2),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TextButton(
-                      onPressed: () => _confirmLogout(context),
-                      style: TextButton.styleFrom(
-                        foregroundColor: AppColors.offWhite,
-                        padding: EdgeInsets.symmetric(
-                          vertical: responsive.hp(1.25),
-                        ),
-                        textStyle: TextStyle(
-                          fontSize: responsive.fontSize(14),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      child: const Text('Afmelden'),
-                    ),
-                    TextButton(
-                      onPressed: () => _confirmDelete(context),
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.redAccent,
-                        padding: EdgeInsets.symmetric(
-                          vertical: responsive.hp(1.0),
-                        ),
-                        textStyle: TextStyle(
-                          fontSize: responsive.fontSize(13),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      child: const Text('Account verwijderen'),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+            );
+          },
         ),
-      ),
-    );
-  }
-
-  Widget _buildProfileInfoSection(BuildContext context) {
-    final responsive = context.responsive;
-    return Container(
-      padding: EdgeInsets.all(responsive.sp(2.5)),
-      decoration: BoxDecoration(
-        color: AppColors.lightMintGreen.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(responsive.sp(3)),
-        border: Border.all(color: AppColors.offWhite.withValues(alpha: 0.2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Profielgegevens',
-                  style: TextStyle(
-                    color: AppColors.offWhite,
-                    fontSize: responsive.fontSize(16),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              TextButton(
-                onPressed: () => _handleEditProfile(context),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.lightMintGreen,
-                  textStyle: TextStyle(fontSize: responsive.fontSize(14)),
-                ),
-                child: const Text('Bijwerken'),
-              )
-            ],
-          ),
-          SizedBox(height: responsive.spacing(12)),
-          if (_loadingProfile)
-            const Center(child: CircularProgressIndicator())
-          else
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _infoRow(
-                  context,
-                  label: 'Naam',
-                  value: _profile?.userName ?? _userName,
-                ),
-                _infoRow(
-                  context,
-                  label: 'Eâ€‘mail',
-                  value: _profile?.email,
-                ),
-                if ((_profile?.postcode ?? '').isNotEmpty)
-                  _infoRow(
-                    context,
-                    label: 'Postcode',
-                    value: _profile!.postcode,
-                  ),
-                if ((_profile?.gender ?? '').isNotEmpty)
-                  _infoRow(
-                    context,
-                    label: 'Geslacht',
-                    value: _profile!.gender,
-                  ),
-                if ((_profile?.dateOfBirth ?? '').isNotEmpty)
-                  _infoRow(
-                    context,
-                    label: 'Geboortedatum',
-                    value: _profile!.dateOfBirth,
-                  ),
-                if ((_profile?.description ?? '').isNotEmpty)
-                  _infoRow(
-                    context,
-                    label: 'Beschrijving',
-                    value: _profile!.description,
-                  ),
-              ],
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _infoRow(BuildContext context, {required String label, String? value}) {
-    final responsive = context.responsive;
-    if (value == null || value.isEmpty) return const SizedBox.shrink();
-    return Padding(
-      padding: EdgeInsets.only(bottom: responsive.hp(0.8)),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: responsive.wp(30),
-            child: Text(
-              label,
-              style: TextStyle(
-                color: AppColors.offWhite.withValues(alpha: 0.8),
-                fontWeight: FontWeight.w500,
-                fontSize: responsive.fontSize(14),
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: TextStyle(
-                color: AppColors.offWhite,
-                fontSize: responsive.fontSize(14),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -424,7 +398,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       final profileApi = context.read<ProfileApiInterface>();
       final currentProfile = await profileApi.fetchMyProfile();
+
       if (!mounted) return;
+
       final updatedProfile = await Navigator.of(context).push<Profile>(
         MaterialPageRoute(
           builder: (context) => EditProfileScreen(
@@ -432,11 +408,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
       );
+
       if (updatedProfile != null && mounted) {
         setState(() {
           _profile = updatedProfile;
           _userName = updatedProfile.userName;
         });
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Profiel bijgewerkt'),
@@ -446,6 +424,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     } catch (e) {
       if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Fout bij laden profiel: $e'),
@@ -457,83 +436,252 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _confirmLogout(BuildContext context) {
     final responsive = context.responsive;
+
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(
-          'Afmelden?',
-          style: TextStyle(fontSize: responsive.fontSize(18)),
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
         ),
-        content: Text(
-          'Wilt u uitloggen?',
-          style: TextStyle(fontSize: responsive.fontSize(14)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFD4AF37).withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.info_outline,
+                  color: Color(0xFFD4AF37),
+                  size: 32,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Weet je het zeker?',
+                style: TextStyle(
+                  fontSize: responsive.fontSize(18),
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Je wordt uitgelogd en moet opnieuw inloggen.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: responsive.fontSize(13),
+                  color: Colors.grey.shade600,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 28),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(ctx).pop(),
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        side: BorderSide(
+                          color: Colors.grey.shade300,
+                          width: 1.5,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: Text(
+                        'Annuleren',
+                        style: TextStyle(
+                          fontSize: responsive.fontSize(14),
+                          color: Colors.grey.shade700,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () async {
+                        Navigator.of(ctx).pop();
+                        final appStateProvider =
+                            context.read<AppStateProvider>();
+                        await appStateProvider.logout();
+                      },
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        side: BorderSide(
+                          color: Colors.grey.shade300,
+                          width: 1.5,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: Text(
+                        'Ja, uitloggen',
+                        style: TextStyle(
+                          fontSize: responsive.fontSize(14),
+                          color: Colors.black87,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('Annuleren', style: TextStyle(fontSize: responsive.fontSize(14))),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.of(ctx).pop();
-              final appStateProvider = context.read<AppStateProvider>();
-              await appStateProvider.logout();
-            },
-            child: Text('Afmelden', style: TextStyle(fontSize: responsive.fontSize(14))),
-          ),
-        ],
       ),
     );
   }
 
   void _confirmDelete(BuildContext context) {
     final responsive = context.responsive;
+
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(
-          'Account verwijderen?',
-          style: TextStyle(fontSize: responsive.fontSize(18)),
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
         ),
-        content: Text(
-          'Dit zal uw account en alle bijbehorende gegevens permanent verwijderen. Deze actie kan niet ongedaan worden gemaakt.',
-          style: TextStyle(fontSize: responsive.fontSize(14)),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('Annuleren', style: TextStyle(fontSize: responsive.fontSize(14))),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.of(ctx).pop();
-              if (!mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Account wordt verwijderd...'),
-                  duration: Duration(seconds: 2),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: AppColors.error.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
                 ),
-              );
-              try {
-                final profileApi = context.read<ProfileApiInterface>();
-                final appStateProvider = context.read<AppStateProvider>();
-                await profileApi.deleteMyProfile();
-                await appStateProvider.deleteProfile();
-              } catch (e) {
-                if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Fout bij verwijderen: $e'),
-                    backgroundColor: Colors.red,
+                child: Icon(
+                  Icons.error_outline,
+                  color: AppColors.error,
+                  size: 32,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Weet je het zeker?',
+                style: TextStyle(
+                  fontSize: responsive.fontSize(18),
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Je gegevens gaan permanent verloren; dit kan niet ongedaan worden.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: responsive.fontSize(13),
+                  color: Colors.grey.shade600,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 28),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(ctx).pop(),
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        side: BorderSide(
+                          color: Colors.grey.shade300,
+                          width: 1.5,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: Text(
+                        'Annuleren',
+                        style: TextStyle(
+                          fontSize: responsive.fontSize(14),
+                          color: Colors.grey.shade700,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
                   ),
-                );
-              }
-            },
-            child: Text('Verwijderen', style: TextStyle(fontSize: responsive.fontSize(14), color: Colors.red)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () async {
+                        Navigator.of(ctx).pop();
+
+                        if (!mounted) return;
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Account wordt verwijderd...'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+
+                        try {
+                          final profileApi =
+                              context.read<ProfileApiInterface>();
+                          final appStateProvider =
+                              context.read<AppStateProvider>();
+
+                          await profileApi.deleteMyProfile();
+                          await appStateProvider.deleteProfile();
+                        } catch (e) {
+                          if (!mounted) return;
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Fout bij verwijderen: $e'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      },
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        side: BorderSide(
+                          color: Colors.red.shade300,
+                          width: 1.5,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: Text(
+                        'Ja, verwijderen',
+                        style: TextStyle(
+                          fontSize: responsive.fontSize(14),
+                          color: Colors.red.shade600,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 }
-
