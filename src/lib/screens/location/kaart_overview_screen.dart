@@ -1958,7 +1958,6 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                       }).toList(),
                                 ),
                           ],
-                          nonRotatedChildren: const [],
                         ),
 
                         Positioned(

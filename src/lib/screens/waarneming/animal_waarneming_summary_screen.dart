@@ -80,7 +80,7 @@ class _AnimalWaarnemingSummaryScreenState
         // Clear the current sighting and navigate to logbook
         sightingManager.clearCurrentanimalSighting();
         debugPrint('[AnimalWaarnemingSummaryScreen] Navigating to logbook');
-        if (!context.mounted) return;
+        if (!mounted) return;
         context.read<NavigationStateInterface>().pushAndRemoveUntil(
               context,
               const LogbookScreen(),
