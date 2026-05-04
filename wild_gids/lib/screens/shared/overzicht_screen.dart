@@ -9,7 +9,7 @@ import 'package:wildgids/screens/shared/rapporteren.dart';
 import 'package:wildgids/screens/logbook/logbook_screen.dart';
 import 'package:wildgids/providers/app_state_provider.dart';
 import 'package:wildgids/screens/location/kaart_overview_screen.dart';
-import 'package:wildgids/screens/game/animals_quiz_screen.dart';
+import 'package:wildgids/screens/game/challenge_screen.dart';
 import 'package:wildgids/screens/species/species_list_screen.dart';
 
 class OverzichtScreen extends StatefulWidget {
@@ -147,7 +147,7 @@ class _OverzichtScreenState extends State<OverzichtScreen> {
                                     .read<NavigationStateInterface>()
                                     .pushForward(
                                       context,
-                                      const AnimalsQuizScreen(),
+                                      const ChallengeScreen(),
                                     );
                               },
                             ),
