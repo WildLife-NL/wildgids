@@ -13,7 +13,11 @@ import 'package:wildgids/screens/profile/profile_screen.dart';
 import 'package:wildgids/screens/species/species_list_screen.dart';
 
 class WaarnemmingStartScreen extends StatefulWidget {
-  const WaarnemmingStartScreen({super.key});
+   final bool showBottomNav; 
+  const WaarnemmingStartScreen({super.key,
+   this.showBottomNav = true,
+  });
+  
 
   @override
   State<WaarnemmingStartScreen> createState() => _WaarnemmingStartScreenState();
@@ -59,13 +63,15 @@ void _onTabSelected(NavTab tab) {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6F4),
-      bottomNavigationBar: SafeArea(
+      bottomNavigationBar: widget.showBottomNav
+    ? SafeArea(
         top: false,
         child: CustomNavBar(
-          currentTab: NavTab.waarneming,
+          currentTab: NavTab.soorten,
           onTabSelected: _onTabSelected,
         ),
-      ),
+      )
+    : null,
       body: SafeArea(
         bottom: false, // So content doesn't overlap nav bar
         child: SingleChildScrollView(

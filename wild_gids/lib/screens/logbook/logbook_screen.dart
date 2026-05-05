@@ -14,9 +14,13 @@ import 'package:wildgids/screens/logbook/recent_sightings_screen.dart';
 import 'package:wildgids/screens/species/species_list_screen.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/custom_nav_bar.dart';
 import 'package:wildgids/screens/waarneming/waarneming_start_screen.dart';
+//import 'package:wildgids/screens/main/main_tab_shell.dart';
 
 class LogbookScreen extends StatelessWidget {
-  const LogbookScreen({super.key});
+   final bool showBottomNav;
+  const LogbookScreen({super.key,
+   this.showBottomNav = true,
+   });
 
   void _openAllInteractions(BuildContext context) {
     Navigator.push(
@@ -126,13 +130,15 @@ case NavTab.profile:
           ],
         ),
       ),
-      bottomNavigationBar: SafeArea(
+      bottomNavigationBar: showBottomNav
+    ? SafeArea(
         top: false,
         child: CustomNavBar(
-          currentTab: NavTab.logboek,
-          onTabSelected: onTabSelected,
+          currentTab: NavTab.soorten,
+          onTabSelected: (_) {},
         ),
-      ),
+      )
+    : null,
     );
   }
 }

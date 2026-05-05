@@ -18,8 +18,12 @@ import 'package:wildgids/screens/waarneming/waarneming_start_screen.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/custom_nav_bar.dart';
 
 class SpeciesListScreen extends StatefulWidget {
-  const SpeciesListScreen({super.key});
+  final bool showBottomNav; 
 
+  const SpeciesListScreen({
+    super.key,
+    this.showBottomNav = true, 
+  });
   @override
   State<SpeciesListScreen> createState() => _SpeciesListScreenState();
 }
@@ -320,13 +324,15 @@ void _onTabSelected(NavTab tab) {
           ],
         ),
       ),
-      bottomNavigationBar: SafeArea(
-  top: false,
-  child: CustomNavBar(
-    currentTab: NavTab.zones,
-    onTabSelected: _onTabSelected,
-  ),
-),
+  bottomNavigationBar: widget.showBottomNav
+    ? SafeArea(
+        top: false,
+        child: CustomNavBar(
+          currentTab: NavTab.soorten,
+          onTabSelected: _onTabSelected,
+        ),
+      )
+    : null,
     );
   }
 }

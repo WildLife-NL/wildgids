@@ -7,7 +7,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:wildgids/providers/map_provider.dart';
 import 'package:wildgids/providers/app_state_provider.dart';
 import 'package:wildgids/constants/app_colors.dart';
-import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
+//import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
 import 'package:wildgids/models/enums/nav_tab.dart';
 import 'package:wildgids/screens/logbook/logbook_screen.dart';
 //import 'package:wildgids/screens/shared/rapporteren.dart';
@@ -40,8 +40,12 @@ class _IconStyle {
 }
 
 class KaartOverviewScreen extends StatefulWidget {
-  const KaartOverviewScreen({super.key});
+  final bool showBottomNav;
 
+  const KaartOverviewScreen({
+    super.key,
+    this.showBottomNav = true,
+  });
   @override
   State<KaartOverviewScreen> createState() => _KaartOverviewScreenState();
 }
@@ -265,6 +269,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     _bootstrap();
     _startFollowingMe();
   }
+  
 
   @override
   void dispose() {
@@ -1281,28 +1286,59 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     );
   }
 
-  void _onTabSelected(NavTab tab) {
-    if (tab == NavTab.kaart) return;
-    final navigation = context.read<NavigationStateInterface>();
-    switch (tab) {
-      case NavTab.soorten:
-      case NavTab.zones:
-        navigation.pushReplacementForward(context, const SpeciesListScreen());
-        break;
-      case NavTab.waarneming:
-        navigation.pushReplacementForward(context, const WaarnemmingStartScreen());
-        break;
-      case NavTab.logboek:
-        navigation.pushReplacementForward(context, const LogbookScreen());
-        break;
-        case NavTab.instellingen:
-      case NavTab.profile:
-        navigation.pushReplacementForward(context, const ProfileScreen());
-        break;
-      case NavTab.kaart:
-        break;
-    }
+ void _onTabSelected(NavTab tab) {
+  if (tab == NavTab.kaart) return;
+
+  Widget page;
+
+  switch (tab) {
+    case NavTab.soorten:
+    case NavTab.zones:
+      page = const SpeciesListScreen();
+      break;
+
+    case NavTab.waarneming:
+      page = const WaarnemmingStartScreen();
+      break;
+
+    case NavTab.logboek:
+      page = const LogbookScreen();
+      break;
+
+    case NavTab.instellingen:
+    case NavTab.profile:
+      page = const ProfileScreen();
+      break;
+
+    case NavTab.kaart:
+      return;
   }
+
+  Navigator.of(context).pushReplacement(
+    PageRouteBuilder(
+      transitionDuration: const Duration(milliseconds: 230),
+      reverseTransitionDuration: const Duration(milliseconds: 180),
+      pageBuilder: (_, animation, __) => page,
+      transitionsBuilder: (_, animation, __, child) {
+        final curvedAnimation = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+        );
+
+        return FadeTransition(
+          opacity: curvedAnimation,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0.04, 0),
+              end: Offset.zero,
+            ).animate(curvedAnimation),
+            child: child,
+          ),
+        );
+      },
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -2313,13 +2349,15 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
             },
           ),
         ),
-        bottomNavigationBar: SafeArea(
-          top: false,
-          child: CustomNavBar(
-            currentTab: NavTab.kaart,
-            onTabSelected: _onTabSelected,
-          ),
+       bottomNavigationBar: widget.showBottomNav
+    ? SafeArea(
+        top: false,
+        child: CustomNavBar(
+          currentTab: NavTab.kaart,
+          onTabSelected: _onTabSelected,
         ),
+      )
+    : null,
       ),
     );
   }

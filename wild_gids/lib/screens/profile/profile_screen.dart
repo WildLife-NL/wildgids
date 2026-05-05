@@ -20,7 +20,9 @@ import 'package:wildgids/widgets/shared_ui_widgets/custom_nav_bar.dart';
 import 'package:wildgids/screens/waarneming/waarneming_start_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final bool showBottomNav; 
+  const ProfileScreen({super.key,
+  this.showBottomNav = true,});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -436,13 +438,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
           },
         ),
       ),
-      bottomNavigationBar: SafeArea(
-  top: false,
-  child: CustomNavBar(
-    currentTab: NavTab.profile,
-    onTabSelected: _onTabSelected,
-  ),
-),
+bottomNavigationBar: widget.showBottomNav
+    ? SafeArea(
+        top: false,
+        child: CustomNavBar(
+          currentTab: NavTab.soorten,
+          onTabSelected: _onTabSelected,
+        ),
+      )
+    : null,
     );
   }
 
