@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:wildgids/constants/app_colors.dart';
@@ -29,7 +29,7 @@ class VerkeersongevalHistoryScreen extends StatelessWidget {
         child: Column(
           children: [
             CustomAppBar(
-              leftIcon: Icons.arrow_back_ios,
+              leftIcon: null,
               centerText: 'Verkeersongeval geschiedenis',
               rightIcon: null,
               showUserIcon: true,
@@ -373,7 +373,7 @@ class _DetailSheet extends StatelessWidget {
                         ),
                       ),
                     );
-                  }).toList(),
+                  }),
                 ],
               ],
             ),

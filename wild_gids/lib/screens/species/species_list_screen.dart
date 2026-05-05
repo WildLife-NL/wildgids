@@ -10,6 +10,12 @@ import 'package:wildgids/utils/species_click_tracker.dart';
 import 'package:wildgids/utils/species_image_resolver.dart';
 import 'package:wildgids/widgets/animals/scrollable_animal_grid.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
+import 'package:wildgids/models/enums/nav_tab.dart';
+import 'package:wildgids/screens/location/kaart_overview_screen.dart';
+import 'package:wildgids/screens/logbook/logbook_screen.dart';
+import 'package:wildgids/screens/profile/profile_screen.dart';
+import 'package:wildgids/screens/waarneming/waarneming_start_screen.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/custom_nav_bar.dart';
 
 class SpeciesListScreen extends StatefulWidget {
   const SpeciesListScreen({super.key});
@@ -29,6 +35,45 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
 
   bool _isLoading = true;
   String? _error;
+
+void _onTabSelected(NavTab tab) {
+  final nav = context.read<NavigationStateInterface>();
+
+  switch (tab) {
+    case NavTab.soorten:
+    case NavTab.zones:
+      return;
+
+    case NavTab.rapporten:
+      nav.pushReplacementForward(
+        context,
+        const WaarnemmingStartScreen(),
+      );
+      break;
+
+    case NavTab.kaart:
+      nav.pushReplacementForward(
+        context,
+        const KaartOverviewScreen(),
+      );
+      break;
+
+    case NavTab.logboek:
+      nav.pushReplacementForward(
+        context,
+        const LogbookScreen(),
+      );
+      break;
+
+    case NavTab.instellingen:
+    case NavTab.profile:
+      nav.pushReplacementForward(
+        context,
+        const ProfileScreen(),
+      );
+      break;
+  }
+}
 
   @override
   void initState() {
@@ -275,6 +320,13 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
           ],
         ),
       ),
+      bottomNavigationBar: SafeArea(
+  top: false,
+  child: CustomNavBar(
+    currentTab: NavTab.zones,
+    onTabSelected: _onTabSelected,
+  ),
+),
     );
   }
 }

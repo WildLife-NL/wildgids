@@ -3,9 +3,26 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
 import 'package:wildgids/screens/waarneming/location_selection_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:wildgids/models/enums/report_type.dart';
+import 'package:wildgids/providers/app_state_provider.dart';
 
-class WaarnemmingStartScreen extends StatelessWidget {
+class WaarnemmingStartScreen extends StatefulWidget {
   const WaarnemmingStartScreen({super.key});
+
+  @override
+  State<WaarnemmingStartScreen> createState() => _WaarnemmingStartScreenState();
+}
+
+class _WaarnemmingStartScreenState extends State<WaarnemmingStartScreen> {
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<AppStateProvider>().initializeReport(ReportType.waarneming);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

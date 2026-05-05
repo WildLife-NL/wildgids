@@ -1,9 +1,12 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:wildgids/interfaces/data_apis/tracking_api_interface.dart';
+import 'package:wildgids/interfaces/location/living_lab_interface.dart';
+import 'package:wildgids/managers/map/living_lab_manager.dart';
 import 'package:wildgids/models/beta_models/tracking_reading_model.dart';
 import 'package:wildgids/utils/connection_checker.dart';
 
@@ -13,6 +16,7 @@ class TrackingCacheManager {
   static const String _cacheKey = 'cached_tracking_readings';
 
   final TrackingApiInterface trackingApi;
+  final LivingLabInterface _livingLabManager;
   final Connectivity _connectivity;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
 
@@ -23,8 +27,12 @@ class TrackingCacheManager {
   final String redLog = '\x1B[31m';
   final String yellowLog = '\x1B[93m';
 
-  TrackingCacheManager({required this.trackingApi, Connectivity? connectivity})
-    : _connectivity = connectivity ?? Connectivity();
+  TrackingCacheManager({
+    required this.trackingApi,
+    Connectivity? connectivity,
+    LivingLabInterface? livingLabManager,
+  }) : _connectivity = connectivity ?? Connectivity(),
+       _livingLabManager = livingLabManager ?? LivingLabManager();
 
   /// Initialize connectivity monitoring
   void init() {
@@ -195,6 +203,7 @@ class TrackingCacheManager {
 
     List<TrackingReading> failedReadings = [];
     int successCount = 0;
+    int skippedOutsideLivingLabs = 0;
 
     for (int i = 0; i < cachedReadings.length; i++) {
       TrackingReading reading = cachedReadings[i];
@@ -206,6 +215,10 @@ class TrackingCacheManager {
       }
 
       try {
+        if (!_isInLivingLab(reading.latitude, reading.longitude)) {
+          skippedOutsideLivingLabs++;
+          continue;
+        }
         await trackingApi.addTrackingReading(
           lat: reading.latitude,
           lon: reading.longitude,
@@ -221,7 +234,8 @@ class TrackingCacheManager {
     debugPrint('$yellowLog[TrackingCacheManager] === Send Summary ===');
     debugPrint(
       '$yellowLog[TrackingCacheManager] Total: ${cachedReadings.length}, '
-      'Successful: $successCount, Failed: ${failedReadings.length}',
+      'Successful: $successCount, Failed: ${failedReadings.length}, '
+      'SkippedOutsideLivingLabs: $skippedOutsideLivingLabs',
     );
 
     // Update cache with only failed readings
@@ -250,6 +264,13 @@ class TrackingCacheManager {
     required double lon,
     required DateTime timestampUtc,
   }) async {
+    if (!_isInLivingLab(lat, lon)) {
+      debugPrint(
+        '$yellowLog[TrackingCacheManager] Skipping tracking reading outside living labs',
+      );
+      return null;
+    }
+
     debugPrint(
       '$yellowLog[TrackingCacheManager] Attempting to send tracking reading',
     );
@@ -298,6 +319,10 @@ class TrackingCacheManager {
 
       return null;
     }
+  }
+
+  bool _isInLivingLab(double lat, double lon) {
+    return _livingLabManager.isLocationInAnyLivingLab(LatLng(lat, lon));
   }
 }
 

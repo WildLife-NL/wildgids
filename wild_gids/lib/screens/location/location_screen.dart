@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wildgids/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
@@ -15,7 +15,7 @@ import 'package:wildgids/providers/map_provider.dart';
 import 'package:wildgids/screens/waarneming/animal_list_overview_screen.dart';
 // Removed collision details screen import (flow deprecated)
 import 'package:wildgids/screens/questionnaire/questionnaire_screen.dart';
-import 'package:wildgids/screens/shared/overzicht_screen.dart';
+import 'package:wildgids/screens/location/kaart_overview_screen.dart';
 import 'package:wildgids/utils/sighting_api_transformer.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/bottom_app_bar.dart';
@@ -179,6 +179,7 @@ class _LocationScreenState extends State<LocationScreen> {
       debugPrint(const JsonEncoder.withIndent('  ').convert(apiFormat));
 
       // 7. send to backend
+      if (!mounted) return;
       final responseModel = await submitReport(
         animalSightingManager,
         interactionManager,
@@ -193,7 +194,7 @@ class _LocationScreenState extends State<LocationScreen> {
             '\x1B[33m[LocationScreen] No questionnaire returned, skipping questionnaire screen\x1B[0m',
           );
           _pendingSnackBarMessage = 'Melding succesvol verstuurd';
-          _pendingNavigationScreen = const OverzichtScreen();
+          _pendingNavigationScreen = const KaartOverviewScreen();
           _pendingRemoveUntil = true;
         } else {
           debugPrint(

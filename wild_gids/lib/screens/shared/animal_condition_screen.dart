@@ -1,8 +1,8 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
 
-import 'package:wildgids/screens/shared/overzicht_screen.dart';
+import 'package:wildgids/screens/location/kaart_overview_screen.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/bottom_app_bar.dart';
 import 'package:wildgids/widgets/location/invisible_map_preloader.dart'; // âœ… import preloader
@@ -102,7 +102,7 @@ class _AnimalConditionScreenState extends State<AnimalConditionScreen> {
           final navigationManager = context.read<NavigationStateInterface>();
           navigationManager.pushReplacementBack(
             context,
-            const OverzichtScreen(),
+            const KaartOverviewScreen(),
           ); // Adjust destination as needed
         },
         onNextPressed: null,

@@ -1,7 +1,7 @@
 name: wildgids
 description: "A new Flutter project."
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.0+20260325
 
 environment:
   sdk: ^3.7.0
@@ -29,12 +29,23 @@ dependencies:
   collection: ^1.17.1
   package_info_plus: ^8.0.3
   flutter_local_notifications: ^17.2.1
+  wildlifenl_map_logic_components:
+    git:
+      url: https://github.com/WildLife-NL/wildlifenl-components.git
+      ref: main
+      path: wildlifenl_map_logic_components
+  wildlifenl_map_ui_components:
+    git:
+      url: https://github.com/WildLife-NL/wildlifenl-components.git
+      ref: main
+      path: wildlifenl_map_ui_components
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   integration_test:
     sdk: flutter
+  image: any
   flutter_lints: ^5.0.0
   mockito: ^5.4.6
   build_runner: ^2.4.15

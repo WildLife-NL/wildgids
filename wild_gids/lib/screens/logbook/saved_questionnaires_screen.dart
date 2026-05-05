@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:wildgids/constants/app_colors.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';

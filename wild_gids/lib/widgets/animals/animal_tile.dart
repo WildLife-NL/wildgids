@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:wildgids/models/animal_waarneming_models/animal_model.dart';
 
 class AnimalTile extends StatefulWidget {
@@ -22,22 +22,21 @@ class _AnimalTileState extends State<AnimalTile> {
         onTap: widget.onTap,
         child: Card(
           elevation: 3,
-          shadowColor: Colors.black.withValues(alpha: 0.1),
+          shadowColor: Colors.black.withOpacity(0.1),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: BorderSide(
-              color: const Color.fromARGB(113, 0, 0, 0),
+            side: const BorderSide(
+              color: Color.fromARGB(113, 0, 0, 0),
               width: 1,
             ),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Image area - takes up most of the card
               Expanded(
                 child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.only(
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(14),
                       topRight: Radius.circular(14),
                     ),
@@ -49,43 +48,42 @@ class _AnimalTileState extends State<AnimalTile> {
                       topRight: Radius.circular(14),
                     ),
                     child: SizedBox.expand(
-                      child: widget.animal.animalImagePath != null && !_imageError
+                      child: widget.animal.animalImagePath != null &&
+                              !_imageError
                           ? _buildImageWithFallback()
                           : Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.image_not_supported_outlined,
-                                  size: 50,
-                                  color: Colors.grey[400],
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'No image',
-                                  style: TextStyle(
-                                    color: Colors.grey[500],
-                                    fontSize: 12,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.image_not_supported_outlined,
+                                    size: 50,
+                                    color: Colors.grey[400],
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'No image',
+                                    style: TextStyle(
+                                      color: Colors.grey[500],
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
                     ),
                   ),
                 ),
               ),
-              // Divider line
               Container(
                 height: 1,
                 color: const Color.fromARGB(84, 0, 0, 0),
               ),
-              // Name area - bottom section with white background
               Container(
                 width: double.infinity,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.white,
-                  borderRadius: const BorderRadius.only(
+                  borderRadius: BorderRadius.only(
                     bottomLeft: Radius.circular(14),
                     bottomRight: Radius.circular(14),
                   ),
@@ -115,6 +113,8 @@ class _AnimalTileState extends State<AnimalTile> {
       image: AssetImage(widget.animal.animalImagePath!),
       fit: BoxFit.cover,
       frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+        if (wasSynchronouslyLoaded) return child;
+
         return AnimatedOpacity(
           opacity: frame == null ? 0 : 1,
           duration: const Duration(milliseconds: 500),
@@ -123,10 +123,20 @@ class _AnimalTileState extends State<AnimalTile> {
         );
       },
       errorBuilder: (context, error, stackTrace) {
-        debugPrint('[AnimalTile] Error loading image: ${widget.animal.animalImagePath}');
-        setState(() {
-          _imageError = true;
-        });
+        debugPrint(
+          '[AnimalTile] Error loading image: ${widget.animal.animalImagePath}',
+        );
+
+        if (!_imageError) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              setState(() {
+                _imageError = true;
+              });
+            }
+          });
+        }
+
         return Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -151,4 +161,3 @@ class _AnimalTileState extends State<AnimalTile> {
     );
   }
 }
-

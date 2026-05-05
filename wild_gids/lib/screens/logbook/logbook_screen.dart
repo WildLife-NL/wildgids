@@ -1,11 +1,19 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
+import 'package:wildgids/models/enums/nav_tab.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
-import 'package:wildgids/screens/shared/overzicht_screen.dart';
+import 'package:wildgids/screens/location/kaart_overview_screen.dart';
+import 'package:wildgids/screens/profile/profile_screen.dart';
+//import 'package:wildgids/screens/shared/rapporteren.dart';
 import 'package:wildgids/screens/shared/my_interaction_history_screen.dart';
 import 'package:wildgids/screens/logbook/saved_questionnaires_screen.dart';
 import 'package:wildgids/screens/logbook/my_responses_screen.dart';
 import 'package:wildgids/screens/logbook/recent_sightings_screen.dart';
+import 'package:wildgids/screens/species/species_list_screen.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/custom_nav_bar.dart';
+import 'package:wildgids/screens/waarneming/waarneming_start_screen.dart';
 
 class LogbookScreen extends StatelessWidget {
   const LogbookScreen({super.key});
@@ -40,6 +48,28 @@ class LogbookScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    void onTabSelected(NavTab tab) {
+      final navigationManager = context.read<NavigationStateInterface>();
+      switch (tab) {
+        case NavTab.soorten:
+      case NavTab.zones:
+        navigationManager.pushReplacementForward(context, const SpeciesListScreen());
+        break;
+        case NavTab.rapporten:
+          navigationManager.pushReplacementForward(context, const WaarnemmingStartScreen());
+          break;
+        case NavTab.kaart:
+          navigationManager.pushReplacementForward(context, const KaartOverviewScreen());
+          break;
+        case NavTab.logboek:
+          return;
+        case NavTab.instellingen:
+case NavTab.profile:
+  navigationManager.pushReplacementForward(context, const ProfileScreen());
+  break;
+      }
+    }
+
     return Scaffold(
       backgroundColor: AppColors.lightMintGreen,
       body: SafeArea(
@@ -47,15 +77,10 @@ class LogbookScreen extends StatelessWidget {
         child: Column(
           children: [
             CustomAppBar(
-              leftIcon: Icons.arrow_back_ios,
+              leftIcon: null,
               centerText: 'Logboek',
               rightIcon: null,
               showUserIcon: true,
-              onLeftIconPressed: () {
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (_) => const OverzichtScreen()),
-                );
-              },
               iconColor: Colors.black,
               textColor: Colors.black,
               fontScale: 1.15,
@@ -99,6 +124,13 @@ class LogbookScreen extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: CustomNavBar(
+          currentTab: NavTab.logboek,
+          onTabSelected: onTabSelected,
         ),
       ),
     );

@@ -1,16 +1,21 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
 import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/screens/waarneming/waarneming_start_screen.dart';
 import 'package:wildgids/widgets/overzicht/top_container.dart';
 import 'package:wildgids/widgets/overzicht/action_buttons.dart';
-import 'package:wildgids/screens/shared/rapporteren.dart';
+//import 'package:wildgids/screens/shared/rapporteren.dart';
 import 'package:wildgids/screens/logbook/logbook_screen.dart';
 import 'package:wildgids/providers/app_state_provider.dart';
 import 'package:wildgids/screens/location/kaart_overview_screen.dart';
 import 'package:wildgids/screens/game/challenge_screen.dart';
+import 'package:wildgids/screens/profile/profile_screen.dart';
 import 'package:wildgids/screens/species/species_list_screen.dart';
+import 'package:wildgids/models/enums/nav_tab.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/custom_nav_bar.dart';
 
 class OverzichtScreen extends StatefulWidget {
   const OverzichtScreen({super.key});
@@ -22,6 +27,7 @@ class OverzichtScreen extends StatefulWidget {
 class _OverzichtScreenState extends State<OverzichtScreen> {
   String userName = "Joe Doe";
   String reportButtonLabel = 'Rapporteren';
+  NavTab _currentTab = NavTab.zones;
 
   @override
   void initState() {
@@ -62,6 +68,110 @@ class _OverzichtScreenState extends State<OverzichtScreen> {
     });
   }
 
+  Future<bool> _isLocationReady() async {
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return false;
+
+    final permission = await Geolocator.checkPermission();
+    return permission == LocationPermission.whileInUse ||
+        permission == LocationPermission.always;
+  }
+
+  Future<void> _showLocationRequiredPopup() async {
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Locatie vereist'),
+            content: const Text(
+              'U moet locatie delen om deze functie te gebruiken.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Sluiten'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  await Geolocator.openAppSettings();
+                  if (!context.mounted) return;
+                  Navigator.of(context).pop();
+                },
+                child: const Text('App-instellingen'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  await Geolocator.openLocationSettings();
+                  if (!context.mounted) return;
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Locatie-instellingen'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  Future<void> _runWithLocationGate(VoidCallback onAllowed) async {
+    final isReady = await _isLocationReady();
+    if (!isReady) {
+      await _showLocationRequiredPopup();
+      return;
+    }
+    onAllowed();
+  }
+
+  void _onTabSelected(NavTab tab) {
+    if (tab == _currentTab) return;
+    setState(() => _currentTab = tab);
+
+    switch (tab) {
+      case NavTab.soorten:
+      case NavTab.zones:
+        _runWithLocationGate(() {
+          context.read<NavigationStateInterface>().pushReplacementForward(
+            context,
+            const SpeciesListScreen(),
+          );
+        });
+        break;
+      case NavTab.rapporten:
+        _runWithLocationGate(() {
+          context.read<NavigationStateInterface>().pushReplacementForward(
+            context,
+            const WaarnemmingStartScreen(),
+          );
+        });
+        break;
+      case NavTab.kaart:
+        _runWithLocationGate(() {
+          context.read<NavigationStateInterface>().pushReplacementForward(
+            context,
+            const KaartOverviewScreen(),
+          );
+        });
+        break;
+      case NavTab.logboek:
+        _runWithLocationGate(() {
+          context.read<NavigationStateInterface>().pushReplacementForward(
+            context,
+            const LogbookScreen(),
+          );
+        });
+        break;
+        case NavTab.instellingen:
+      case NavTab.profile:
+        context.read<NavigationStateInterface>().pushReplacementForward(
+          context,
+          const ProfileScreen(),
+        );
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final navigationManager = context.read<NavigationStateInterface>();
@@ -78,13 +188,17 @@ class _OverzichtScreenState extends State<OverzichtScreen> {
     final double iconSize = (screenSize.width * 0.14).clamp(28.0, 56.0);
     final double buttonFontSize = (screenSize.width * 0.045).clamp(14.0, 22.0);
 
-    return WillPopScope(
-      onWillPop: () async {
-        // Prevent back button from doing anything - user is on home screen
-        return false;
-      },
+    return PopScope(
+      canPop: false,
       child: Scaffold(
         backgroundColor: AppColors.lightMintGreen,
+        bottomNavigationBar: SafeArea(
+          top: false,
+          child: CustomNavBar(
+            currentTab: _currentTab,
+            onTabSelected: _onTabSelected,
+          ),
+        ),
         body: LayoutBuilder(
           builder: (context, constraints) {
             final double estimatedContentHeight =
@@ -128,41 +242,41 @@ class _OverzichtScreenState extends State<OverzichtScreen> {
                               icon: Icons.map,
                               imagePath: null,
                               key: Key('rapporten_kaart_button'),
-                              onPressed: () {
-                                context
-                                    .read<NavigationStateInterface>()
-                                    .pushForward(
-                                      context,
-                                      const KaartOverviewScreen(),
-                                    );
-                              },
+                             onPressed: () {
+  _runWithLocationGate(() {
+    context.read<NavigationStateInterface>().pushForward(
+      context,
+      const KaartOverviewScreen(),
+    );
+  });
+},
                             ),
                             (
-                              text: 'Dierenquiz',
-                              icon: Icons.quiz,
-                              imagePath: null,
-                              key: Key('dierenquiz_button'),
-                              onPressed: () {
-                                context
-                                    .read<NavigationStateInterface>()
-                                    .pushForward(
-                                      context,
-                                      const ChallengeScreen(),
-                                    );
-                              },
-                            ),
+  text: 'Dierenquiz',
+  icon: Icons.quiz,
+  imagePath: null,
+  key: Key('dierenquiz_button'),
+  onPressed: () {
+    context.read<NavigationStateInterface>().pushForward(
+      context,
+      const ChallengeScreen(),
+    );
+  },
+),
                             (
                               text: 'Diersoorten',
                               icon: Icons.pets,
                               imagePath: null,
                               key: Key('diersoorten_button'),
                               onPressed: () {
-                                context
-                                    .read<NavigationStateInterface>()
-                                    .pushReplacementForward(
-                                      context,
-                                      const SpeciesListScreen(),
-                                    );
+                                _runWithLocationGate(() {
+                                  context
+                                      .read<NavigationStateInterface>()
+                                      .pushReplacementForward(
+                                        context,
+                                        const SpeciesListScreen(),
+                                      );
+                                });
                               },
                             ),
                             (
@@ -171,20 +285,22 @@ class _OverzichtScreenState extends State<OverzichtScreen> {
                               imagePath: null,
                               key: Key('rapporteren_button'),
                               onPressed: () {
-                                try {
-                                  navigationManager.pushForward(
-                                    context,
-                                    const Rapporteren(),
-                                  );
-                                } catch (e) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Er is een fout opgetreden bij het navigeren',
+                                _runWithLocationGate(() {
+                                  try {
+                                    navigationManager.pushForward(
+                                      context,
+                                      const WaarnemmingStartScreen(),
+                                    );
+                                  } catch (e) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Er is een fout opgetreden bij het navigeren',
+                                        ),
                                       ),
-                                    ),
-                                  );
-                                }
+                                    );
+                                  }
+                                });
                               },
                             ),
                             (
@@ -193,20 +309,22 @@ class _OverzichtScreenState extends State<OverzichtScreen> {
                               imagePath: null,
                               key: Key('logboek_button'),
                               onPressed: () {
-                                try {
-                                  navigationManager.pushForward(
-                                    context,
-                                    const LogbookScreen(),
-                                  );
-                                } catch (e) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Er is een fout opgetreden bij het navigeren',
+                                _runWithLocationGate(() {
+                                  try {
+                                    navigationManager.pushForward(
+                                      context,
+                                      const LogbookScreen(),
+                                    );
+                                  } catch (e) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Er is een fout opgetreden bij het navigeren',
+                                        ),
                                       ),
-                                    ),
-                                  );
-                                }
+                                    );
+                                  }
+                                });
                               },
                             ),
                             (

@@ -10,6 +10,14 @@ import 'package:wildgids/interfaces/data_apis/profile_api_interface.dart';
 import 'package:wildgids/screens/profile/edit_profile_screen.dart';
 import 'package:wildgids/models/beta_models/profile_model.dart';
 import 'package:wildgids/widgets/location/location_sharing_indicator.dart';
+import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
+import 'package:wildgids/models/enums/nav_tab.dart';
+import 'package:wildgids/screens/location/kaart_overview_screen.dart';
+import 'package:wildgids/screens/logbook/logbook_screen.dart';
+//import 'package:wildgids/screens/shared/rapporteren.dart';
+import 'package:wildgids/screens/species/species_list_screen.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/custom_nav_bar.dart';
+import 'package:wildgids/screens/waarneming/waarneming_start_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -22,7 +30,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _userName = 'Loading...';
   Profile? _profile;
   bool _loadingProfile = true;
+  void _onTabSelected(NavTab tab) {
+  final navigationManager = context.read<NavigationStateInterface>();
 
+  switch (tab) {
+    case NavTab.soorten:
+    case NavTab.zones:
+      navigationManager.pushReplacementForward(
+        context,
+        const SpeciesListScreen(),
+      );
+      break;
+
+    case NavTab.rapporten:
+      navigationManager.pushReplacementForward(
+        context,
+        const WaarnemmingStartScreen(),
+      );
+      break;
+
+    case NavTab.kaart:
+      navigationManager.pushReplacementForward(
+        context,
+        const KaartOverviewScreen(),
+      );
+      break;
+
+    case NavTab.logboek:
+      navigationManager.pushReplacementForward(
+        context,
+        const LogbookScreen(),
+      );
+      break;
+
+    case NavTab.instellingen:
+    case NavTab.profile:
+      return;
+  }
+}
 
   @override
   void initState() {
@@ -391,6 +436,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           },
         ),
       ),
+      bottomNavigationBar: SafeArea(
+  top: false,
+  child: CustomNavBar(
+    currentTab: NavTab.profile,
+    onTabSelected: _onTabSelected,
+  ),
+),
     );
   }
 

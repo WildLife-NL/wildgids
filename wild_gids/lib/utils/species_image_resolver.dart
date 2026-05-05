@@ -120,7 +120,7 @@ class SpeciesImageResolver {
     return '$_colorAnimalsDir/$colorBase.png';
   }
 
-    /// Used after clicking (real photo)
+     /// Used after clicking (real photo)
   static String? realForCommonName(String? commonName) {
     final base = _base[_normalize(commonName)];
     if (base == null) return null;

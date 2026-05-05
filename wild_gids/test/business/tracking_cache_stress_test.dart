@@ -1,4 +1,6 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+// ignore_for_file: avoid_print
+
+import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wildgids/managers/api_managers/tracking_cache_manager.dart';
 import 'package:wildgids/models/beta_models/tracking_reading_model.dart';
@@ -71,7 +73,7 @@ void main() {
       final cachedJson = prefs.getStringList('cached_tracking_readings');
       final storageSize = cachedJson!.join('').length;
       print(
-        'Storage size: ${storageSize} bytes (${(storageSize / 1024).toStringAsFixed(2)} KB)',
+        'Storage size: $storageSize bytes (${(storageSize / 1024).toStringAsFixed(2)} KB)',
       );
 
       // Verify all readings cached
@@ -103,7 +105,7 @@ void main() {
       final cachedJson = prefs.getStringList('cached_tracking_readings');
       final storageSize = cachedJson!.join('').length;
       print(
-        'Storage size: ${storageSize} bytes (${(storageSize / 1024).toStringAsFixed(2)} KB)',
+        'Storage size: $storageSize bytes (${(storageSize / 1024).toStringAsFixed(2)} KB)',
       );
       print(
         'Average size per reading: ${(storageSize / 1000).toStringAsFixed(2)} bytes',
@@ -147,7 +149,7 @@ void main() {
       final cachedJson = prefs.getStringList('cached_tracking_readings');
       final storageSize = cachedJson!.join('').length;
       print(
-        'Storage size: ${storageSize} bytes (${(storageSize / 1024).toStringAsFixed(2)} KB or ${(storageSize / (1024 * 1024)).toStringAsFixed(2)} MB)',
+        'Storage size: $storageSize bytes (${(storageSize / 1024).toStringAsFixed(2)} KB or ${(storageSize / (1024 * 1024)).toStringAsFixed(2)} MB)',
       );
       print(
         'Average size per reading: ${(storageSize / 10000).toStringAsFixed(2)} bytes',
@@ -178,7 +180,7 @@ void main() {
       final sampleSize = cachedJson!.join('').length;
       final avgPerReading = sampleSize / 100;
 
-      print('Sample size (100 readings): ${sampleSize} bytes');
+      print('Sample size (100 readings): $sampleSize bytes');
       print('Average per reading: ${avgPerReading.toStringAsFixed(2)} bytes');
 
       final estimate100k = avgPerReading * 100000;
@@ -333,7 +335,7 @@ void main() {
             final cachedJson = prefs.getStringList('cached_tracking_readings');
             final storageSize = cachedJson!.join('').length;
             print(
-              '${i} readings: ${(storageSize / (1024 * 1024)).toStringAsFixed(2)} MB',
+              '$i readings: ${(storageSize / (1024 * 1024)).toStringAsFixed(2)} MB',
             );
           }
         }
