@@ -33,6 +33,11 @@ class _RapporterenState extends State<Rapporteren> {
   bool _isLoading = true;
   bool _hasLoadedTypes = false;
 
+  String _cleanInteractionLabel(String raw) {
+    // Backend may prepend slashes like "/// Waarnemingen".
+    return raw.replaceAll('/', '').trim();
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -222,7 +227,9 @@ class _RapporterenState extends State<Rapporteren> {
                                               height: responsive.hp(22),
                                               child: ReportButton(
                                                 image: icon,
-                                                text: type.name,
+                                                text: _cleanInteractionLabel(
+                                                  type.name,
+                                                ),
                                                 onPressed:
                                                     () =>
                                                         _handleReportTypeSelection(

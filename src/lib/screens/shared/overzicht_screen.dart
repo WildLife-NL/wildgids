@@ -27,6 +27,11 @@ class _OverzichtScreenState extends State<OverzichtScreen> {
   String reportButtonLabel = 'Rapporteren';
   NavTab _currentTab = NavTab.zones;
 
+  String _cleanInteractionLabel(String raw) {
+    // Backend may prepend slashes like "/// Waarnemingen".
+    return raw.replaceAll('/', '').trim();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -48,7 +53,7 @@ class _OverzichtScreenState extends State<OverzichtScreen> {
         name ??= (types.isNotEmpty ? types.first.name : null);
         if (name != null && name.isNotEmpty) {
           setState(() {
-            reportButtonLabel = name!;
+            reportButtonLabel = _cleanInteractionLabel(name!);
           });
         }
       } catch (_) {
