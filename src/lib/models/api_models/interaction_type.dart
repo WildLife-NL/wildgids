@@ -11,14 +11,20 @@ class InteractionType {
 
   factory InteractionType.fromJson(Map<String, dynamic> json) {
     return InteractionType(
-      id: json['ID'],
-      name: json['name'],
-      description: json['description'],
+      id: _asInt(json['ID'] ?? json['id']),
+      name: (json['name'] ?? '').toString(),
+      description: (json['description'] ?? '').toString(),
     );
   }
 
   Map<String, dynamic> toJson() {
     // Use API-consistent keys so saved drafts can round-trip via fromJson
     return {'ID': id, 'name': name, 'description': description};
+  }
+
+  static int _asInt(Object? value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
   }
 }

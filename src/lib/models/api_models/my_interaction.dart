@@ -60,7 +60,7 @@ class ReportOfCollision {
               ?.map((e) => InvolvedAnimal.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
-      estimatedDamage: json['estimatedDamage'] ?? 0,
+      estimatedDamage: _asInt(json['estimatedDamage']),
       intensity: json['intensity'] ?? 'medium',
       urgency: json['urgency'] ?? 'medium',
     );
@@ -95,9 +95,9 @@ class ReportOfDamage {
     return ReportOfDamage(
       belonging: json['belonging'] ?? '',
       impactType: json['impactType'] ?? '',
-      impactValue: json['impactValue'] ?? 0,
-      estimatedDamage: json['estimatedDamage'] ?? 0,
-      estimatedLoss: json['estimatedLoss'] ?? 0,
+      impactValue: _asInt(json['impactValue']),
+      estimatedDamage: _asInt(json['estimatedDamage']),
+      estimatedLoss: _asInt(json['estimatedLoss']),
     );
   }
 
@@ -208,7 +208,7 @@ class InteractionTypeInfo {
 
   factory InteractionTypeInfo.fromJson(Map<String, dynamic> json) {
     return InteractionTypeInfo(
-      id: json['ID'] ?? 0,
+      id: _asInt(json['ID'] ?? json['id']),
       name: json['name'] ?? '',
       description: json['description'] ?? '',
     );
@@ -217,6 +217,12 @@ class InteractionTypeInfo {
   Map<String, dynamic> toJson() {
     return {'ID': id, 'name': name, 'description': description};
   }
+}
+
+int _asInt(Object? value) {
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  return int.tryParse(value?.toString() ?? '') ?? 0;
 }
 
 class ExperimentInfo {
