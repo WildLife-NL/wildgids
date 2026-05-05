@@ -66,7 +66,7 @@ void main() {
       expect(find.text(AnimalAge.pasGeboren.label), findsOneWidget);
     });
 
-    testWidgets('should update count when counter buttons are pressed', (
+    testWidgets('should add observed animal when form is submitted', (
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(createAnimalCountingWidget());
@@ -80,12 +80,12 @@ void main() {
       await tester.tap(find.text('Volwassen'));
       await tester.pumpAndSettle();
 
-      // Find and tap the increment button using the "+" text
-      await tester.tap(find.text('+'));
+      // Submit selection
+      await tester.tap(find.text('Voeg toe aan de lijst'));
       await tester.pumpAndSettle();
 
-      // Instead of verifying a method call, just check that the test completes without errors
-      expect(true, isTrue); // This will always pass if we get to this point
+      verify(mockAnimalSightingManager.addObservedAnimal(any)).called(1);
+      verify(mockAnimalSightingManager.syncObservedAnimalsToSighting()).called(1);
     });
 
     testWidgets('should show error overlay when an error occurs', (

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:math' as math;
 import 'package:wildgids/config/app_config.dart';
 import 'package:wildgids/constants/app_colors.dart';
 import 'package:wildgids/constants/app_text_theme.dart';
@@ -141,11 +142,14 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
 
   Widget _buildTextField(int index) {
     final responsive = context.responsive;
-    final boxWidth = responsive.breakpointValue<double>(
-      small: responsive.wp(13),
-      medium: responsive.wp(12),
-      large: responsive.wp(11),
-      extraLarge: responsive.wp(10),
+    final boxWidth = math.min(
+      responsive.breakpointValue<double>(
+        small: responsive.wp(13),
+        medium: responsive.wp(12),
+        large: responsive.wp(11),
+        extraLarge: responsive.wp(10),
+      ),
+      88.0,
     );
     final fontSize = responsive.breakpointValue<double>(
       small: responsive.fontSize(20),
@@ -289,18 +293,22 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
                 ],
               ),
             ),
-            Text(
-              'Voer de verificatiecode in',
-              style: AppTextTheme.textTheme.titleMedium?.copyWith(
-                fontSize: responsive.fontSize(16),
-                fontWeight: FontWeight.w500,
-                shadows: [
-                  Shadow(
-                    color: Colors.black.withValues(alpha: 0.25),
-                    offset: const Offset(0, 2),
-                    blurRadius: 4,
-                  ),
-                ],
+            Expanded(
+              child: Text(
+                'Voer de verificatiecode in',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextTheme.textTheme.titleMedium?.copyWith(
+                  fontSize: responsive.fontSize(16),
+                  fontWeight: FontWeight.w500,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black.withValues(alpha: 0.25),
+                      offset: const Offset(0, 2),
+                      blurRadius: 4,
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -322,8 +330,10 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
           ),
         ],
         SizedBox(height: responsive.spacing(20)),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: responsive.spacing(10),
+          runSpacing: responsive.spacing(10),
           children: List.generate(6, (index) => _buildTextField(index)),
         ),
         const Spacer(),

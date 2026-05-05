@@ -18,8 +18,11 @@ void main() {
   late MockAppStateProvider mockAppStateProvider;
 
   setUpAll(() async {
-    // âœ… Load environment variables for widget tests
-    await dotenv.load(fileName: ".env");
+    try {
+      await dotenv.load(fileName: '.env');
+    } catch (_) {
+      // Tests should not depend on a local .env file.
+    }
   });
 
   setUp(() {
@@ -50,21 +53,31 @@ void main() {
           value: mockAppStateProvider,
         ),
       ],
-      child: const MaterialApp(home: LoginScreen()),
+      child: const MaterialApp(
+        home: Scaffold(
+          body: SizedBox(width: 3000, height: 1800, child: LoginScreen()),
+        ),
+      ),
     );
   }
 
   testWidgets('should render login form', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(3000, 1800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
     await tester.pumpWidget(createLoginScreen());
 
     // Verify email field and login button are rendered
     expect(find.byType(TextField), findsOneWidget);
-    expect(find.text('Login'), findsOneWidget);
+    expect(find.text('Aanmelden'), findsOneWidget);
   });
 
   testWidgets('should validate email and show error for invalid email', (
     WidgetTester tester,
   ) async {
+    tester.view.physicalSize = const Size(3000, 1800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
     when(
       mockLoginInterface.validateEmail(any),
     ).thenReturn('Ongeldig e-mailadres');
@@ -73,7 +86,7 @@ void main() {
 
     // Enter invalid email and tap login button
     await tester.enterText(find.byType(TextField), 'invalid-email');
-    await tester.tap(find.text('Login'));
+    await tester.tap(find.text('Aanmelden'));
     await tester.pump();
     await tester.pumpAndSettle(); // Wait for dialog
 
@@ -84,6 +97,9 @@ void main() {
   testWidgets('should call sendLoginCode for valid email', (
     WidgetTester tester,
   ) async {
+    tester.view.physicalSize = const Size(3000, 1800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
     when(mockLoginInterface.validateEmail('test@example.com')).thenReturn(null);
     when(
       mockLoginInterface.sendLoginCode('test@example.com'),
@@ -93,7 +109,7 @@ void main() {
 
     // Enter valid email and tap login button
     await tester.enterText(find.byType(TextField), 'test@example.com');
-    await tester.tap(find.text('Login'));
+    await tester.tap(find.text('Aanmelden'));
     await tester.pump();
 
     // Verify sendLoginCode was called
@@ -103,6 +119,9 @@ void main() {
   testWidgets(
     'should show verification screen after successful login code request',
     (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(3000, 1800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
       when(
         mockLoginInterface.validateEmail('test@example.com'),
       ).thenReturn(null);
@@ -114,7 +133,7 @@ void main() {
 
       // Enter valid email and tap login button
       await tester.enterText(find.byType(TextField), 'test@example.com');
-      await tester.tap(find.text('Login'));
+      await tester.tap(find.text('Aanmelden'));
 
       await tester.pump();
       await tester.pumpAndSettle(); // Wait for verification screen
@@ -128,6 +147,9 @@ void main() {
   testWidgets('should show error dialog when login code request fails', (
     WidgetTester tester,
   ) async {
+    tester.view.physicalSize = const Size(3000, 1800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
     when(mockLoginInterface.validateEmail('test@example.com')).thenReturn(null);
     when(
       mockLoginInterface.sendLoginCode('test@example.com'),
@@ -137,7 +159,7 @@ void main() {
 
     // Enter valid email and tap login button
     await tester.enterText(find.byType(TextField), 'test@example.com');
-    await tester.tap(find.text('Login'));
+    await tester.tap(find.text('Aanmelden'));
 
     await tester.pump();
     await tester.pumpAndSettle(); // Wait for API call to complete
@@ -152,6 +174,9 @@ void main() {
   testWidgets(
     'should show error dialog when login code request throws exception',
     (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(3000, 1800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
       when(
         mockLoginInterface.validateEmail('test@example.com'),
       ).thenReturn(null);
@@ -168,7 +193,7 @@ void main() {
 
       // Enter valid email and tap login button
       await tester.enterText(find.byType(TextField), 'test@example.com');
-      await tester.tap(find.text('Login'));
+      await tester.tap(find.text('Aanmelden'));
 
       // First pump to handle the initial state change (showVerification = true)
       await tester.pump();
@@ -190,6 +215,9 @@ void main() {
   testWidgets('should handle exception during login code request', (
     WidgetTester tester,
   ) async {
+    tester.view.physicalSize = const Size(3000, 1800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
     when(mockLoginInterface.validateEmail('test@example.com')).thenReturn(null);
 
     // Use thenAnswer with a Future that throws instead of thenThrow
@@ -205,7 +233,7 @@ void main() {
 
     // Enter valid email and tap login button
     await tester.enterText(find.byType(TextField), 'test@example.com');
-    await tester.tap(find.text('Login'));
+    await tester.tap(find.text('Aanmelden'));
 
     // First pump to handle the initial state change (showVerification = true)
     await tester.pump();

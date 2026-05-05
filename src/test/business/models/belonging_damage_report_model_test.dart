@@ -1,6 +1,7 @@
 ﻿import 'package:flutter_test/flutter_test.dart';
 import 'package:wildgids/models/beta_models/belonging_damage_report_model.dart';
 import 'package:wildgids/models/beta_models/possesion_model.dart';
+import 'package:wildgids/models/beta_models/report_location_model.dart';
 
 void main() {
   group('BelongingDamageReport Model', () {
@@ -20,6 +21,9 @@ void main() {
         currentImpactDamages: 500.0,
         estimatedTotalDamages: 1000.0,
         description: 'Test damage',
+        userSelectedLocation: ReportLocation(latitude: 52.1, longtitude: 4.1),
+        systemLocation: ReportLocation(latitude: 52.0, longtitude: 4.0),
+        suspectedSpeciesID: 'wolf',
         systemDateTime: DateTime(2023, 5, 15),
       );
 
@@ -75,6 +79,9 @@ void main() {
         currentImpactDamages: 500.0,
         estimatedTotalDamages: 1000.0,
         description: 'Test damage',
+        userSelectedLocation: ReportLocation(latitude: 52.1, longtitude: 4.1),
+        systemLocation: ReportLocation(latitude: 52.0, longtitude: 4.0),
+        suspectedSpeciesID: 'wolf',
         systemDateTime: DateTime(2023, 5, 15),
       );
 
@@ -82,12 +89,15 @@ void main() {
       final json = report.toJson();
 
       // Assert
-      expect(json['possesionDamageReportID'], 'report-123');
-      expect(json['belonging']['ID'], 'belonging-123');
-      expect(json['belonging']['name'], 'Test Belonging');
-      expect(json['belonging']['category'], 'Test Category');
+      expect(json['possesionDamageReportID'], isNull);
+      expect(json['reportOfDamage']['belonging'], 'Test Belonging');
+      expect(json['reportOfDamage']['impactType'], 'square-meters');
+      expect(json['reportOfDamage']['impactValue'], 100);
+      expect(json['reportOfDamage']['estimatedDamage'], 500);
+      expect(json['reportOfDamage']['estimatedLoss'], 1000);
       expect(json['description'], 'Test damage');
-      expect(json['systemDateTime'], '2023-05-15T00:00:00.000');
+      expect(json['typeID'], 2);
+      expect(json['speciesID'], 'wolf');
     });
 
     test('should handle null values correctly', () {

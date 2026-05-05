@@ -6,10 +6,22 @@ import 'package:wildgids/interfaces/waarneming_flow/animal_sighting_reporting_in
 import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
 import 'package:wildgids/providers/app_state_provider.dart';
 import 'package:wildgids/providers/map_provider.dart';
+import 'package:wildgids/managers/api_managers/interaction_types_manager.dart';
+import 'package:wildgids/interfaces/data_apis/interaction_types_api_interface.dart';
+import 'package:wildgids/models/api_models/interaction_type.dart';
 import 'package:wildgids/screens/shared/rapporteren.dart';
 import 'package:wildgids/widgets/questionnaire/report_button.dart';
 import '../helpers/rapporteren_helpers.dart';
 import '../mock_generator.mocks.dart';
+
+class _FakeInteractionTypesApi implements InteractionTypesApiInterface {
+  @override
+  Future<List<InteractionType>> getAllInteractionTypes() async {
+    return [
+      InteractionType(id: 1, name: 'Waarneming', description: 'Test type'),
+    ];
+  }
+}
 
 void main() {
   late MockNavigationStateInterface mockNavigationManager;
@@ -45,6 +57,9 @@ void main() {
           value: mockAppStateProvider,
         ),
         ChangeNotifierProvider<MapProvider>.value(value: mockMapProvider),
+        Provider<InteractionTypesManager>(
+          create: (_) => InteractionTypesManager(_FakeInteractionTypesApi()),
+        ),
       ],
       child: MaterialApp(
         home: Scaffold(
@@ -65,7 +80,7 @@ void main() {
   }
 
   group('RapporterenScreen', () {
-    testWidgets('should render only Waarnemingen button', (
+    testWidgets('should render only Waarneming button', (
       WidgetTester tester,
     ) async {
       // Arrange
@@ -76,20 +91,20 @@ void main() {
 
       // Assert
       expect(find.byType(ReportButton), findsNWidgets(1));
-      expect(find.text('Waarnemingen'), findsOneWidget);
+      expect(find.text('Waarneming'), findsOneWidget);
       expect(find.text('Gewasschade'), findsNothing);
       expect(find.text('Verkeersongeval'), findsNothing);
     });
 
     testWidgets(
-      'should create animal sighting and navigate when Waarnemingen is pressed',
+      'should create animal sighting and navigate when Waarneming is pressed',
       (WidgetTester tester) async {
         // Arrange
         await tester.pumpWidget(createRapporterenScreen());
         await tester.pumpAndSettle();
 
-        // Act - Find and ensure the Waarnemingen button is visible before tapping
-        final waarnemingButton = find.text('Waarnemingen');
+        // Act - Find and ensure the Waarneming button is visible before tapping
+        final waarnemingButton = find.text('Waarneming');
         await ensureWidgetIsVisible(tester, waarnemingButton);
         await tester.tap(waarnemingButton);
         await tester.pump();
@@ -105,26 +120,18 @@ void main() {
     testWidgets('should handle navigation failure gracefully', (
       WidgetTester tester,
     ) async {
-      // Skip this test for now as the Rapporteren screen doesn't have error handling
-      // for navigation failures. This test would need to be updated once error handling
-      // is implemented in the Rapporteren screen.
-
       // Arrange
+      RapporterenHelpers.setupFailedNavigation(mockNavigationManager);
       await tester.pumpWidget(createRapporterenScreen());
       await tester.pumpAndSettle();
+      final waarnemingButton = find.text('Waarneming');
+      await ensureWidgetIsVisible(tester, waarnemingButton);
+      await tester.tap(waarnemingButton);
+      await tester.pump();
 
-      // Skip the rest of the test
-      expect(true, isTrue); // Always passes
-    });
-
-    testWidgets('should throw exception when navigation fails', (
-      WidgetTester tester,
-    ) async {
-      // Skip this test for now as Flutter's test framework doesn't easily allow
-      // testing for exceptions thrown during gesture processing
-
-      // Mark the test as passed
-      expect(true, isTrue);
+      // The screen currently bubbles navigation exceptions from the manager.
+      final error = tester.takeException();
+      expect(error, isA<Exception>());
     });
   });
 }

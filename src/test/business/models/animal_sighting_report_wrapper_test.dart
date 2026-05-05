@@ -219,7 +219,7 @@ void main() {
       expect(() => reportWrapper.toJson(), throwsStateError);
     });
 
-    test('should throw StateError when system location is missing', () {
+    test('should fallback to manual location when system location is missing', () {
       // Arrange
       final animalModel = AnimalModel(
         animalId: '1',
@@ -246,11 +246,14 @@ void main() {
 
       final reportWrapper = AnimalSightingReportWrapper(sightingModel);
 
-      // Act & Assert
-      expect(() => reportWrapper.toJson(), throwsStateError);
+      // Act
+      final json = reportWrapper.toJson();
+      // Assert
+      expect(json['location']['latitude'], 52.1);
+      expect(json['location']['longitude'], 4.1);
     });
 
-    test('should throw StateError when manual location is missing', () {
+    test('should fallback to system location when manual location is missing', () {
       // Arrange
       final animalModel = AnimalModel(
         animalId: '1',
@@ -277,8 +280,11 @@ void main() {
 
       final reportWrapper = AnimalSightingReportWrapper(sightingModel);
 
-      // Act & Assert
-      expect(() => reportWrapper.toJson(), throwsStateError);
+      // Act
+      final json = reportWrapper.toJson();
+      // Assert
+      expect(json['place']['latitude'], 52.0);
+      expect(json['place']['longitude'], 4.0);
     });
 
     test('should handle complex animal sighting with multiple animals', () {

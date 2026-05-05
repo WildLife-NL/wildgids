@@ -120,31 +120,19 @@ class TrackingCacheManager {
   /// Cache a tracking reading to local storage
   Future<void> cacheReading(TrackingReading reading) async {
     try {
-      debugPrint(
-        '$yellowLog[TrackingCacheManager] Caching tracking reading: $reading',
-      );
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final List<String> cachedJson = prefs.getStringList(_cacheKey) ?? <String>[];
+      cachedJson.add(jsonEncode(reading.toJson()));
 
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      List<String>? cachedJson = prefs.getStringList(_cacheKey);
+      await prefs.setStringList(_cacheKey, cachedJson);
 
-      List<TrackingReading> readings = [];
-      if (cachedJson != null) {
-        readings =
-            cachedJson
-                .map((json) => TrackingReading.fromJson(jsonDecode(json)))
-                .toList();
+      // Keep logs compact: only every 100 readings, plus first entry.
+      final int total = cachedJson.length;
+      if (total == 1 || total % 100 == 0) {
+        debugPrint(
+          '$greenLog[TrackingCacheManager] Cached reading successfully. Total cached: $total',
+        );
       }
-
-      readings.add(reading);
-
-      List<String> updatedJson =
-          readings.map((reading) => jsonEncode(reading.toJson())).toList();
-
-      await prefs.setStringList(_cacheKey, updatedJson);
-
-      debugPrint(
-        '$greenLog[TrackingCacheManager] Cached reading successfully. Total cached: ${readings.length}',
-      );
     } catch (e, stackTrace) {
       debugPrint('$redLog[TrackingCacheManager] Failed to cache reading: $e');
       debugPrint('$redLog$stackTrace');

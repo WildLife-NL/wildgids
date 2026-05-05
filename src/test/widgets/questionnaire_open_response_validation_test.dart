@@ -73,7 +73,8 @@ void main() {
 
       // Valid inputs
       expect(_validateText('123', pattern), isNull);
-      expect(_validateText('0', pattern), isNull);
+      // Single-character input is now rejected by backend-aligned min-length rule.
+      expect(_validateText('0', pattern), isNotNull);
       expect(_validateText('999999', pattern), isNull);
 
       // Invalid inputs

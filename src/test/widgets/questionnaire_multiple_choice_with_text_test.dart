@@ -1,5 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
 import 'package:wildgids/models/api_models/answer.dart';
 import 'package:wildgids/models/api_models/experiment.dart';
 import 'package:wildgids/models/api_models/interaction_type.dart';
@@ -7,6 +8,7 @@ import 'package:wildgids/models/api_models/questionaire.dart';
 import 'package:wildgids/models/api_models/question.dart';
 import 'package:wildgids/models/api_models/user.dart';
 import 'package:wildgids/widgets/questionnaire/questionnaire_multiple_choice.dart';
+import 'package:wildgids/providers/response_provider.dart';
 
 void main() {
   group('QuestionnaireMultipleChoice with Per-Answer Text Fields', () {
@@ -69,13 +71,16 @@ void main() {
         await tester.pumpWidget(
           MaterialApp(
             home: Scaffold(
-              body: QuestionnaireMultipleChoice(
-                question: testQuestion,
-                questionnaire: testQuestionnaire,
-                onNextPressed: () {},
-                onBackPressed: () {},
-                interactionID: 'interaction123',
-                index: 0,
+              body: ChangeNotifierProvider(
+                create: (_) => ResponseProvider(),
+                child: QuestionnaireMultipleChoice(
+                  question: testQuestion,
+                  questionnaire: testQuestionnaire,
+                  onNextPressed: () {},
+                  onBackPressed: () {},
+                  interactionID: 'interaction123',
+                  index: 0,
+                ),
               ),
             ),
           ),
@@ -83,7 +88,7 @@ void main() {
 
         // Verify checkboxes are rendered
         expect(find.byType(Checkbox), findsWidgets);
-        expect(find.byIcon(Icons.check_box_outline_blank), findsWidgets);
+        expect(find.byType(Checkbox), findsNWidgets(testAnswers.length));
       },
     );
 
@@ -94,13 +99,16 @@ void main() {
         await tester.pumpWidget(
           MaterialApp(
             home: Scaffold(
-              body: QuestionnaireMultipleChoice(
-                question: testQuestion,
-                questionnaire: testQuestionnaire,
-                onNextPressed: () {},
-                onBackPressed: () {},
-                interactionID: 'interaction123',
-                index: 0,
+              body: ChangeNotifierProvider(
+                create: (_) => ResponseProvider(),
+                child: QuestionnaireMultipleChoice(
+                  question: testQuestion,
+                  questionnaire: testQuestionnaire,
+                  onNextPressed: () {},
+                  onBackPressed: () {},
+                  interactionID: 'interaction123',
+                  index: 0,
+                ),
               ),
             ),
           ),
@@ -125,13 +133,16 @@ void main() {
         await tester.pumpWidget(
           MaterialApp(
             home: Scaffold(
-              body: QuestionnaireMultipleChoice(
-                question: testQuestion,
-                questionnaire: testQuestionnaire,
-                onNextPressed: () {},
-                onBackPressed: () {},
-                interactionID: 'interaction123',
-                index: 0,
+              body: ChangeNotifierProvider(
+                create: (_) => ResponseProvider(),
+                child: QuestionnaireMultipleChoice(
+                  question: testQuestion,
+                  questionnaire: testQuestionnaire,
+                  onNextPressed: () {},
+                  onBackPressed: () {},
+                  interactionID: 'interaction123',
+                  index: 0,
+                ),
               ),
             ),
           ),
@@ -164,13 +175,16 @@ void main() {
         await tester.pumpWidget(
           MaterialApp(
             home: Scaffold(
-              body: QuestionnaireMultipleChoice(
-                question: testQuestion,
-                questionnaire: testQuestionnaire,
-                onNextPressed: () {},
-                onBackPressed: () {},
-                interactionID: 'interaction123',
-                index: 0,
+              body: ChangeNotifierProvider(
+                create: (_) => ResponseProvider(),
+                child: QuestionnaireMultipleChoice(
+                  question: testQuestion,
+                  questionnaire: testQuestionnaire,
+                  onNextPressed: () {},
+                  onBackPressed: () {},
+                  interactionID: 'interaction123',
+                  index: 0,
+                ),
               ),
             ),
           ),
@@ -201,13 +215,16 @@ void main() {
         await tester.pumpWidget(
           MaterialApp(
             home: Scaffold(
-              body: QuestionnaireMultipleChoice(
-                question: testQuestion,
-                questionnaire: testQuestionnaire,
-                onNextPressed: () {},
-                onBackPressed: () {},
-                interactionID: 'interaction123',
-                index: 0,
+              body: ChangeNotifierProvider(
+                create: (_) => ResponseProvider(),
+                child: QuestionnaireMultipleChoice(
+                  question: testQuestion,
+                  questionnaire: testQuestionnaire,
+                  onNextPressed: () {},
+                  onBackPressed: () {},
+                  interactionID: 'interaction123',
+                  index: 0,
+                ),
               ),
             ),
           ),
@@ -218,6 +235,7 @@ void main() {
         await tester.pumpAndSettle();
 
         // Select third answer (skip second)
+        await tester.ensureVisible(find.byType(Checkbox).at(2));
         await tester.tap(find.byType(Checkbox).at(2));
         await tester.pumpAndSettle();
 

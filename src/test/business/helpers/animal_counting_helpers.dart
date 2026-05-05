@@ -10,7 +10,11 @@ import '../mock_generator.mocks.dart';
 
 class AnimalCountingHelpers {
   static Future<void> setupEnvironment() async {
-    await dotenv.load(fileName: ".env");
+    try {
+      await dotenv.load(fileName: '.env');
+    } catch (_) {
+      // Tests should not depend on a local .env file.
+    }
   }
 
   static MockNavigationStateInterface getMockNavigationManager() {

@@ -30,6 +30,7 @@ void main() {
             body: Column(
               children: [
                 ScrollableAnimalGrid(
+                  key: const ValueKey('grid'),
                   animals: null,
                   isLoading: true,
                   error: null,
@@ -57,6 +58,7 @@ void main() {
             body: Column(
               children: [
                 ScrollableAnimalGrid(
+                  key: const ValueKey('grid'),
                   animals: null,
                   isLoading: false,
                   error: errorMessage,
@@ -69,7 +71,7 @@ void main() {
         ),
       );
 
-      expect(find.text('Error: $errorMessage'), findsOneWidget);
+      expect(find.text('Fout: $errorMessage'), findsOneWidget);
     });
 
     testWidgets(
@@ -83,6 +85,7 @@ void main() {
               body: Column(
                 children: [
                   ScrollableAnimalGrid(
+                    key: const ValueKey('grid'),
                     animals: null,
                     isLoading: false,
                     error: 'Error',
@@ -112,6 +115,7 @@ void main() {
             body: Column(
               children: [
                 ScrollableAnimalGrid(
+                  key: const ValueKey('grid'),
                   animals: testAnimals,
                   isLoading: false,
                   error: null,
@@ -137,6 +141,7 @@ void main() {
             body: Column(
               children: [
                 ScrollableAnimalGrid(
+                  key: const ValueKey('grid'),
                   animals: [],
                   isLoading: false,
                   error: null,

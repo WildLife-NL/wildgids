@@ -11,7 +11,11 @@ import '../mock_generator.mocks.dart';
 
 class AnimalHelpers {
   static Future<void> setupEnvironment() async {
-    await dotenv.load(fileName: ".env");
+    try {
+      await dotenv.load(fileName: '.env');
+    } catch (_) {
+      // Tests should not depend on a local .env file.
+    }
   }
 
   static MockSpeciesApiInterface getMockSpeciesApi() {
@@ -22,7 +26,9 @@ class AnimalHelpers {
   static MockFilterInterface getMockFilterManager() {
     final mock = MockFilterInterface();
     when(mock.getAvailableFilters(any)).thenReturn([]);
-    when(mock.filterAnimalsAlphabetically(any)).thenReturn([]);
+    when(mock.filterAnimalsAlphabetically(any)).thenAnswer(
+      (invocation) => List<AnimalModel>.from(invocation.positionalArguments[0] as List),
+    );
     when(mock.searchAnimals(any, any)).thenReturn([]);
     return mock;
   }

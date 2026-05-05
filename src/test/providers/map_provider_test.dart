@@ -124,6 +124,8 @@ void main() {
         time: DateTime.now(),
       );
       const address = 'Amsterdam, Netherlands';
+      // selectedAddress must be non-empty for updatePosition to mirror current values.
+      mapProvider.selectedAddress = 'previous';
 
       // Act
       await mapProvider.updatePosition(position, address);

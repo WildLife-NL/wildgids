@@ -8,7 +8,11 @@ import '../mock_generator.mocks.dart';
 class TestHelpers {
   // Initialize environment variables for tests
   static Future<void> setupEnvironment() async {
-    await dotenv.load(fileName: ".env");
+    try {
+      await dotenv.load(fileName: '.env');
+    } catch (_) {
+      // Tests should not depend on a local .env file.
+    }
   }
 
   // Create mocked instances

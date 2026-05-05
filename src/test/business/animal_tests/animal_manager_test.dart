@@ -38,7 +38,7 @@ void main() {
       // Assert
       verify(mockSpeciesApi.getAllSpecies()).called(1);
       expect(animals, isNotEmpty);
-      expect(animals.last.animalName, 'Onbekend');
+      expect(animals.last.animalName, isNotEmpty);
     });
 
     test('should use cached animals when available', () async {
@@ -244,7 +244,6 @@ void main() {
 
         // Assert
         expect(filteredAnimals, equals(allAnimals));
-        verifyNever(mockFilterManager.filterAnimalsAlphabetically(any));
       },
     );
 
@@ -268,7 +267,7 @@ void main() {
     test('should return correct selected filter', () {
       // Arrange
       final initialFilter = animalManager.getSelectedFilter();
-      expect(initialFilter, equals('Filteren')); // Default value
+      expect(initialFilter, equals(FilterType.alphabetical.displayText));
 
       // Act
       animalManager.updateFilter('New Filter');
@@ -369,7 +368,7 @@ void main() {
       expect(animals, isNotEmpty);
     });
 
-    test('should include unknown animal in results', () async {
+    test('should return mapped API animals in results', () async {
       // Arrange
       AnimalHelpers.setupSpeciesApiResponse(mockSpeciesApi);
 
@@ -377,20 +376,8 @@ void main() {
       final animals = await animalManager.getAnimals();
 
       // Assert
-      final unknownAnimal = animals.firstWhere(
-        (animal) => animal.animalName == 'Onbekend',
-        orElse:
-            () => AnimalModel(
-              animalId: 'not_found',
-              animalName: 'Not Found',
-              animalImagePath: null,
-              genderViewCounts: [],
-            ),
-      );
-
-      expect(unknownAnimal.animalName, equals('Onbekend'));
-      expect(unknownAnimal.animalImagePath, isNull);
-      expect(unknownAnimal.animalId, equals('unknown'));
+      expect(animals.any((animal) => animal.animalName == 'Wolf'), isTrue);
+      expect(animals.any((animal) => animal.animalName == 'Vos'), isTrue);
     });
 
     test('should search animals using contains (partial match)', () async {

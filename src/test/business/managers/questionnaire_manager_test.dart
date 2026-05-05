@@ -1,5 +1,4 @@
 ﻿import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
 import 'package:wildgids/managers/other/questionnaire_manager.dart';
 import 'package:wildgids/models/api_models/experiment.dart';
 import 'package:wildgids/models/api_models/interaction_type.dart';
@@ -43,32 +42,11 @@ void main() {
   });
 
   group('QuestionnaireManager', () {
-    test('should fetch questionnaire by ID', () async {
-      // Arrange
-      final questionnaire = Questionnaire(
-        id: '5c5cd71a-ed88-4e18-8cd4-725a6c6fe4b1',
-        experiment: mockExperiment,
-        interactionType: mockInteractionType,
-        name: 'Test Questionnaire',
-        questions: [],
+    test('should throw when getQuestionnaire is called directly', () async {
+      await expectLater(
+        questionnaireManager.getQuestionnaire(),
+        throwsA(isA<StateError>()),
       );
-
-      when(
-        mockQuestionnaireApi.getQuestionnaireByID(
-          '5c5cd71a-ed88-4e18-8cd4-725a6c6fe4b1',
-        ),
-      ).thenAnswer((_) async => questionnaire);
-
-      // Act
-      final result = await questionnaireManager.getQuestionnaire();
-
-      // Assert
-      expect(result, equals(questionnaire));
-      verify(
-        mockQuestionnaireApi.getQuestionnaireByID(
-          '5c5cd71a-ed88-4e18-8cd4-725a6c6fe4b1',
-        ),
-      ).called(1);
     });
 
     test('should build questionnaire layout with no questions', () async {
@@ -297,14 +275,11 @@ void main() {
       expect(widgets[2], isA<QuestionnaireMultipleChoice>());
     });
 
-    test('should handle API errors gracefully', () async {
-      // Arrange
-      when(
-        mockQuestionnaireApi.getQuestionnaireByID(any),
-      ).thenThrow(Exception('API error'));
-
-      // Act & Assert
-      expect(() => questionnaireManager.getQuestionnaire(), throwsException);
+    test('should keep getQuestionnaire unsupported regardless of API state', () async {
+      await expectLater(
+        questionnaireManager.getQuestionnaire(),
+        throwsA(isA<StateError>()),
+      );
     });
 
     test(

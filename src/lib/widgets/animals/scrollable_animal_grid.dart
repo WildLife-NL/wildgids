@@ -68,11 +68,9 @@ class ScrollableAnimalGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-        child: _buildContent(),
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+      child: _buildContent(),
     );
   }
 }

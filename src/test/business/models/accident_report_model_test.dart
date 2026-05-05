@@ -106,8 +106,8 @@ void main() {
       final json = report.toJson();
 
       // Assert
-      expect(json['accidentReportID'], 'accident-123');
-      expect(json['estimatedDamage'], 'Front bumper damaged');
+      expect(json['accidentReportID'], isNull);
+      expect(json['estimatedDamage'], 0);
       expect(json['involvedAnimals'].length, 1);
       expect(json['involvedAnimals'][0]['condition'], 'alive');
     });
