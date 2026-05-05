@@ -1289,7 +1289,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
       case NavTab.zones:
         navigation.pushReplacementForward(context, const SpeciesListScreen());
         break;
-      case NavTab.rapporten:
+      case NavTab.waarneming:
         navigation.pushReplacementForward(context, const WaarnemmingStartScreen());
         break;
       case NavTab.logboek:

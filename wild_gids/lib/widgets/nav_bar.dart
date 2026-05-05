@@ -59,7 +59,7 @@ class CustomNavBar extends StatelessWidget {
                       label: 'Soorten',
                     ),
                     _buildNavItem(
-                      tab: NavTab.rapporten,
+                      tab: NavTab.waarneming,
                       iconPath: 'assets/icons/nav-bar/rapporten.svg',
                       selectedIconPath: 'assets/icons/nav-bar/rapport-selected.svg',
                       label: 'Rapporten',

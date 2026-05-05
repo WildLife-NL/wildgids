@@ -138,7 +138,7 @@ class _OverzichtScreenState extends State<OverzichtScreen> {
           );
         });
         break;
-      case NavTab.rapporten:
+      case NavTab.waarneming:
         _runWithLocationGate(() {
           context.read<NavigationStateInterface>().pushReplacementForward(
             context,

@@ -5,6 +5,12 @@ import 'package:wildgids/screens/waarneming/location_selection_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:wildgids/models/enums/report_type.dart';
 import 'package:wildgids/providers/app_state_provider.dart';
+import 'package:wildgids/widgets/shared_ui_widgets/custom_nav_bar.dart';
+import 'package:wildgids/models/enums/nav_tab.dart';
+import 'package:wildgids/screens/location/kaart_overview_screen.dart';
+import 'package:wildgids/screens/logbook/logbook_screen.dart';
+import 'package:wildgids/screens/profile/profile_screen.dart';
+import 'package:wildgids/screens/species/species_list_screen.dart';
 
 class WaarnemmingStartScreen extends StatefulWidget {
   const WaarnemmingStartScreen({super.key});
@@ -23,167 +29,196 @@ class _WaarnemmingStartScreenState extends State<WaarnemmingStartScreen> {
       context.read<AppStateProvider>().initializeReport(ReportType.waarneming);
     });
   }
+void _onTabSelected(NavTab tab) {
+  final nav = context.read<NavigationStateInterface>();
 
+  switch (tab) {
+    case NavTab.zones:
+    case NavTab.soorten:
+      nav.pushReplacementForward(context, const SpeciesListScreen());
+      break;
+
+    case NavTab.waarneming:
+      return; // already here
+
+    case NavTab.kaart:
+      nav.pushReplacementForward(context, const KaartOverviewScreen());
+      break;
+
+    case NavTab.logboek:
+      nav.pushReplacementForward(context, const LogbookScreen());
+      break;
+
+    case NavTab.profile:
+    case NavTab.instellingen:
+      nav.pushReplacementForward(context, const ProfileScreen());
+      break;
+  }
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF5F6F4),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.only(top: 70, bottom: 16.0),
-              child: Text(
-                'Meld uw waarneming',
-                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 24,
-                      color: Colors.black,
-                    ),
-              ),
-            ),
-            
-            // Map section with binoculars overlay and start button
-            Padding(
-              padding: const EdgeInsets.only(
-                top: 80.0,
-                left: 16.0,
-                right: 16.0,
-              ),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // Map background image - full height
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color.fromARGB(60, 0, 0, 0), width: 1),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: Image.asset(
-                        'assets/icons/map-pic.jpg',
-                        height: 320,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                  
-                  // Start button - positioned directly below binoculars
-                  Positioned(
-                    top: 170,
-                    child: Container(
-                      width: MediaQuery.of(context).size.width - 50,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 20,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(
-                          color: const Color.fromARGB(95, 0, 0, 0),
-                          width: 1,
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 8,
-                            offset: const Offset(0, -2),
+      backgroundColor: const Color(0xFFF5F6F4),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: CustomNavBar(
+          currentTab: NavTab.waarneming,
+          onTabSelected: _onTabSelected,
+        ),
+      ),
+      body: SafeArea(
+        bottom: false, // So content doesn't overlap nav bar
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // Header
+              Padding(
+                padding: const EdgeInsets.only(top: 32, bottom: 16.0), // less top padding
+                child: Text(
+                  'Meld uw waarneming',
+                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 24,
+                            color: Colors.black,
                           ),
-                        ],
+                ),
+              ),
+              // Map section with binoculars overlay and start button
+              Padding(
+                padding: const EdgeInsets.only(
+                  top: 24.0, // less top padding
+                  left: 16.0,
+                  right: 16.0,
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // Map background image - full height
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color.fromARGB(60, 0, 0, 0), width: 1),
                       ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          GestureDetector(
-                            onTap: () {
-                              final navigationManager = context.read<NavigationStateInterface>();
-                              debugPrint('[Waarneming] Start new sighting');
-                              navigationManager.pushForward(
-                                context,
-                                const LocationSelectionScreen(),
-                              );
-                            },
-                            child: Column(
-                              children: [
-                                Text(
-                                  'Start',
-                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black,
-                                    fontSize: 20,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Image.asset(
+                          'assets/icons/map-pic.jpg',
+                          height: 320,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    // Start button - positioned directly below binoculars
+                    Positioned(
+                      top: 170,
+                      child: Container(
+                        width: MediaQuery.of(context).size.width - 50,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 20,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border.all(
+                            color: const Color.fromARGB(95, 0, 0, 0),
+                            width: 1,
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, -2),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                final navigationManager = context.read<NavigationStateInterface>();
+                                debugPrint('[Waarneming] Start new sighting');
+                                navigationManager.pushForward(
+                                  context,
+                                  const LocationSelectionScreen(),
+                                );
+                              },
+                              child: Column(
+                                children: [
+                                  Text(
+                                    'Start',
+                                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                      fontSize: 20,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Nieuwe Waarneming Starten',
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: Colors.grey[600],
-                                    fontSize: 13,
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Nieuwe Waarneming Starten',
+                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                      color: Colors.grey[600],
+                                      fontSize: 13,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    // Binoculars icon in dark circle - rendered on top of button
+                    Positioned(
+                      top: 80,
+                      child: Container(
+                        width: 100,
+                        height: 100,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF333333),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: SvgPicture.asset(
+                            'assets/icons/binoculars-filled.svg',
+                            width: 48,
+                            height: 48,
+                            colorFilter: const ColorFilter.mode(
+                              Colors.white,
+                              BlendMode.srcIn,
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  
-                  // Binoculars icon in dark circle - rendered on top of button
-                  Positioned(
-                    top: 80,
-                    child: Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        color: Color(0xFF333333),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: SvgPicture.asset(
-                          'assets/icons/binoculars-filled.svg',
-                          width: 48,
-                          height: 48,
-                          colorFilter: const ColorFilter.mode(
-                            Colors.white,
-                            BlendMode.srcIn,
-                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            
-            const SizedBox(height: 50),
-            
-            // Recent sightings section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Recente waarnemingen',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w400,
-                      color: Colors.black,
-                      fontSize: 16,
+              const SizedBox(height: 30),
+              // Recent sightings section
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Recente waarnemingen',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w400,
+                        color: Colors.black,
+                        fontSize: 16,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  _buildRecentSightingsList(context),
-                ],
+                    const SizedBox(height: 8),
+                    _buildRecentSightingsList(context),
+                  ],
+                ),
               ),
-            ),
-            
-            const SizedBox(height: 24),
-          ],
+              const SizedBox(height: 24),
+            ],
+          ),
         ),
       ),
     );

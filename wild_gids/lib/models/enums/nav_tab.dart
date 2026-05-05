@@ -1,7 +1,7 @@
 enum NavTab {
   soorten,
   zones,
-  rapporten,
+  waarneming,
   kaart,
   logboek,
   instellingen,

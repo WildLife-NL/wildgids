@@ -44,7 +44,7 @@ void _onTabSelected(NavTab tab) {
     case NavTab.zones:
       return;
 
-    case NavTab.rapporten:
+    case NavTab.waarneming:
       nav.pushReplacementForward(
         context,
         const WaarnemmingStartScreen(),

@@ -42,7 +42,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
       break;
 
-    case NavTab.rapporten:
+    case NavTab.waarneming:
       navigationManager.pushReplacementForward(
         context,
         const WaarnemmingStartScreen(),

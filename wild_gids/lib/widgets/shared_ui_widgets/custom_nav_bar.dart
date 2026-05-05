@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:wildgids/models/enums/nav_tab.dart';
+//import 'dart:math' as math;
 
 class CustomNavBar extends StatelessWidget {
   final NavTab currentTab;
@@ -70,17 +71,17 @@ class CustomNavBar extends StatelessWidget {
                       child: _buildNavItem(
                         tab: NavTab.zones,
                         icon: Icons.add_location_alt,
-                        label: 'Diersoorten',
+                        label: 'Soorten',
                       ),
                     ),
                     Expanded(
                       child: _buildNavItem(
-                        tab: NavTab.rapporten,
-                        icon: Icons.campaign,
-                        label: 'Rapporten',
+                        tab: NavTab.waarneming,
+                        icon: Icons.visibility, // <-- binocular/observation icon
+                        label: 'Waarneming',    // <-- singular, as requested
                       ),
                     ),
-                    const SizedBox(width: 60),
+                    const SizedBox(width: 60), // Space for the center button (FAB)
                     Expanded(
                       child: _buildNavItem(
                         tab: NavTab.logboek,
@@ -256,3 +257,4 @@ class NavBarCurvePainter extends CustomPainter {
         oldDelegate.bumpShoulder != bumpShoulder;
   }
 }
+

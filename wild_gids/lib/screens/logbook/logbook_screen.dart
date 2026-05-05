@@ -55,7 +55,7 @@ class LogbookScreen extends StatelessWidget {
       case NavTab.zones:
         navigationManager.pushReplacementForward(context, const SpeciesListScreen());
         break;
-        case NavTab.rapporten:
+        case NavTab.waarneming:
           navigationManager.pushReplacementForward(context, const WaarnemmingStartScreen());
           break;
         case NavTab.kaart:
