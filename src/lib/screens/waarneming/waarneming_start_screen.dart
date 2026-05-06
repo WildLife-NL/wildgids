@@ -66,9 +66,7 @@ class _WaarnemmingStartScreenState extends State<WaarnemmingStartScreen> {
 
       if (!mounted) return;
       setState(() {
-        _recentApiSightings = (todayOnly.isNotEmpty ? todayOnly : sightingsOnly)
-            .take(3)
-            .toList();
+        _recentApiSightings = todayOnly.take(3).toList();
         _loadingRecentSightings = false;
       });
       _resolveMissingLocationNames(_recentApiSightings);
@@ -350,16 +348,9 @@ void _onTabSelected(NavTab tab) {
       );
     }
 
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey[300]!, width: 1),
-        borderRadius: BorderRadius.circular(12),
-        color: Colors.grey[50],
-      ),
-      child: Column(
-        children: List.generate(recentSightings.length, (index) {
+    return Column(
+      children: List.generate(recentSightings.length, (index) {
           final MyInteraction sighting = recentSightings[index];
-          final isLast = index == recentSightings.length - 1;
           final animalName = sighting.species.commonName.isNotEmpty
               ? sighting.species.commonName
               : 'Onbekend dier';
@@ -368,51 +359,50 @@ void _onTabSelected(NavTab tab) {
           final dayLabel = _buildDayLabel(sighting);
           final locationLabel = _buildLocationLabel(sighting);
           
-          return Column(
-            children: [
-              GestureDetector(
+          return Container(
+            margin: const EdgeInsets.only(bottom: 10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(color: Colors.grey[300]!, width: 1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
                 onTap: () {
                   debugPrint('[Waarneming] Tapped sighting: $animalName');
                 },
                 child: Padding(
-                  padding: const EdgeInsets.all(8.0),
+                  padding: const EdgeInsets.all(10),
                   child: Row(
                     children: [
-                      // Animal image
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(8),
                         child:
                             resolvedImagePath != null
                                 ? Image.asset(
                                   resolvedImagePath,
-                                  width: 50,
-                                  height: 50,
+                                  width: 56,
+                                  height: 56,
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
                                     return Container(
-                                      width: 50,
-                                      height: 50,
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey[300],
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
+                                      width: 56,
+                                      height: 56,
+                                      color: Colors.grey[300],
                                       child: const Icon(Icons.pets, size: 24),
                                     );
                                   },
                                 )
                                 : Container(
-                                  width: 50,
-                                  height: 50,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[300],
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
+                                  width: 56,
+                                  height: 56,
+                                  color: Colors.grey[300],
                                   child: const Icon(Icons.pets, size: 24),
                                 ),
                       ),
                       const SizedBox(width: 10),
-
-                      // Sighting info
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -428,40 +418,33 @@ void _onTabSelected(NavTab tab) {
                             const SizedBox(height: 2),
                             Text(
                               animalName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                fontSize: 12,
+                                fontSize: 13,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              locationLabel,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Colors.grey[600],
+                                fontSize: 11,
                               ),
                             ),
                           ],
-                        ),
-                      ),
-
-                      // Distance
-                      Text(
-                        locationLabel,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
-                          fontSize: 11,
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-              
-              // Divider - not after last item
-              if (!isLast)
-                Divider(
-                  height: 1,
-                  color: Colors.grey[300],
-                  indent: 60,
-                  endIndent: 0,
-                ),
-            ],
+            ),
           );
         }),
-      ),
     );
   }
 

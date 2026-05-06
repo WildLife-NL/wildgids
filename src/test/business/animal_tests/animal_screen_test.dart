@@ -99,7 +99,7 @@ void main() {
       await tester.pumpWidget(createAnimalScreen());
       await tester.pumpAndSettle();
 
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Wolf').first);
+      await tester.tap(find.text('Wolf').first);
       await tester.pumpAndSettle();
 
       verify(

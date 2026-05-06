@@ -1,4 +1,11 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:wildgids/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
+import 'package:wildgids/models/animal_waarneming_models/observed_animal_entry.dart';
+import 'package:wildgids/models/enums/animal_age.dart';
+import 'package:wildgids/models/enums/animal_age_extensions.dart';
+import 'package:wildgids/models/enums/animal_condition.dart';
+import 'package:wildgids/models/enums/animal_gender.dart';
 
 class AnimalCounting extends StatefulWidget {
   final VoidCallback? onAddToList;
@@ -10,7 +17,8 @@ class AnimalCounting extends StatefulWidget {
 }
 
 class _AnimalCountingState extends State<AnimalCounting> {
-  int currentCount = 0;
+  AnimalGender? _selectedGender;
+  AnimalAge? _selectedAge;
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +61,81 @@ class _AnimalCountingState extends State<AnimalCounting> {
                       padding: const EdgeInsets.all(20.0),
                       child: Column(
                         children: [
-                          // Content goes here
+                          Wrap(
+                            spacing: 8,
+                            children: [
+                              ChoiceChip(
+                                label: const Text('Mannelijk'),
+                                selected: _selectedGender == AnimalGender.mannelijk,
+                                onSelected: (_) {
+                                  setState(() {
+                                    _selectedGender = AnimalGender.mannelijk;
+                                  });
+                                },
+                              ),
+                              ChoiceChip(
+                                label: const Text('Vrouwelijk'),
+                                selected: _selectedGender == AnimalGender.vrouwelijk,
+                                onSelected: (_) {
+                                  setState(() {
+                                    _selectedGender = AnimalGender.vrouwelijk;
+                                  });
+                                },
+                              ),
+                              ChoiceChip(
+                                label: const Text('Onbekend'),
+                                selected: _selectedGender == AnimalGender.onbekend,
+                                onSelected: (_) {
+                                  setState(() {
+                                    _selectedGender = AnimalGender.onbekend;
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          if (_selectedGender != null)
+                            Wrap(
+                              spacing: 8,
+                              children: [
+                                ChoiceChip(
+                                  label: const Text('Volwassen'),
+                                  selected: _selectedAge == AnimalAge.volwassen,
+                                  onSelected: (_) {
+                                    setState(() {
+                                      _selectedAge = AnimalAge.volwassen;
+                                    });
+                                  },
+                                ),
+                                ChoiceChip(
+                                  label: const Text('Onvolwassen'),
+                                  selected: _selectedAge == AnimalAge.onvolwassen,
+                                  onSelected: (_) {
+                                    setState(() {
+                                      _selectedAge = AnimalAge.onvolwassen;
+                                    });
+                                  },
+                                ),
+                                ChoiceChip(
+                                  label: Text(AnimalAge.pasGeboren.label),
+                                  selected: _selectedAge == AnimalAge.pasGeboren,
+                                  onSelected: (_) {
+                                    setState(() {
+                                      _selectedAge = AnimalAge.pasGeboren;
+                                    });
+                                  },
+                                ),
+                                ChoiceChip(
+                                  label: const Text('Onbekend'),
+                                  selected: _selectedAge == AnimalAge.onbekend,
+                                  onSelected: (_) {
+                                    setState(() {
+                                      _selectedAge = AnimalAge.onbekend;
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
                         ],
                       ),
                     ),
@@ -99,11 +181,25 @@ class _AnimalCountingState extends State<AnimalCounting> {
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
-                      onPressed: () {},
+                      onPressed: () {
+                        if (_selectedGender == null || _selectedAge == null) return;
+                        final manager =
+                            context.read<AnimalSightingReportingInterface>();
+                        manager.addObservedAnimal(
+                          ObservedAnimalEntry(
+                            age: _selectedAge!,
+                            gender: _selectedGender!,
+                            condition: AnimalCondition.andere,
+                            count: 1,
+                          ),
+                        );
+                        manager.syncObservedAnimalsToSighting();
+                        widget.onAddToList?.call();
+                      },
                       child: const Text(
-                        'Volgende',
+                        'Voeg toe aan de lijst',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
                         ),
