@@ -2,8 +2,13 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>We use your location to show nearby wildlife and relevant map features.</string>
+
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
@@ -26,12 +31,6 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>We gebruiken je locatie om waarnemingen en routes correct te registreren.</string>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>We gebruiken je locatie om waarnemingen en routes correct te registreren.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>We gebruiken je locatie om waarnemingen op de kaart te plaatsen.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -74,3 +73,4 @@
 	</array>
 </dict>
 </plist>
+

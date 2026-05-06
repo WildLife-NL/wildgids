@@ -1,29 +1,24 @@
-﻿import 'dart:math' as math;
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
-import 'package:wildgids/constants/app_colors.dart';
-import 'package:wildgids/providers/app_state_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:wildgids/screens/game/challenge_screen.dart';
-import 'package:wildgids/utils/responsive_utils.dart';
-import 'package:wildgids/interfaces/data_apis/profile_api_interface.dart';
-import 'package:wildgids/screens/profile/edit_profile_screen.dart';
-import 'package:wildgids/models/beta_models/profile_model.dart';
-import 'package:wildgids/widgets/location/location_sharing_indicator.dart';
 import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
 import 'package:wildgids/models/enums/nav_tab.dart';
+import 'package:wildgids/providers/app_state_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wildgids/interfaces/data_apis/profile_api_interface.dart';
+import 'package:wildgids/utils/responsive_utils.dart';
 import 'package:wildgids/screens/location/kaart_overview_screen.dart';
 import 'package:wildgids/screens/logbook/logbook_screen.dart';
-//import 'package:wildgids/screens/shared/rapporteren.dart';
-//import 'package:wildgids/screens/species/species_list_screen.dart';
+import 'package:wildgids/screens/profile/edit_profile_screen.dart';
+import 'package:wildgids/screens/shared/rapporteren.dart';
+import 'package:wildgids/screens/species/species_list_screen.dart';
+import 'package:wildgids/models/beta_models/profile_model.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/custom_nav_bar.dart';
-import 'package:wildgids/screens/waarneming/waarneming_start_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
-  final bool showBottomNav; 
-  const ProfileScreen({super.key,
-  this.showBottomNav = true,});
+  const ProfileScreen({super.key});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -33,49 +28,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _userName = 'Loading...';
   Profile? _profile;
   bool _loadingProfile = true;
+  bool _notificationsEnabled = true;
+  String _appVersionLabel = '';
+
+  static const _pageBg = Color(0xFFEFF2EF);
+  static const _primaryGreen = Color(0xFF103D1E);
+  static const _textPrimary = Color(0xFF111827);
+  static const _borderDefault = Color(0xFFE0E0E0);
+  static const _cardBackground = Color(0xFFF5F6F4);
+
   void _onTabSelected(NavTab tab) {
-  final navigationManager = context.read<NavigationStateInterface>();
-
-  switch (tab) {
-    case NavTab.ontdekken:
-    case NavTab.zones:
-      navigationManager.pushReplacementForward(
-        context,
-        const ChallengeScreen(),
-      );
-      break;
-
-    case NavTab.waarneming:
-      navigationManager.pushReplacementForward(
-        context,
-        const WaarnemmingStartScreen(),
-      );
-      break;
-
-    case NavTab.kaart:
-      navigationManager.pushReplacementForward(
-        context,
-        const KaartOverviewScreen(),
-      );
-      break;
-
-    case NavTab.logboek:
-      navigationManager.pushReplacementForward(
-        context,
-        const LogbookScreen(),
-      );
-      break;
-
-    case NavTab.instellingen:
-    case NavTab.profile:
-      return;
+    final navigationManager = context.read<NavigationStateInterface>();
+    switch (tab) {
+      case NavTab.zones:
+        navigationManager.pushReplacementForward(context, const SpeciesListScreen());
+        break;
+      case NavTab.rapporten:
+        navigationManager.pushReplacementForward(context, const Rapporteren());
+        break;
+      case NavTab.kaart:
+        navigationManager.pushReplacementForward(context, const KaartOverviewScreen());
+        break;
+      case NavTab.logboek:
+        navigationManager.pushReplacementForward(context, const LogbookScreen());
+        break;
+      case NavTab.profile:
+        return;
+    }
   }
-}
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
+    _loadAppVersion();
   }
 
   Future<void> _loadUserData() async {
@@ -84,6 +70,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (!mounted) return;
     setState(() {
       _userName = prefs.getString('userName') ?? 'User';
+      _notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
     });
 
     try {
@@ -104,104 +91,115 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _loadAppVersion() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      final build = info.buildNumber;
+
+      if (build.length >= 8 && RegExp(r'^\d{8}$').hasMatch(build)) {
+        final yy = build.substring(2, 4);
+        final mm = build.substring(4, 6);
+        final dd = build.substring(6, 8);
+
+        if (!mounted) return;
+        setState(() {
+          _appVersionLabel = 'App Version: V$yy.$mm.$dd';
+        });
+        return;
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _appVersionLabel = 'App Version: V${info.version}+${info.buildNumber}';
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _appVersionLabel = 'App Version: onbekend';
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final responsive = context.responsive;
-    final appStateProvider = context.watch<AppStateProvider>();
+    final app = context.watch<AppStateProvider>();
     final fs = responsive.fontSize;
 
     final email = _profile?.email ?? '—';
+    final effectiveVersion =
+        _appVersionLabel.isNotEmpty ? _appVersionLabel : 'App Version: laden...';
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: _pageBg,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
             final horizontalPad = responsive.wp(3.5).clamp(10.0, 18.0);
-            final cardW = math.min(
-              540.0,
-              constraints.maxWidth - horizontalPad * 2,
-            );
+            final cardW = math.min(540.0, constraints.maxWidth - horizontalPad * 2);
 
             return Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: horizontalPad,
-                vertical: 4,
-              ),
+              padding: EdgeInsets.symmetric(horizontal: horizontalPad, vertical: 4),
               child: Center(
                 child: ConstrainedBox(
                   constraints: BoxConstraints(maxWidth: cardW),
                   child: Card(
                     color: Colors.white,
-                    elevation: 0,
+                    elevation: 2,
                     shadowColor: Colors.black26,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                      side: BorderSide(
-                        color: AppColors.borderDefault,
+                      borderRadius: BorderRadius.circular(20),
+                      side: const BorderSide(
+                        color: _borderDefault,
                         width: 1,
                       ),
                     ),
                     child: SingleChildScrollView(
+                      padding: const EdgeInsets.only(bottom: 20),
                       child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          const SizedBox(height: 12),
-
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: IconButton(
-                                icon: const Icon(Icons.arrow_back_ios_new),
-                                color: Colors.grey.shade900,
-                                onPressed: () => Navigator.of(context).pop(),
-                              ),
-                            ),
-                          ),
+                          const SizedBox(height: 14),
 
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 18),
                             child: Card(
-                              color: AppColors.backgroundLight,
+                              color: _cardBackground,
                               elevation: 0,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
-                                side: BorderSide(
-                                  color: Colors.grey.shade300,
+                                side: const BorderSide(
+                                  color: _borderDefault,
                                   width: 1,
                                 ),
                               ),
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
-                                  vertical: 24,
+                                  vertical: 20,
                                   horizontal: 20,
                                 ),
                                 child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
                                   children: [
                                     Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         CircleAvatar(
                                           radius: 36,
-                                          backgroundColor:
-                                              Colors.grey.shade200,
-                                          child: Icon(
+                                          backgroundColor: Colors.grey.shade200,
+                                          child: const Icon(
                                             Icons.person,
                                             size: 40,
-                                            color: AppColors.darkCharcoal,
+                                            color: Colors.black87,
                                           ),
                                         ),
                                         const SizedBox(width: 16),
                                         Expanded(
                                           child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
+                                            crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
-                                              const SizedBox(height: 2),
+                                              const SizedBox(height: 1),
                                               Text(
                                                 _userName,
                                                 maxLines: 1,
@@ -209,13 +207,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                 style: TextStyle(
                                                   fontSize: fs(18),
                                                   fontWeight: FontWeight.w700,
-                                                  color: Colors.grey.shade900,
+                                                  color: _textPrimary,
                                                 ),
                                               ),
                                               const SizedBox(height: 4),
                                               Text(
                                                 _loadingProfile ? '…' : email,
-                                                maxLines: 2,
+                                                maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
                                                 style: TextStyle(
                                                   fontSize: fs(11),
@@ -228,30 +226,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         ),
                                       ],
                                     ),
-                                    const SizedBox(height: 20),
+                                    const SizedBox(height: 15),
                                     FilledButton(
-                                      onPressed: _loadingProfile
-                                          ? null
-                                          : () => _handleEditProfile(context),
+                                      onPressed: _loadingProfile ? null : _handleEditProfile,
                                       style: FilledButton.styleFrom(
-                                        backgroundColor: Colors.white,
+                                        backgroundColor: _cardBackground,
                                         foregroundColor: Colors.grey.shade900,
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 12,
-                                        ),
-                                        minimumSize:
-                                            const Size.fromHeight(48),
+                                        padding: const EdgeInsets.symmetric(vertical: 8),
+                                        minimumSize: const Size.fromHeight(48),
                                         shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(26),
-                                          side: BorderSide(
-                                            color: Colors.grey.shade300,
+                                          borderRadius: BorderRadius.circular(26),
+                                          side: const BorderSide(
+                                            color: _borderDefault,
                                             width: 1.5,
                                           ),
                                         ),
                                       ),
                                       child: Text(
-                                        'Profiel bewerken',
+                                        'Profiel Bewerken',
                                         style: TextStyle(fontSize: fs(15)),
                                       ),
                                     ),
@@ -261,7 +253,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
 
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 10),
 
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 18),
@@ -281,16 +273,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 18),
                             child: Container(
                               decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: Colors.grey.shade300,
-                                ),
+                                border: Border.all(color: Colors.grey.shade300),
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: Column(
                                 children: [
                                   SwitchListTile(
-                                    contentPadding:
-                                        const EdgeInsets.symmetric(
+                                    contentPadding: const EdgeInsets.symmetric(
                                       horizontal: 14,
                                       vertical: 4,
                                     ),
@@ -301,40 +290,51 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         color: Colors.grey.shade900,
                                       ),
                                     ),
-                                    value: appStateProvider
-                                        .isLocationTrackingEnabled,
+                                    value: app.isLocationTrackingEnabled,
                                     activeThumbColor: Colors.white,
-                                    activeTrackColor: AppColors.primaryGreen,
+                                    activeTrackColor: _primaryGreen,
                                     onChanged: (enabled) async {
-                                      await appStateProvider
-                                          .setLocationTrackingEnabled(enabled);
+                                      await app.setLocationTrackingEnabled(enabled);
+                                      if (!mounted) return;
+                                      setState(() {});
                                     },
                                   ),
-                                  Divider(
-                                    height: 1,
-                                    color: Colors.grey.shade300,
-                                  ),
-                                  const Padding(
-                                    padding: EdgeInsets.symmetric(
+                                  Divider(height: 1, color: Colors.grey.shade300),
+                                  SwitchListTile(
+                                    contentPadding: const EdgeInsets.symmetric(
                                       horizontal: 14,
-                                      vertical: 12,
+                                      vertical: 4,
                                     ),
-                                    child: LocationSharingIndicator(
-                                      showLabel: true,
-                                      iconSize: 18,
+                                    title: Text(
+                                      'Meldingen',
+                                      style: TextStyle(
+                                        fontSize: fs(15),
+                                        color: _textPrimary,
+                                      ),
                                     ),
+                                    value: _notificationsEnabled,
+                                    activeThumbColor: Colors.white,
+                                    activeTrackColor: _primaryGreen,
+                                    onChanged: (enabled) async {
+                                      final prefs = await SharedPreferences.getInstance();
+                                      await prefs.setBool('notifications_enabled', enabled);
+                                      if (!mounted) return;
+                                      setState(() {
+                                        _notificationsEnabled = enabled;
+                                      });
+                                    },
                                   ),
                                 ],
                               ),
                             ),
                           ),
 
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 10),
 
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 18),
                             child: Card(
-                              color: AppColors.backgroundLight,
+                              color: _cardBackground,
                               elevation: 0,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
@@ -348,33 +348,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   vertical: 24,
                                   horizontal: 20,
                                 ),
-                                child: FilledButton(
-                                  onPressed: () => _confirmLogout(context),
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: Colors.white,
-                                    foregroundColor: Colors.grey.shade900,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 12,
-                                    ),
-                                    minimumSize: const Size.fromHeight(48),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(26),
-                                      side: BorderSide(
-                                        color: Colors.grey.shade300,
-                                        width: 1.5,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    Text(
+                                      effectiveVersion,
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: fs(11),
+                                        color: Colors.grey.shade600,
                                       ),
                                     ),
-                                  ),
-                                  child: Text(
-                                    'Uitloggen',
-                                    style: TextStyle(fontSize: fs(15)),
-                                  ),
+                                    const SizedBox(height: 10),
+                                    FilledButton(
+                                      onPressed: _confirmLogout,
+                                      style: FilledButton.styleFrom(
+                                        backgroundColor: Colors.white,
+                                        foregroundColor: Colors.grey.shade900,
+                                        padding: const EdgeInsets.symmetric(vertical: 12),
+                                        minimumSize: const Size.fromHeight(48),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(26),
+                                          side: const BorderSide(
+                                            color: _borderDefault,
+                                            width: 1.5,
+                                          ),
+                                        ),
+                                      ),
+                                      child: Text(
+                                        'Uitloggen',
+                                        style: TextStyle(fontSize: fs(15)),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
                           ),
 
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 10),
 
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 18),
@@ -400,17 +412,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     height: 1.25,
                                   ),
                                 ),
-                                const SizedBox(height: 16),
+                                const SizedBox(height: 10),
                                 FilledButton(
-                                  onPressed: () => _confirmDelete(context),
+                                  onPressed: _confirmDelete,
                                   style: FilledButton.styleFrom(
                                     backgroundColor:
                                         const Color.fromARGB(136, 255, 230, 232),
                                     foregroundColor:
-                                        AppColors.error,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 12,
-                                    ),
+                                        const Color.fromARGB(255, 209, 118, 118),
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
                                     minimumSize: const Size.fromHeight(44),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(26),
@@ -427,8 +437,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ],
                             ),
                           ),
-
-                          const SizedBox(height: 20),
                         ],
                       ),
                     ),
@@ -439,19 +447,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
           },
         ),
       ),
-bottomNavigationBar: widget.showBottomNav
-    ? SafeArea(
+      bottomNavigationBar: SafeArea(
         top: false,
         child: CustomNavBar(
-          currentTab: NavTab.ontdekken,
+          currentTab: NavTab.profile,
           onTabSelected: _onTabSelected,
         ),
-      )
-    : null,
+      ),
     );
   }
 
-  Future<void> _handleEditProfile(BuildContext context) async {
+  Future<void> _handleEditProfile() async {
     try {
       final profileApi = context.read<ProfileApiInterface>();
       final currentProfile = await profileApi.fetchMyProfile();
@@ -481,7 +487,6 @@ bottomNavigationBar: widget.showBottomNav
       }
     } catch (e) {
       if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Fout bij laden profiel: $e'),
@@ -491,7 +496,7 @@ bottomNavigationBar: widget.showBottomNav
     }
   }
 
-  void _confirmLogout(BuildContext context) {
+  void _confirmLogout() {
     final responsive = context.responsive;
 
     showDialog(
@@ -543,7 +548,6 @@ bottomNavigationBar: widget.showBottomNav
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: () => Navigator.of(ctx).pop(),
                       style: OutlinedButton.styleFrom(
                         backgroundColor: Colors.white,
                         side: BorderSide(
@@ -555,11 +559,12 @@ bottomNavigationBar: widget.showBottomNav
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
+                      onPressed: () => Navigator.of(ctx).pop(),
                       child: Text(
                         'Annuleren',
                         style: TextStyle(
                           fontSize: responsive.fontSize(14),
-                          color: Colors.grey.shade700,
+                          color: Colors.black,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -568,12 +573,6 @@ bottomNavigationBar: widget.showBottomNav
                   const SizedBox(width: 12),
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: () async {
-                        Navigator.of(ctx).pop();
-                        final appStateProvider =
-                            context.read<AppStateProvider>();
-                        await appStateProvider.logout();
-                      },
                       style: OutlinedButton.styleFrom(
                         backgroundColor: Colors.white,
                         side: BorderSide(
@@ -585,11 +584,17 @@ bottomNavigationBar: widget.showBottomNav
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
+                      onPressed: () async {
+                        Navigator.of(ctx).pop();
+                        if (!mounted) return;
+                        final appStateProvider = context.read<AppStateProvider>();
+                        await appStateProvider.logout();
+                      },
                       child: Text(
-                        'Ja, uitloggen',
+                        'Ja, Uitloggen',
                         style: TextStyle(
                           fontSize: responsive.fontSize(14),
-                          color: Colors.black87,
+                          color: Colors.black,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -604,7 +609,7 @@ bottomNavigationBar: widget.showBottomNav
     );
   }
 
-  void _confirmDelete(BuildContext context) {
+  void _confirmDelete() {
     final responsive = context.responsive;
 
     showDialog(
@@ -623,12 +628,12 @@ bottomNavigationBar: widget.showBottomNav
                 width: 60,
                 height: 60,
                 decoration: BoxDecoration(
-                  color: AppColors.error.withValues(alpha: 0.1),
+                  color: Colors.red.shade100,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   Icons.error_outline,
-                  color: AppColors.error,
+                  color: Colors.red.shade600,
                   size: 32,
                 ),
               ),
@@ -656,7 +661,6 @@ bottomNavigationBar: widget.showBottomNav
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: () => Navigator.of(ctx).pop(),
                       style: OutlinedButton.styleFrom(
                         backgroundColor: Colors.white,
                         side: BorderSide(
@@ -668,11 +672,12 @@ bottomNavigationBar: widget.showBottomNav
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
+                      onPressed: () => Navigator.of(ctx).pop(),
                       child: Text(
                         'Annuleren',
                         style: TextStyle(
                           fontSize: responsive.fontSize(14),
-                          color: Colors.grey.shade700,
+                          color: Colors.grey.shade600,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -681,6 +686,17 @@ bottomNavigationBar: widget.showBottomNav
                   const SizedBox(width: 12),
                   Expanded(
                     child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        side: BorderSide(
+                          color: Colors.red.shade300,
+                          width: 1.5,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
                       onPressed: () async {
                         Navigator.of(ctx).pop();
 
@@ -694,10 +710,8 @@ bottomNavigationBar: widget.showBottomNav
                         );
 
                         try {
-                          final profileApi =
-                              context.read<ProfileApiInterface>();
-                          final appStateProvider =
-                              context.read<AppStateProvider>();
+                          final profileApi = context.read<ProfileApiInterface>();
+                          final appStateProvider = context.read<AppStateProvider>();
 
                           await profileApi.deleteMyProfile();
                           await appStateProvider.deleteProfile();
@@ -712,19 +726,8 @@ bottomNavigationBar: widget.showBottomNav
                           );
                         }
                       },
-                      style: OutlinedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        side: BorderSide(
-                          color: Colors.red.shade300,
-                          width: 1.5,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
                       child: Text(
-                        'Ja, verwijderen',
+                        'Ja, Verwijderen',
                         style: TextStyle(
                           fontSize: responsive.fontSize(14),
                           color: Colors.red.shade600,

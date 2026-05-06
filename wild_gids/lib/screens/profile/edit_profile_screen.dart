@@ -1,6 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wildgids/constants/app_colors.dart';
 import 'package:wildgids/interfaces/data_apis/profile_api_interface.dart';
 import 'package:wildgids/models/beta_models/profile_model.dart';
 import 'package:wildgids/utils/responsive_utils.dart';
@@ -45,13 +44,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void initState() {
     super.initState();
 
-    _nameController = TextEditingController(
-      text: widget.initialProfile.userName,
-    );
-
-    _postcodeController = TextEditingController(
-      text: widget.initialProfile.postcode ?? '',
-    );
+    _nameController = TextEditingController(text: widget.initialProfile.userName);
+    _postcodeController =
+        TextEditingController(text: widget.initialProfile.postcode ?? '');
 
     String dateOfBirthStr = '';
     if (widget.initialProfile.dateOfBirth != null &&
@@ -62,11 +57,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
 
     _dateOfBirthController = TextEditingController(text: dateOfBirthStr);
-
-    _descriptionController = TextEditingController(
-      text: widget.initialProfile.description ?? '',
-    );
-
+    _descriptionController =
+        TextEditingController(text: widget.initialProfile.description ?? '');
     _selectedGender = widget.initialProfile.gender;
   }
 
@@ -80,23 +72,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Future<void> _selectDate() async {
-    DateTime initialDate = DateTime.now();
+    DateTime initialDate;
 
     if (_dateOfBirthController.text.isNotEmpty) {
       try {
         String dateStr = _dateOfBirthController.text;
-
         if (dateStr.contains('T')) {
           dateStr = dateStr.split('T')[0];
         }
-
         initialDate = DateTime.parse(dateStr);
       } catch (_) {
         initialDate = DateTime.now();
       }
+    } else {
+      initialDate = DateTime.now();
     }
 
-    final DateTime? picked = await showDatePicker(
+    final picked = await showDatePicker(
       context: context,
       initialDate: initialDate,
       firstDate: DateTime(1900),
@@ -112,9 +104,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Future<void> _saveProfile() async {
-    final name = _nameController.text.trim();
-
-    if (name.isEmpty || name.length < 2) {
+    if (_nameController.text.isEmpty || _nameController.text.length < 2) {
       _showErrorSnackBar('Naam moet minstens 2 karakters lang zijn');
       return;
     }
@@ -129,16 +119,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       final updatedProfile = Profile(
         userID: widget.initialProfile.userID,
         email: widget.initialProfile.email,
-        userName: name,
-        postcode: _postcodeController.text.trim().isNotEmpty
-            ? _postcodeController.text.trim()
-            : null,
+        userName: _nameController.text,
+        postcode:
+            _postcodeController.text.isNotEmpty ? _postcodeController.text : null,
         gender: _selectedGender,
-        dateOfBirth: _dateOfBirthController.text.trim().isNotEmpty
-            ? _dateOfBirthController.text.trim()
+        dateOfBirth: _dateOfBirthController.text.isNotEmpty
+            ? _dateOfBirthController.text
             : null,
-        description: _descriptionController.text.trim().isNotEmpty
-            ? _descriptionController.text.trim()
+        description: _descriptionController.text.isNotEmpty
+            ? _descriptionController.text
             : null,
         reportAppTerms: widget.initialProfile.reportAppTerms,
         recreationAppTerms: widget.initialProfile.recreationAppTerms,
@@ -149,13 +138,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       await profileApi.updateMyProfile(updatedProfile);
 
       if (!mounted) return;
-
       _showSuccessSnackBar('Profiel succesvol bijgewerkt');
 
       await Future.delayed(const Duration(milliseconds: 500));
 
       if (!mounted) return;
-
       Navigator.of(context).pop(updatedProfile);
     } catch (e) {
       _showErrorSnackBar('Fout bij bijwerken: $e');
@@ -172,7 +159,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: AppColors.error,
+        backgroundColor: Colors.red,
         duration: const Duration(seconds: 3),
       ),
     );
@@ -180,10 +167,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   void _showSuccessSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Profiel succesvol bijgewerkt'),
+      SnackBar(
+        content: Text(message),
         backgroundColor: Colors.green,
-        duration: Duration(seconds: 2),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -212,7 +199,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ),
+
                 const SizedBox(height: 16),
+
                 Card(
                   color: Colors.white,
                   elevation: 2,
@@ -272,16 +261,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             ],
                           ),
                         ),
+
                         const SizedBox(height: 24),
-                        _buildFieldLabel(responsive, 'Volledige naam'),
+
+                        _buildFieldLabel(fs, 'Volledige naam'),
                         const SizedBox(height: 8),
                         _buildTextField(
                           responsive,
                           _nameController,
                           'Vul je naam in',
                         ),
+
                         const SizedBox(height: 16),
-                        _buildFieldLabel(responsive, 'Email adres'),
+
+                        _buildFieldLabel(fs, 'Email adres'),
                         const SizedBox(height: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -301,32 +294,42 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             ),
                           ),
                         ),
+
                         const SizedBox(height: 16),
-                        _buildFieldLabel(responsive, 'Geslacht'),
+
+                        _buildFieldLabel(fs, 'Geslacht'),
                         const SizedBox(height: 8),
                         _buildGenderDropdown(responsive),
+
                         const SizedBox(height: 16),
-                        _buildFieldLabel(responsive, 'Postcode'),
+
+                        _buildFieldLabel(fs, 'Postcode'),
                         const SizedBox(height: 8),
                         _buildTextField(
                           responsive,
                           _postcodeController,
                           '1234AB',
                         ),
+
                         const SizedBox(height: 16),
-                        _buildFieldLabel(responsive, 'Geboortedatum'),
+
+                        _buildFieldLabel(fs, 'Geboortedatum'),
                         const SizedBox(height: 8),
                         _buildDateField(responsive),
+
                         const SizedBox(height: 16),
-                        _buildFieldLabel(responsive, 'Beschrijving'),
+
+                        _buildFieldLabel(fs, 'Beschrijving'),
                         const SizedBox(height: 8),
                         _buildTextField(
                           responsive,
                           _descriptionController,
-                          'Voer een beschrijving in',
+                          'Vertel iets over jezelf',
                           maxLines: 4,
                         ),
+
                         const SizedBox(height: 24),
+
                         FilledButton(
                           onPressed: _isLoading ? null : _saveProfile,
                           style: FilledButton.styleFrom(
@@ -369,11 +372,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  Widget _buildFieldLabel(ResponsiveUtils responsive, String text) {
+  Widget _buildFieldLabel(double Function(double) fs, String text) {
     return Text(
       text,
       style: TextStyle(
-        fontSize: responsive.fontSize(13),
+        fontSize: fs(13),
         color: Colors.grey.shade700,
         fontWeight: FontWeight.w500,
       ),
@@ -413,9 +416,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           borderRadius: BorderRadius.circular(20),
           borderSide: BorderSide(color: Colors.grey.shade300),
         ),
-        focusedBorder: const OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(20)),
-          borderSide: BorderSide(
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(
             color: Color(0xFF37A904),
             width: 1.5,
           ),
@@ -460,53 +463,42 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Widget _buildGenderDropdown(ResponsiveUtils responsive) {
-  return Container(
-    padding: const EdgeInsets.symmetric(horizontal: 14),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: Colors.grey.shade300),
-    ),
-    child: DropdownButtonHideUnderline(
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: BoxDecoration(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
       child: DropdownButton<String>(
         value: _selectedGender,
-        isExpanded: true,
-        icon: Icon(
-          Icons.expand_more,
-          color: Colors.grey.shade600,
-        ),
-        dropdownColor: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        style: TextStyle(
-          color: Colors.grey.shade900,
-          fontSize: responsive.fontSize(15),
-        ),
         hint: Text(
           'Selecteer geslacht',
           style: TextStyle(
-            color: AppColors.backgroundLight,
+            color: Colors.grey.shade500,
             fontSize: responsive.fontSize(15),
           ),
         ),
+        isExpanded: true,
+        underline: const SizedBox(),
         onChanged: (String? newValue) {
           setState(() {
             _selectedGender = newValue;
           });
         },
-        items: _genderOptions.map((value) {
+        items: _genderOptions.map<DropdownMenuItem<String>>((String value) {
           return DropdownMenuItem<String>(
             value: value,
             child: Text(
               _genderLabelNl(value),
               style: TextStyle(
-                fontSize: responsive.fontSize(15),
                 color: Colors.grey.shade900,
+                fontSize: responsive.fontSize(15),
               ),
             ),
           );
         }).toList(),
       ),
-    ),
-  );
-}
+    );
+  }
 }
