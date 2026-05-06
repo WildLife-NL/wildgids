@@ -5,7 +5,7 @@ import 'package:wildgids/interfaces/data_apis/species_api_interface.dart';
 import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
 import 'package:wildgids/models/api_models/species.dart';
 import 'package:wildgids/models/animal_waarneming_models/animal_model.dart';
-import 'package:wildgids/screens/shared/overzicht_screen.dart';
+//import 'package:wildgids/screens/shared/overzicht_screen.dart';
 import 'package:wildgids/utils/species_click_tracker.dart';
 import 'package:wildgids/utils/species_image_resolver.dart';
 import 'package:wildgids/widgets/animals/scrollable_animal_grid.dart';
@@ -16,6 +16,7 @@ import 'package:wildgids/screens/logbook/logbook_screen.dart';
 import 'package:wildgids/screens/profile/profile_screen.dart';
 import 'package:wildgids/screens/waarneming/waarneming_start_screen.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/custom_nav_bar.dart';
+import 'package:wildgids/screens/game/challenge_screen.dart';
 
 class SpeciesListScreen extends StatefulWidget {
   final bool showBottomNav; 
@@ -47,7 +48,7 @@ void _onTabSelected(NavTab tab) {
     case NavTab.ontdekken:
       nav.pushReplacementForward(
         context,
-        const SpeciesListScreen(),
+        const ChallengeScreen(),
       );
       break;
     case NavTab.zones:
@@ -155,7 +156,7 @@ void _onTabSelected(NavTab tab) {
 
   void _handleBackNavigation() {
     final nav = context.read<NavigationStateInterface>();
-    nav.pushAndRemoveUntil(context, const OverzichtScreen());
+    nav.pushAndRemoveUntil(context, const ChallengeScreen());
   }
 
   Future<void> _handleSpeciesSelection(AnimalModel animal) async {

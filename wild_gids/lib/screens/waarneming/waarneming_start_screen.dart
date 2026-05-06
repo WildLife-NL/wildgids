@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
+import 'package:wildgids/screens/game/challenge_screen.dart';
 import 'package:wildgids/screens/waarneming/location_selection_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:wildgids/models/enums/report_type.dart';
@@ -10,7 +11,7 @@ import 'package:wildgids/models/enums/nav_tab.dart';
 import 'package:wildgids/screens/location/kaart_overview_screen.dart';
 import 'package:wildgids/screens/logbook/logbook_screen.dart';
 import 'package:wildgids/screens/profile/profile_screen.dart';
-import 'package:wildgids/screens/species/species_list_screen.dart';
+//import 'package:wildgids/screens/species/species_list_screen.dart';
 
 class WaarnemmingStartScreen extends StatefulWidget {
    final bool showBottomNav; 
@@ -39,7 +40,7 @@ void _onTabSelected(NavTab tab) {
   switch (tab) {
     case NavTab.zones:
     case NavTab.ontdekken:
-      nav.pushReplacementForward(context, const SpeciesListScreen());
+      nav.pushReplacementForward(context, const ChallengeScreen());
       break;
 
     case NavTab.waarneming:

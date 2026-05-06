@@ -9,9 +9,10 @@ import 'package:wildgids/providers/app_state_provider.dart';
 import 'package:wildgids/constants/app_colors.dart';
 //import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
 import 'package:wildgids/models/enums/nav_tab.dart';
+import 'package:wildgids/screens/game/challenge_screen.dart';
 import 'package:wildgids/screens/logbook/logbook_screen.dart';
 //import 'package:wildgids/screens/shared/rapporteren.dart';
-import 'package:wildgids/screens/species/species_list_screen.dart';
+//import 'package:wildgids/screens/species/species_list_screen.dart';
 import 'package:wildgids/screens/waarneming/waarneming_start_screen.dart';
 import 'package:wildgids/widgets/overlay/encounter_message_overlay.dart';
 import 'package:wildgids/managers/map/location_map_manager.dart';
@@ -1294,7 +1295,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
   switch (tab) {
     case NavTab.ontdekken:
     case NavTab.zones:
-      page = const SpeciesListScreen();
+      page = const ChallengeScreen();
       break;
 
     case NavTab.waarneming:

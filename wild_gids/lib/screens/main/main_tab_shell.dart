@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:wildgids/models/enums/nav_tab.dart';
+import 'package:wildgids/screens/game/challenge_screen.dart';
 import 'package:wildgids/screens/location/kaart_overview_screen.dart';
-import 'package:wildgids/screens/species/species_list_screen.dart';
+//import 'package:wildgids/screens/species/species_list_screen.dart';
 import 'package:wildgids/screens/waarneming/waarneming_start_screen.dart';
 import 'package:wildgids/screens/logbook/logbook_screen.dart';
 import 'package:wildgids/screens/profile/profile_screen.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/custom_nav_bar.dart';
+
 
 class MainTabShell extends StatefulWidget {
   const MainTabShell({super.key});
@@ -20,8 +22,8 @@ class _MainTabShellState extends State<MainTabShell> {
 
   late final Map<NavTab, Widget> _pages = {
     NavTab.kaart: const KaartOverviewScreen(showBottomNav: false),
-    NavTab.ontdekken: const SpeciesListScreen(showBottomNav: false),
-    NavTab.zones: const SpeciesListScreen(showBottomNav: false),
+    NavTab.ontdekken: const ChallengeScreen(),
+    NavTab.zones: const ChallengeScreen(),
     NavTab.waarneming: const WaarnemmingStartScreen(showBottomNav: false),
     NavTab.logboek: const LogbookScreen(showBottomNav: false),
     NavTab.profile: const ProfileScreen(showBottomNav: false),

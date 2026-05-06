@@ -132,7 +132,7 @@ class _OverzichtScreenState extends State<OverzichtScreen> {
       case NavTab.ontdekken:
        context.read<NavigationStateInterface>().pushReplacementForward(
           context,
-          const SpeciesListScreen(),
+          const ChallengeScreen(),
         );
         break;
       case NavTab.zones:

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:wildgids/constants/app_colors.dart';
 import 'package:wildgids/providers/app_state_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wildgids/screens/game/challenge_screen.dart';
 import 'package:wildgids/utils/responsive_utils.dart';
 import 'package:wildgids/interfaces/data_apis/profile_api_interface.dart';
 import 'package:wildgids/screens/profile/edit_profile_screen.dart';
@@ -15,7 +16,7 @@ import 'package:wildgids/models/enums/nav_tab.dart';
 import 'package:wildgids/screens/location/kaart_overview_screen.dart';
 import 'package:wildgids/screens/logbook/logbook_screen.dart';
 //import 'package:wildgids/screens/shared/rapporteren.dart';
-import 'package:wildgids/screens/species/species_list_screen.dart';
+//import 'package:wildgids/screens/species/species_list_screen.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/custom_nav_bar.dart';
 import 'package:wildgids/screens/waarneming/waarneming_start_screen.dart';
 
@@ -40,7 +41,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     case NavTab.zones:
       navigationManager.pushReplacementForward(
         context,
-        const SpeciesListScreen(),
+        const ChallengeScreen(),
       );
       break;
 

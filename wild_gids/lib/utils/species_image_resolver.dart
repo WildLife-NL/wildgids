@@ -21,18 +21,24 @@ class SpeciesImageResolver {
     'wild kat': 'wilde_kat',
     'konik': 'Konikpaard',
     'konikpaard': 'Konikpaard',
-    'shetland pony': 'Shetland_pony',
-    'pony': 'Shetland_pony',
-    'ponys': 'Shetland_pony',
+    // Pony variations - catch all possibilities
+    'shetland pony': 'Pony_shetland',
+    'shetland': 'Pony_shetland',
+    'shetlandpony': 'Pony_shetland',
+    'pony': 'Pony_shetland',
+    'ponys': 'Pony_shetland',
+    'exmoor pony': 'Pony_exmoor',
+    'exmoor': 'Pony_exmoor',
+    'exmoorpony': 'Pony_exmoor',
+    //
     'galloway': 'Galloway',
     'wisent': 'Wisent',
-    'tauros': 'Tauros',
+    'taurus': 'Taurus',
     'hermelijn': 'Hermelijn',
     'wezel': 'wezel',
     'woelrat': 'woelrat',
     'egel': 'egel',
     'europese nerts': 'Europese_Nerts',
-    'exmoor pony': 'Exmoor_Pony',
     'hooglander': 'Hooglander',
     'goudjakhals': 'Goudjakhals',
     'otter': 'otter',
@@ -56,6 +62,8 @@ class SpeciesImageResolver {
     'Hermelijn': 'hermelijn',
     'Wild_Zwijn': 'wildzwijn',
     'Taurus': 'taurus',
+    'Pony_shetland': 'shetlandpony',
+    'Pony_exmoor': 'exmoorpony',
     'bever': 'bever',
     'das': 'das',
     'eekhoorn': 'eekhoorn',
@@ -69,9 +77,6 @@ class SpeciesImageResolver {
     'wezel': 'wezel',
     'wolf': 'wolf',
     'woelrat': 'woelrat',
-    'Shetland_pony': 'shetlandpony',
-    'Exmoor_Pony': 'exmoorpony',
-
   };
 
   // Real image mapping (keep as-is mostly)
@@ -85,7 +90,6 @@ class SpeciesImageResolver {
     'eekhoorn': 'eekhoorn',
     'egel': 'egel',
     'Europese_Nerts': 'europese_Nerts',
-    'Exmoor_Pony': 'Exmoor_Pony',
     'Galloway': 'galloway',
     'Goudjakhals': 'Goudjakhals',
     'haas': 'haas',
@@ -94,10 +98,11 @@ class SpeciesImageResolver {
     'konijn': 'konijn',
     'Konikpaard': 'konikpaard',
     'otter': 'otter',
+    'Pony_shetland': 'shetlandpony',
+    'Pony_exmoor': 'exmoorpony',
     'ree': 'ree',
-    'Shetland_pony': 'shetland_pony',
     'steenmarter': 'steenmarter',
-    'Tauros': 'taurus',
+    'Taurus': 'taurus',
     'vos': 'vos',
     'wezel': 'wezel',
     'wilde_kat': 'wilde_kat',
@@ -111,23 +116,41 @@ class SpeciesImageResolver {
 
   /// Used in grid (initial hidden/preview state)
   static String? drawingForCommonName(String? commonName) {
-    final base = _base[_normalize(commonName)];
+    final normalized = _normalize(commonName);
+    final base = _base[normalized];
+    
+    // Debug logging
+    print('SpeciesImageResolver.drawing: input="$commonName" → normalized="$normalized" → base="$base"');
+    
     if (base == null) return null;
 
     final colorBase = _colorFileBase[base];
+    print('  colorFileBase[$base] = $colorBase');
+    
     if (colorBase == null) return null;
 
-    return '$_colorAnimalsDir/$colorBase.png';
+    final path = '$_colorAnimalsDir/$colorBase.png';
+    print('  final path: $path');
+    return path;
   }
 
-     /// Used after clicking (real photo)
+  /// Used after clicking (real photo)
   static String? realForCommonName(String? commonName) {
-    final base = _base[_normalize(commonName)];
+    final normalized = _normalize(commonName);
+    final base = _base[normalized];
+    
+    // Debug logging
+    print('SpeciesImageResolver.real: input="$commonName" → normalized="$normalized" → base="$base"');
+    
     if (base == null) return null;
 
     final realBase = _realFileBase[base];
+    print('  realFileBase[$base] = $realBase');
+    
     if (realBase == null) return null;
 
-    return '$_realDir/real_$realBase.png';
+    final path = '$_realDir/real_$realBase.png';
+    print('  final path: $path');
+    return path;
   }
 }
