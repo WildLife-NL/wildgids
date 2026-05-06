@@ -48,13 +48,27 @@ class _ChallengeScreenState extends State<ChallengeScreen>
     super.dispose();
   }
 
-  void _navigateToSpeciesList() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const SpeciesListScreen(),
+void _navigateToSpeciesList() {
+  Navigator.of(context).push(
+    PageRouteBuilder(
+      pageBuilder: (_, __, ___) => const SpeciesListScreen(
+        showBottomNav: false,
       ),
-    );
-  }
+      transitionDuration: const Duration(milliseconds: 300),
+      transitionsBuilder: (_, animation, __, child) {
+        final tween = Tween<Offset>(
+          begin: const Offset(1.0, 0.0), // Species enters from right
+          end: Offset.zero,
+        ).chain(CurveTween(curve: Curves.easeOutCubic));
+
+        return SlideTransition(
+          position: animation.drive(tween),
+          child: child,
+        );
+      },
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -102,6 +116,10 @@ class _ChallengeScreenState extends State<ChallengeScreen>
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                        color: AppColors.borderDefault,
+                        width: 1,
+                      ),
                   boxShadow: [
                     BoxShadow(
                       color: ChallengeScreen.primaryGreen.withOpacity(0.3),
@@ -191,6 +209,10 @@ class ProgressHeaderCard extends StatelessWidget {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+                        color: AppColors.borderDefault,
+                        width: 1,
+                      ),
         boxShadow: [
           BoxShadow(
             color: ChallengeScreen.primaryGreen.withOpacity(0.25),
@@ -237,6 +259,7 @@ class ProgressHeaderCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(12),
+              
             ),
             child: const Text(
               'Level 3',

@@ -155,9 +155,8 @@ void _onTabSelected(NavTab tab) {
   }
 
   void _handleBackNavigation() {
-    final nav = context.read<NavigationStateInterface>();
-    nav.pushAndRemoveUntil(context, const ChallengeScreen());
-  }
+  Navigator.of(context).pop();
+}
 
   Future<void> _handleSpeciesSelection(AnimalModel animal) async {
     final selectedSpecies = _allSpecies.firstWhere(

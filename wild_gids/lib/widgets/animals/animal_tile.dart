@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:wildgids/models/animal_waarneming_models/animal_model.dart';
+import 'package:wildgids/constants/app_colors.dart';
 
 class AnimalTile extends StatefulWidget {
   final AnimalModel animal;
@@ -21,12 +22,12 @@ class _AnimalTileState extends State<AnimalTile> {
       child: GestureDetector(
         onTap: widget.onTap,
         child: Card(
-          elevation: 3,
+          elevation: 0,
           shadowColor: Colors.black.withOpacity(0.1),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
             side: const BorderSide(
-              color: Color.fromARGB(113, 0, 0, 0),
+              color: AppColors.borderDefault,
               width: 1,
             ),
           ),
@@ -77,7 +78,7 @@ class _AnimalTileState extends State<AnimalTile> {
               ),
               Container(
                 height: 1,
-                color: const Color.fromARGB(84, 0, 0, 0),
+                color: AppColors.borderDefault,
               ),
               Container(
                 width: double.infinity,
