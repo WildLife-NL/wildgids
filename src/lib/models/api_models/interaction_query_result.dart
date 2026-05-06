@@ -49,13 +49,24 @@ class InteractionQueryResult {
       throw const FormatException('InteractionQueryResult: missing id');
     }
 
-    // location / place node
-    final locNode =
-        (json['location'] ?? json['place'] ?? const <String, dynamic>{})
-            as Map<String, dynamic>;
+    // location / place node (backend shapes vary across endpoints)
+    final locationNode = _asMap(json['location']);
+    final placeNodeForCoords = _asMap(json['place']);
 
-    final lat = _asDouble(locNode['latitude'] ?? locNode['lat']);
-    final lon = _asDouble(locNode['longitude'] ?? locNode['lon']);
+    final lat = _asDouble(
+      locationNode['latitude'] ??
+          locationNode['lat'] ??
+          placeNodeForCoords['latitude'] ??
+          placeNodeForCoords['lat'],
+    );
+    final lon = _asDouble(
+      locationNode['longitude'] ??
+          locationNode['lon'] ??
+          locationNode['longtitude'] ??
+          placeNodeForCoords['longitude'] ??
+          placeNodeForCoords['lon'] ??
+          placeNodeForCoords['longtitude'],
+    );
 
     if (lat == null || lon == null) {
       throw const FormatException(
@@ -70,12 +81,12 @@ class InteractionQueryResult {
 
     // optional fields
     final typeNode =
-        json['type'] as Map<String, dynamic>? ??
-        json['interactionType'] as Map<String, dynamic>? ??
-        const {};
-    final speciesNode = json['species'] as Map<String, dynamic>? ?? const {};
-    final userNode = json['user'] as Map<String, dynamic>? ?? const {};
-    final placeNode = json['place'] as Map<String, dynamic>? ?? const {};
+        _asMap(json['type']).isNotEmpty
+            ? _asMap(json['type'])
+            : _asMap(json['interactionType']);
+    final speciesNode = _asMap(json['species']);
+    final userNode = _asMap(json['user']);
+    final placeNode = _asMap(json['place']);
 
     // Parse involved animals from reportOfSighting, reportOfCollision, or reportOfDamage
     List<AnimalInfo>? animals;
@@ -140,5 +151,15 @@ class InteractionQueryResult {
     if (v == null) return null;
     if (v is num) return v.toDouble();
     return double.tryParse(v.toString());
+  }
+
+  static Map<String, dynamic> _asMap(Object? value) {
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) {
+      return value.map(
+        (key, val) => MapEntry(key.toString(), val),
+      );
+    }
+    return const <String, dynamic>{};
   }
 }

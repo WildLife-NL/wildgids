@@ -119,6 +119,29 @@ void main() {
       expect(vicinity.animals[0].speciesName, "Ree");
       expect(vicinity.animals[1].speciesName, "Wolf");
     });
+
+    test('should parse interaction coordinates from place and longtitude', () {
+      final json = {
+        "animals": [],
+        "detections": [],
+        "interactions": [
+          {
+            "ID": "interaction-place-1",
+            "location": {"latitude": null, "longitude": null},
+            "place": {"latitude": "51.701", "longtitude": "5.304"},
+            "moment": "2025-11-26T10:00:00Z",
+            "species": {"commonName": "Wolf"},
+            "type": "waarneming",
+          },
+        ],
+      };
+
+      final vicinity = Vicinity.fromJson(json);
+
+      expect(vicinity.interactions.length, 1);
+      expect(vicinity.interactions.first.lat, 51.701);
+      expect(vicinity.interactions.first.lon, 5.304);
+    });
   });
 }
 

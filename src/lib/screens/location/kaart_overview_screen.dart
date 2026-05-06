@@ -15,14 +15,15 @@ import 'package:wildgids/screens/species/species_list_screen.dart';
 import 'package:wildgids/widgets/overlay/encounter_message_overlay.dart';
 import 'package:wildgids/managers/map/location_map_manager.dart';
 import 'package:wildgids/screens/profile/profile_screen.dart';
-import 'package:wildgids/widgets/map/interaction_detail_dialog.dart';
-import 'package:wildgids/widgets/map/animal_detail_dialog.dart';
+import 'package:wildgids/widgets/map/animal_detail_card.dart';
 import 'package:wildgids/models/animal_waarneming_models/animal_pin.dart';
 import 'package:wildgids/models/animal_waarneming_models/interaction_to_animal_pin.dart';
 import 'package:wildgids/widgets/map/detection_detail_dialog.dart';
+import 'package:wildgids/data_managers/my_interaction_api.dart';
 import 'package:wildgids/data_managers/tracking_api.dart';
 import 'package:wildgids/interfaces/data_apis/tracking_api_interface.dart';
 import 'package:wildgids/config/app_config.dart';
+import 'package:wildgids/models/api_models/interaction_query_result.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/custom_nav_bar.dart';
 import 'package:wildgids/constants/mock_location.dart';
@@ -85,6 +86,8 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
   bool _showInteractionsNew = true;
   bool _showInteractionsMedium = false;
   bool _showInteractionsOld = false;
+  AnimalPin? _selectedAnimalDetail;
+  String? _selectedAnimalIconPath;
 
   bool _showTrackingHistory = false;
   List<TrackingReadingResponse> _trackingHistory = [];
@@ -406,6 +409,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     debugPrint('[Map] Fetching data from vicinity endpoint');
 
     await map.loadAllPinsFromVicinity();
+    await _mergeMyReportedInteractions(map);
 
     debugPrint(
       '[Map] vicinity totals  animals=${map.animalPins.length} '
@@ -443,6 +447,51 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     debugPrint(
       'â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•',
     );
+  }
+
+  Future<void> _mergeMyReportedInteractions(MapProvider map) async {
+    try {
+      final myApi = MyInteractionApi(AppConfig.shared.apiClient);
+      final myInteractions = await myApi.getMyInteractions();
+
+      final List<InteractionQueryResult> fromMine =
+          myInteractions.map((interaction) {
+            final double lat =
+                interaction.location.latitude != 0.0
+                    ? interaction.location.latitude
+                    : interaction.place.latitude;
+            final double lon =
+                interaction.location.longitude != 0.0
+                    ? interaction.location.longitude
+                    : interaction.place.longitude;
+
+            return InteractionQueryResult(
+              id: interaction.id,
+              lat: lat,
+              lon: lon,
+              moment: interaction.moment.toUtc(),
+              typeName: interaction.type.name,
+              speciesName: interaction.species.commonName,
+              description: interaction.description,
+              userName: interaction.user.name,
+            );
+          }).toList();
+
+      final Map<String, InteractionQueryResult> mergedById = {
+        for (final itx in map.interactions) itx.id: itx,
+      };
+      for (final itx in fromMine) {
+        mergedById[itx.id] = itx;
+      }
+
+      map.setMockVicinity(
+        animals: map.animalPins,
+        detections: map.detectionPins,
+        interactions: mergedById.values.toList(),
+      );
+    } catch (e) {
+      debugPrint('[Map] Could not merge my reported interactions: $e');
+    }
   }
 
   Future<void> _bootstrap() async {
@@ -521,6 +570,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
         } catch (e) {
           debugPrint('[Bootstrap] âŒ Failed to load vicinity data: $e');
         }
+        await _mergeMyReportedInteractions(map);
 
         debugPrint(
           '[Map] initial totals  '
@@ -841,8 +891,11 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
       50,
       100,
       200,
+      300,
       500,
+      750,
       1000,
+      1500,
       2000,
       5000,
       10000,
@@ -853,7 +906,8 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
       500000,
     ];
 
-    const targetWidthPx = 150.0;
+    // Keep the visual scale bar more compact in pixels.
+    const targetWidthPx = 115.0;
     double chosenMeters = candidates.first.toDouble();
     double chosenWidth = chosenMeters / metersPerPixel;
     double bestDistance = (chosenWidth - targetWidthPx).abs();
@@ -875,7 +929,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
 
     if ((chosenWidth - _scaleBarWidth).abs() > 0.5 || _scaleBarLabel != label) {
       setState(() {
-        _scaleBarWidth = chosenWidth.clamp(40, 200);
+        _scaleBarWidth = chosenWidth.clamp(32, 150);
         _scaleBarLabel = label;
       });
     }
@@ -1238,6 +1292,21 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     }
   }
 
+  void _showAnimalDetailCard(AnimalPin pin, String? iconPath) {
+    setState(() {
+      _selectedAnimalDetail = pin;
+      _selectedAnimalIconPath = iconPath;
+    });
+  }
+
+  void _closeAnimalDetailCard() {
+    if (_selectedAnimalDetail == null) return;
+    setState(() {
+      _selectedAnimalDetail = null;
+      _selectedAnimalIconPath = null;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final map = context.watch<MapProvider>();
@@ -1253,6 +1322,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
         }
       },
       child: Scaffold(
+        extendBody: true,
         body:
             pos == null
                 ? const Center(child: CircularProgressIndicator())
@@ -1427,18 +1497,9 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                                   behavior:
                                                       HitTestBehavior.opaque,
                                                   onTap: () {
-                                                    showDialog(
-                                                      context: context,
-                                                      builder:
-                                                          (
-                                                            _,
-                                                          ) => AnimalDetailDialog(
-                                                            animal: pin,
-                                                            animalIconPath:
-                                                                _getAnimalIconPath(
-                                                                  pin.speciesName,
-                                                                ),
-                                                          ),
+                                                    _showAnimalDetailCard(
+                                                      pin,
+                                                      _getAnimalIconPath(pin.speciesName),
                                                     );
                                                   },
                                                   child: Builder(
@@ -1792,18 +1853,15 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                                     behavior:
                                                         HitTestBehavior.opaque,
                                                     onTap: () {
-                                                      showDialog(
-                                                        context: context,
-                                                        builder:
-                                                            (
-                                                              _,
-                                                            ) => InteractionDetailDialog(
-                                                              interaction: itx,
-                                                              animalIconPath:
-                                                                  _getAnimalIconPath(
-                                                                    itx.speciesName,
-                                                                  ),
-                                                            ),
+                                                      _showAnimalDetailCard(
+                                                        AnimalPin(
+                                                          id: itx.id,
+                                                          lat: itx.lat,
+                                                          lon: itx.lon,
+                                                          seenAt: itx.moment,
+                                                          speciesName: itx.speciesName,
+                                                        ),
+                                                        _getAnimalIconPath(itx.speciesName),
                                                       );
                                                     },
                                                     child: Builder(
@@ -1908,13 +1966,9 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                             child: GestureDetector(
                                               behavior: HitTestBehavior.opaque,
                                               onTap: () {
-                                                showDialog(
-                                                  context: context,
-                                                  builder: (_) => AnimalDetailDialog(
-                                                    animal: itx.toAnimalPin(),
-                                                    animalIconPath:
-                                                        _getAnimalIconPath(itx.speciesName),
-                                                  ),
+                                                _showAnimalDetailCard(
+                                                  itx.toAnimalPin(),
+                                                  _getAnimalIconPath(itx.speciesName),
                                                 );
                                               },
                                               child: Builder(
@@ -2103,6 +2157,40 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                             ),
                           ),
                         ),
+                        if (_selectedAnimalDetail != null)
+                          Positioned(
+                            bottom: 105,
+                            left: 0,
+                            right: 0,
+                            child: Center(
+                              child: SizedBox(
+                                width: math.min(
+                                  460,
+                                  MediaQuery.of(context).size.width - 12,
+                                ),
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: Stack(
+                                    children: [
+                                      AnimalDetailCard(
+                                        animal: _selectedAnimalDetail,
+                                        iconPath: _selectedAnimalIconPath,
+                                      ),
+                                      Positioned(
+                                        top: 8,
+                                        right: 8,
+                                        child: IconButton(
+                                          icon: const Icon(Icons.close, color: Colors.grey),
+                                          splashRadius: 20,
+                                          onPressed: _closeAnimalDetailCard,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
                         if (_devDebugToolsEnabled)
                           Positioned(
                             top: 210,
