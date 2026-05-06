@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:wildgids/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
 import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
 import 'package:wildgids/providers/app_state_provider.dart';
-import 'package:wildgids/screens/shared/rapporteren.dart';
+//import 'package:wildgids/screens/logbook/waarneming_history_screen.dart';
+import 'package:wildgids/screens/waarneming/waarneming_start_screen.dart';
+//import 'package:wildgids/screens/shared/rapporteren.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
 import 'package:wildgids/constants/app_colors.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/bottom_app_bar.dart';
@@ -54,7 +56,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
     _navigationManager.clearApplicationState(context);
 
     // Remove all screens and navigate to Rapporteren
-    _navigationManager.pushAndRemoveUntil(context, const Rapporteren());
+    _navigationManager.pushAndRemoveUntil(context, const WaarnemmingStartScreen());
   }
 
   void _handleStatusSelection(BuildContext context, String status) {

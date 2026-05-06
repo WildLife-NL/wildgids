@@ -1,8 +1,9 @@
-class SpeciesImageResolver {
-  static const String _blackIconsDir = 'assets/black_icons_animal';
-  static const String _realDir = 'assets/real_animal_pics_no_bg';
+import 'package:flutter/foundation.dart';
 
-  // Canonical base names used by both directories (case-sensitive as per files)
+class SpeciesImageResolver {
+  static const String _colorAnimalsDir = 'assets/images/color-animals';
+
+  // Map API/common names → canonical base name
   static final Map<String, String> _base = {
     'vos': 'vos',
     'wolf': 'wolf',
@@ -21,18 +22,24 @@ class SpeciesImageResolver {
     'wild kat': 'wilde_kat',
     'konik': 'Konikpaard',
     'konikpaard': 'Konikpaard',
-    'shetland pony': 'Shetland_pony',
-    'pony': 'Shetland_pony',
-    'ponys': 'Shetland_pony',
+    // Pony variations - catch all possibilities
+    'shetland pony': 'Pony_shetland',
+    'shetland': 'Pony_shetland',
+    'shetlandpony': 'Pony_shetland',
+    'pony': 'Pony_shetland',
+    'ponys': 'Pony_shetland',
+    'exmoor pony': 'Pony_exmoor',
+    'exmoor': 'Pony_exmoor',
+    'exmoorpony': 'Pony_exmoor',
+    //
     'galloway': 'Galloway',
     'wisent': 'Wisent',
-    'tauros': 'Tauros',
+    'taurus': 'Taurus',
     'hermelijn': 'Hermelijn',
     'wezel': 'wezel',
     'woelrat': 'woelrat',
     'egel': 'egel',
     'europese nerts': 'Europese_Nerts',
-    'exmoor pony': 'Exmoor_Pony',
     'hooglander': 'Hooglander',
     'goudjakhals': 'Goudjakhals',
     'otter': 'otter',
@@ -40,54 +47,69 @@ class SpeciesImageResolver {
     'zwijn': 'Wild_Zwijn',
   };
 
-  static String _normalize(String? name) => (name ?? '').trim().toLowerCase();
-
-  // Not-clicked => return black icon
-  static String? drawingForCommonName(String? commonName) {
-    final base = _base[_normalize(commonName)];
-    if (base == null) return null;
-    return '$_blackIconsDir/${base}_black_icon-removebg-preview.png';
-  }
-
-  // Map canonical base to the exact filename base used in real_animal_pics_no_bg
-  static final Map<String, String> _realFileBase = {
+  // Map canonical base → actual filename (LOWERCASE!)
+  static final Map<String, String> _colorFileBase = {
+    'Galloway': 'galloway',
+    'Hooglander': 'hooglander',
+    'Damhert': 'damhert',
+    'Europese_Nerts': 'europesenerts',
+    'Bunzing': 'bunzing',
+    'Wisent': 'wisent',
+    'Goudjakhals': 'goudjakhals',
+    'Edelhert': 'edelhert',
+    'Konikpaard': 'konikpaard',
+    'wilde_kat': 'wildkat',
+    'Boommarter': 'boommarter',
+    'Hermelijn': 'hermelijn',
+    'Wild_Zwijn': 'wildzwijn',
+    'Taurus': 'taurus',
+    'Pony_shetland': 'shetlandpony',
+    'Pony_exmoor': 'exmoorpony',
     'bever': 'bever',
-    'Boommarter': 'Boommarter',
-    'Bunzing': 'Bunzing',
-    'Damhert': 'Damhert',
     'das': 'das',
-    'Edelhert': 'Edelhert',
     'eekhoorn': 'eekhoorn',
     'egel': 'egel',
-    'Europese_Nerts': 'Europese_Nerts',
-    'Exmoor_Pony': 'Exmoor_Pony',
-    'Galloway': 'Galloway',
-    'Goudjakhals': 'Goudjakhals',
     'haas': 'haas',
-    'Hermelijn': 'Hermelijn',
-    'Hooglander': 'Hooglander',
     'konijn': 'konijn',
-    'Konikpaard': 'Konikpaard',
     'otter': 'otter',
     'ree': 'ree',
-    'Shetland_pony': 'Shetland_pony',
     'steenmarter': 'steenmarter',
-    'Tauros': 'Tauros',
     'vos': 'vos',
     'wezel': 'wezel',
-    'wilde_kat': 'wilde_kat',
-    'Wild_Zwijn': 'Wild_Zwijn',
-    'Wisent': 'Wisen', // real folder uses Wisen
     'wolf': 'wolf',
-    // Intentionally omit entries that have no real image (e.g., 'woelrat') to trigger paw fallback
+    'woelrat': 'woelrat',
   };
 
-  // Clicked => return real photo if available; otherwise null so UI shows paw
-  static String? realForCommonName(String? commonName) {
-    final base = _base[_normalize(commonName)];
+  static String _normalize(String? name) =>
+      (name ?? '').trim().toLowerCase();
+
+  /// Used in grid (initial hidden/preview state)
+  static String? drawingForCommonName(String? commonName) {
+    final normalized = _normalize(commonName);
+    final base = _base[normalized];
+    
+    // Debug logging
+    debugPrint('SpeciesImageResolver.drawing: input="$commonName" → normalized="$normalized" → base="$base"');
+    
     if (base == null) return null;
-    final realBase = _realFileBase[base];
-    if (realBase == null) return null;
-    return '$_realDir/real_$realBase.png';
+
+    final colorBase = _colorFileBase[base];
+    debugPrint('  colorFileBase[$base] = $colorBase');
+    
+    if (colorBase == null) return null;
+
+    final path = '$_colorAnimalsDir/$colorBase.png';
+    debugPrint('  final path: $path');
+    return path;
+  }
+
+  /// Legacy API kept for compatibility.
+  /// Product decision: always use color animal images.
+  static String? realForCommonName(String? commonName) {
+    final drawingPath = drawingForCommonName(commonName);
+    debugPrint(
+      'SpeciesImageResolver.real fallback to color image: input="$commonName" -> path="$drawingPath"',
+    );
+    return drawingPath;
   }
 }

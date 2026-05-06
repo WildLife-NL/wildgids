@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:wildgids/models/enums/nav_tab.dart';
+//import 'dart:math' as math;
 
 class CustomNavBar extends StatelessWidget {
   final NavTab currentTab;
@@ -69,18 +70,18 @@ class CustomNavBar extends StatelessWidget {
                     Expanded(
                       child: _buildNavItem(
                         tab: NavTab.zones,
-                        icon: Icons.add_location_alt,
-                        label: 'Diersoorten',
+                        icon: Icons.travel_explore,
+                        label: 'Ontdekken',
                       ),
                     ),
                     Expanded(
                       child: _buildNavItem(
-                        tab: NavTab.rapporten,
-                        icon: Icons.campaign,
-                        label: 'Rapporten',
+                        tab: NavTab.waarneming,
+                        icon: Icons.visibility, 
+                        label: 'Waarnem.',  
                       ),
                     ),
-                    const SizedBox(width: 60),
+                    const SizedBox(width: 60), 
                     Expanded(
                       child: _buildNavItem(
                         tab: NavTab.logboek,
@@ -140,6 +141,9 @@ class CustomNavBar extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               label,
+              maxLines: 1,
+              softWrap: false,
+              overflow: TextOverflow.fade,
               style: TextStyle(
                 fontSize: _fontSize,
                 color: color,
@@ -256,3 +260,4 @@ class NavBarCurvePainter extends CustomPainter {
         oldDelegate.bumpShoulder != bumpShoulder;
   }
 }
+

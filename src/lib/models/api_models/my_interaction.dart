@@ -1,18 +1,32 @@
 class MyInteractionLocation {
   final double latitude;
   final double longitude;
+  final String cityName;
+  final String streetName;
 
-  MyInteractionLocation({required this.latitude, required this.longitude});
+  MyInteractionLocation({
+    required this.latitude,
+    required this.longitude,
+    this.cityName = '',
+    this.streetName = '',
+  });
 
   factory MyInteractionLocation.fromJson(Map<String, dynamic> json) {
     return MyInteractionLocation(
       latitude: (json['latitude'] ?? 0.0).toDouble(),
       longitude: (json['longitude'] ?? 0.0).toDouble(),
+      cityName: (json['cityName'] ?? json['city'] ?? '').toString(),
+      streetName: (json['streetName'] ?? json['street'] ?? '').toString(),
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {'latitude': latitude, 'longitude': longitude};
+    return {
+      'latitude': latitude,
+      'longitude': longitude,
+      if (cityName.isNotEmpty) 'cityName': cityName,
+      if (streetName.isNotEmpty) 'streetName': streetName,
+    };
   }
 }
 

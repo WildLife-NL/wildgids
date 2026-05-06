@@ -1,8 +1,10 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wildgids/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
 import 'package:wildgids/screens/waarneming/animal_waarneming_details_screen.dart';
+import 'package:wildgids/screens/waarneming/animal_waarneming_summary_screen.dart';
+import 'package:wildgids/utils/species_image_resolver.dart';
 
 class AnimalAantalScreen extends StatefulWidget {
   const AnimalAantalScreen({super.key});
@@ -50,6 +52,9 @@ class _AnimalAantalScreenState extends State<AnimalAantalScreen> {
         context.read<AnimalSightingReportingInterface>();
     final sighting = sightingManager.getCurrentanimalSighting();
     final selectedAnimal = sighting?.animalSelected;
+    final selectedAnimalImagePath =
+        SpeciesImageResolver.drawingForCommonName(selectedAnimal?.animalName) ??
+        selectedAnimal?.animalImagePath;
 
     if (selectedAnimal == null) {
       return Scaffold(
@@ -60,8 +65,6 @@ class _AnimalAantalScreenState extends State<AnimalAantalScreen> {
       );
     }
 
-    const appBarTitle = 'Waarneming';
-
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6F4),
       body: SafeArea(
@@ -71,7 +74,7 @@ class _AnimalAantalScreenState extends State<AnimalAantalScreen> {
             // App Bar
             CustomAppBar(
               
-              centerText: appBarTitle,
+              centerText: 'Waarneming',
               rightIcon: null,
               showUserIcon: false,
               useFixedText: true,
@@ -153,11 +156,11 @@ class _AnimalAantalScreenState extends State<AnimalAantalScreen> {
                                                 topRight: Radius.circular(14),
                                               ),
                                               child: SizedBox.expand(
-                                                child: selectedAnimal.animalImagePath !=
+                                                child: selectedAnimalImagePath !=
                                                         null
                                                     ? Image(
                                                         image: AssetImage(
-                                                          selectedAnimal.animalImagePath!,
+                                                          selectedAnimalImagePath,
                                                         ),
                                                         fit: BoxFit.cover,
                                                       )
@@ -203,6 +206,8 @@ class _AnimalAantalScreenState extends State<AnimalAantalScreen> {
                                           color: Colors.black,
                                         ),
                                         textAlign: TextAlign.center,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
                                   ],
@@ -428,15 +433,12 @@ class _AnimalAantalScreenState extends State<AnimalAantalScreen> {
                       child: ElevatedButton(
                         onPressed: () {
                           if (currentCount > 0) {
-                            _saveAnimalCount();
-                            debugPrint('[AnimalAantal] Navigating to AnimalWaarnemingDetailsScreen');
-                            // Navigate to animal details screen for the first animal
+                            // Navigate directly to summary, skipping details
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
-                                    AnimalWaarnemingDetailsScreen(
-                                      animalIndex: 0,
+                                    AnimalWaarnemingSummaryScreen(
                                       totalCount: currentCount,
                                     ),
                               ),

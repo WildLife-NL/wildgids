@@ -3,18 +3,25 @@ import 'package:provider/provider.dart';
 import 'package:wildgids/constants/app_colors.dart';
 import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
 import 'package:wildgids/models/enums/nav_tab.dart';
-import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
+import 'package:wildgids/screens/game/challenge_screen.dart';
 import 'package:wildgids/screens/location/kaart_overview_screen.dart';
 import 'package:wildgids/screens/profile/profile_screen.dart';
-import 'package:wildgids/screens/shared/rapporteren.dart';
+//import 'package:wildgids/screens/shared/rapporteren.dart';
 import 'package:wildgids/screens/shared/my_interaction_history_screen.dart';
 import 'package:wildgids/screens/logbook/saved_questionnaires_screen.dart';
 import 'package:wildgids/screens/logbook/my_responses_screen.dart';
-import 'package:wildgids/screens/species/species_list_screen.dart';
+import 'package:wildgids/screens/logbook/recent_sightings_screen.dart';
+//import 'package:wildgids/screens/species/species_list_screen.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/custom_nav_bar.dart';
+import 'package:wildgids/screens/waarneming/waarneming_start_screen.dart';
+
+//import 'package:wildgids/screens/main/main_tab_shell.dart';
 
 class LogbookScreen extends StatelessWidget {
-  const LogbookScreen({super.key});
+   final bool showBottomNav;
+  const LogbookScreen({super.key,
+   this.showBottomNav = true,
+   });
 
   void _openAllInteractions(BuildContext context) {
     Navigator.push(
@@ -37,46 +44,44 @@ class LogbookScreen extends StatelessWidget {
     );
   }
 
+  void _openRecentSightings(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const RecentSightingsScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     void onTabSelected(NavTab tab) {
       final navigationManager = context.read<NavigationStateInterface>();
       switch (tab) {
-        case NavTab.zones:
-          navigationManager.pushReplacementForward(context, const SpeciesListScreen());
-          break;
-        case NavTab.rapporten:
-          navigationManager.pushReplacementForward(context, const Rapporteren());
+        case NavTab.ontdekken:
+      case NavTab.zones:
+        navigationManager.pushReplacementForward(context, const ChallengeScreen());
+        break;
+        case NavTab.waarneming:
+          navigationManager.pushReplacementForward(context, const WaarnemmingStartScreen());
           break;
         case NavTab.kaart:
           navigationManager.pushReplacementForward(context, const KaartOverviewScreen());
           break;
         case NavTab.logboek:
           return;
-        case NavTab.profile:
-          navigationManager.pushReplacementForward(context, const ProfileScreen());
-          break;
+        case NavTab.instellingen:
+case NavTab.profile:
+  navigationManager.pushReplacementForward(context, const ProfileScreen());
+  break;
       }
     }
 
     return Scaffold(
       backgroundColor: AppColors.lightMintGreen,
       body: SafeArea(
+        top: false,
         bottom: false,
         child: Column(
           children: [
-            CustomAppBar(
-              leftIcon: null,
-              centerText: 'Logboek',
-              rightIcon: null,
-              showUserIcon: true,
-              iconColor: Colors.black,
-              textColor: Colors.black,
-              fontScale: 1.15,
-              iconScale: 1.15,
-              userIconScale: 1.15,
-              useFixedText: true,
-            ),
             Expanded(
               child: Center(
                 child: ConstrainedBox(
@@ -87,7 +92,11 @@ class LogbookScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        
+                        _ReportButton(
+                          label: 'Recente waarnemingen',
+                          onTap: () => _openRecentSightings(context),
+                        ),
+                        const SizedBox(height: 12),
                         _ReportButton(
                           label: 'Mijn interacties',
                           onTap: () => _openAllInteractions(context),
@@ -111,13 +120,15 @@ class LogbookScreen extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: SafeArea(
+      bottomNavigationBar: showBottomNav
+    ? SafeArea(
         top: false,
         child: CustomNavBar(
           currentTab: NavTab.logboek,
           onTabSelected: onTabSelected,
         ),
-      ),
+      )
+    : null,
     );
   }
 }

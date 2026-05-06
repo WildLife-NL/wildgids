@@ -1,1 +1,9 @@
-enum NavTab { zones, rapporten, kaart, logboek, profile }
+enum NavTab {
+  ontdekken,
+  zones,
+  waarneming,
+  kaart,
+  logboek,
+  instellingen,
+  profile,
+}

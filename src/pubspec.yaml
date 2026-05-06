@@ -89,9 +89,12 @@ flutter:
     - assets/icons/rapporteren/accident_icon.png
     - assets/icons/accident.png
     - assets/icons/binoculars.png
+    - assets/icons/binoculars-filled.svg
+    - assets/icons/map-pic.jpg
     - assets/icons/agriculture.png
     - assets/icons/deer.png
     - assets/icons/animals/
+    - assets/animals/PNG/
     - assets/animals/
     - assets/black_icons_animal/
     - assets/real_animal_pics_no_bg/
@@ -112,6 +115,8 @@ flutter:
     - assets/icons/possesion/gewassen/tulip_2.svg
     - assets/icons/possesion/gewassen/wheat.svg
     - assets/location/location_icon.png
+    - assets/icons/nav-bar/
+    - assets/images/color-animals/
   # Avoid bundling entire assets/ directory to reduce size
     - .env
 

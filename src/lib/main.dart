@@ -47,9 +47,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wildgids/providers/app_state_provider.dart';
 import 'package:wildgids/providers/map_provider.dart';
 import 'package:wildgids/providers/response_provider.dart';
+import 'package:wildgids/providers/submitted_sightings_provider.dart';
 import 'package:wildgids/screens/login/login_screen.dart';
 import 'package:wildgids/screens/gate/location_gate_screen.dart';
-import 'package:wildgids/screens/location/kaart_overview_screen.dart';
+//import 'package:wildgids/screens/location/kaart_overview_screen.dart';
 import 'package:wildgids/interfaces/data_apis/profile_api_interface.dart';
 
 import 'package:wildgids/data_managers/interaction_types_api.dart';
@@ -60,6 +61,7 @@ import 'package:wildgids/data_managers/conveyance_api.dart';
 
 import 'package:wildgids/utils/token_validator.dart';
 import 'package:wildgids/utils/notification_service.dart';
+import 'package:wildgids/screens/main/main_tab_shell.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -100,6 +102,8 @@ void main() async {
   final conveyanceApi = ConveyanceApi(apiClient);
   final conveyanceProvider = ConveyanceProvider(conveyanceApi);
 
+  final submittedSightingsProvider = SubmittedSightingsProvider();
+
   mapProvider.setVicinityApi(vicinityApi);
 
   final interactionTypesApi = InteractionTypesApi(apiClient);
@@ -130,9 +134,9 @@ void main() async {
 
   final bool hasValidToken = await TokenValidator.hasValidToken();
   final Widget initialScreen =
-      hasValidToken
-          ? const LocationGateScreen(next: KaartOverviewScreen())
-          : const LoginScreen();
+    hasValidToken
+        ? const LocationGateScreen(next: MainTabShell())
+        : const LoginScreen();
 
   runApp(
     MultiProvider(
@@ -140,6 +144,9 @@ void main() async {
         ChangeNotifierProvider<AppStateProvider>.value(value: appStateProvider),
         ChangeNotifierProvider<MapProvider>.value(value: mapProvider),
         ChangeNotifierProvider<ResponseProvider>.value(value: responseProvider),
+        ChangeNotifierProvider<SubmittedSightingsProvider>.value(
+          value: submittedSightingsProvider,
+        ),
         ChangeNotifierProvider<ConveyanceProvider>.value(
           value: conveyanceProvider,
         ),

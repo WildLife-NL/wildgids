@@ -7,11 +7,13 @@ import 'package:geolocator/geolocator.dart';
 import 'package:wildgids/providers/map_provider.dart';
 import 'package:wildgids/providers/app_state_provider.dart';
 import 'package:wildgids/constants/app_colors.dart';
-import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
+//import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
 import 'package:wildgids/models/enums/nav_tab.dart';
+import 'package:wildgids/screens/game/challenge_screen.dart';
 import 'package:wildgids/screens/logbook/logbook_screen.dart';
-import 'package:wildgids/screens/shared/rapporteren.dart';
-import 'package:wildgids/screens/species/species_list_screen.dart';
+//import 'package:wildgids/screens/shared/rapporteren.dart';
+//import 'package:wildgids/screens/species/species_list_screen.dart';
+import 'package:wildgids/screens/waarneming/waarneming_start_screen.dart';
 import 'package:wildgids/widgets/overlay/encounter_message_overlay.dart';
 import 'package:wildgids/managers/map/location_map_manager.dart';
 import 'package:wildgids/screens/profile/profile_screen.dart';
@@ -41,8 +43,12 @@ class _IconStyle {
 }
 
 class KaartOverviewScreen extends StatefulWidget {
-  const KaartOverviewScreen({super.key});
+  final bool showBottomNav;
 
+  const KaartOverviewScreen({
+    super.key,
+    this.showBottomNav = true,
+  });
   @override
   State<KaartOverviewScreen> createState() => _KaartOverviewScreenState();
 }
@@ -246,6 +252,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     _bootstrap();
     _startFollowingMe();
   }
+  
 
   @override
   void dispose() {
@@ -1271,27 +1278,6 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     );
   }
 
-  void _onTabSelected(NavTab tab) {
-    if (tab == NavTab.kaart) return;
-    final navigation = context.read<NavigationStateInterface>();
-    switch (tab) {
-      case NavTab.zones:
-        navigation.pushReplacementForward(context, const SpeciesListScreen());
-        break;
-      case NavTab.rapporten:
-        navigation.pushReplacementForward(context, const Rapporteren());
-        break;
-      case NavTab.logboek:
-        navigation.pushReplacementForward(context, const LogbookScreen());
-        break;
-      case NavTab.profile:
-        navigation.pushReplacementForward(context, const ProfileScreen());
-        break;
-      case NavTab.kaart:
-        break;
-    }
-  }
-
   void _showAnimalDetailCard(AnimalPin pin, String? iconPath) {
     setState(() {
       _selectedAnimalDetail = pin;
@@ -1305,6 +1291,59 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
       _selectedAnimalDetail = null;
       _selectedAnimalIconPath = null;
     });
+  }
+
+  void _onTabSelected(NavTab tab) {
+    if (tab == NavTab.kaart) return;
+
+    Widget page;
+
+    switch (tab) {
+      case NavTab.ontdekken:
+      case NavTab.zones:
+        page = const ChallengeScreen();
+        break;
+
+      case NavTab.waarneming:
+        page = const WaarnemmingStartScreen();
+        break;
+
+      case NavTab.logboek:
+        page = const LogbookScreen();
+        break;
+
+      case NavTab.instellingen:
+      case NavTab.profile:
+        page = const ProfileScreen();
+        break;
+
+      case NavTab.kaart:
+        return;
+    }
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 230),
+        reverseTransitionDuration: const Duration(milliseconds: 180),
+        pageBuilder: (_, animation, __) => page,
+        transitionsBuilder: (_, animation, __, child) {
+          final curvedAnimation = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
+          );
+
+          return FadeTransition(
+            opacity: curvedAnimation,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0.04, 0),
+                end: Offset.zero,
+              ).animate(curvedAnimation),
+              child: child,
+            ),
+          );
+        },
+      ),
+    );
   }
 
   @override
@@ -2210,13 +2249,16 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                   ),
                 ),
         floatingActionButton: null,
-        bottomNavigationBar: SafeArea(
-          top: false,
-          child: CustomNavBar(
-            currentTab: NavTab.kaart,
-            onTabSelected: _onTabSelected,
-          ),
-        ),
+        bottomNavigationBar:
+            widget.showBottomNav
+                ? SafeArea(
+                  top: false,
+                  child: CustomNavBar(
+                    currentTab: NavTab.kaart,
+                    onTabSelected: _onTabSelected,
+                  ),
+                )
+                : null,
       ),
     );
   }

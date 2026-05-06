@@ -2,6 +2,7 @@
 import 'package:wildgids/models/animal_waarneming_models/animal_model.dart';
 import 'package:wildgids/constants/app_colors.dart';
 import 'package:wildgids/utils/responsive_utils.dart';
+import 'package:wildgids/utils/species_image_resolver.dart';
 
 class CompactAnimalDisplay extends StatelessWidget {
   final AnimalModel animal;
@@ -12,6 +13,9 @@ class CompactAnimalDisplay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final responsive = context.responsive;
+    final animalImagePath =
+        SpeciesImageResolver.drawingForCommonName(animal.animalName) ??
+        animal.animalImagePath;
 
     // Calculate responsive dimensions
     final double calculatedHeight =
@@ -47,11 +51,11 @@ class CompactAnimalDisplay extends StatelessWidget {
             // Use a smaller, consistent radius for images so corners are less rounded
             borderRadius: BorderRadius.circular(responsive.sp(0.75)),
             child:
-                animal.animalImagePath != null
+                animalImagePath != null
                     ? SizedBox(
                       height: finalHeight - (finalPadding * 2),
                       child: Image.asset(
-                        animal.animalImagePath!,
+                        animalImagePath,
                         fit: BoxFit.contain,
                       ),
                     )
@@ -76,7 +80,7 @@ class CompactAnimalDisplay extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.center,
-                maxLines: 2,
+                maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ),

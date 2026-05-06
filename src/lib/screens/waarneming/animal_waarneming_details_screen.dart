@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wildgids/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
 import 'package:wildgids/models/enums/animal_age.dart';
@@ -9,6 +9,7 @@ import 'package:wildgids/models/animal_waarneming_models/animal_model.dart';
 import 'package:wildgids/models/animal_waarneming_models/animal_gender_view_count_model.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
 import 'package:wildgids/screens/waarneming/animal_waarneming_summary_screen.dart';
+import 'package:wildgids/utils/species_image_resolver.dart';
 
 class AnimalWaarnemingDetailsScreen extends StatefulWidget {
   final int animalIndex; // 0-based index (0 = Dier 1, 1 = Dier 2, etc)
@@ -122,11 +123,11 @@ class _AnimalWaarnemingDetailsScreenState
         ),
       );
     } else {
+      // Last animal - go to summary screen
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) =>
-              AnimalWaarnemingSummaryScreen(totalCount: widget.totalCount),
+          builder: (context) => AnimalWaarnemingSummaryScreen(totalCount: widget.totalCount),
         ),
       );
     }
@@ -143,6 +144,9 @@ class _AnimalWaarnemingDetailsScreenState
         context.read<AnimalSightingReportingInterface>();
     final sighting = sightingManager.getCurrentanimalSighting();
     final selectedAnimal = sighting?.animalSelected;
+    final selectedAnimalImagePath =
+        SpeciesImageResolver.drawingForCommonName(selectedAnimal?.animalName) ??
+        selectedAnimal?.animalImagePath;
 
     if (selectedAnimal == null) {
       return Scaffold(
@@ -153,8 +157,6 @@ class _AnimalWaarnemingDetailsScreenState
       );
     }
 
-    const appBarTitle = 'Waarneming';
-
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6F4),
       body: SafeArea(
@@ -163,7 +165,7 @@ class _AnimalWaarnemingDetailsScreenState
           children: [
             // App Bar
             CustomAppBar(
-              centerText: appBarTitle,
+              centerText: 'Waarneming',
               rightIcon: null,
               showUserIcon: false,
               useFixedText: true,
@@ -244,11 +246,11 @@ class _AnimalWaarnemingDetailsScreenState
                                                 topRight: Radius.circular(14),
                                               ),
                                               child: SizedBox.expand(
-                                                child: selectedAnimal.animalImagePath !=
+                                                child: selectedAnimalImagePath !=
                                                         null
                                                     ? Image(
                                                         image: AssetImage(
-                                                          selectedAnimal.animalImagePath!,
+                                                          selectedAnimalImagePath,
                                                         ),
                                                         fit: BoxFit.cover,
                                                       )
@@ -294,6 +296,8 @@ class _AnimalWaarnemingDetailsScreenState
                                           color: Colors.black,
                                         ),
                                         textAlign: TextAlign.center,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
                                   ],
@@ -402,7 +406,7 @@ class _AnimalWaarnemingDetailsScreenState
                         ),
                         child: Text(
                           widget.animalIndex == widget.totalCount - 1
-                              ? 'Volgende'
+                              ? 'Indienen'
                               : 'Klaar met dieren',
                           style: const TextStyle(
                             fontSize: 16,
@@ -449,18 +453,20 @@ class _AnimalWaarnemingDetailsScreenState
             return OutlinedButton(
               onPressed: () => onSelected(option),
               style: OutlinedButton.styleFrom(
-                foregroundColor: isSelected ? Colors.white : Colors.black87,
-                backgroundColor:
-                    isSelected ? const Color(0xFF4A4A4A) : Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 side: BorderSide(
                   color: isSelected
-                      ? const Color(0xFF4A4A4A)
+                      ? const Color(0xFF333333)
                       : const Color(0xFF999999),
-                  width: 1.5,
+                  width: isSelected ? 2 : 1.5,
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                backgroundColor:
+                    isSelected ? const Color(0xFF333333) : Colors.transparent,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(20),
                 ),
               ),
               child: Text(

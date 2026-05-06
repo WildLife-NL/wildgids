@@ -130,10 +130,11 @@ class _RapporterenState extends State<Rapporteren> {
   void _onTabSelected(NavTab tab) {
     final navigationManager = context.read<NavigationStateInterface>();
     switch (tab) {
+      case NavTab.ontdekken:
       case NavTab.zones:
         navigationManager.pushReplacementForward(context, const SpeciesListScreen());
         break;
-      case NavTab.rapporten:
+      case NavTab.waarneming:
         return;
       case NavTab.kaart:
         navigationManager.pushReplacementForward(context, const KaartOverviewScreen());
@@ -141,6 +142,7 @@ class _RapporterenState extends State<Rapporteren> {
       case NavTab.logboek:
         navigationManager.pushReplacementForward(context, const LogbookScreen());
         break;
+      case NavTab.instellingen:
       case NavTab.profile:
         navigationManager.pushReplacementForward(context, const ProfileScreen());
         break;
@@ -253,7 +255,7 @@ class _RapporterenState extends State<Rapporteren> {
       bottomNavigationBar: SafeArea(
         top: false,
         child: CustomNavBar(
-          currentTab: NavTab.rapporten,
+          currentTab: NavTab.waarneming,
           onTabSelected: _onTabSelected,
         ),
       ),

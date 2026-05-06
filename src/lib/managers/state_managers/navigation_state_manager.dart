@@ -3,7 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
 import 'package:wildgids/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
 import 'package:wildgids/providers/app_state_provider.dart';
-import 'package:wildgids/screens/shared/rapporteren.dart';
+//import 'package:wildgids/screens/shared/rapporteren.dart';
+import 'package:wildgids/screens/waarneming/waarneming_start_screen.dart';
 
 class NavigationStateManager implements NavigationStateInterface {
   final List<TextEditingController> _controllers = [];
@@ -24,7 +25,7 @@ class NavigationStateManager implements NavigationStateInterface {
   @override
   void resetToHome(BuildContext context) {
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => const Rapporteren()),
+      MaterialPageRoute(builder: (context) => const WaarnemmingStartScreen()),
       (route) => false,
     );
 

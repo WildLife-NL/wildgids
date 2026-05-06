@@ -4,12 +4,14 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
 import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/screens/waarneming/waarneming_start_screen.dart';
 import 'package:wildgids/widgets/overzicht/top_container.dart';
 import 'package:wildgids/widgets/overzicht/action_buttons.dart';
-import 'package:wildgids/screens/shared/rapporteren.dart';
+//import 'package:wildgids/screens/shared/rapporteren.dart';
 import 'package:wildgids/screens/logbook/logbook_screen.dart';
 import 'package:wildgids/providers/app_state_provider.dart';
 import 'package:wildgids/screens/location/kaart_overview_screen.dart';
+import 'package:wildgids/screens/game/challenge_screen.dart';
 import 'package:wildgids/screens/profile/profile_screen.dart';
 import 'package:wildgids/screens/species/species_list_screen.dart';
 import 'package:wildgids/models/enums/nav_tab.dart';
@@ -132,6 +134,12 @@ class _OverzichtScreenState extends State<OverzichtScreen> {
     setState(() => _currentTab = tab);
 
     switch (tab) {
+      case NavTab.ontdekken:
+       context.read<NavigationStateInterface>().pushReplacementForward(
+          context,
+          const ChallengeScreen(),
+        );
+        break;
       case NavTab.zones:
         _runWithLocationGate(() {
           context.read<NavigationStateInterface>().pushReplacementForward(
@@ -140,11 +148,11 @@ class _OverzichtScreenState extends State<OverzichtScreen> {
           );
         });
         break;
-      case NavTab.rapporten:
+      case NavTab.waarneming:
         _runWithLocationGate(() {
           context.read<NavigationStateInterface>().pushReplacementForward(
             context,
-            const Rapporteren(),
+            const WaarnemmingStartScreen(),
           );
         });
         break;
@@ -164,6 +172,7 @@ class _OverzichtScreenState extends State<OverzichtScreen> {
           );
         });
         break;
+        case NavTab.instellingen:
       case NavTab.profile:
         context.read<NavigationStateInterface>().pushReplacementForward(
           context,
@@ -243,17 +252,27 @@ class _OverzichtScreenState extends State<OverzichtScreen> {
                               icon: Icons.map,
                               imagePath: null,
                               key: Key('rapporten_kaart_button'),
-                              onPressed: () {
-                                _runWithLocationGate(() {
-                                  context
-                                      .read<NavigationStateInterface>()
-                                      .pushForward(
-                                        context,
-                                        const KaartOverviewScreen(),
-                                      );
-                                });
-                              },
+                             onPressed: () {
+  _runWithLocationGate(() {
+    context.read<NavigationStateInterface>().pushForward(
+      context,
+      const KaartOverviewScreen(),
+    );
+  });
+},
                             ),
+                            (
+  text: 'Dierenquiz',
+  icon: Icons.quiz,
+  imagePath: null,
+  key: Key('dierenquiz_button'),
+  onPressed: () {
+    context.read<NavigationStateInterface>().pushForward(
+      context,
+      const ChallengeScreen(),
+    );
+  },
+),
                             (
                               text: 'Diersoorten',
                               icon: Icons.pets,
@@ -280,7 +299,7 @@ class _OverzichtScreenState extends State<OverzichtScreen> {
                                   try {
                                     navigationManager.pushForward(
                                       context,
-                                      const Rapporteren(),
+                                      const WaarnemmingStartScreen(),
                                     );
                                   } catch (e) {
                                     ScaffoldMessenger.of(context).showSnackBar(

@@ -1,112 +1,174 @@
 import 'package:flutter/material.dart';
 import 'package:wildgids/models/animal_waarneming_models/animal_model.dart';
 import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/utils/species_image_resolver.dart';
 
-class AnimalTile extends StatelessWidget {
+class AnimalTile extends StatefulWidget {
   final AnimalModel animal;
   final VoidCallback onTap;
 
   const AnimalTile({super.key, required this.animal, required this.onTap});
 
   @override
+  State<AnimalTile> createState() => _AnimalTileState();
+}
+
+class _AnimalTileState extends State<AnimalTile> {
+  bool _imageError = false;
+
+  String? get _resolvedImagePath =>
+      SpeciesImageResolver.drawingForCommonName(widget.animal.animalName) ??
+      widget.animal.animalImagePath;
+
+  @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: ElevatedButton(
-        onPressed: onTap,
-        style: ElevatedButton.styleFrom(
-          padding: EdgeInsets.zero,
-          // Use pure white for the button background when not tapped
-          backgroundColor: AppColors.lightMintGreen100,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(25),
-          ),
+      padding: const EdgeInsets.only(bottom: 16),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: Card(
           elevation: 0,
-        ).copyWith(
-          // Use the app's brown300 color for hover/pressed overlay so the
-          // photo container highlights with 0xFFEBC4A6 as requested.
-          overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
-            if (states.contains(WidgetState.hovered)) {
-              return AppColors.brown300.withValues(alpha: 0.12);
-            }
-            if (states.contains(WidgetState.pressed)) {
-              return AppColors.brown300.withValues(alpha: 0.18);
-            }
-            return null;
-          }),
-        ),
-        child: Ink(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(25),
-            // Make the visible container background pure white when idle
-            color: AppColors.lightMintGreen100,
+          shadowColor: Colors.black.withValues(alpha: 0.1),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(
+              color: AppColors.borderDefault,
+              width: 1,
+            ),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              children: [
-                // Make image container square using AspectRatio
-                Expanded(
-                  child: AspectRatio(
-                    aspectRatio: 1.0, // Square ratio
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: Container(
-                        width: double.infinity,
-                        color: AppColors.lightMintGreen100,
-                        child:
-                            animal.animalImagePath != null
-                                ? Image(
-                                  image: AssetImage(animal.animalImagePath!),
-                                  fit:
-                                      BoxFit
-                                          .cover, // Cover to fill the square, cropping if needed
-                                  frameBuilder: (
-                                    context,
-                                    child,
-                                    frame,
-                                    wasSynchronouslyLoaded,
-                                  ) {
-                                    if (wasSynchronouslyLoaded) return child;
-                                    return AnimatedOpacity(
-                                      opacity: frame == null ? 0 : 1,
-                                      duration: const Duration(
-                                        milliseconds: 300,
-                                      ),
-                                      curve: Curves.easeOut,
-                                      child: child,
-                                    );
-                                  },
-                                )
-                                : const Center(
-                                  child: Icon(
-                                    Icons.help_outline,
-                                    size: 80,
-                                    color: AppColors.brown,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Expanded(
+                child: Container(
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(14),
+                      topRight: Radius.circular(14),
+                    ),
+                    color: Colors.white,
+                  ),
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(14),
+                      topRight: Radius.circular(14),
+                    ),
+                    child: SizedBox.expand(
+                      child: _resolvedImagePath != null &&
+                              !_imageError
+                          ? _buildImageWithFallback()
+                          : Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.image_not_supported_outlined,
+                                    size: 50,
+                                    color: Colors.grey[400],
                                   ),
-                                ),
-                      ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'No image',
+                                    style: TextStyle(
+                                      color: Colors.grey[500],
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  animal.animalName,
+              ),
+              Container(
+                height: 1,
+                color: AppColors.borderDefault,
+              ),
+              Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(14),
+                    bottomRight: Radius.circular(14),
+                  ),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                child: Text(
+                  widget.animal.animalName,
                   style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w400,
                     color: Colors.black,
                   ),
                   textAlign: TextAlign.center,
-                  maxLines: 2,
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
-}
 
+  Widget _buildImageWithFallback() {
+    final imagePath = _resolvedImagePath;
+    if (imagePath == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Image(
+      image: AssetImage(imagePath),
+      fit: BoxFit.cover,
+      frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+        if (wasSynchronouslyLoaded) return child;
+
+        return AnimatedOpacity(
+          opacity: frame == null ? 0 : 1,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeOut,
+          child: child,
+        );
+      },
+      errorBuilder: (context, error, stackTrace) {
+        debugPrint(
+          '[AnimalTile] Error loading image: $imagePath',
+        );
+
+        if (!_imageError) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              setState(() {
+                _imageError = true;
+              });
+            }
+          });
+        }
+
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.broken_image_outlined,
+                size: 50,
+                color: Colors.grey[400],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Failed to load',
+                style: TextStyle(
+                  color: Colors.grey[500],
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}

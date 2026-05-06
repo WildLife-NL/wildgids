@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
-
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:http/http.dart' as http;
@@ -88,11 +88,16 @@ class ApiClient {
     if (authenticated) {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString(_tokenKey);
+      debugPrint('[ApiClient] Token retrieval: token is ${token != null ? "FOUND (${token.length} chars)" : "NULL/MISSING"}');
       // Only include Authorization header if we actually have a token.
       // Some endpoints allow anonymous access, and sending "Bearer null"
       // or an empty token may cause unintended 401s.
       if (token != null && token.isNotEmpty) {
+        final tokenPreview = token.length > 10 ? token.substring(0, 10) : token;
+        debugPrint('[ApiClient] Adding Authorization header: Bearer $tokenPreview...');
         defaultHeaders[HttpHeaders.authorizationHeader] = 'Bearer $token';
+      } else {
+        debugPrint('[ApiClient] WARNING: No token found - request will be unauthenticated!');
       }
     }
     if (headers != null) {

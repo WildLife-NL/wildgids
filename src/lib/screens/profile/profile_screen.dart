@@ -10,13 +10,18 @@ import 'package:wildgids/utils/responsive_utils.dart';
 import 'package:wildgids/screens/location/kaart_overview_screen.dart';
 import 'package:wildgids/screens/logbook/logbook_screen.dart';
 import 'package:wildgids/screens/profile/edit_profile_screen.dart';
-import 'package:wildgids/screens/shared/rapporteren.dart';
 import 'package:wildgids/screens/species/species_list_screen.dart';
+import 'package:wildgids/screens/waarneming/waarneming_start_screen.dart';
 import 'package:wildgids/models/beta_models/profile_model.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/custom_nav_bar.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final bool showBottomNav;
+
+  const ProfileScreen({
+    super.key,
+    this.showBottomNav = true,
+  });
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -31,11 +36,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _onTabSelected(NavTab tab) {
     final navigationManager = context.read<NavigationStateInterface>();
     switch (tab) {
+      case NavTab.ontdekken:
       case NavTab.zones:
         navigationManager.pushReplacementForward(context, const SpeciesListScreen());
         break;
-      case NavTab.rapporten:
-        navigationManager.pushReplacementForward(context, const Rapporteren());
+      case NavTab.waarneming:
+        navigationManager.pushReplacementForward(
+          context,
+          const WaarnemmingStartScreen(),
+        );
         break;
       case NavTab.kaart:
         navigationManager.pushReplacementForward(context, const KaartOverviewScreen());
@@ -43,6 +52,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       case NavTab.logboek:
         navigationManager.pushReplacementForward(context, const LogbookScreen());
         break;
+      case NavTab.instellingen:
       case NavTab.profile:
         return;
     }
@@ -262,13 +272,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: CustomNavBar(
-          currentTab: NavTab.profile,
-          onTabSelected: _onTabSelected,
-        ),
-      ),
+      bottomNavigationBar:
+          widget.showBottomNav
+              ? SafeArea(
+                top: false,
+                child: CustomNavBar(
+                  currentTab: NavTab.profile,
+                  onTabSelected: _onTabSelected,
+                ),
+              )
+              : null,
     );
   }
 

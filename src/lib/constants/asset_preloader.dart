@@ -64,7 +64,7 @@ class AssetPreloader {
       'assets/animals/konikpaard.png',
       'assets/animals/shetland pony.png',
       'assets/animals/exmoor pony.png',
-      'assets/animals/tauros.png',
+      'assets/animals/taurus.png',
       'assets/animals/europese nerts.png',
       'assets/animals/woelrat.png',
       'assets/animals/goudjakhals.png',
