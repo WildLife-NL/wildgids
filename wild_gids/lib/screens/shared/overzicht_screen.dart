@@ -129,7 +129,12 @@ class _OverzichtScreenState extends State<OverzichtScreen> {
     setState(() => _currentTab = tab);
 
     switch (tab) {
-      case NavTab.soorten:
+      case NavTab.ontdekken:
+       context.read<NavigationStateInterface>().pushReplacementForward(
+          context,
+          const SpeciesListScreen(),
+        );
+        break;
       case NavTab.zones:
         _runWithLocationGate(() {
           context.read<NavigationStateInterface>().pushReplacementForward(

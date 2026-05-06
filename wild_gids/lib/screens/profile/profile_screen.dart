@@ -36,7 +36,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final navigationManager = context.read<NavigationStateInterface>();
 
   switch (tab) {
-    case NavTab.soorten:
+    case NavTab.ontdekken:
     case NavTab.zones:
       navigationManager.pushReplacementForward(
         context,
@@ -442,7 +442,7 @@ bottomNavigationBar: widget.showBottomNav
     ? SafeArea(
         top: false,
         child: CustomNavBar(
-          currentTab: NavTab.soorten,
+          currentTab: NavTab.ontdekken,
           onTabSelected: _onTabSelected,
         ),
       )

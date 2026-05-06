@@ -1292,7 +1292,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
   Widget page;
 
   switch (tab) {
-    case NavTab.soorten:
+    case NavTab.ontdekken:
     case NavTab.zones:
       page = const SpeciesListScreen();
       break;

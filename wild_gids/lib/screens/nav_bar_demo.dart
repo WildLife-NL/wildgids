@@ -10,7 +10,7 @@ class NavBarDemo extends StatefulWidget {
 }
 
 class _NavBarDemoState extends State<NavBarDemo> {
-  NavTab currentTab = NavTab.soorten;
+  NavTab currentTab = NavTab.ontdekken;
 
   @override
   Widget build(BuildContext context) {

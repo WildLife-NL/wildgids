@@ -53,10 +53,10 @@ class CustomNavBar extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     _buildNavItem(
-                      tab: NavTab.soorten,
+                      tab: NavTab.ontdekken,
                       iconPath: 'assets/icons/nav-bar/soorten.svg',
                       selectedIconPath: 'assets/icons/nav-bar/soorten-selected.svg',
-                      label: 'Soorten',
+                      label: 'Ontdekken',
                     ),
                     _buildNavItem(
                       tab: NavTab.waarneming,

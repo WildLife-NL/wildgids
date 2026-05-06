@@ -27,7 +27,7 @@ class NavBarPreviewScreen extends StatefulWidget {
 }
 
 class _NavBarPreviewScreenState extends State<NavBarPreviewScreen> {
-  NavTab currentTab = NavTab.soorten;
+  NavTab currentTab = NavTab.ontdekken;
 
   @override
   Widget build(BuildContext context) {

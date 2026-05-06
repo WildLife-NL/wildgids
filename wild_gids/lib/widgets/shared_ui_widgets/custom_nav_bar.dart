@@ -70,18 +70,18 @@ class CustomNavBar extends StatelessWidget {
                     Expanded(
                       child: _buildNavItem(
                         tab: NavTab.zones,
-                        icon: Icons.add_location_alt,
-                        label: 'Soorten',
+                        icon: Icons.travel_explore,
+                        label: 'Ontdekken',
                       ),
                     ),
                     Expanded(
                       child: _buildNavItem(
                         tab: NavTab.waarneming,
-                        icon: Icons.visibility, // <-- binocular/observation icon
-                        label: 'Waarneming',    // <-- singular, as requested
+                        icon: Icons.visibility, 
+                        label: 'Waarneming',  
                       ),
                     ),
-                    const SizedBox(width: 60), // Space for the center button (FAB)
+                    const SizedBox(width: 60), 
                     Expanded(
                       child: _buildNavItem(
                         tab: NavTab.logboek,

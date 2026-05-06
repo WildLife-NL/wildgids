@@ -38,7 +38,7 @@ void _onTabSelected(NavTab tab) {
 
   switch (tab) {
     case NavTab.zones:
-    case NavTab.soorten:
+    case NavTab.ontdekken:
       nav.pushReplacementForward(context, const SpeciesListScreen());
       break;
 
@@ -67,7 +67,7 @@ void _onTabSelected(NavTab tab) {
     ? SafeArea(
         top: false,
         child: CustomNavBar(
-          currentTab: NavTab.soorten,
+          currentTab: NavTab.ontdekken,
           onTabSelected: _onTabSelected,
         ),
       )

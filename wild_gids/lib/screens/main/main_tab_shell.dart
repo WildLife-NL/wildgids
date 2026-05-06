@@ -20,7 +20,7 @@ class _MainTabShellState extends State<MainTabShell> {
 
   late final Map<NavTab, Widget> _pages = {
     NavTab.kaart: const KaartOverviewScreen(showBottomNav: false),
-    NavTab.soorten: const SpeciesListScreen(showBottomNav: false),
+    NavTab.ontdekken: const SpeciesListScreen(showBottomNav: false),
     NavTab.zones: const SpeciesListScreen(showBottomNav: false),
     NavTab.waarneming: const WaarnemmingStartScreen(showBottomNav: false),
     NavTab.logboek: const LogbookScreen(showBottomNav: false),

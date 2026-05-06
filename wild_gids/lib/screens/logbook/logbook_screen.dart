@@ -55,7 +55,7 @@ class LogbookScreen extends StatelessWidget {
     void onTabSelected(NavTab tab) {
       final navigationManager = context.read<NavigationStateInterface>();
       switch (tab) {
-        case NavTab.soorten:
+        case NavTab.ontdekken:
       case NavTab.zones:
         navigationManager.pushReplacementForward(context, const SpeciesListScreen());
         break;
@@ -134,7 +134,7 @@ case NavTab.profile:
     ? SafeArea(
         top: false,
         child: CustomNavBar(
-          currentTab: NavTab.soorten,
+          currentTab: NavTab.ontdekken,
           onTabSelected: (_) {},
         ),
       )
