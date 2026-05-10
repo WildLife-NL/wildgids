@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wildgids/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
 import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
-import 'package:wildgids/screens/shared/rapporteren.dart';
+//import 'package:wildgids/screens/shared/rapporteren.dart';
 import 'package:wildgids/screens/waarneming/animal_list_overview_screen.dart';
+import 'package:wildgids/screens/waarneming/waarneming_start_screen.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/bottom_app_bar.dart';
 import 'package:wildgids/widgets/animals/animal_counting.dart';
@@ -56,7 +57,7 @@ class _AnimalCountingScreenState extends State<AnimalCountingScreen> {
     final navigationManager = context.read<NavigationStateInterface>();
     navigationManager.pushReplacementBack(
       context,
-      const Rapporteren(),
+      const WaarnemmingStartScreen(),
     );
   }
 

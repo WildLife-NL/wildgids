@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wildgids/constants/app_colors.dart';
 import 'package:wildgids/interfaces/data_apis/profile_api_interface.dart';
 import 'package:wildgids/models/beta_models/profile_model.dart';
 import 'package:wildgids/utils/responsive_utils.dart';
@@ -17,11 +16,25 @@ class EditProfileScreen extends StatefulWidget {
   State<EditProfileScreen> createState() => _EditProfileScreenState();
 }
 
+String _genderLabelNl(String? apiValue) {
+  switch (apiValue?.toLowerCase()) {
+    case 'male':
+      return 'man';
+    case 'female':
+      return 'vrouw';
+    case 'other':
+      return 'anders';
+    default:
+      return apiValue ?? '';
+  }
+}
+
 class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _nameController;
   late TextEditingController _postcodeController;
   late TextEditingController _dateOfBirthController;
   late TextEditingController _descriptionController;
+
   String? _selectedGender;
   bool _isLoading = false;
 
@@ -30,19 +43,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   void initState() {
     super.initState();
+
     _nameController = TextEditingController(text: widget.initialProfile.userName);
-    _postcodeController = TextEditingController(text: widget.initialProfile.postcode ?? '');
-    
-    // Handle dateOfBirth - extract YYYY-MM-DD from ISO 8601 if needed
+    _postcodeController =
+        TextEditingController(text: widget.initialProfile.postcode ?? '');
+
     String dateOfBirthStr = '';
-    if (widget.initialProfile.dateOfBirth != null && widget.initialProfile.dateOfBirth!.isNotEmpty) {
+    if (widget.initialProfile.dateOfBirth != null &&
+        widget.initialProfile.dateOfBirth!.isNotEmpty) {
       dateOfBirthStr = widget.initialProfile.dateOfBirth!.contains('T')
           ? widget.initialProfile.dateOfBirth!.split('T')[0]
           : widget.initialProfile.dateOfBirth!;
     }
+
     _dateOfBirthController = TextEditingController(text: dateOfBirthStr);
-    
-    _descriptionController = TextEditingController(text: widget.initialProfile.description ?? '');
+    _descriptionController =
+        TextEditingController(text: widget.initialProfile.description ?? '');
     _selectedGender = widget.initialProfile.gender;
   }
 
@@ -56,25 +72,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Future<void> _selectDate() async {
-    DateTime? initialDate;
-    
+    DateTime initialDate;
+
     if (_dateOfBirthController.text.isNotEmpty) {
       try {
-        // Handle both formats: YYYY-MM-DD and ISO 8601
         String dateStr = _dateOfBirthController.text;
         if (dateStr.contains('T')) {
-          // ISO 8601 format: 2001-10-29T00:00:00Z
           dateStr = dateStr.split('T')[0];
         }
         initialDate = DateTime.parse(dateStr);
-      } catch (e) {
+      } catch (_) {
         initialDate = DateTime.now();
       }
     } else {
       initialDate = DateTime.now();
     }
 
-    final DateTime? picked = await showDatePicker(
+    final picked = await showDatePicker(
       context: context,
       initialDate: initialDate,
       firstDate: DateTime(1900),
@@ -83,7 +97,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     if (picked != null) {
       setState(() {
-        // Format as YYYY-MM-DD
         _dateOfBirthController.text =
             '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
       });
@@ -107,10 +120,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         userID: widget.initialProfile.userID,
         email: widget.initialProfile.email,
         userName: _nameController.text,
-        postcode: _postcodeController.text.isNotEmpty ? _postcodeController.text : null,
+        postcode:
+            _postcodeController.text.isNotEmpty ? _postcodeController.text : null,
         gender: _selectedGender,
-        dateOfBirth: _dateOfBirthController.text.isNotEmpty ? _dateOfBirthController.text : null,
-        description: _descriptionController.text.isNotEmpty ? _descriptionController.text : null,
+        dateOfBirth: _dateOfBirthController.text.isNotEmpty
+            ? _dateOfBirthController.text
+            : null,
+        description: _descriptionController.text.isNotEmpty
+            ? _descriptionController.text
+            : null,
         reportAppTerms: widget.initialProfile.reportAppTerms,
         recreationAppTerms: widget.initialProfile.recreationAppTerms,
         location: widget.initialProfile.location,
@@ -122,8 +140,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       if (!mounted) return;
       _showSuccessSnackBar('Profiel succesvol bijgewerkt');
 
-      // Navigate back after a short delay
       await Future.delayed(const Duration(milliseconds: 500));
+
       if (!mounted) return;
       Navigator.of(context).pop(updatedProfile);
     } catch (e) {
@@ -160,128 +178,172 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final responsive = context.responsive;
+    final fs = responsive.fontSize;
 
     return Scaffold(
-      backgroundColor: AppColors.darkGreen,
+      backgroundColor: const Color(0xFFF5F6F4),
       body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: responsive.wp(4)),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Padding(
-                padding: EdgeInsets.only(top: responsive.hp(1)),
-                child: Row(
-                  children: [
-                    SizedBox(width: responsive.wp(12)),
-                    Expanded(
-                      child: Center(
-                        child: Text(
-                          'Profiel Bijwerken',
-                          style: TextStyle(
-                            color: AppColors.offWhite,
-                            fontSize: responsive.fontSize(24),
-                            fontWeight: FontWeight.w600,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_new),
+                    color: Colors.grey.shade900,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                Card(
+                  color: Colors.white,
+                  elevation: 2,
+                  shadowColor: Colors.black26,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                    side: const BorderSide(
+                      color: Color(0xFFB2B2B2),
+                      width: 1,
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 24,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Center(
+                          child: Stack(
+                            children: [
+                              Container(
+                                width: 120,
+                                height: 120,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.grey.shade200,
+                                ),
+                                child: Icon(
+                                  Icons.person,
+                                  size: 60,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Colors.white,
+                                      width: 2,
+                                    ),
+                                    color: Colors.white,
+                                  ),
+                                  child: Icon(
+                                    Icons.camera_alt_outlined,
+                                    size: 20,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ),
-                    ),
-                    SizedBox(width: responsive.wp(12)),
-                  ],
-                ),
-              ),
 
-              SizedBox(height: responsive.spacing(24)),
+                        const SizedBox(height: 24),
 
-              // Form fields
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Name field
-                      _buildLabel(responsive, 'Naam *'),
-                      SizedBox(height: responsive.spacing(8)),
-                      _buildTextField(
-                        responsive,
-                        _nameController,
-                        'Voer uw naam in',
-                        minLength: 2,
-                      ),
+                        _buildFieldLabel(fs, 'Volledige naam'),
+                        const SizedBox(height: 8),
+                        _buildTextField(
+                          responsive,
+                          _nameController,
+                          'Vul je naam in',
+                        ),
 
-                      SizedBox(height: responsive.spacing(20)),
+                        const SizedBox(height: 16),
 
-                      // Gender dropdown
-                      _buildLabel(responsive, 'Geslacht'),
-                      SizedBox(height: responsive.spacing(8)),
-                      _buildGenderDropdown(responsive),
-
-                      SizedBox(height: responsive.spacing(20)),
-
-                      // Date of birth field
-                      _buildLabel(responsive, 'Geboortedatum'),
-                      SizedBox(height: responsive.spacing(8)),
-                      _buildDateField(responsive),
-
-                      SizedBox(height: responsive.spacing(20)),
-
-                      // Postcode field
-                      _buildLabel(responsive, 'Postcode'),
-                      SizedBox(height: responsive.spacing(8)),
-                      _buildTextField(
-                        responsive,
-                        _postcodeController,
-                        'Voer uw postcode in',
-                      ),
-
-                      SizedBox(height: responsive.spacing(20)),
-
-                      // Description field
-                      _buildLabel(responsive, 'Beschrijving'),
-                      SizedBox(height: responsive.spacing(8)),
-                      _buildTextField(
-                        responsive,
-                        _descriptionController,
-                        'Voer een beschrijving in',
-                        maxLines: 4,
-                      ),
-
-                      SizedBox(height: responsive.spacing(32)),
-
-                      // Save button
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          style: ButtonStyle(
-                            backgroundColor: WidgetStateProperty.resolveWith<Color?>(
-                              (states) {
-                                if (states.contains(WidgetState.hovered) ||
-                                    states.contains(WidgetState.pressed)) {
-                                  return AppColors.lightGreen;
-                                }
-                                return AppColors.lightMintGreen;
-                              },
+                        _buildFieldLabel(fs, 'Email adres'),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: Text(
+                            widget.initialProfile.email,
+                            style: TextStyle(
+                              fontSize: fs(15),
+                              color: Colors.grey.shade700,
                             ),
-                            foregroundColor: WidgetStateProperty.resolveWith<Color?>(
-                              (states) {
-                                if (states.contains(WidgetState.hovered) ||
-                                    states.contains(WidgetState.pressed)) {
-                                  return AppColors.offWhite;
-                                }
-                                return AppColors.black;
-                              },
-                            ),
-                            padding: WidgetStateProperty.all(
-                              EdgeInsets.symmetric(vertical: responsive.hp(1.75)),
-                            ),
-                            shape: WidgetStateProperty.all(
-                              RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(responsive.sp(3)),
+                          ),
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        _buildFieldLabel(fs, 'Geslacht'),
+                        const SizedBox(height: 8),
+                        _buildGenderDropdown(responsive),
+
+                        const SizedBox(height: 16),
+
+                        _buildFieldLabel(fs, 'Postcode'),
+                        const SizedBox(height: 8),
+                        _buildTextField(
+                          responsive,
+                          _postcodeController,
+                          '1234AB',
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        _buildFieldLabel(fs, 'Geboortedatum'),
+                        const SizedBox(height: 8),
+                        _buildDateField(responsive),
+
+                        const SizedBox(height: 16),
+
+                        _buildFieldLabel(fs, 'Beschrijving'),
+                        const SizedBox(height: 8),
+                        _buildTextField(
+                          responsive,
+                          _descriptionController,
+                          'Vertel iets over jezelf',
+                          maxLines: 4,
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        FilledButton(
+                          onPressed: _isLoading ? null : _saveProfile,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.grey.shade900,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(26),
+                              side: BorderSide(
+                                color: Colors.grey.shade400,
+                                width: 1.5,
                               ),
                             ),
                           ),
-                          onPressed: _isLoading ? null : _saveProfile,
                           child: _isLoading
                               ? const SizedBox(
                                   height: 20,
@@ -293,32 +355,30 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               : Text(
                                   'Opslaan',
                                   style: TextStyle(
-                                    fontSize: responsive.fontSize(16),
+                                    fontSize: fs(15),
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
                         ),
-                      ),
-
-                      SizedBox(height: responsive.spacing(20)),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildLabel(ResponsiveUtils responsive, String text) {
+  Widget _buildFieldLabel(double Function(double) fs, String text) {
     return Text(
       text,
       style: TextStyle(
-        color: AppColors.offWhite,
-        fontSize: responsive.fontSize(14),
-        fontWeight: FontWeight.w600,
+        fontSize: fs(13),
+        color: Colors.grey.shade700,
+        fontWeight: FontWeight.w500,
       ),
     );
   }
@@ -328,41 +388,39 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     TextEditingController controller,
     String hint, {
     int maxLines = 1,
-    int minLength = 0,
   }) {
     return TextField(
       controller: controller,
       maxLines: maxLines,
       minLines: maxLines == 1 ? 1 : maxLines,
       style: TextStyle(
-        color: AppColors.black,
-        fontSize: responsive.fontSize(14),
+        color: Colors.grey.shade900,
+        fontSize: responsive.fontSize(15),
       ),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(
-          color: Colors.grey[600],
-          fontSize: responsive.fontSize(14),
+          color: Colors.grey.shade500,
+          fontSize: responsive.fontSize(15),
         ),
-        filled: true,
-        fillColor: AppColors.lightMintGreen,
-        contentPadding: EdgeInsets.symmetric(
-          horizontal: responsive.wp(3),
-          vertical: responsive.hp(1),
+        filled: false,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 12,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(responsive.sp(2)),
-          borderSide: const BorderSide(color: AppColors.lightMintGreen),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide(color: Colors.grey.shade300),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(responsive.sp(2)),
-          borderSide: const BorderSide(color: AppColors.lightMintGreen),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide(color: Colors.grey.shade300),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(responsive.sp(2)),
-          borderSide: BorderSide(
-            color: AppColors.darkGreen,
-            width: 2,
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(
+            color: Color(0xFF37A904),
+            width: 1.5,
           ),
         ),
       ),
@@ -373,14 +431,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return GestureDetector(
       onTap: _selectDate,
       child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: responsive.wp(3),
-          vertical: responsive.hp(1),
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: AppColors.lightMintGreen,
-          borderRadius: BorderRadius.circular(responsive.sp(2)),
-          border: Border.all(color: AppColors.lightMintGreen),
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.grey.shade300),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -391,15 +446,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   : _dateOfBirthController.text,
               style: TextStyle(
                 color: _dateOfBirthController.text.isEmpty
-                    ? Colors.grey[600]
-                    : AppColors.black,
-                fontSize: responsive.fontSize(14),
+                    ? Colors.grey.shade500
+                    : Colors.grey.shade900,
+                fontSize: responsive.fontSize(15),
               ),
             ),
             Icon(
-              Icons.calendar_today,
-              color: AppColors.darkGreen,
-              size: responsive.sp(2),
+              Icons.expand_more,
+              color: Colors.grey.shade600,
+              size: 20,
             ),
           ],
         ),
@@ -409,19 +464,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Widget _buildGenderDropdown(ResponsiveUtils responsive) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: responsive.wp(3)),
+      padding: const EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
-        color: AppColors.lightMintGreen,
-        borderRadius: BorderRadius.circular(responsive.sp(2)),
-        border: Border.all(color: AppColors.lightMintGreen),
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.grey.shade300),
       ),
       child: DropdownButton<String>(
         value: _selectedGender,
         hint: Text(
           'Selecteer geslacht',
           style: TextStyle(
-            color: Colors.grey[600],
-            fontSize: responsive.fontSize(14),
+            color: Colors.grey.shade500,
+            fontSize: responsive.fontSize(15),
           ),
         ),
         isExpanded: true,
@@ -435,10 +490,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           return DropdownMenuItem<String>(
             value: value,
             child: Text(
-              value.toUpperCase(),
+              _genderLabelNl(value),
               style: TextStyle(
-                color: AppColors.black,
-                fontSize: responsive.fontSize(14),
+                color: Colors.grey.shade900,
+                fontSize: responsive.fontSize(15),
               ),
             ),
           );
@@ -447,4 +502,3 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 }
-
