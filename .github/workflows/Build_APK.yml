@@ -9,6 +9,7 @@ jobs:
   build-apk:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
+
     permissions:
       contents: write
 
@@ -19,6 +20,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -42,6 +45,9 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Run tests
+        run: flutter test
+
       - name: Set version build number to today
         run: |
           TODAY=$(date +%Y%m%d)
@@ -49,6 +55,8 @@ jobs:
           NAME_PART=$(echo "$CURRENT_VERSION" | cut -d '+' -f1)
           NEW_VERSION="${NAME_PART}+${TODAY}"
           sed -i "s/^version: .*/version: ${NEW_VERSION}/" pubspec.yaml
+          echo "NEW_VERSION=${NEW_VERSION}" >> $GITHUB_ENV
+          echo "RELEASE_TAG=v${NEW_VERSION}" >> $GITHUB_ENV
           echo "New version: ${NEW_VERSION}"
 
       - name: Commit updated pubspec version
@@ -56,7 +64,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add pubspec.yaml
-          git commit -m "Set version to today's date" || echo "No changes to commit"
+          git commit -m "Set version to ${NEW_VERSION}" || echo "No changes to commit"
           git push
 
       - name: Build APK
@@ -66,8 +74,21 @@ jobs:
         run: |
           mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/wildgids.apk
 
-      - name: Upload APK
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-release-apk-wildgids
           path: src/build/app/outputs/flutter-apk/wildgids.apk
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: Release ${{ env.NEW_VERSION }}
+          body: |
+            Automatische release voor versie ${{ env.NEW_VERSION }}.
+
+            APK: wildgids.apk
+          files: src/build/app/outputs/flutter-apk/wildgids.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
