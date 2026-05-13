@@ -21,11 +21,9 @@ import 'package:wildgids/widgets/map/animal_detail_card.dart';
 import 'package:wildgids/models/animal_waarneming_models/animal_pin.dart';
 import 'package:wildgids/models/animal_waarneming_models/interaction_to_animal_pin.dart';
 import 'package:wildgids/widgets/map/detection_detail_dialog.dart';
-import 'package:wildgids/data_managers/my_interaction_api.dart';
 import 'package:wildgids/data_managers/tracking_api.dart';
 import 'package:wildgids/interfaces/data_apis/tracking_api_interface.dart';
 import 'package:wildgids/config/app_config.dart';
-import 'package:wildgids/models/api_models/interaction_query_result.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/custom_nav_bar.dart';
 import 'package:wildgids/constants/mock_location.dart';
@@ -416,7 +414,6 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     debugPrint('[Map] Fetching data from vicinity endpoint');
 
     await map.loadAllPinsFromVicinity();
-    await _mergeMyReportedInteractions(map);
 
     debugPrint(
       '[Map] vicinity totals  animals=${map.animalPins.length} '
@@ -454,51 +451,6 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     debugPrint(
       'â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•',
     );
-  }
-
-  Future<void> _mergeMyReportedInteractions(MapProvider map) async {
-    try {
-      final myApi = MyInteractionApi(AppConfig.shared.apiClient);
-      final myInteractions = await myApi.getMyInteractions();
-
-      final List<InteractionQueryResult> fromMine =
-          myInteractions.map((interaction) {
-            final double lat =
-                interaction.location.latitude != 0.0
-                    ? interaction.location.latitude
-                    : interaction.place.latitude;
-            final double lon =
-                interaction.location.longitude != 0.0
-                    ? interaction.location.longitude
-                    : interaction.place.longitude;
-
-            return InteractionQueryResult(
-              id: interaction.id,
-              lat: lat,
-              lon: lon,
-              moment: interaction.moment.toUtc(),
-              typeName: interaction.type.name,
-              speciesName: interaction.species.commonName,
-              description: interaction.description,
-              userName: interaction.user.name,
-            );
-          }).toList();
-
-      final Map<String, InteractionQueryResult> mergedById = {
-        for (final itx in map.interactions) itx.id: itx,
-      };
-      for (final itx in fromMine) {
-        mergedById[itx.id] = itx;
-      }
-
-      map.setMockVicinity(
-        animals: map.animalPins,
-        detections: map.detectionPins,
-        interactions: mergedById.values.toList(),
-      );
-    } catch (e) {
-      debugPrint('[Map] Could not merge my reported interactions: $e');
-    }
   }
 
   Future<void> _bootstrap() async {
@@ -577,8 +529,6 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
         } catch (e) {
           debugPrint('[Bootstrap] âŒ Failed to load vicinity data: $e');
         }
-        await _mergeMyReportedInteractions(map);
-
         debugPrint(
           '[Map] initial totals  '
           'animals=${map.animalPins.length} '
