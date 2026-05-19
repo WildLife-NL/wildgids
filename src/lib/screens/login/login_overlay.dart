@@ -9,14 +9,14 @@ class LoginOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final responsive = context.responsive;
+
     return GestureDetector(
       onTap: () => Navigator.of(context).pop(),
       child: Material(
-        color: AppColors.lightMintGreen.withValues(alpha: 0.5),
+        color: AppColors.backgroundLight.withValues(alpha: 0.5),
         child: Center(
           child: GestureDetector(
-            onTap:
-                () {}, // Prevents taps on the container from closing the overlay
+            onTap: () {},
             child: Container(
               margin: EdgeInsets.symmetric(horizontal: responsive.wp(5)),
               constraints: BoxConstraints(maxWidth: responsive.wp(80)),
@@ -36,15 +36,15 @@ class LoginOverlay extends StatelessWidget {
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                             colors: [
-                              Colors.black,
-                              Colors.black.withValues(alpha: 0.8),
+                              AppColors.textPrimary,
+                              AppColors.textPrimary.withValues(alpha: 0.8),
                             ],
                           ).createShader(bounds);
                         },
                         child: Icon(
                           Icons.exit_to_app,
                           size: responsive.sp(4),
-                          color: Colors.black,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                       onPressed: () => Navigator.of(context).pop(),
@@ -67,17 +67,19 @@ class LoginOverlay extends StatelessWidget {
                             style: AppTextTheme.textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                               fontSize: responsive.fontSize(24),
+                              color: AppColors.textPrimary,
                             ),
                             textAlign: TextAlign.center,
                           ),
                           SizedBox(height: responsive.spacing(20)),
                           Text(
-                            'Geef uw emailadres op en bevestig met de knop \'Aanmelden\'. '
-                            'U ontvangt een verificatiecode per email die u in deze app invoert. '
-                            'Als er nog geen account bestaat voor dit emailadres, wordt dit automatisch geregistreerd. '
+                            'Geef uw e-mailadres op en bevestig met de knop \'Aanmelden\'. '
+                            'U ontvangt een verificatiecode per e-mail die u dan in deze app invoert. '
+                            'Indien er nog geen account bestaat voor dit e-mailadres wordt deze automatisch geregistreerd. '
                             'Daarna bent u aangemeld.',
                             style: AppTextTheme.textTheme.bodyMedium?.copyWith(
                               fontSize: responsive.fontSize(14),
+                              color: AppColors.textPrimary,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -94,4 +96,3 @@ class LoginOverlay extends StatelessWidget {
     );
   }
 }
-
