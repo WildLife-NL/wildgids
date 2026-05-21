@@ -426,65 +426,71 @@ class _AnimalWaarnemingDetailsScreenState
     );
   }
 
-  Widget _buildSelectorSection(
-    String label,
-    List<dynamic> options,
-    Function(dynamic) onSelected,
-    dynamic selectedValue,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Colors.black87,
-          ),
+Widget _buildSelectorSection(
+  String label,
+  List<dynamic> options,
+  Function(dynamic) onSelected,
+  dynamic selectedValue,
+) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        label,
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: Colors.black87,
         ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: options.map((option) {
-            final isSelected = option == selectedValue;
-            final label = _getEnumLabel(option);
-            return OutlinedButton(
-              onPressed: () => onSelected(option),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
+      ),
+      const SizedBox(height: 8),
+      LayoutBuilder(
+        builder: (context, constraints) {
+          final itemWidth = (constraints.maxWidth - 8) / 2;
+
+          return Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: options.map((option) {
+              final isSelected = option == selectedValue;
+              final label = _getEnumLabel(option);
+
+              return SizedBox(
+                width: itemWidth,
+                child: OutlinedButton(
+                  onPressed: () => onSelected(option),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    backgroundColor:
+                        isSelected ? const Color(0xFF333333) : Colors.white,
+                    side: BorderSide(
+                      color: isSelected
+                          ? const Color(0xFF333333)
+                          : const Color(0xFF999999),
+                      width: isSelected ? 2 : 1.5,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: Text(
+                    label,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isSelected ? Colors.white : Colors.black87,
+                    ),
+                  ),
                 ),
-                side: BorderSide(
-                  color: isSelected
-                      ? const Color(0xFF333333)
-                      : const Color(0xFF999999),
-                  width: isSelected ? 2 : 1.5,
-                ),
-                backgroundColor:
-                    isSelected ? const Color(0xFF333333) : Colors.transparent,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: isSelected
-                      ? Colors.white
-                      : Colors.black87,
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
+              );
+            }).toList(),
+          );
+        },
+      ),
+    ],
+  );
+}
 
   String _getEnumLabel(dynamic value) {
     if (value is AnimalAge) {
