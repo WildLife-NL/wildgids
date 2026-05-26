@@ -16,6 +16,7 @@ import 'package:wildgids/interfaces/data_apis/tracking_api_interface.dart'
 import 'package:wildgids/managers/api_managers/tracking_cache_manager.dart';
 import 'package:wildgids/interfaces/data_apis/vicinity_api_interface.dart';
 import 'package:wildgids/models/api_models/vicinity.dart';
+import 'package:wildgids/utils/last_sent_tracking_location.dart';
 import 'package:wildgids/utils/tracking_vicinity_parser.dart';
 import 'package:wildgids/utils/notification_service.dart';
 import 'dart:async';
@@ -35,7 +36,6 @@ class MapProvider extends ChangeNotifier {
   Timer? _trackingTimer;
   bool _isTracking = false;
   Duration _trackingInterval = LocationSharingConfig.updateInterval;
-  Position? _lastSentTrackingPosition;
 
   bool get isTracking => _isTracking;
   Duration get trackingInterval => _trackingInterval;
@@ -68,18 +68,6 @@ class MapProvider extends ChangeNotifier {
     return now.hour == 0;
   }
 
-  bool _isSameAsLastSentPosition(Position pos) {
-    final last = _lastSentTrackingPosition;
-    if (last == null) return false;
-    final distance = Geolocator.distanceBetween(
-      last.latitude,
-      last.longitude,
-      pos.latitude,
-      pos.longitude,
-    );
-    return distance < LocationSharingConfig.minDistanceMetersForNewPing;
-  }
-
   Future<TrackingNotice?> sendTrackingPingFromPosition(Position pos) async {
     if (_isInTrackingPauseWindow(DateTime.now())) {
       debugPrint(
@@ -88,7 +76,7 @@ class MapProvider extends ChangeNotifier {
       return null;
     }
 
-    if (_isSameAsLastSentPosition(pos)) {
+    if (LastSentTrackingLocation.isUnchanged(pos.latitude, pos.longitude)) {
       debugPrint(
         '[MapProvider] Skipping tracking ping; location unchanged from last sent position',
       );
@@ -121,7 +109,6 @@ class MapProvider extends ChangeNotifier {
             _applyVicinity(notice.vicinity!);
           }
           _lastTrackingNotice = notice;
-          _lastSentTrackingPosition = pos;
           if (notice.hasMessage) {
             debugPrint(
               '[MapProvider] Got tracking notice, calling notifyListeners()',
@@ -133,8 +120,7 @@ class MapProvider extends ChangeNotifier {
             NotificationService.instance.show(title: title, body: notice.text);
           }
           notifyListeners();
-        } else {
-          _lastSentTrackingPosition = pos;
+        } else if (LastSentTrackingLocation.hasSent) {
           debugPrint(
             '[MapProvider] tracking-reading cached or sent; no notice from backend',
           );
@@ -169,7 +155,7 @@ class MapProvider extends ChangeNotifier {
           _applyVicinity(notice.vicinity!);
         }
         _lastTrackingNotice = notice;
-        _lastSentTrackingPosition = pos;
+        LastSentTrackingLocation.record(pos.latitude, pos.longitude);
         if (notice.hasMessage) {
           final title =
               notice.severity == 1
@@ -179,7 +165,7 @@ class MapProvider extends ChangeNotifier {
         }
         notifyListeners();
       } else {
-        _lastSentTrackingPosition = pos;
+        LastSentTrackingLocation.record(pos.latitude, pos.longitude);
       }
       return notice;
     } catch (e) {
@@ -405,19 +391,28 @@ class MapProvider extends ChangeNotifier {
       final getVicinity = await vicinityApi.getMyVicinity();
 
       if (pos != null) {
-        try {
-          final postVicinity = await vicinityApi.getVicinityForCurrentLocation(
-            latitude: pos.latitude,
-            longitude: pos.longitude,
+        if (LastSentTrackingLocation.isUnchanged(pos.latitude, pos.longitude)) {
+          debugPrint(
+            '[MapProvider] Skipping POST for map pins; location unchanged',
           );
-          vicinity = TrackingVicinityParser.merge(postVicinity, getVicinity);
-          source = TrackingVicinityParser.isEmpty(postVicinity)
-              ? 'GET /tracking-readings/me/ (POST empty)'
-              : 'POST /tracking-reading/ + GET /tracking-readings/me/';
-        } catch (e) {
-          debugPrint('[MapProvider] POST /tracking-reading/ failed: $e');
           vicinity = getVicinity;
-          source = 'GET /tracking-readings/me/';
+          source = 'GET /tracking-readings/me/ (unchanged location)';
+        } else {
+          try {
+            final postVicinity = await vicinityApi.getVicinityForCurrentLocation(
+              latitude: pos.latitude,
+              longitude: pos.longitude,
+            );
+            LastSentTrackingLocation.record(pos.latitude, pos.longitude);
+            vicinity = TrackingVicinityParser.merge(postVicinity, getVicinity);
+            source = TrackingVicinityParser.isEmpty(postVicinity)
+                ? 'GET /tracking-readings/me/ (POST empty)'
+                : 'POST /tracking-reading/ + GET /tracking-readings/me/';
+          } catch (e) {
+            debugPrint('[MapProvider] POST /tracking-reading/ failed: $e');
+            vicinity = getVicinity;
+            source = 'GET /tracking-readings/me/';
+          }
         }
       } else {
         vicinity = getVicinity;
@@ -618,7 +613,7 @@ class MapProvider extends ChangeNotifier {
     currentAddress = '';
     selectedPosition = null;
     selectedAddress = '';
-    _lastSentTrackingPosition = null;
+    LastSentTrackingLocation.clear();
     _trackingCacheManager?.clearCache();
     notifyListeners();
   }

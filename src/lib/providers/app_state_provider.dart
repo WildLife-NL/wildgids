@@ -19,9 +19,8 @@ class AppStateProvider with ChangeNotifier {
   DateTime? _lastLocationUpdate;
   static const Duration locationCacheTimeout = Duration(minutes: 15);
 
-  // Location tracking preference
-  bool _isLocationTrackingEnabled = false;
-  bool get isLocationTrackingEnabled => _isLocationTrackingEnabled;
+  // Location sharing is mandatory for WildGids and cannot be disabled in-app.
+  bool get isLocationTrackingEnabled => true;
 
   bool _notificationsEnabled = true;
   bool get notificationsEnabled => _notificationsEnabled;
@@ -160,15 +159,14 @@ class AppStateProvider with ChangeNotifier {
     Timer.periodic(locationCacheTimeout, (_) => updateLocationCache());
   }
 
-  /// Load location tracking preference from SharedPreferences
+  /// Loads notification preference and enforces always-on location sharing.
   Future<void> loadLocationTrackingPreference() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      _isLocationTrackingEnabled =
-          prefs.getBool('location_tracking_enabled') ?? false;
+      await prefs.setBool('location_tracking_enabled', true);
       _notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
       debugPrint(
-        '[AppStateProvider] Loaded location tracking: $_isLocationTrackingEnabled, '
+        '[AppStateProvider] Location sharing: always enabled; '
         'notifications: $_notificationsEnabled',
       );
       notifyListeners();
@@ -176,21 +174,24 @@ class AppStateProvider with ChangeNotifier {
       debugPrint(
         '[AppStateProvider] Failed to load preferences: $e',
       );
-      _isLocationTrackingEnabled = false;
       _notificationsEnabled = true;
     }
   }
 
+  /// Location sharing cannot be turned off; kept for call-site compatibility.
   Future<void> setLocationTrackingEnabled(bool enabled) async {
+    if (!enabled) {
+      debugPrint(
+        '[AppStateProvider] Ignoring request to disable location sharing',
+      );
+    }
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('location_tracking_enabled', enabled);
-      _isLocationTrackingEnabled = enabled;
-      debugPrint('[AppStateProvider] Location tracking: $enabled');
+      await prefs.setBool('location_tracking_enabled', true);
       notifyListeners();
     } catch (e) {
       debugPrint(
-        '[AppStateProvider] Failed to save location tracking preference: $e',
+        '[AppStateProvider] Failed to persist location sharing preference: $e',
       );
     }
   }

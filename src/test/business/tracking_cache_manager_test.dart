@@ -8,6 +8,7 @@ import 'package:wildgids/models/beta_models/tracking_reading_model.dart';
 import 'package:wildgids/models/ui_models/living_lab_area.dart';
 import 'package:wildgids/interfaces/data_apis/tracking_api_interface.dart';
 import 'package:wildgids/utils/connection_checker.dart';
+import 'package:wildgids/utils/last_sent_tracking_location.dart';
 
 /// Mock implementation of TrackingApiInterface for testing
 class MockTrackingApi implements TrackingApiInterface {
@@ -66,6 +67,7 @@ void main() {
 
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
+      LastSentTrackingLocation.clear();
       mockApi = MockTrackingApi();
       cacheManager = TrackingCacheManager(
         trackingApi: mockApi,
@@ -258,6 +260,24 @@ void main() {
         expect(cached[i].longitude, 5.0 + i * 0.1);
         expect(cached[i].timestampUtc, timestamps[i]);
       }
+    });
+
+    test('should skip send when location unchanged', () async {
+      mockApi.shouldFail = false;
+      mockHasInternet = true;
+
+      await cacheManager.sendOrCacheReading(
+        lat: 52.0,
+        lon: 5.0,
+        timestampUtc: DateTime.utc(2025, 11, 20, 12, 0, 0),
+      );
+      await cacheManager.sendOrCacheReading(
+        lat: 52.0,
+        lon: 5.0,
+        timestampUtc: DateTime.utc(2025, 11, 20, 12, 10, 0),
+      );
+
+      expect(mockApi.sentReadings.length, 1);
     });
 
     test('should skip reading outside living labs', () async {

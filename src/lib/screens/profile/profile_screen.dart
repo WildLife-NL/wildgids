@@ -1,7 +1,6 @@
 ﻿import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -284,7 +283,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                             child: Column(
                                 children: [
-                                  SwitchListTile(
+                                  ListTile(
                                     contentPadding: const EdgeInsets.symmetric(
                                       horizontal: 14,
                                       vertical: 4,
@@ -296,28 +295,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         color: Colors.grey.shade900,
                                       ),
                                     ),
-                                    value: app.isLocationTrackingEnabled,
-                                    activeThumbColor: Colors.white,
-                                    activeTrackColor: AppColors.primaryGreen,
-                                    onChanged: (enabled) async {
-                                      await app.setLocationTrackingEnabled(enabled);
-                                      if (!context.mounted) return;
-                                      final map = context.read<MapProvider>();
-                                      final state = context.read<AppStateProvider>();
-                                      if (!enabled) {
-                                        map.clearUserLocationAndStopTracking();
-                                        if (map.isInitialized) {
-                                          map.mapController.move(
-                                            const LatLng(52.1326, 5.2913),
-                                            7.0,
-                                          );
-                                        }
-                                      }
-                                      map.setVicinityNotificationsEnabled(
-                                        state.isLocationTrackingEnabled &&
-                                            state.notificationsEnabled,
-                                      );
-                                    },
+                                    subtitle: Text(
+                                      'Altijd ingeschakeld',
+                                      style: TextStyle(
+                                        fontSize: fs(13),
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                    trailing: Icon(
+                                      Icons.check_circle,
+                                      color: AppColors.primaryGreen,
+                                      size: fs(22),
+                                    ),
                                   ),
                                   Divider(height: 1, color: Colors.grey.shade300),
                                   SwitchListTile(
