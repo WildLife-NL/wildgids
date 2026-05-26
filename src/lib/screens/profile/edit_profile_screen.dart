@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wildgids/interfaces/data_apis/profile_api_interface.dart';
 import 'package:wildgids/models/beta_models/profile_model.dart';
 import 'package:wildgids/utils/responsive_utils.dart';
+import 'package:wildgids/utils/text_display_utils.dart';
 
 class EditProfileScreen extends StatefulWidget {
   final Profile initialProfile;
@@ -16,14 +17,29 @@ class EditProfileScreen extends StatefulWidget {
   State<EditProfileScreen> createState() => _EditProfileScreenState();
 }
 
+String _genderLabelNl(String? apiValue) {
+  switch (apiValue?.toLowerCase()) {
+    case 'male':
+      return 'man';
+    case 'female':
+      return 'vrouw';
+    case 'other':
+      return 'anders';
+    default:
+      return apiValue ?? '';
+  }
+}
+
 class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _nameController;
   late TextEditingController _postcodeController;
   late TextEditingController _dateOfBirthController;
-  late TextEditingController _descriptionController;
+  late TextEditingController _notesController;
+  late TextEditingController _natureVisitFrequencyController;
   String? _selectedGender;
   bool _isLoading = false;
 
+  /// API-waarden (Engels); we tonen Nederlandse labels.
   final List<String> _genderOptions = ['female', 'male', 'other'];
 
   @override
@@ -31,17 +47,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.initState();
     _nameController = TextEditingController(text: widget.initialProfile.userName);
     _postcodeController = TextEditingController(text: widget.initialProfile.postcode ?? '');
+    
+    // Handle dateOfBirth - extract YYYY-MM-DD from ISO 8601 if needed
     String dateOfBirthStr = '';
-    if (widget.initialProfile.dateOfBirth != null &&
-        widget.initialProfile.dateOfBirth!.isNotEmpty) {
-      String raw = widget.initialProfile.dateOfBirth!;
-      if (raw.contains('T')) {
-        raw = raw.split('T')[0];
-      }
-      dateOfBirthStr = _formatDateForDisplay(raw);
+    if (widget.initialProfile.dateOfBirth != null && widget.initialProfile.dateOfBirth!.isNotEmpty) {
+      dateOfBirthStr = widget.initialProfile.dateOfBirth!.contains('T')
+          ? widget.initialProfile.dateOfBirth!.split('T')[0]
+          : widget.initialProfile.dateOfBirth!;
     }
     _dateOfBirthController = TextEditingController(text: dateOfBirthStr);
-    _descriptionController = TextEditingController(text: widget.initialProfile.description ?? '');
+    
+    _notesController = TextEditingController(text: widget.initialProfile.notes ?? '');
+    _natureVisitFrequencyController = TextEditingController(
+      text: widget.initialProfile.natureVisitFrequency?.toString() ?? '',
+    );
     _selectedGender = widget.initialProfile.gender;
   }
 
@@ -50,40 +69,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _nameController.dispose();
     _postcodeController.dispose();
     _dateOfBirthController.dispose();
-    _descriptionController.dispose();
+    _notesController.dispose();
+    _natureVisitFrequencyController.dispose();
     super.dispose();
-  }
-
-  String _formatDateForDisplay(String yyyyMmDd) {
-    final parts = yyyyMmDd.split('-');
-    if (parts.length == 3) {
-      return '${parts[2]}-${parts[1]}-${parts[0]}';
-    }
-    return yyyyMmDd;
-  }
-
-  String _formatDateForApi(String ddMmYyyy) {
-    final parts = ddMmYyyy.split('-');
-    if (parts.length == 3) {
-      return '${parts[2]}-${parts[1]}-${parts[0]}';
-    }
-    return ddMmYyyy;
   }
 
   Future<void> _selectDate() async {
     DateTime? initialDate;
-
+    
     if (_dateOfBirthController.text.isNotEmpty) {
       try {
+        // Handle both formats: YYYY-MM-DD and ISO 8601
         String dateStr = _dateOfBirthController.text;
         if (dateStr.contains('T')) {
+          // ISO 8601 format: 2001-10-29T00:00:00Z
           dateStr = dateStr.split('T')[0];
-        }
-        if (dateStr.contains('-')) {
-          final parts = dateStr.split('-');
-          if (parts.length == 3 && parts[0].length == 2) {
-            dateStr = '${parts[2]}-${parts[1]}-${parts[0]}';
-          }
         }
         initialDate = DateTime.parse(dateStr);
       } catch (e) {
@@ -102,15 +102,35 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     if (picked != null) {
       setState(() {
+        // Format as YYYY-MM-DD
         _dateOfBirthController.text =
-            '${picked.day.toString().padLeft(2, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.year}';
+            '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
       });
     }
+  }
+
+  int? _parseNatureVisitFrequencyInput() {
+    final text = _natureVisitFrequencyController.text.trim();
+    if (text.isEmpty) {
+      return widget.initialProfile.natureVisitFrequency;
+    }
+    final parsed = int.tryParse(text);
+    if (parsed == null || parsed < 0) {
+      return null;
+    }
+    return parsed;
   }
 
   Future<void> _saveProfile() async {
     if (_nameController.text.isEmpty || _nameController.text.length < 2) {
       _showErrorSnackBar('Naam moet minstens 2 karakters lang zijn');
+      return;
+    }
+
+    final natureVisitFrequency = _parseNatureVisitFrequencyInput();
+    if (_natureVisitFrequencyController.text.trim().isNotEmpty &&
+        natureVisitFrequency == null) {
+      _showErrorSnackBar('Natuurbezoekfrequentie moet een geheel getal â‰¥ 0 zijn');
       return;
     }
 
@@ -127,12 +147,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         userName: _nameController.text,
         postcode: _postcodeController.text.isNotEmpty ? _postcodeController.text : null,
         gender: _selectedGender,
-        dateOfBirth: _dateOfBirthController.text.isNotEmpty
-            ? _formatDateForApi(_dateOfBirthController.text)
-            : null,
-        description: _descriptionController.text.isNotEmpty ? _descriptionController.text : null,
+        dateOfBirth: _dateOfBirthController.text.isNotEmpty ? _dateOfBirthController.text : null,
+        notes: _notesController.text.isNotEmpty ? _notesController.text : null,
+        natureVisitFrequency: _parseNatureVisitFrequencyInput(),
         reportAppTerms: widget.initialProfile.reportAppTerms,
         recreationAppTerms: widget.initialProfile.recreationAppTerms,
+        firebaseCloudMessagingToken:
+            widget.initialProfile.firebaseCloudMessagingToken,
         location: widget.initialProfile.location,
         locationTimestamp: widget.initialProfile.locationTimestamp,
       );
@@ -141,6 +162,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       if (!mounted) return;
       _showSuccessSnackBar('Profiel succesvol bijgewerkt');
+
+      // Navigate back after a short delay
       await Future.delayed(const Duration(milliseconds: 500));
       if (!mounted) return;
       Navigator.of(context).pop(updatedProfile);
@@ -178,225 +201,260 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final responsive = context.responsive;
+    final fs = responsive.fontSize;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F8F6),
+      backgroundColor: Color(0XFFF5F6F4),
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final bool compact = constraints.maxHeight < 760;
-            final double topGap = compact ? 6 : 10;
-            final double midGap = compact ? 8 : 10;
-            final double buttonHeight = compact ? 56 : 64;
-            final double avatarSize = compact ? 44 : 52;
-
-            return Padding(
-              padding: EdgeInsets.fromLTRB(14, topGap, 14, compact ? 8 : 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Container(
-                    padding: EdgeInsets.fromLTRB(14, compact ? 8 : 10, 14, compact ? 8 : 10),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.08),
-                          blurRadius: 18,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        IconButton(
-                          icon: Icon(
-                            Icons.arrow_back_ios_new_rounded,
-                            size: compact ? 18 : 20,
-                            color: const Color(0xFF111827),
-                          ),
-                          splashRadius: 20,
-                          onPressed: () => Navigator.of(context).maybePop(),
-                        ),
-                        Container(
-                          width: avatarSize,
-                          height: avatarSize,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFF1F1F1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(Icons.person, size: compact ? 22 : 26, color: Colors.black45),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Profiel Bewerken',
-                            style: TextStyle(
-                              color: const Color(0xFF111827),
-                              fontSize: responsive.fontSize(compact ? 21 : 24),
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ],
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Back button
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_new),
+                    color: Colors.grey.shade900,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Card content
+                Card(
+                  color: Colors.white,
+                  elevation: 2,
+                  shadowColor: Colors.black26,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                    side: BorderSide(
+                      color: Color(0xFFB2B2B2),
+                      width: 1,
                     ),
                   ),
-                  SizedBox(height: midGap),
-                  Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Expanded(
-                          child: _buildSectionCard(
-                            compact: compact,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _buildSectionTitle(
-                                  responsive,
-                                  'Persoonlijke informatie',
-                                  compact: compact,
+                        // Profile Picture Section
+                        Center(
+                          child: Stack(
+                            children: [
+                              Container(
+                                width: 120,
+                                height: 120,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.grey.shade200,
                                 ),
-                                SizedBox(height: compact ? 6 : 8),
-                                _buildLabel(responsive, 'Naam *'),
-                                const SizedBox(height: 6),
-                                _buildTextField(
-                                  responsive,
-                                  _nameController,
-                                  'Voer uw naam in',
-                                  minLength: 2,
+                                child: Icon(
+                                  Icons.person,
+                                  size: 60,
+                                  color: Colors.grey.shade700,
                                 ),
-                                SizedBox(height: compact ? 6 : 8),
-                                _buildLabel(responsive, 'Geslacht'),
-                                const SizedBox(height: 6),
-                                _buildGenderDropdown(responsive),
-                                SizedBox(height: compact ? 6 : 8),
-                                _buildLabel(responsive, 'Geboortedatum'),
-                                const SizedBox(height: 6),
-                                _buildDateField(responsive),
-                              ],
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: midGap),
-                        Expanded(
-                          child: _buildSectionCard(
-                            compact: compact,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _buildSectionTitle(
-                                  responsive,
-                                  'Extra informatie',
-                                  compact: compact,
-                                ),
-                                SizedBox(height: compact ? 6 : 8),
-                                _buildLabel(responsive, 'Postcode'),
-                                const SizedBox(height: 6),
-                                _buildTextField(
-                                  responsive,
-                                  _postcodeController,
-                                  'Voer uw postcode in',
-                                ),
-                                SizedBox(height: compact ? 6 : 8),
-                                _buildLabel(responsive, 'Beschrijving'),
-                                const SizedBox(height: 6),
-                                Expanded(
-                                  child: _buildTextField(
-                                    responsive,
-                                    _descriptionController,
-                                    'Voer een beschrijving in',
-                                    maxLines: 3,
+                              ),
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Colors.white,
+                                      width: 2,
+                                    ),
+                                    color: Colors.white,
+                                  ),
+                                  child: Icon(
+                                    Icons.camera_alt_outlined,
+                                    size: 20,
+                                    color: Colors.grey.shade600,
                                   ),
                                 ),
-                              ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Form Fields
+                        // Full Name
+                        Text(
+                          'Volledige naam',
+                          style: TextStyle(
+                            fontSize: fs(13),
+                            color: Colors.grey.shade700,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        _buildTextField(
+                          responsive,
+                          _nameController,
+                          'Mila Pulvirenti',
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Email
+                        Text(
+                          'Email adres',
+                          style: TextStyle(
+                            fontSize: fs(13),
+                            color: Colors.grey.shade700,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: Tooltip(
+                            message: widget.initialProfile.email,
+                            waitDuration: const Duration(milliseconds: 400),
+                            child: Text(
+                              truncateEmail(
+                                widget.initialProfile.email,
+                                maxLength: 36,
+                              ),
+                              maxLines: 1,
+                              softWrap: false,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: fs(15),
+                                color: Colors.grey.shade700,
+                              ),
                             ),
                           ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Role Dropdown
+                        Text(
+                          'Rol',
+                          style: TextStyle(
+                            fontSize: fs(13),
+                            color: Colors.grey.shade700,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        _buildGenderDropdown(responsive),
+                        const SizedBox(height: 16),
+
+                        // Postcode
+                        Text(
+                          'Postcode',
+                          style: TextStyle(
+                            fontSize: fs(13),
+                            color: Colors.grey.shade700,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        _buildTextField(
+                          responsive,
+                          _postcodeController,
+                          '1234AB',
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Birth Date
+                        Text(
+                          'Geboortedatum',
+                          style: TextStyle(
+                            fontSize: fs(13),
+                            color: Colors.grey.shade700,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        _buildDateField(responsive),
+                        const SizedBox(height: 16),
+
+                        Text(
+                          'Natuurbezoek per week',
+                          style: TextStyle(
+                            fontSize: fs(13),
+                            color: Colors.grey.shade700,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        _buildTextField(
+                          responsive,
+                          _natureVisitFrequencyController,
+                          '0',
+                          keyboardType: TextInputType.number,
+                        ),
+                        const SizedBox(height: 16),
+
+                        Text(
+                          'Notities',
+                          style: TextStyle(
+                            fontSize: fs(13),
+                            color: Colors.grey.shade700,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        _buildTextField(
+                          responsive,
+                          _notesController,
+                          'Optionele notities',
+                          maxLines: 4,
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Save Button
+                        FilledButton(
+                          onPressed: _isLoading ? null : _saveProfile,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.grey.shade900,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(26),
+                              side: BorderSide(
+                                color: Colors.grey.shade400,
+                                width: 1.5,
+                              ),
+                            ),
+                          ),
+                          child: _isLoading
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Text(
+                                  'Opslaan',
+                                  style: TextStyle(
+                                    fontSize: fs(15),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
                         ),
                       ],
                     ),
                   ),
-                  SizedBox(height: midGap),
-                  SizedBox(
-                    width: double.infinity,
-                    height: buttonHeight,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF103D1E),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(32),
-                        ),
-                        elevation: 0,
-                      ),
-                      onPressed: _isLoading ? null : _saveProfile,
-                      child: _isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : Text(
-                              'Opslaan',
-                              style: TextStyle(
-                                fontSize: responsive.fontSize(compact ? 18 : 20),
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionCard({required Widget child, required bool compact}) {
-    return Container(
-      padding: EdgeInsets.fromLTRB(16, compact ? 12 : 16, 16, compact ? 12 : 18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.07),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
+                ),
+              ],
+            ),
           ),
-        ],
-      ),
-      child: child,
-    );
-  }
-
-  Widget _buildSectionTitle(
-    ResponsiveUtils responsive,
-    String title, {
-    required bool compact,
-  }) {
-    return Text(
-      title,
-      style: TextStyle(
-        color: const Color(0xFF111827),
-        fontSize: responsive.fontSize(compact ? 17 : 19),
-        fontWeight: FontWeight.w700,
-      ),
-    );
-  }
-
-  Widget _buildLabel(ResponsiveUtils responsive, String text) {
-    return Text(
-      text,
-      style: TextStyle(
-        color: const Color(0xFF374151),
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
@@ -406,41 +464,39 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     TextEditingController controller,
     String hint, {
     int maxLines = 1,
-    int minLength = 0,
+    TextInputType? keyboardType,
   }) {
     return TextField(
       controller: controller,
+      keyboardType: keyboardType,
       maxLines: maxLines,
       minLines: maxLines == 1 ? 1 : maxLines,
-      textAlignVertical: maxLines > 1 ? TextAlignVertical.top : TextAlignVertical.center,
       style: TextStyle(
-        color: const Color(0xFF111827),
-        fontSize: responsive.fontSize(16),
+        color: Colors.grey.shade900,
+        fontSize: responsive.fontSize(15),
       ),
       decoration: InputDecoration(
-        isDense: true,
         hintText: hint,
         hintStyle: TextStyle(
-          color: const Color(0xFF9CA3AF),
+          color: Colors.grey.shade500,
           fontSize: responsive.fontSize(15),
         ),
-        filled: true,
-        fillColor: Colors.white,
-        contentPadding: EdgeInsets.symmetric(
-          horizontal: responsive.wp(4),
-          vertical: maxLines > 1 ? 10 : 12,
-        ),
+        filled: false,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(22),
-          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide(color: Colors.grey.shade300),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(22),
-          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide(color: Colors.grey.shade300),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(22),
-          borderSide: const BorderSide(color: Color(0xFF103D1E), width: 1.5),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide(
+            color: const Color(0xFF37A904),
+            width: 1.5,
+          ),
         ),
       ),
     );
@@ -450,21 +506,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return GestureDetector(
       onTap: _selectDate,
       child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: responsive.wp(4),
-          vertical: responsive.hp(1.35),
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.grey.shade300),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -475,15 +521,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   : _dateOfBirthController.text,
               style: TextStyle(
                 color: _dateOfBirthController.text.isEmpty
-                    ? const Color(0xFF9CA3AF)
-                    : const Color(0xFF111827),
-                fontSize: responsive.fontSize(16),
+                    ? Colors.grey.shade500
+                    : Colors.grey.shade900,
+                fontSize: responsive.fontSize(15),
               ),
             ),
             Icon(
-              Icons.calendar_today,
-              color: const Color(0xFF103D1E),
-              size: responsive.sp(2),
+              Icons.expand_more,
+              color: Colors.grey.shade600,
+              size: 20,
             ),
           ],
         ),
@@ -493,25 +539,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Widget _buildGenderDropdown(ResponsiveUtils responsive) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: responsive.wp(4)),
+      padding: const EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.grey.shade300),
       ),
       child: DropdownButton<String>(
         value: _selectedGender,
         hint: Text(
           'Selecteer geslacht',
           style: TextStyle(
-            color: const Color(0xFF9CA3AF),
+            color: Colors.grey.shade500,
             fontSize: responsive.fontSize(15),
           ),
         ),
@@ -526,10 +565,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           return DropdownMenuItem<String>(
             value: value,
             child: Text(
-              value.toUpperCase(),
+              _genderLabelNl(value),
               style: TextStyle(
-                color: const Color(0xFF111827),
-                fontSize: responsive.fontSize(16),
+                color: Colors.grey.shade900,
+                fontSize: responsive.fontSize(15),
               ),
             ),
           );

@@ -11,6 +11,7 @@ import 'package:wildgids/models/animal_waarneming_models/animal_gender_view_coun
 import 'package:wildgids/models/enums/animal_gender.dart';
 import 'package:wildgids/models/animal_waarneming_models/view_count_model.dart';
 import 'package:wildgids/models/ui_models/image_list_model.dart';
+import 'package:wildgids/utils/api_datetime.dart';
 
 void main() {
   group('AnimalSightingReportWrapper', () {
@@ -359,7 +360,11 @@ void main() {
       expect(json['place']['latitude'], 52.1);
       expect(json['place']['longitude'], 4.1);
       expect(json['reportOfSighting']['involvedAnimals'], isA<List>());
-      expect(json['moment'], contains('2023-01-01T14:30:00'));
+      final selected = DateTime(2023, 1, 1, 14, 30);
+      expect(
+        DateTime.parse(json['moment'] as String).toUtc(),
+        selected.toUtc(),
+      );
     });
 
     test('should handle sighting with minimal required data', () {

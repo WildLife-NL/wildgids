@@ -246,6 +246,16 @@ class TrackingCacheManager {
     }
   }
 
+  Future<void> clearCache() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_cacheKey);
+      debugPrint('$greenLog[TrackingCacheManager] Cache cleared');
+    } catch (e) {
+      debugPrint('$redLog[TrackingCacheManager] Failed to clear cache: $e');
+    }
+  }
+
   /// Attempt to send a tracking reading immediately, cache if it fails
   Future<TrackingNotice?> sendOrCacheReading({
     required double lat,

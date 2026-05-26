@@ -2,14 +2,10 @@
 import 'package:provider/provider.dart';
 import 'package:wildgids/constants/app_colors.dart';
 import 'package:wildgids/constants/app_text_theme.dart';
-import 'package:wildgids/models/factories/button_model_factory.dart';
 import 'package:wildgids/screens/location/kaart_overview_screen.dart';
 import 'package:wildgids/screens/login/login_overlay.dart';
-import 'package:wildgids/widgets/shared_ui_widgets/brown_button.dart';
-import 'package:wildgids/widgets/login/verification_code_input.dart';
 import 'package:wildgids/interfaces/other/login_interface.dart';
 import 'package:wildgids/widgets/overlay/error_overlay.dart';
-import 'package:wildgids/utils/responsive_utils.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -119,12 +115,13 @@ void _handleVerifyCode() async {
     return;
   }
 
-  final result = await _loginManager.verifyCode(
-    emailController.text.trim(),
-    code,
-  );
-
-  if (result == false || result == null) {
+  try {
+    await _loginManager.verifyCode(
+      emailController.text.trim(),
+      code,
+    );
+  } catch (_) {
+    if (!mounted) return;
     setState(() {
       isError = true;
       errorMessage = 'Ongeldige verificatiecode';
@@ -134,9 +131,7 @@ void _handleVerifyCode() async {
 
   if (!mounted) return;
 
-  if (!mounted) return;
-
-Navigator.of(context).pushReplacement(
+  Navigator.of(context).pushReplacement(
   MaterialPageRoute(
     builder: (context) => const KaartOverviewScreen(),
   ),

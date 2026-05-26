@@ -76,20 +76,20 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
   static const double _clusterUntilZoom = 17.0;
 
   static const double _initialZoom = 15.0;
-  bool _followUser = true;
+  bool _followUser = false;
 
   bool _showAnimals = true;
   bool _showDetections = true;
   bool _showInteractions = true;
   bool _showAnimalsNew = true;
-  bool _showAnimalsMedium = false;
-  bool _showAnimalsOld = false;
+  bool _showAnimalsMedium = true;
+  bool _showAnimalsOld = true;
   bool _showDetectionsNew = true;
-  bool _showDetectionsMedium = false;
-  bool _showDetectionsOld = false;
+  bool _showDetectionsMedium = true;
+  bool _showDetectionsOld = true;
   bool _showInteractionsNew = true;
-  bool _showInteractionsMedium = false;
-  bool _showInteractionsOld = false;
+  bool _showInteractionsMedium = true;
+  bool _showInteractionsOld = true;
   AnimalPin? _selectedAnimalDetail;
   String? _selectedAnimalIconPath;
 
@@ -411,7 +411,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
   Future<void> _fetchAllForView() async {
     final map = context.read<MapProvider>();
 
-    debugPrint('[Map] Fetching data from vicinity endpoint');
+    debugPrint('[Map] Fetching map pins from tracking-reading API');
 
     await map.loadAllPinsFromVicinity();
 
@@ -517,7 +517,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
         _pendingZoom = _initialZoom;
         _applyPendingCamera();
 
-        debugPrint('[Bootstrap] Loading data from vicinity endpoint');
+        debugPrint('[Bootstrap] Loading map pins from tracking-reading API');
         try {
           await map.loadAllPinsFromVicinity().timeout(
             const Duration(seconds: 15),
@@ -1328,8 +1328,9 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                           children: [
                             fm.TileLayer(
                               urlTemplate: LocationMapManager.standardTileUrl,
-                              subdomains: const ['a', 'b', 'c', 'd'],
+                              subdomains: LocationMapManager.standardTileSubdomains,
                               userAgentPackageName: 'com.wildgids.app',
+                              retinaMode: LocationMapManager.tileRetinaMode(context),
                               keepBuffer: 1,
                             ),
 
@@ -1356,7 +1357,6 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                                   _iconStyleForTimestamp(
                                                     pin.seenAt,
                                                   );
-                                              final Color animalColor = Colors.grey;
                                               final mapRotation =
                                                   map
                                                       .mapController
@@ -1416,7 +1416,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                                                             .size *
                                                                         0.9,
                                                                     color:
-                                                                        animalColor,
+                                                                        style.color,
                                                                   );
                                                                 },
                                                               ),
@@ -1425,7 +1425,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                                           : Icon(
                                                             Icons.pets,
                                                             size: style.size,
-                                                            color: animalColor,
+                                                            color: style.color,
                                                           ),
                                                 ),
                                               );
@@ -1497,7 +1497,6 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                                           _iconStyleForTimestamp(
                                                             pin.seenAt,
                                                           );
-                                                      final Color animalColor = Colors.grey;
                                                       return _getAnimalIconPath(
                                                                 pin.speciesName,
                                                               ) !=
@@ -1508,7 +1507,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                                             child: ColorFiltered(
                                                               colorFilter:
                                                                   ColorFilter.mode(
-                                                                    animalColor,
+                                                                    style.color,
                                                                     BlendMode
                                                                         .srcIn,
                                                                   ),
@@ -1535,7 +1534,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                                                             .size *
                                                                         0.9,
                                                                     color:
-                                                                        animalColor,
+                                                                        style.color,
                                                                   );
                                                                 },
                                                               ),
@@ -1544,7 +1543,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                                           : Icon(
                                                             Icons.pets,
                                                             size: style.size,
-                                                            color: animalColor,
+                                                            color: style.color,
                                                           );
                                                     },
                                                   ),
@@ -2071,16 +2070,17 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   IconButton(
-                                    tooltip: 'Volgen',
+                                    tooltip: _followUser
+                                        ? 'Kaart volgt je locatie (uit)'
+                                        : 'Kaart volgt je locatie (aan)',
+                                    onLongPress: _loadTrackingHistory,
                                     onPressed: () {
-                                      if (_showTrackingHistory) {
-                                        setState(() {
+                                      setState(() {
+                                        if (_showTrackingHistory) {
                                           _showTrackingHistory = false;
-                                          _followUser = !_followUser;
-                                        });
-                                      } else {
-                                        _loadTrackingHistory();
-                                      }
+                                        }
+                                        _followUser = !_followUser;
+                                      });
                                     },
                                     icon: Icon(
                                       Icons.directions_walk,

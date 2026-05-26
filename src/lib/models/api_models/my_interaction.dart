@@ -1,3 +1,5 @@
+import 'package:wildgids/utils/api_datetime.dart';
+
 class MyInteractionLocation {
   final double latitude;
   final double longitude;
@@ -128,8 +130,18 @@ class ReportOfDamage {
 
 class ReportOfSighting {
   final List<InvolvedAnimal> involvedAnimals;
+  final String? humanActivity;
+  final String? humanActivityOther;
+  final String? perceivedAnimalActivity;
+  final String? perceivedAnimalActivityOther;
 
-  ReportOfSighting({required this.involvedAnimals});
+  ReportOfSighting({
+    required this.involvedAnimals,
+    this.humanActivity,
+    this.humanActivityOther,
+    this.perceivedAnimalActivity,
+    this.perceivedAnimalActivityOther,
+  });
 
   factory ReportOfSighting.fromJson(Map<String, dynamic> json) {
     return ReportOfSighting(
@@ -138,11 +150,24 @@ class ReportOfSighting {
               ?.map((e) => InvolvedAnimal.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
+      humanActivity: json['humanActivity'] as String?,
+      humanActivityOther: json['humanActivityOther'] as String?,
+      perceivedAnimalActivity: json['perceivedAnimalActivity'] as String?,
+      perceivedAnimalActivityOther:
+          json['perceivedAnimalActivityOther'] as String?,
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {'involvedAnimals': involvedAnimals.map((e) => e.toJson()).toList()};
+    return {
+      'involvedAnimals': involvedAnimals.map((e) => e.toJson()).toList(),
+      if (humanActivity != null) 'humanActivity': humanActivity,
+      if (humanActivityOther != null) 'humanActivityOther': humanActivityOther,
+      if (perceivedAnimalActivity != null)
+        'perceivedAnimalActivity': perceivedAnimalActivity,
+      if (perceivedAnimalActivityOther != null)
+        'perceivedAnimalActivityOther': perceivedAnimalActivityOther,
+    };
   }
 }
 
@@ -353,9 +378,7 @@ class MyInteraction {
       id: json['ID'] ?? '',
       description: json['description'] ?? '',
       location: MyInteractionLocation.fromJson(json['location'] ?? {}),
-      moment: DateTime.parse(
-        json['moment'] ?? DateTime.now().toIso8601String(),
-      ),
+      moment: ApiDateTime.parse(json['moment']?.toString()),
       place: MyInteractionLocation.fromJson(json['place'] ?? {}),
       reportOfCollision:
           json['reportOfCollision'] != null
@@ -369,9 +392,7 @@ class MyInteraction {
           json['reportOfSighting'] != null
               ? ReportOfSighting.fromJson(json['reportOfSighting'])
               : null,
-      timestamp: DateTime.parse(
-        json['timestamp'] ?? DateTime.now().toIso8601String(),
-      ),
+      timestamp: ApiDateTime.parse(json['timestamp']?.toString()),
       species: InteractionSpecies.fromJson(json['species'] ?? {}),
       user: InteractionUser.fromJson(json['user'] ?? {}),
       type: InteractionTypeInfo.fromJson(json['type'] ?? {}),

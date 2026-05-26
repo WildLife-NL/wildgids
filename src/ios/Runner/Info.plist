@@ -9,6 +9,11 @@
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>We use your location to show nearby wildlife and relevant map features.</string>
 
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Bluetooth is nodig om collars te scannen voor contacttracing.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>Bluetooth is nodig om collars te scannen voor contacttracing.</string>
+
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

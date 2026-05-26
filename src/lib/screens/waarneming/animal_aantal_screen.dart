@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wildgids/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
-import 'package:wildgids/screens/waarneming/animal_waarneming_details_screen.dart';
-import 'package:wildgids/screens/waarneming/animal_waarneming_summary_screen.dart';
+import 'package:wildgids/screens/waarneming/animal_activity_screen.dart';
 import 'package:wildgids/utils/species_image_resolver.dart';
 
 class AnimalAantalScreen extends StatefulWidget {
@@ -369,11 +368,10 @@ class _AnimalAantalScreenState extends State<AnimalAantalScreen> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) =>
-                                          AnimalWaarnemingDetailsScreen(
-                                            animalIndex: 0,
-                                            totalCount: currentCount,
-                                          ),
+                                      builder: (context) => AnimalActivityScreen(
+                                        totalCount: currentCount,
+                                        proceedToDetails: true,
+                                      ),
                                     ),
                                   );
                                 }
@@ -433,14 +431,13 @@ class _AnimalAantalScreenState extends State<AnimalAantalScreen> {
                       child: ElevatedButton(
                         onPressed: () {
                           if (currentCount > 0) {
-                            // Navigate directly to summary, skipping details
+                            _saveAnimalCount();
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    AnimalWaarnemingSummaryScreen(
-                                      totalCount: currentCount,
-                                    ),
+                                builder: (context) => AnimalActivityScreen(
+                                  totalCount: currentCount,
+                                ),
                               ),
                             );
                           }

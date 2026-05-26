@@ -50,6 +50,15 @@ class NotificationService {
     _initialized = true;
   }
 
+  Future<void> requestAndroidNotificationPermission() async {
+    if (!_initialized) await init();
+    if (!kIsWeb && Platform.isAndroid) {
+      final androidImpl = _plugin.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
+      await androidImpl?.requestNotificationsPermission();
+    }
+  }
+
   Future<void> show({
     required String title,
     required String body,

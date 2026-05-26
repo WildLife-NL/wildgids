@@ -37,18 +37,25 @@ class Experiment {
       convertedLivingLabs = LivingLabs.fromJson(json["livingLab"]);
     }
 
+    final rawUser = json['user'];
+    final user = rawUser is Map<String, dynamic>
+        ? User.fromJson(rawUser)
+        : rawUser is Map
+            ? User.fromJson(Map<String, dynamic>.from(rawUser))
+            : User(id: 'N/A', email: null);
+
     return Experiment(
-      id: json["ID"],
-      description: json["description"],
+      id: json['ID']?.toString() ?? '',
+      description: json['description']?.toString() ?? '',
       end: contertedEnd,
       livingLab: convertedLivingLabs,
-      messageActivity: json["messageActivity"],
-      name: json["name"],
-      numberOfMessages: json["numberOfMessages"],
-      numberOfQuestionnaires: json["numberOfQuestionnaires"],
-      questionnaireActivity: json["questionnaireActivity"],
-      start: DateTime.parse(json["start"]),
-      user: User.fromJson(json["user"]),
+      messageActivity: json['messageActivity'],
+      name: json['name']?.toString() ?? '',
+      numberOfMessages: json['numberOfMessages'],
+      numberOfQuestionnaires: json['numberOfQuestionnaires'],
+      questionnaireActivity: json['questionnaireActivity'],
+      start: DateTime.parse(json['start'].toString()),
+      user: user,
     );
   }
 

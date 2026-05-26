@@ -1,13 +1,14 @@
 import 'package:geolocator/geolocator.dart';
 
-/// Global switch to mock location everywhere maps use current position.
+/// Vaste testlocatie voor GPS in de hele app (kaart, tracking, waarneming).
 class MockLocation {
-  // Mock location is disabled so the app always uses live GPS location.
-  static bool get enabled => false;
-  static const double lat = 52.088130;
-  static const double lon = 5.170465;
+  /// Zet op `false` om weer echte GPS te gebruiken.
+  static const bool enabled = true;
 
-  /// Create a Position with our mocked coordinates using reasonable defaults.
+  /// Eindhoven-omgeving (jouw coördinaten).
+  static const double lat = 51.42611;
+  static const double lon = 5.48261;
+
   static Position position() => Position(
         latitude: lat,
         longitude: lon,
@@ -20,4 +21,13 @@ class MockLocation {
         altitudeAccuracy: 0,
         headingAccuracy: 0,
       );
+
+  static Future<Position> current({
+    LocationSettings locationSettings = const LocationSettings(
+      accuracy: LocationAccuracy.high,
+    ),
+  }) async {
+    if (enabled) return position();
+    return Geolocator.getCurrentPosition(locationSettings: locationSettings);
+  }
 }

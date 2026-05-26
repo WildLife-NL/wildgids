@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -10,6 +12,10 @@ import 'package:wildgids/data_managers/profile_api.dart';
 import 'package:wildgids/data_managers/questionaire_api.dart';
 import 'package:wildgids/data_managers/species_api.dart';
 import 'package:wildgids/data_managers/vicinity_api.dart';
+import 'package:wildgids/data_managers/contact_api.dart';
+import 'package:wildgids/constants/sighting_report_activities.dart';
+import 'package:wildgids/services/contact_tracing_coordinator.dart';
+import 'package:wildgids/services/contact_tracing_monitor.dart';
 import 'package:wildgids/data_managers/tracking_api.dart';
 import 'package:wildgids/managers/api_managers/tracking_cache_manager.dart';
 import 'package:wildgids/interfaces/waarneming_flow/animal_interface.dart';
@@ -84,6 +90,11 @@ void main() async {
 
   final apiClient = ApiClient(dotenv.get('DEV_BASE_URL'));
   final appConfig = AppConfig(apiClient);
+  try {
+    await SightingReportActivityCatalog.preload(apiClient);
+  } catch (e) {
+    debugPrint('[main] SightingReport schema preload failed: $e');
+  }
 
   final authApi = AuthApi(apiClient);
   final profileApi = ProfileApi(apiClient);
@@ -92,6 +103,14 @@ void main() async {
   final questionnaireAPI = QuestionaireApi(apiClient);
   final responseAPI = ResponseApi(apiClient);
   final vicinityApi = VicinityApi(apiClient);
+  final contactApi = ContactApi(apiClient);
+  final contactTracingMonitor = ContactTracingMonitor(contactApi);
+  final contactTracingCoordinator = ContactTracingCoordinator(
+    contactApi: contactApi,
+    monitor: contactTracingMonitor,
+    navigatorKey: appStateProvider.navigatorKey,
+  );
+  unawaited(contactTracingCoordinator.initialize());
 
   final loginManager = LoginManager(authApi, profileApi);
   final filterManager = FilterManager();
@@ -152,6 +171,13 @@ void main() async {
         ),
         Provider<AppConfig>.value(value: appConfig),
         Provider<ApiClient>.value(value: apiClient),
+        Provider<ContactApi>.value(value: contactApi),
+        ChangeNotifierProvider<ContactTracingMonitor>.value(
+          value: contactTracingMonitor,
+        ),
+        ChangeNotifierProvider<ContactTracingCoordinator>.value(
+          value: contactTracingCoordinator,
+        ),
         Provider<AuthApiInterface>.value(value: authApi),
         Provider<ProfileApiInterface>.value(value: profileApi),
         Provider<SpeciesApiInterface>.value(value: speciesApi),
@@ -195,34 +221,7 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _ensureLocationSharingEnabled();
-    }
-  }
-
-  Future<void> _ensureLocationSharingEnabled() async {
-    if (!mounted) return;
-    final appState = context.read<AppStateProvider>();
-    if (!appState.isLocationTrackingEnabled) {
-      await appState.setLocationTrackingEnabled(true);
-    }
-  }
-
+class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return _MediaQueryWrapper(

@@ -9,6 +9,7 @@ extension InteractionToAnimalPin on InteractionQueryResult {
       lon: lon,
       seenAt: moment,
       speciesName: speciesName ?? typeName,
+      locationLabel: placeName,
     );
   }
 }

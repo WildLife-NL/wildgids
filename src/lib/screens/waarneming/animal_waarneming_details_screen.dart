@@ -123,11 +123,11 @@ class _AnimalWaarnemingDetailsScreenState
         ),
       );
     } else {
-      // Last animal - go to summary screen
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => AnimalWaarnemingSummaryScreen(totalCount: widget.totalCount),
+          builder: (context) =>
+              AnimalWaarnemingSummaryScreen(totalCount: widget.totalCount),
         ),
       );
     }

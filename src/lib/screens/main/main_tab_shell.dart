@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:wildgids/models/enums/nav_tab.dart';
+import 'package:wildgids/services/contact_tracing_coordinator.dart';
 import 'package:wildgids/screens/game/challenge_screen.dart';
 import 'package:wildgids/screens/location/kaart_overview_screen.dart';
 //import 'package:wildgids/screens/species/species_list_screen.dart';
@@ -35,6 +39,15 @@ class _MainTabShellState extends State<MainTabShell> {
       case NavTab.instellingen:
         return const ProfileScreen(showBottomNav: false);
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(context.read<ContactTracingCoordinator>().initialize());
+    });
   }
 
   void _onTabSelected(NavTab tab) {

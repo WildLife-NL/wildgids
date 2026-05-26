@@ -250,7 +250,13 @@ class _LocationDateTimeScreenState extends State<LocationDateTimeScreen> {
                                         fm.TileLayer(
                                           urlTemplate:
                                               LocationMapManager.standardTileUrl,
+                                          subdomains:
+                                              LocationMapManager.standardTileSubdomains,
                                           userAgentPackageName: 'com.wildgids.app',
+                                          retinaMode:
+                                              LocationMapManager.tileRetinaMode(
+                                            context,
+                                          ),
                                         ),
                                         fm.MarkerLayer(
                                           markers: [

@@ -23,12 +23,17 @@ class AppStateProvider with ChangeNotifier {
   bool _isLocationTrackingEnabled = false;
   bool get isLocationTrackingEnabled => _isLocationTrackingEnabled;
 
+  bool _notificationsEnabled = true;
+  bool get notificationsEnabled => _notificationsEnabled;
+
   ReportType? get currentReportType => _currentReportType;
-  Position? get cachedPosition => _cachedPosition;
+  Position? get cachedPosition =>
+      MockLocation.enabled ? MockLocation.position() : _cachedPosition;
   String? get cachedAddress => _cachedAddress;
   DateTime? get lastLocationUpdate => _lastLocationUpdate;
 
   bool get isLocationCacheValid {
+    if (MockLocation.enabled) return true;
     if (_lastLocationUpdate == null || _cachedPosition == null) {
       debugPrint(
         '\x1B[33m[AppStateProvider] Cache invalid: No cached data\x1B[0m',
@@ -125,14 +130,12 @@ class AppStateProvider with ChangeNotifier {
 
   Future<void> updateLocationCache() async {
     try {
-      final position = MockLocation.enabled
-          ? MockLocation.position()
-          : await Geolocator.getCurrentPosition(
-              locationSettings: const LocationSettings(
-                accuracy: LocationAccuracy.high,
-                timeLimit: Duration(seconds: 5),
-              ),
-            );
+      final position = await MockLocation.current(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 5),
+        ),
+      );
 
       final locationService = LocationMapManager();
       final address = await locationService.getAddressFromPosition(position);
@@ -161,37 +164,46 @@ class AppStateProvider with ChangeNotifier {
   Future<void> loadLocationTrackingPreference() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      _isLocationTrackingEnabled = true;
-      await prefs.setBool('location_tracking_enabled', true);
+      _isLocationTrackingEnabled =
+          prefs.getBool('location_tracking_enabled') ?? false;
+      _notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
       debugPrint(
-        '[AppStateProvider] Loaded location tracking preference: $_isLocationTrackingEnabled',
+        '[AppStateProvider] Loaded location tracking: $_isLocationTrackingEnabled, '
+        'notifications: $_notificationsEnabled',
       );
       notifyListeners();
     } catch (e) {
       debugPrint(
-        '[AppStateProvider] Failed to load location tracking preference: $e',
+        '[AppStateProvider] Failed to load preferences: $e',
       );
-      _isLocationTrackingEnabled = true;
+      _isLocationTrackingEnabled = false;
+      _notificationsEnabled = true;
     }
   }
 
-  /// Toggle location tracking on/off
   Future<void> setLocationTrackingEnabled(bool enabled) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('location_tracking_enabled', true);
-      _isLocationTrackingEnabled = true;
-      if (!enabled) {
-        debugPrint(
-          '[AppStateProvider] Disable request ignored: location tracking is mandatory',
-        );
-      } else {
-        debugPrint('[AppStateProvider] Location tracking enabled');
-      }
+      await prefs.setBool('location_tracking_enabled', enabled);
+      _isLocationTrackingEnabled = enabled;
+      debugPrint('[AppStateProvider] Location tracking: $enabled');
       notifyListeners();
     } catch (e) {
       debugPrint(
         '[AppStateProvider] Failed to save location tracking preference: $e',
+      );
+    }
+  }
+
+  Future<void> setNotificationsEnabled(bool enabled) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('notifications_enabled', enabled);
+      _notificationsEnabled = enabled;
+      notifyListeners();
+    } catch (e) {
+      debugPrint(
+        '[AppStateProvider] Failed to save notifications preference: $e',
       );
     }
   }

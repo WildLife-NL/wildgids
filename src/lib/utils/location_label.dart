@@ -109,3 +109,28 @@ String formatFriendlyLocation(double lat, double lon) {
   final coords = '${lat.toStringAsFixed(3)}/${lon.toStringAsFixed(3)}';
   return area.isNotEmpty ? '$area $coords' : coords;
 }
+
+/// Short label for map pins (street + city when possible).
+String formatAddressForDisplay(String address) {
+  final parts = address
+      .split(',')
+      .map((e) => e.trim())
+      .where((e) => e.isNotEmpty)
+      .toList();
+  if (parts.isEmpty) return address;
+
+  String stripPostal(String value) =>
+      value.replaceFirst(RegExp(r'^\d{4}\s*'), '').trim();
+
+  if (parts.length >= 3) {
+    final street = parts.first;
+    final city = stripPostal(parts[parts.length - 2]);
+    if (city.isNotEmpty && street.isNotEmpty) {
+      return '$street, $city';
+    }
+  }
+  if (parts.length >= 2) {
+    return stripPostal(parts[parts.length - 2]);
+  }
+  return parts.first;
+}

@@ -15,12 +15,13 @@ import 'package:wildgids/interfaces/data_apis/tracking_api_interface.dart'
     show TrackingApiInterface, TrackingNotice;
 import 'package:wildgids/managers/api_managers/tracking_cache_manager.dart';
 import 'package:wildgids/interfaces/data_apis/vicinity_api_interface.dart';
+import 'package:wildgids/models/api_models/vicinity.dart';
+import 'package:wildgids/utils/tracking_vicinity_parser.dart';
 import 'package:wildgids/utils/notification_service.dart';
 import 'dart:async';
 
 class MapProvider extends ChangeNotifier {
   final LivingLabManager _livingLabManager = LivingLabManager();
-  static const double _maxVicinityDistanceMeters = 10000; // 10 km
   TrackingApiInterface? _trackingApi;
   TrackingCacheManager? _trackingCacheManager;
   Position? selectedPosition;
@@ -116,30 +117,31 @@ class MapProvider extends ChangeNotifier {
         );
 
         if (notice != null) {
+          if (notice.vicinity != null) {
+            _applyVicinity(notice.vicinity!);
+          }
           _lastTrackingNotice = notice;
           _lastSentTrackingPosition = pos;
-          debugPrint(
-            '[MapProvider] ðŸ”” Got tracking notice, calling notifyListeners()',
-          );
-          final title =
-              notice.severity == 1
-                  ? 'Waarschuwing'
-                  : (notice.severity == 2 ? 'Melding' : 'Informatie');
-          NotificationService.instance.show(title: title, body: notice.text);
-          notifyListeners(); // if any UI wants to react to changes
-          debugPrint(
-            '[MapProvider] âœ“ tracking-reading OK; notice="${notice.text}"'
-            ' sev=${notice.severity ?? '-'}',
-          );
+          if (notice.hasMessage) {
+            debugPrint(
+              '[MapProvider] Got tracking notice, calling notifyListeners()',
+            );
+            final title =
+                notice.severity == 1
+                    ? 'Waarschuwing'
+                    : (notice.severity == 2 ? 'Melding' : 'Informatie');
+            NotificationService.instance.show(title: title, body: notice.text);
+          }
+          notifyListeners();
         } else {
           _lastSentTrackingPosition = pos;
           debugPrint(
-            '[MapProvider] âœ“ tracking-reading cached or sent; no notice from backend',
+            '[MapProvider] tracking-reading cached or sent; no notice from backend',
           );
         }
         return notice;
       } catch (e) {
-        debugPrint('[MapProvider] âŒ tracking-reading failed: $e');
+        debugPrint('[MapProvider] tracking-reading failed: $e');
         return null;
       }
     }
@@ -163,26 +165,21 @@ class MapProvider extends ChangeNotifier {
       );
 
       if (notice != null) {
+        if (notice.vicinity != null) {
+          _applyVicinity(notice.vicinity!);
+        }
         _lastTrackingNotice = notice;
         _lastSentTrackingPosition = pos;
-        debugPrint(
-          '[MapProvider] ðŸ”” Got tracking notice, calling notifyListeners()',
-        );
-        final title =
-            notice.severity == 1
-                ? 'Waarschuwing'
-                : (notice.severity == 2 ? 'Melding' : 'Informatie');
-        NotificationService.instance.show(title: title, body: notice.text);
-        notifyListeners(); // if any UI wants to react to changes
-        debugPrint(
-          '[MapProvider] âœ“ tracking-reading OK; notice="${notice.text}"'
-          ' sev=${notice.severity ?? '-'}',
-        );
+        if (notice.hasMessage) {
+          final title =
+              notice.severity == 1
+                  ? 'Waarschuwing'
+                  : (notice.severity == 2 ? 'Melding' : 'Informatie');
+          NotificationService.instance.show(title: title, body: notice.text);
+        }
+        notifyListeners();
       } else {
         _lastSentTrackingPosition = pos;
-        debugPrint(
-          '[MapProvider] âœ“ tracking-reading OK; no notice from backend',
-        );
       }
       return notice;
     } catch (e) {
@@ -209,6 +206,10 @@ class MapProvider extends ChangeNotifier {
   String? _detectionPinsError;
 
   VicinityApiInterface? _vicinityApi;
+  String? _lastPinsLoadSource;
+
+  /// Last API used for map pins, e.g. `GET /tracking-readings/me/`.
+  String? get lastPinsLoadSource => _lastPinsLoadSource;
 
   void setVicinityApi(VicinityApiInterface api) {
     _vicinityApi = api;
@@ -343,49 +344,91 @@ class MapProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void _applyVicinity(Vicinity vicinity) {
+    _animalPins
+      ..clear()
+      ..addAll(vicinity.animals);
+    _detectionPins
+      ..clear()
+      ..addAll(vicinity.detections);
+    _interactions
+      ..clear()
+      ..addAll(vicinity.interactions);
+    _animalPinsError = null;
+    _detectionPinsError = null;
+    _interactionsError = null;
+    _animalPinsLoading = false;
+    _detectionPinsLoading = false;
+    _interactionsLoading = false;
+  }
+
+  /// Loads map pins from the tracking-reading API.
+  ///
+  /// With a known position, always [POST /tracking-reading/] first so the
+  /// response includes `animals`, `detections` and `interactions` in the
+  /// vicinity of that reading (OpenAPI). Falls back to
+  /// [GET /tracking-readings/me/] on failure.
+  ///
+  /// Periodic background pings are separate ([startTracking]) and follow
+  /// the profile "Locatie delen" setting.
   Future<void> loadAllPinsFromVicinity() async {
-    if (_vicinityApi == null) {
-      debugPrint(
-        '[MapProvider] âš ï¸ VicinityApi not set - falling back to individual calls',
-      );
-      return;
-    }
+    debugPrint(
+      '[MapProvider] Loading map pins via tracking-reading API',
+    );
 
-    debugPrint('[MapProvider] ðŸ“ Loading all pins from vicinity endpoint');
+    _animalPinsLoading = true;
+    _detectionPinsLoading = true;
+    _interactionsLoading = true;
+    _animalPinsError = null;
+    _detectionPinsError = null;
+    _interactionsError = null;
+    notifyListeners();
 
-    try {
-      _animalPinsLoading = true;
-      _detectionPinsLoading = true;
-      _interactionsLoading = true;
-      _animalPinsError = null;
-      _detectionPinsError = null;
-      _interactionsError = null;
-      notifyListeners();
-
-      final vicinity = await _vicinityApi!.getMyVicinity();
-
-      final filteredAnimals = _filterNearbyAnimals(vicinity.animals);
-      final filteredDetections = _filterNearbyDetections(vicinity.detections);
-      final filteredInteractions = _filterNearbyInteractions(
-        vicinity.interactions,
-      );
-
-      _animalPins
-        ..clear()
-        ..addAll(filteredAnimals);
-      _detectionPins
-        ..clear()
-        ..addAll(filteredDetections);
-      _interactions
-        ..clear()
-        ..addAll(filteredInteractions);
-
+    final vicinityApi = _vicinityApi;
+    if (vicinityApi == null) {
+      const message = 'Geen kaartdata (VicinityApi niet beschikbaar)';
+      _animalPinsError = message;
+      _detectionPinsError = message;
+      _interactionsError = message;
       _animalPinsLoading = false;
       _detectionPinsLoading = false;
       _interactionsLoading = false;
+      notifyListeners();
+      return;
+    }
+
+    try {
+      Vicinity vicinity;
+      String source;
+
+      final pos = currentPosition ?? selectedPosition;
+      final getVicinity = await vicinityApi.getMyVicinity();
+
+      if (pos != null) {
+        try {
+          final postVicinity = await vicinityApi.getVicinityForCurrentLocation(
+            latitude: pos.latitude,
+            longitude: pos.longitude,
+          );
+          vicinity = TrackingVicinityParser.merge(postVicinity, getVicinity);
+          source = TrackingVicinityParser.isEmpty(postVicinity)
+              ? 'GET /tracking-readings/me/ (POST empty)'
+              : 'POST /tracking-reading/ + GET /tracking-readings/me/';
+        } catch (e) {
+          debugPrint('[MapProvider] POST /tracking-reading/ failed: $e');
+          vicinity = getVicinity;
+          source = 'GET /tracking-readings/me/';
+        }
+      } else {
+        vicinity = getVicinity;
+        source = 'GET /tracking-readings/me/';
+      }
+
+      _lastPinsLoadSource = source;
+      _applyVicinity(vicinity);
 
       debugPrint(
-        '[MapProvider] âœ“ Vicinity loaded (after distance filter): '
+        '[MapProvider] Pins from $_lastPinsLoadSource: '
         '${_animalPins.length} animals, '
         '${_detectionPins.length} detections, '
         '${_interactions.length} interactions',
@@ -479,15 +522,17 @@ class MapProvider extends ChangeNotifier {
         debugPrint('[MapProvider] Interaction notification skipped: $e');
       }
     } catch (e) {
-      debugPrint('[MapProvider] âŒ Vicinity load failed: $e');
-      _animalPinsError = e.toString();
-      _detectionPinsError = e.toString();
-      _interactionsError = e.toString();
-      _animalPinsLoading = false;
-      _detectionPinsLoading = false;
-      _interactionsLoading = false;
-      notifyListeners();
+      debugPrint('[MapProvider] tracking-reading vicinity load failed: $e');
+      const message = 'Geen kaartdata (tracking-readings mislukt)';
+      _animalPinsError = message;
+      _detectionPinsError = message;
+      _interactionsError = message;
     }
+
+    _animalPinsLoading = false;
+    _detectionPinsLoading = false;
+    _interactionsLoading = false;
+    notifyListeners();
   }
 
   void setMockVicinity({
@@ -518,14 +563,12 @@ class MapProvider extends ChangeNotifier {
   Future<void> _sendTrackingNow() async {
     try {
       final pos = currentPosition ??
-          (MockLocation.enabled
-              ? MockLocation.position()
-              : await Geolocator.getCurrentPosition(
-                  locationSettings: const LocationSettings(
-                    accuracy: LocationAccuracy.medium,
-                    timeLimit: Duration(seconds: 7),
-                  ),
-                ));
+          await MockLocation.current(
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.medium,
+              timeLimit: Duration(seconds: 7),
+            ),
+          );
       await sendTrackingPingFromPosition(pos);
     } catch (e) {
       debugPrint('[MapProvider] tracking ping skipped: $e');
@@ -565,54 +608,25 @@ class MapProvider extends ChangeNotifier {
     debugPrint('[MapProvider] tracking STOPPED');
   }
 
+  void setVicinityNotificationsEnabled(bool enabled) {
+    // Vicinity map notifications are controlled elsewhere; kept for profile UI wiring.
+  }
+
+  void clearUserLocationAndStopTracking() {
+    stopTracking();
+    currentPosition = null;
+    currentAddress = '';
+    selectedPosition = null;
+    selectedAddress = '';
+    _lastSentTrackingPosition = null;
+    _trackingCacheManager?.clearCache();
+    notifyListeners();
+  }
+
   @override
   void dispose() {
     _trackingTimer?.cancel();
     super.dispose();
-  }
-
-  List<AnimalPin> _filterNearbyAnimals(List<AnimalPin> animals) {
-    final origin = currentPosition;
-    if (origin == null) return animals;
-    return animals.where((animal) {
-      final distance = Geolocator.distanceBetween(
-        origin.latitude,
-        origin.longitude,
-        animal.lat,
-        animal.lon,
-      );
-      return distance <= _maxVicinityDistanceMeters;
-    }).toList();
-  }
-
-  List<DetectionPin> _filterNearbyDetections(List<DetectionPin> detections) {
-    final origin = currentPosition;
-    if (origin == null) return detections;
-    return detections.where((detection) {
-      final distance = Geolocator.distanceBetween(
-        origin.latitude,
-        origin.longitude,
-        detection.lat,
-        detection.lon,
-      );
-      return distance <= _maxVicinityDistanceMeters;
-    }).toList();
-  }
-
-  List<InteractionQueryResult> _filterNearbyInteractions(
-    List<InteractionQueryResult> interactions,
-  ) {
-    final origin = currentPosition;
-    if (origin == null) return interactions;
-    return interactions.where((interaction) {
-      final distance = Geolocator.distanceBetween(
-        origin.latitude,
-        origin.longitude,
-        interaction.lat,
-        interaction.lon,
-      );
-      return distance <= _maxVicinityDistanceMeters;
-    }).toList();
   }
 }
 

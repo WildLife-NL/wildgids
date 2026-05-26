@@ -4,6 +4,7 @@ import 'package:wildgids/constants/app_colors.dart';
 import 'package:wildgids/data_managers/my_interaction_api.dart';
 import 'package:wildgids/data_managers/api_client.dart';
 import 'package:wildgids/models/api_models/my_interaction.dart';
+import 'package:wildgids/utils/api_datetime.dart';
 import 'package:wildgids/utils/location_label.dart';
 import 'package:wildgids/screens/logbook/logbook_screen.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
@@ -153,9 +154,7 @@ class _InteractionCard extends StatelessWidget {
 
   const _InteractionCard({required this.interaction});
 
-  String _formatDateTime(DateTime dateTime) {
-    return DateFormat('dd MMM yyyy, HH:mm').format(dateTime);
-  }
+  String _formatDateTime(DateTime dateTime) => ApiDateTime.formatNl(dateTime);
 
   Widget _buildReportDetails() {
     if (interaction.reportOfCollision != null) {

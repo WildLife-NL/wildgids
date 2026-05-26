@@ -186,18 +186,9 @@ class ProfileApi implements ProfileApiInterface {
 
   @override
   Future<Profile> updateMyProfile(Profile updatedProfile) async {
-    final body = {
-      'name': updatedProfile.userName,
-      'email': updatedProfile.email,
-      'gender': updatedProfile.gender,
-      'postcode': updatedProfile.postcode,
-      'reportAppTerms': updatedProfile.reportAppTerms ?? false,
-      'recreationAppTerms': updatedProfile.recreationAppTerms ?? false,
-      if (updatedProfile.dateOfBirth != null)
-        'dateOfBirth': updatedProfile.dateOfBirth,
-      if (updatedProfile.description != null)
-        'description': updatedProfile.description,
-    };
+    final body = updatedProfile.toUpdateJson(
+      firebaseCloudMessagingToken: updatedProfile.firebaseCloudMessagingToken,
+    );
 
     debugPrint('[ProfileApi] PUT /profile/me/ body: ${jsonEncode(body)}');
 

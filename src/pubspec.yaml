@@ -29,6 +29,7 @@ dependencies:
   collection: ^1.17.1
   package_info_plus: ^8.0.3
   flutter_local_notifications: ^17.2.1
+  flutter_blue_plus: ^1.35.5
   wildlifenl_map_logic_components:
     git:
       url: https://github.com/WildLife-NL/wildlifenl-components.git

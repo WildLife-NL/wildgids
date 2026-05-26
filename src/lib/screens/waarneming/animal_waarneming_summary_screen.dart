@@ -8,8 +8,11 @@ import 'package:wildgids/screens/logbook/logbook_screen.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
 import 'package:wildgids/models/enums/animal_gender.dart';
 import 'package:wildgids/models/animal_waarneming_models/animal_model.dart';
+import 'package:wildgids/models/animal_waarneming_models/animal_gender_view_count_model.dart';
+import 'package:wildgids/models/animal_waarneming_models/view_count_model.dart';
 import 'package:wildgids/screens/waarneming/waarneming_start_screen.dart';
 import 'package:wildgids/providers/submitted_sightings_provider.dart';
+import 'package:wildgids/utils/api_datetime.dart';
 import 'package:wildgids/utils/species_image_resolver.dart';
 
 class AnimalWaarnemingSummaryScreen extends StatefulWidget {
@@ -56,8 +59,21 @@ class _AnimalWaarnemingSummaryScreenState
           final animalsToAdd = List<AnimalModel>.from(
             sighting.animals ?? [],
           );
+          final placeholder = AnimalModel(
+            animalId: sighting.animalSelected!.animalId,
+            animalImagePath: sighting.animalSelected!.animalImagePath,
+            animalName: sighting.animalSelected!.animalName,
+            category: sighting.animalSelected!.category,
+            condition: sighting.animalSelected!.condition,
+            genderViewCounts: [
+              AnimalGenderViewCount(
+                gender: AnimalGender.onbekend,
+                viewCount: ViewCountModel(unknownAmount: 1),
+              ),
+            ],
+          );
           for (int i = 0; i < widget.totalCount; i++) {
-            animalsToAdd.add(sighting.animalSelected!);
+            animalsToAdd.add(placeholder);
           }
           // Create a new sighting with the populated animals list
           sighting = sighting.copyWith(animals: animalsToAdd);
@@ -603,10 +619,7 @@ List<Widget> _buildAnimalDetailsList(List animals) {
       if (dt == null) {
         return 'Datum en tijd nog niet ingesteld';
       }
-      // Format: DD-MM-YYYY | HH:MM
-      final date = '${dt.day.toString().padLeft(2, '0')}-${dt.month.toString().padLeft(2, '0')}-${dt.year}';
-      final time = '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-      return '$date | $time';
+      return ApiDateTime.formatSummary(dt);
     } catch (e) {
       return 'Datum en tijd nog niet ingesteld';
     }
