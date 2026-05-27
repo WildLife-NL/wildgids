@@ -142,13 +142,17 @@ class _AnimalDetailCardState extends State<AnimalDetailCard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Waarneming',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
+                    Text(
+                    (animal?.reportType ?? 'Waarneming')
+                  .replaceFirstMapped(
+                    RegExp(r'^[a-z]'),
+                    (m) => m.group(0)!.toUpperCase(),
+                  ),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
                     ),
+                  ),
                     Text(
                       displayName,
                       maxLines: 1,

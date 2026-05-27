@@ -179,7 +179,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
       );
 
     _mpListener ??= () {
-      debugPrint('[Kaart] ðŸ“¨ Listener triggered');
+      debugPrint('[Kaart] 📨 Listener triggered');
       final n = _mp.lastTrackingNotice;
 
       if (n == null) {
@@ -217,7 +217,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
           if (!mounted) return;
 
           try {
-            debugPrint('[Kaart] ðŸŽ‰ Showing message-style popup: "${n.text}" (web only)');
+            debugPrint('[Kaart] 🎉 Showing message-style popup: "${n.text}" (web only)');
             showDialog(
               context: context,
               barrierDismissible: true,
@@ -232,14 +232,14 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                   ),
             );
           } catch (e) {
-            debugPrint('[Kaart] âŒ Failed to show tracking notice: $e');
+            debugPrint('[Kaart] ❌ Failed to show tracking notice: $e');
           }
         });
       });
     };
 
     if (!_listenerAttached) {
-      debugPrint('[Kaart] ðŸ”— Attaching listener to MapProvider');
+      debugPrint('[Kaart] 🔗 Attaching listener to MapProvider');
       _mp.addListener(_mpListener!);
       _listenerAttached = true;
     }
@@ -287,6 +287,15 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
       'Eekhoorn',
     ];
 
+    final reportTypes = [
+  'waarneming',
+  'camera',
+  'acoustic',
+  'collision',
+  'schadamelding',
+  'collar',
+];
+
     final dx = [0.0000, 0.0012, -0.0012, 0.0018, -0.0018, 0.0009, -0.0009, 0.0015];
     final dy = [0.0000, 0.0010, -0.0010, -0.0016, 0.0016, -0.0008, 0.0008, 0.0013];
 
@@ -305,6 +314,8 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
           lon: center.longitude + (dx[i % dx.length]),
           seenAt: ts,
           speciesName: species[i],
+          reportType: reportTypes[i % reportTypes.length],
+          
         ),
       );
     }
@@ -385,18 +396,18 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
       await mp.updatePosition(pos, mp.currentAddress);
 
       if (appStateProvider.isLocationTrackingEnabled) {
-        debugPrint('[ME/live] ðŸ“¡ Sending tracking ping for position update');
+        debugPrint('[ME/live] 📡 Sending tracking ping for position update');
         final notice = await _mp.sendTrackingPingFromPosition(pos);
         if (notice != null) {
           debugPrint(
-            '[ME/live] ðŸ”” Received notice from tracking ping: "${notice.text}"',
+            '[ME/live] 📔 Received notice from tracking ping: "${notice.text}"',
           );
         } else {
           debugPrint('[ME/live] No notice from position update');
         }
       } else {
         debugPrint(
-          '[ME/live] âš ï¸ Skipping tracking ping - tracking disabled by user',
+          '[ME/live] ⚠️ Skipping tracking ping - tracking disabled by user',
         );
       }
 
@@ -423,11 +434,11 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     );
 
     debugPrint(
-      'â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•',
+      '═══════════════════════════════════════════════════════════════',
     );
     debugPrint('[ANIMALS] Total count: ${map.animalPins.length}');
     debugPrint(
-      'â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•',
+      '═══════════════════════════════════════════════════════════════',
     );
 
     for (int i = 0; i < map.animalPins.length; i++) {
@@ -450,7 +461,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
       }
     }
     debugPrint(
-      'â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•',
+      '═══════════════════════════════════════════════════════════════',
     );
   }
 
@@ -493,11 +504,11 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     _applyPendingCamera();
 
     if (app.isLocationTrackingEnabled) {
-      debugPrint('[Kaart/Bootstrap] ðŸ“¡ Sending initial tracking ping');
+      debugPrint('[Kaart/Bootstrap] 📡 Sending initial tracking ping');
       final initialNotice = await map.sendTrackingPingFromPosition(pos);
       if (initialNotice != null) {
         debugPrint(
-          '[Kaart/Bootstrap] ðŸ”” Initial ping returned notice: "${initialNotice.text}"',
+          '[Kaart/Bootstrap] 📔 Initial ping returned notice: "${initialNotice.text}"',
         );
       } else {
         debugPrint('[Kaart/Bootstrap] Initial ping returned no notice');
@@ -509,7 +520,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
       );
       map.startTracking(interval: LocationSharingConfig.updateInterval);
     } else {
-      debugPrint('[Kaart/Bootstrap] âš ï¸ Location tracking is disabled by user');
+      debugPrint('[Kaart/Bootstrap] ⚠️ Location tracking is disabled by user');
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -523,12 +534,12 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
           await map.loadAllPinsFromVicinity().timeout(
             const Duration(seconds: 15),
             onTimeout: () {
-              debugPrint('[Bootstrap] âš ï¸ Vicinity API timeout after 15s');
+              debugPrint('[Bootstrap] ⚠️ Vicinity API timeout after 15s');
               return;
             },
           );
         } catch (e) {
-          debugPrint('[Bootstrap] âŒ Failed to load vicinity data: $e');
+          debugPrint('[Bootstrap] ❌ Failed to load vicinity data: $e');
         }
         debugPrint(
           '[Map] initial totals  '
@@ -539,11 +550,11 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
         );
 
         debugPrint(
-          'â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•',
+          '═══════════════════════════════════════════════════════════════',
         );
         debugPrint('[BOOTSTRAP ANIMALS] Total count: ${map.animalPins.length}');
         debugPrint(
-          'â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•',
+          '═══════════════════════════════════════════════════════════════',
         );
 
         for (int i = 0; i < map.animalPins.length; i++) {
@@ -566,7 +577,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
           }
         }
         debugPrint(
-          'â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•',
+          '═══════════════════════════════════════════════════════════════',
         );
 
         _queueFetch();
@@ -619,7 +630,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
       final newest = sorted.last.timestamp;
       final now = DateTime.now();
 
-      debugPrint('[TRACKING] ðŸ”´ CRITICAL DATA:');
+      debugPrint('[TRACKING] CRITICAL DATA:');
       debugPrint('[TRACKING] Now: ${now.toIso8601String()}');
       debugPrint(
         '[TRACKING] Newest in DB: ${newest.toIso8601String()} (${now.difference(newest).inSeconds}s ago)',
@@ -1297,6 +1308,124 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     );
   }
 
+  /// Get border color based on detection type
+  Color _getBorderColorForDetectionType(String? detectionType) {
+    if (detectionType == null) return Colors.white;
+    
+    final type = detectionType.toLowerCase();
+    
+    if (type.contains('camera') || type.contains('foto')) {
+      return const Color(0xFFE91E63); // Pink
+    } else if (type.contains('acoustic') || type.contains('geluid')) {
+      return const Color(0xFF00BCD4); // Aqua
+    } else if (type.contains('waarneming') || type.contains('sighting')) {
+      return const Color(0xFF9C27B0); // Purple
+    } else if (type.contains('collision') || type.contains('botsing')) {
+      return const Color(0xFFF44336); // Red
+    } else if (type.contains('schadamelding') || type.contains('damage')) {
+      return const Color(0xFF4CAF50); // Green
+    } else if (type.contains('collar')) {
+      return const Color(0xFFFF9800); // Orange
+    }
+    
+    return Colors.white;
+  }
+
+  /// Build styled animal pin with white circle and colored border
+  Widget _buildStyledAnimalPin(
+    String? speciesName,
+    String? detectionType,
+    _IconStyle style,
+    {int? eventCount}
+  ) {
+    final borderColor = _getBorderColorForDetectionType(detectionType);
+    final iconPath = _getAnimalIconPath(speciesName);
+    
+    return Container(
+      width: style.size + 16,
+      height: style.size + 16,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white,
+        border: Border.all(
+          color: borderColor,
+          width: 3,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Center icon
+          if (iconPath != null)
+            SizedBox(
+              width: style.size,
+              height: style.size,
+              child: ColorFiltered(
+                colorFilter: ColorFilter.mode(
+                  style.color,
+                  BlendMode.srcIn,
+                ),
+                child: Image.asset(
+                  iconPath,
+                  width: style.size,
+                  height: style.size,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Icon(
+                      Icons.pets,
+                      size: style.size * 0.9,
+                      color: style.color,
+                    );
+                  },
+                ),
+              ),
+            )
+          else
+            Icon(
+              Icons.pets,
+              size: style.size,
+              color: style.color,
+            ),
+          
+          // Event count badge (top-right)
+          if (eventCount != null && eventCount > 0)
+            Positioned(
+              top: -4,
+              right: -4,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: borderColor,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 2,
+                    ),
+                  ],
+                ),
+                child: Text(
+                  '$eventCount',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final map = context.watch<MapProvider>();
@@ -1365,13 +1494,13 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                                       .rotation;
                                               return fm.Marker(
                                                 point: LatLng(pin.lat, pin.lon),
-                                                width: (style.size + 8).clamp(
-                                                  24.0,
-                                                  44.0,
+                                                width: (style.size + 24).clamp(
+                                                  30.0,
+                                                  56.0,
                                                 ),
-                                                height: (style.size + 8).clamp(
-                                                  24.0,
-                                                  44.0,
+                                                height: (style.size + 24).clamp(
+                                                  30.0,
+                                                  56.0,
                                                 ),
                                                 rotate: false,
                                                 child: Transform.rotate(
@@ -1379,55 +1508,11 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                                       -mapRotation *
                                                       math.pi /
                                                       180,
-                                                  child:
-                                                      _getAnimalIconPath(
-                                                                pin.speciesName,
-                                                              ) !=
-                                                              null
-                                                          ? SizedBox(
-                                                            width: style.size,
-                                                            height: style.size,
-                                                            child: ColorFiltered(
-                                                              colorFilter:
-                                                                  ColorFilter.mode(
-                                                                    style.color,
-                                                                    BlendMode
-                                                                        .srcIn,
-                                                                  ),
-                                                              child: Image.asset(
-                                                                _getAnimalIconPath(
-                                                                  pin.speciesName,
-                                                                )!,
-                                                                width:
-                                                                    style.size,
-                                                                height:
-                                                                    style.size,
-                                                                fit:
-                                                                    BoxFit
-                                                                        .contain,
-                                                                errorBuilder: (
-                                                                  context,
-                                                                  error,
-                                                                  stackTrace,
-                                                                ) {
-                                                                  return Icon(
-                                                                    Icons.pets,
-                                                                    size:
-                                                                        style
-                                                                            .size *
-                                                                        0.9,
-                                                                    color:
-                                                                        style.color,
-                                                                  );
-                                                                },
-                                                              ),
-                                                            ),
-                                                          )
-                                                          : Icon(
-                                                            Icons.pets,
-                                                            size: style.size,
-                                                            color: style.color,
-                                                          ),
+                                                  child: _buildStyledAnimalPin(
+                                                    pin.speciesName,
+                                                    pin.reportType,
+                                                    style,
+                                                  ),
                                                 ),
                                               );
                                             })
@@ -1475,8 +1560,8 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                                     .rotation;
                                             return fm.Marker(
                                               point: LatLng(pin.lat, pin.lon),
-                                              width: 44,
-                                              height: 44,
+                                              width: 56,
+                                              height: 56,
                                               rotate: false,
                                               child: Transform.rotate(
                                                 angle:
@@ -1487,7 +1572,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                                   behavior:
                                                       HitTestBehavior.opaque,
                                                   onTap: () {
-                                                     _showAnimalDetailCard(pin, getSpeciesCardImagePath(pin.speciesName));
+                                                    _showAnimalDetailCard(pin, getSpeciesCardImagePath(pin.speciesName));
                                                   },
                                                   child: Builder(
                                                     builder: (ctx) {
@@ -1495,54 +1580,11 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                                           _iconStyleForTimestamp(
                                                             pin.seenAt,
                                                           );
-                                                      return _getAnimalIconPath(
-                                                                pin.speciesName,
-                                                              ) !=
-                                                              null
-                                                          ? SizedBox(
-                                                            width: style.size,
-                                                            height: style.size,
-                                                            child: ColorFiltered(
-                                                              colorFilter:
-                                                                  ColorFilter.mode(
-                                                                    style.color,
-                                                                    BlendMode
-                                                                        .srcIn,
-                                                                  ),
-                                                              child: Image.asset(
-                                                                _getAnimalIconPath(
-                                                                  pin.speciesName,
-                                                                )!,
-                                                                width:
-                                                                    style.size,
-                                                                height:
-                                                                    style.size,
-                                                                fit:
-                                                                    BoxFit
-                                                                        .contain,
-                                                                errorBuilder: (
-                                                                  context,
-                                                                  error,
-                                                                  stackTrace,
-                                                                ) {
-                                                                  return Icon(
-                                                                    Icons.pets,
-                                                                    size:
-                                                                        style
-                                                                            .size *
-                                                                        0.9,
-                                                                    color:
-                                                                        style.color,
-                                                                  );
-                                                                },
-                                                              ),
-                                                            ),
-                                                          )
-                                                          : Icon(
-                                                            Icons.pets,
-                                                            size: style.size,
-                                                            color: style.color,
-                                                          );
+                                                      return _buildStyledAnimalPin(
+                                                        pin.speciesName,
+                                                        pin.reportType,
+                                                        style,
+                                                      );
                                                     },
                                                   ),
                                                 ),
@@ -1827,8 +1869,8 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                                       .rotation;
                                               return fm.Marker(
                                                 point: LatLng(itx.lat, itx.lon),
-                                                width: 44,
-                                                height: 44,
+                                                width: 56,
+                                                height: 56,
                                                 rotate: false,
                                                 child: Transform.rotate(
                                                   angle:
@@ -1856,60 +1898,11 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                                             _iconStyleForTimestamp(
                                                               itx.moment,
                                                             );
-                                                        final Color interactionColor = Colors.black;
-                                                        return _getAnimalIconPath(
-                                                                  itx.speciesName,
-                                                                ) !=
-                                                                null
-                                                            ? SizedBox(
-                                                              width: style.size,
-                                                              height:
-                                                                  style.size,
-                                                              child: ColorFiltered(
-                                                                colorFilter:
-                                                                    ColorFilter.mode(
-                                                                      interactionColor,
-                                                                      BlendMode
-                                                                          .srcIn,
-                                                                    ),
-                                                                child: Image.asset(
-                                                                  _getAnimalIconPath(
-                                                                    itx.speciesName,
-                                                                  )!,
-                                                                  width:
-                                                                      style
-                                                                          .size,
-                                                                  height:
-                                                                      style
-                                                                          .size,
-                                                                  fit:
-                                                                      BoxFit
-                                                                          .contain,
-                                                                  errorBuilder: (
-                                                                    context,
-                                                                    error,
-                                                                    stackTrace,
-                                                                  ) {
-                                                                    return Icon(
-                                                                      Icons
-                                                                          .place,
-                                                                      size:
-                                                                          style
-                                                                              .size *
-                                                                          0.9,
-                                                                      color:
-                                                                          interactionColor,
-                                                                    );
-                                                                  },
-                                                                ),
-                                                              ),
-                                                            )
-                                                            : Icon(
-                                                              Icons.place,
-                                                              size: style.size,
-                                                              color:
-                                                                  interactionColor,
-                                                            );
+                                                        return _buildStyledAnimalPin(
+                                                          itx.speciesName,
+                                                          itx.typeName,
+                                                          style,
+                                                        );
                                                       },
                                                     ),
                                                   ),
@@ -1944,8 +1937,8 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                             map.mapController.camera.rotation;
                                         return fm.Marker(
                                           point: LatLng(itx.lat, itx.lon),
-                                          width: 44,
-                                          height: 44,
+                                          width: 56,
+                                          height: 56,
                                           rotate: false,
                                           child: Transform.rotate(
                                             angle: -mapRotation * math.pi / 180,
@@ -1961,35 +1954,11 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                                 builder: (ctx) {
                                                   final style =
                                                       _iconStyleForTimestamp(itx.moment);
-                                                  final Color interactionColor = Colors.black;
-                                                  return _getAnimalIconPath(itx.speciesName) != null
-                                                      ? SizedBox(
-                                                          width: style.size,
-                                                          height: style.size,
-                                                          child: ColorFiltered(
-                                                            colorFilter: ColorFilter.mode(
-                                                              interactionColor,
-                                                              BlendMode.srcIn,
-                                                            ),
-                                                            child: Image.asset(
-                                                              _getAnimalIconPath(itx.speciesName)!,
-                                                              width: style.size,
-                                                              height: style.size,
-                                                              fit: BoxFit.contain,
-                                                              errorBuilder:
-                                                                  (context, error, stackTrace) => Icon(
-                                                                    Icons.place,
-                                                                    size: style.size * 0.9,
-                                                                    color: interactionColor,
-                                                                  ),
-                                                            ),
-                                                          ),
-                                                        )
-                                                      : Icon(
-                                                          Icons.place,
-                                                          size: style.size,
-                                                          color: interactionColor,
-                                                        );
+                                                  return _buildStyledAnimalPin(
+                                                    itx.speciesName,
+                                                    itx.typeName,
+                                                    style,
+                                                  );
                                                 },
                                               ),
                                             ),
@@ -2266,4 +2235,3 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     return _IconStyle(Colors.grey.shade600, 20.0);
   }
 }
-

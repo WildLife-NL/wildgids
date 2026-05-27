@@ -5,6 +5,7 @@ class AnimalPin {
   final double lon;
   final DateTime seenAt;
   final String? locationLabel;
+  final String? reportType;
 
   AnimalPin({
     required this.id,
@@ -13,6 +14,7 @@ class AnimalPin {
     required this.seenAt,
     this.speciesName,
     this.locationLabel,
+    this.reportType,
   });
 
   factory AnimalPin.fromJson(Map<String, dynamic> j) {
