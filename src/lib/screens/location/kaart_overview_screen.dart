@@ -84,6 +84,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
   String? _selectedAnimalIconPath;
 
   bool _showTrackingHistory = false;
+  bool _showLegend = false;
   List<TrackingReadingResponse> _trackingHistory = [];
   bool _loadingTrackingHistory = false;
   final int _trackingHistoryMinutes = 5;
@@ -1152,6 +1153,73 @@ if (isCollar)
 
   }
 
+Widget _legendRow(
+  Color color,
+  String label, {
+  IconData? icon,
+  IconData? badgeIcon,
+}) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8),
+    child: Row(
+      children: [
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+                border: Border.all(
+                  color: color,
+                  width: 3,
+                ),
+              ),
+              child: icon != null
+                  ? Icon(
+                      icon,
+                      size: 16,
+                      color: Colors.black,
+                    )
+                  : null,
+            ),
+
+            if (badgeIcon != null)
+              Positioned(
+                top: -4,
+                right: -4,
+                child: Container(
+                  width: 14,
+                  height: 14,
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    badgeIcon,
+                    size: 8,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+          ],
+        ),
+
+        const SizedBox(width: 12),
+
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -1661,7 +1729,50 @@ if (isCollar)
                             ),
                           ),
                         ),
-
+                        Positioned(
+  right: 14,
+bottom: 45,
+  child: GestureDetector(
+    onTap: () {
+      setState(() {
+        _showLegend = !_showLegend;
+      });
+    },
+   child: Container(
+  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+  decoration: BoxDecoration(
+    color: const Color(0xFF222222),
+    borderRadius: BorderRadius.circular(26),
+    boxShadow: [
+      BoxShadow(
+        color: Colors.black.withValues(alpha: 0.22),
+        blurRadius: 10,
+        offset: const Offset(0, 3),
+      ),
+    ],
+  ),
+  child: Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(
+        _showLegend ? Icons.close : Icons.help_outline,
+        size: 19,
+        color: Colors.white,
+      ),
+      const SizedBox(width: 8),
+      const Text(
+        'Legenda',
+        style: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w700,
+          fontSize: 14,
+        ),
+      ),
+    ],
+  ),
+),
+  ),
+                        ),
                         Positioned(
                           top: 90,
                           right: 14,
@@ -1756,40 +1867,113 @@ if (isCollar)
                             ),
                           ),
                         ),
-                        if (_selectedAnimalDetail != null)
-                          Positioned(
-                            bottom: 105,
-                            left: 0,
-                            right: 0,
-                            child: Center(
-                              child: SizedBox(
-                                width: math.min(
-                                  460,
-                                  MediaQuery.of(context).size.width - 12,
-                                ),
-                                child: Material(
-                                  color: Colors.transparent,
-                                  child: Stack(
-                                    children: [
-                                      AnimalDetailCard(
-                                        animal: _selectedAnimalDetail,
-                                        iconPath: _selectedAnimalIconPath,
-                                      ),
-                                      Positioned(
-                                        top: 8,
-                                        right: 8,
-                                        child: IconButton(
-                                          icon: const Icon(Icons.close, color: Colors.grey),
-                                          splashRadius: 20,
-                                          onPressed: _closeAnimalDetailCard,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
+                        if (_showLegend)
+                          Positioned.fill(
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.translucent,
+                              onTap: () {
+                                setState(() => _showLegend = false);
+                              },
+                              child: const SizedBox.expand(),
                             ),
                           ),
+                        if (_showLegend)
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: 110,
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _legendRow(
+                        const Color(0xFF8613A8),
+                        'Waarneming',
+                      ),
+                      _legendRow(
+                        const Color(0xFF00BFD8),
+                        'Camera',
+                        icon: Icons.camera_alt,
+                      ),
+                      _legendRow(
+                        const Color(0xFFFF9100),
+                        'Acoustic',
+                        icon: Icons.graphic_eq,
+                      ),
+                      _legendRow(
+                        const Color(0xFFFE008E),
+                        'Collar',
+                        badgeIcon: Icons.settings_remote,
+                      ),
+                      _legendRow(
+                        const Color(0xFF0078DA),
+                        'Aanrijding',
+                      ),
+                      _legendRow(
+                        const Color(0xFF008C7B),
+                        'Schademelding',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+                                  if (_selectedAnimalDetail != null)
+                                    Positioned(
+                                      bottom: 105,
+                                      left: 0,
+                                      right: 0,
+                                      child: Center(
+                                        child: SizedBox(
+                                          width: math.min(
+                                            460,
+                                            MediaQuery.of(context).size.width - 12,
+                                          ),
+                                          child: Material(
+                                            color: Colors.transparent,
+                                            child: GestureDetector(
+                                            behavior: HitTestBehavior.translucent,
+                                            onTap: () {
+                                              if (_showLegend) {
+                                                setState(() => _showLegend = false);
+                                              }
+                                            },
+                                            child: Stack(
+                                              children: [
+                                                AnimalDetailCard(
+                                                  animal: _selectedAnimalDetail,
+                                                  iconPath: _selectedAnimalIconPath,
+                                                ),
+                                                Positioned(
+                                                  top: 8,
+                                                  right: 8,
+                                                  child: IconButton(
+                                                    icon: const Icon(Icons.close, color: Colors.grey),
+                                                    splashRadius: 20,
+                                                    onPressed: _closeAnimalDetailCard,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            )
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                         if (_devDebugToolsEnabled)
                           Positioned(
                             top: 210,
