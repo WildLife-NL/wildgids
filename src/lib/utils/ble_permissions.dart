@@ -29,7 +29,10 @@ class BlePermissions {
         .toList();
     if (denied.isNotEmpty) {
       debugPrint('[BlePermissions] denied: $denied');
-      return 'Bluetooth- en locatie-permissies nodig voor scannen';
+      if (Platform.isAndroid) {
+        return 'Bluetooth- en locatie-permissies nodig voor scannen';
+      }
+      return 'Bluetooth-permissie nodig voor scannen (Instellingen → Wild Gids)';
     }
 
     final state = await FlutterBluePlus.adapterState

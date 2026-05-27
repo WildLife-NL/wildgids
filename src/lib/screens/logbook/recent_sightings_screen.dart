@@ -267,7 +267,7 @@ class _RecentInteractionCard extends StatelessWidget {
           color: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: const BorderSide(color: Color(0xFF999999), width: 1),
+            side: const BorderSide(color: AppColors.borderDefault, width: 1),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -357,7 +357,7 @@ class _ImageSection extends StatelessWidget {
           topLeft: Radius.circular(12),
           bottomLeft: Radius.circular(12),
         ),
-        border: Border.all(color: Colors.grey.shade400, width: 2),
+        border: Border.all(color: AppColors.borderDefault, width: 1),
       ),
       child: imagePath != null && imagePath!.isNotEmpty
           ? ClipRRect(

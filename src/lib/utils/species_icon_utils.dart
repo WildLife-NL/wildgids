@@ -51,7 +51,10 @@ String? getSpeciesIconPath(String? speciesName) {
   if (name.contains('bever') || name.contains('beaver')) {
     return 'assets/icons/animals/beaver.png';
   }
-  if (name.contains('boommarten') || name.contains('marten')) {
+  if (name.contains('boommarter') ||
+      name.contains('boommarten') ||
+      name.contains('steenmarter') ||
+      name.contains('pine marten')) {
     return 'assets/icons/animals/boommarten.png';
   }
   if (name.contains('hooglander') || name.contains('highlander')) {

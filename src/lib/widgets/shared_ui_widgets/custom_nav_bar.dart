@@ -69,7 +69,7 @@ class CustomNavBar extends StatelessWidget {
                   children: [
                     Expanded(
                       child: _buildNavItem(
-                        tab: NavTab.zones,
+                        tab: NavTab.ontdekken,
                         icon: Icons.travel_explore,
                         label: 'Ontdekken',
                       ),

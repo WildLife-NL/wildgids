@@ -24,7 +24,7 @@ import 'package:wildgids/widgets/map/detection_detail_dialog.dart';
 import 'package:wildgids/data_managers/tracking_api.dart';
 import 'package:wildgids/interfaces/data_apis/tracking_api_interface.dart';
 import 'package:wildgids/config/app_config.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+//import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/custom_nav_bar.dart';
 import 'package:wildgids/constants/location_sharing_config.dart';
 import 'dart:async';
@@ -84,6 +84,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
   String? _selectedAnimalIconPath;
 
   bool _showTrackingHistory = false;
+  bool _showLegend = false;
   List<TrackingReadingResponse> _trackingHistory = [];
   bool _loadingTrackingHistory = false;
   final int _trackingHistoryMinutes = 5;
@@ -251,91 +252,10 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     super.dispose();
   }
 
-  bool get _devDebugToolsEnabled => dotenv.env['DEV_DEBUG_TOOLS'] == 'true' || dotenv.env['DEV_DEBUG_TOOLS'] == '1';
+  //bool get _devDebugToolsEnabled => dotenv.env['DEV_DEBUG_TOOLS'] == 'true' || dotenv.env['DEV_DEBUG_TOOLS'] == '1';
 
-  void _injectMockPins() {
-    final map = context.read<MapProvider>();
-    final center = map.isInitialized
-        ? map.mapController.camera.center
-        : LatLng(
-            LocationMapManager.denBoschCenter.latitude,
-            LocationMapManager.denBoschCenter.longitude,
-          );
 
-    final now = DateTime.now().toUtc();
-    final species = [
-      'Vos',
-      'Wolf',
-      'Das',
-      'Ree',
-      'Wild zwijn',
-      'Damhert',
-      'Egel',
-      'Eekhoorn',
-    ];
-
-    final reportTypes = [
-  'waarneming',
-  'camera',
-  'acoustic',
-  'collision',
-  'schadamelding',
-  'collar',
-];
-
-    final dx = [0.0000, 0.0012, -0.0012, 0.0018, -0.0018, 0.0009, -0.0009, 0.0015];
-    final dy = [0.0000, 0.0010, -0.0010, -0.0016, 0.0016, -0.0008, 0.0008, 0.0013];
-
-    final animals = <AnimalPin>[];
-    for (int i = 0; i < species.length; i++) {
-      final ts = i < 3
-          ? now.subtract(Duration(minutes: (i + 1) * 10))
-          : (i < 6
-              ? now.subtract(Duration(hours: (i - 2) * 6))
-              : now.subtract(Duration(days: 8 + i)));
-
-      animals.add(
-        AnimalPin(
-          id: 'mock-${i + 1}',
-          lat: center.latitude + (dy[i % dy.length]),
-          lon: center.longitude + (dx[i % dx.length]),
-          seenAt: ts,
-          speciesName: species[i],
-          reportType: reportTypes[i % reportTypes.length],
-          
-        ),
-      );
-    }
-
-    map.setMockVicinity(animals: animals);
-
-    if (mounted) {
-      ScaffoldMessenger.of(context)
-        ..clearSnackBars()
-        ..showSnackBar(
-          const SnackBar(
-            content: Text('Mock dieren geplaatst rond de kaart'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-      setState(() {});
-    }
-  }
-
-  void _emitDevTrackingNotice() {
-    final map = context.read<MapProvider>();
-    map.emitMockTrackingNotice('Dier in de buurt (testmelding)', severity: 2);
-    if (mounted) {
-      ScaffoldMessenger.of(context)
-        ..clearSnackBars()
-        ..showSnackBar(
-          const SnackBar(
-            content: Text('Testmelding verstuurd (notificatie)'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-    }
-  }
+  
 
   void _schedulePinsRefresh({bool immediate = false}) {
     _pinsRefreshDebounce?.cancel();
@@ -962,27 +882,38 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
 
   /// Get border color based on detection type
   Color _getBorderColorForDetectionType(String? detectionType) {
+    
     if (detectionType == null) return Colors.white;
     
     final type = detectionType.toLowerCase();
     
     if (type.contains('camera') || type.contains('foto')) {
-      return const Color(0xFFE91E63); // Pink
+      return const Color(0xFF00BFD8); // Aqua
     } else if (type.contains('acoustic') || type.contains('geluid')) {
-      return const Color(0xFF00BCD4); // Aqua
+      return const Color(0xFFFF9100); // Orange
     } else if (type.contains('waarneming') || type.contains('sighting')) {
-      return const Color(0xFF9C27B0); // Purple
+      return const Color(0xFF8613A8); // Purple
     } else if (type.contains('collision') || type.contains('botsing')) {
-      return const Color(0xFFF44336); // Red
+      return const Color(0xFF0078DA); // Blue
     } else if (type.contains('schadamelding') || type.contains('damage')) {
-      return const Color(0xFF4CAF50); // Green
+      return const Color(0xFF008C7B); // teal
     } else if (type.contains('collar')) {
-      return const Color(0xFFFF9800); // Orange
+      return const Color(0xFFFE008E); // pink
     }
     
     return Colors.white;
   }
 
+  int? _eventCountForPin(AnimalPin pin) {
+    final type = pin.reportType?.toLowerCase();
+    final isFixedPin =
+        type?.contains('camera') == true ||
+        type?.contains('foto') == true ||
+        type?.contains('acoustic') == true ||
+        type?.contains('geluid') == true;
+
+    return isFixedPin ? 3 : null;
+  }
   /// Build styled animal pin with white circle and colored border
   Widget _buildStyledAnimalPin(
     String? speciesName,
@@ -991,11 +922,31 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     {int? eventCount}
   ) {
     final borderColor = _getBorderColorForDetectionType(detectionType);
-    final iconPath = _getAnimalIconPath(speciesName);
+    final type = detectionType?.toLowerCase();
+
+final bool isCamera =
+    type?.contains('camera') == true ||
+    type?.contains('foto') == true;
     
-    return Container(
-      width: style.size + 16,
-      height: style.size + 16,
+
+final bool isAcoustic =
+    type?.contains('acoustic') == true ||
+    type?.contains('geluid') == true;
+    final iconPath = _getAnimalIconPath(speciesName);
+
+final bool isCollar =
+    type?.contains('collar') == true;
+    
+    return SizedBox(
+    width: style.size + 28,
+    height: style.size + 28,
+    child: Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.center,
+      children: [
+      Container(
+        width: style.size + 16,
+        height: style.size + 16,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: Colors.white,
@@ -1015,68 +966,179 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
         alignment: Alignment.center,
         children: [
           // Center icon
-          if (iconPath != null)
-            SizedBox(
-              width: style.size,
-              height: style.size,
-              child: ColorFiltered(
-                colorFilter: ColorFilter.mode(
-                  style.color,
-                  BlendMode.srcIn,
-                ),
-                child: Image.asset(
-                  iconPath,
-                  width: style.size,
-                  height: style.size,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Icon(
-                      Icons.pets,
-                      size: style.size * 0.9,
-                      color: style.color,
-                    );
-                  },
-                ),
-              ),
-            )
-          else
-            Icon(
-              Icons.pets,
-              size: style.size,
-              color: style.color,
-            ),
+          if (isCamera)
+  Icon(
+    Icons.camera_alt,
+    size: style.size * 0.9,
+    color: style.color,
+  )
+else if (isAcoustic)
+  Icon(
+    Icons.graphic_eq,
+    size: style.size * 0.9,
+    color: style.color,
+  )
+else if (iconPath != null)
+  SizedBox(
+    width: style.size,
+    height: style.size,
+    child: ColorFiltered(
+      colorFilter: ColorFilter.mode(
+        style.color,
+        BlendMode.srcIn,
+      ),
+      child: Image.asset(
+        iconPath,
+        width: style.size,
+        height: style.size,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) {
+          return Icon(
+            Icons.pets,
+            size: style.size * 0.9,
+            color: style.color,
+          );
+        },
+      ),
+    ),
+  )
+else
+  Icon(
+    Icons.pets,
+    size: style.size,
+    color: style.color,
+  ),
           
           // Event count badge (top-right)
-          if (eventCount != null && eventCount > 0)
-            Positioned(
-              top: -4,
-              right: -4,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: borderColor,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2),
-                      blurRadius: 2,
-                    ),
-                  ],
+if (eventCount != null && eventCount > 0)
+  Positioned(
+    top: -2,
+    right: -2,
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: borderColor,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 2,
+          ),
+        ],
+      ),
+      child: Text(
+        '$eventCount',
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    ),
+  ),
+
+// Collar badge
+if (isCollar)
+  Positioned(
+    top: -2,
+    right: -2,
+    child: Container(
+      width: 18,
+      height: 18,
+      decoration: BoxDecoration(
+        color: borderColor,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 2,
+          ),
+        ],
+      ),
+      child: const Icon(
+        Icons.settings_remote,
+        size: 11,
+        color: Colors.white,
+      ),
+    ),
+  )
+            
+              ],
+      ),
+    ), // closes Container
+  ],
+),
+);
+
+  }
+
+Widget _legendRow(
+  Color color,
+  String label, {
+  IconData? icon,
+  IconData? badgeIcon,
+}) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8),
+    child: Row(
+      children: [
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+                border: Border.all(
+                  color: color,
+                  width: 3,
                 ),
-                child: Text(
-                  '$eventCount',
-                  style: const TextStyle(
+              ),
+              child: icon != null
+                  ? Icon(
+                      icon,
+                      size: 16,
+                      color: Colors.black,
+                    )
+                  : null,
+            ),
+
+            if (badgeIcon != null)
+              Positioned(
+                top: -4,
+                right: -4,
+                child: Container(
+                  width: 14,
+                  height: 14,
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    badgeIcon,
+                    size: 8,
                     color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
-            ),
-        ],
-      ),
-    );
-  }
+          ],
+        ),
+
+        const SizedBox(width: 12),
+
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -1149,6 +1211,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                                   child: _buildStyledAnimalPin(
                                                     pin.speciesName,
                                                     pin.reportType,
+                                                    eventCount: _eventCountForPin(pin),
                                                     style,
                                                   ),
                                                 ),
@@ -1207,6 +1270,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                                       return _buildStyledAnimalPin(
                                                         pin.speciesName,
                                                         pin.reportType,
+                                                        eventCount: _eventCountForPin(pin),
                                                         style,
                                                       );
                                                     },
@@ -1526,6 +1590,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                                     itx.speciesName,
                                                     itx.typeName,
                                                     style,
+                                                    eventCount: null,
                                                   );
                                                 },
                                               ),
@@ -1583,7 +1648,50 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                             ),
                           ),
                         ),
-
+                        Positioned(
+  right: 14,
+bottom: 45,
+  child: GestureDetector(
+    onTap: () {
+      setState(() {
+        _showLegend = !_showLegend;
+      });
+    },
+   child: Container(
+  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+  decoration: BoxDecoration(
+    color: const Color(0xFF222222),
+    borderRadius: BorderRadius.circular(26),
+    boxShadow: [
+      BoxShadow(
+        color: Colors.black.withValues(alpha: 0.22),
+        blurRadius: 10,
+        offset: const Offset(0, 3),
+      ),
+    ],
+  ),
+  child: Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(
+        _showLegend ? Icons.close : Icons.help_outline,
+        size: 19,
+        color: Colors.white,
+      ),
+      const SizedBox(width: 8),
+      const Text(
+        'Legenda',
+        style: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w700,
+          fontSize: 14,
+        ),
+      ),
+    ],
+  ),
+),
+  ),
+                        ),
                         Positioned(
                           top: 90,
                           right: 14,
@@ -1678,54 +1786,114 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                             ),
                           ),
                         ),
-                        if (_selectedAnimalDetail != null)
-                          Positioned(
-                            bottom: 105,
-                            left: 0,
-                            right: 0,
-                            child: Center(
-                              child: SizedBox(
-                                width: math.min(
-                                  460,
-                                  MediaQuery.of(context).size.width - 12,
-                                ),
-                                child: Material(
-                                  color: Colors.transparent,
-                                  child: Stack(
-                                    children: [
-                                      AnimalDetailCard(
-                                        animal: _selectedAnimalDetail,
-                                        iconPath: _selectedAnimalIconPath,
-                                      ),
-                                      Positioned(
-                                        top: 8,
-                                        right: 8,
-                                        child: IconButton(
-                                          icon: const Icon(Icons.close, color: Colors.grey),
-                                          splashRadius: 20,
-                                          onPressed: _closeAnimalDetailCard,
+                        if (_showLegend)
+                          Positioned.fill(
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.translucent,
+                              onTap: () {
+                                setState(() => _showLegend = false);
+                              },
+                              child: const SizedBox.expand(),
+                            ),
+                          ),
+                        if (_showLegend)
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: 110,
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _legendRow(
+                        const Color(0xFF8613A8),
+                        'Waarneming',
+                      ),
+                      _legendRow(
+                        const Color(0xFF00BFD8),
+                        'Camera',
+                        icon: Icons.camera_alt,
+                      ),
+                      _legendRow(
+                        const Color(0xFFFF9100),
+                        'Acoustic',
+                        icon: Icons.graphic_eq,
+                      ),
+                      _legendRow(
+                        const Color(0xFFFE008E),
+                        'Collar',
+                        badgeIcon: Icons.settings_remote,
+                      ),
+                      _legendRow(
+                        const Color(0xFF0078DA),
+                        'Aanrijding',
+                      ),
+                      _legendRow(
+                        const Color(0xFF008C7B),
+                        'Schademelding',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+                                  if (_selectedAnimalDetail != null)
+                                    Positioned(
+                                      bottom: 105,
+                                      left: 0,
+                                      right: 0,
+                                      child: Center(
+                                        child: SizedBox(
+                                          width: math.min(
+                                            460,
+                                            MediaQuery.of(context).size.width - 12,
+                                          ),
+                                          child: Material(
+                                            color: Colors.transparent,
+                                            child: GestureDetector(
+                                            behavior: HitTestBehavior.translucent,
+                                            onTap: () {
+                                              if (_showLegend) {
+                                                setState(() => _showLegend = false);
+                                              }
+                                            },
+                                            child: Stack(
+                                              children: [
+                                                AnimalDetailCard(
+                                                  animal: _selectedAnimalDetail,
+                                                  iconPath: _selectedAnimalIconPath,
+                                                ),
+                                                Positioned(
+                                                  top: 8,
+                                                  right: 8,
+                                                  child: IconButton(
+                                                    icon: const Icon(Icons.close, color: Colors.grey),
+                                                    splashRadius: 20,
+                                                    onPressed: _closeAnimalDetailCard,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            )
+                                          ),
                                         ),
                                       ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        if (_devDebugToolsEnabled)
-                          Positioned(
-                            top: 210,
-                            right: 20,
-                            child: GestureDetector(
-                              onTap: _injectMockPins,
-                              onLongPress: _emitDevTrackingNotice,
-                              child: const Icon(
-                                Icons.bug_report,
-                                color: Colors.black54,
-                                size: 20,
-                              ),
-                            ),
-                          ),
+                                    ),
+                        
                       ],
                     ),
                   ),
