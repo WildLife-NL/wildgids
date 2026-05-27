@@ -30,7 +30,7 @@ class _MainTabShellState extends State<MainTabShell> {
         return const KaartOverviewScreen(showBottomNav: false);
       case NavTab.ontdekken:
       case NavTab.zones:
-        return const ChallengeScreen(showAppBar: false, showBottomNav: false);
+        return const ChallengeScreen(showAppBar: true, showBottomNav: false);
       case NavTab.waarneming:
         return const WaarnemmingStartScreen(showBottomNav: false);
       case NavTab.logboek:

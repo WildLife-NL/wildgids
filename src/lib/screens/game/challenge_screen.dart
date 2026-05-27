@@ -30,38 +30,7 @@ class ChallengeScreen extends StatefulWidget {
   State<ChallengeScreen> createState() => _ChallengeScreenState();
 }
 
-class _ChallengeScreenState extends State<ChallengeScreen>
-    with TickerProviderStateMixin {
-  late AnimationController _headerAnimationController;
-  late Animation<double> _headerOpacity;
-  late Animation<Offset> _headerSlide;
-
-  @override
-  void initState() {
-    super.initState();
-    _headerAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
-
-    _headerOpacity = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _headerAnimationController, curve: Curves.easeOut),
-    );
-
-    _headerSlide = Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero)
-        .animate(
-          CurvedAnimation(
-              parent: _headerAnimationController, curve: Curves.easeOutCubic),
-        );
-
-    _headerAnimationController.forward();
-  }
-
-  @override
-  void dispose() {
-    _headerAnimationController.dispose();
-    super.dispose();
-  }
+class _ChallengeScreenState extends State<ChallengeScreen> {
 
   void _navigateToSpeciesList() {
     Navigator.of(context).push(
@@ -113,8 +82,10 @@ class _ChallengeScreenState extends State<ChallengeScreen>
       backgroundColor: ChallengeScreen.pageBackground,
       appBar: widget.showAppBar
           ? AppBar(
-              backgroundColor: Colors.transparent,
+              backgroundColor: const Color.fromARGB(255, 248, 248, 248),
               elevation: 0,
+              surfaceTintColor: Colors.transparent,
+              scrolledUnderElevation: 0,
               centerTitle: true,
               title: const Text(
                 'Mijn voortgang',
@@ -127,18 +98,20 @@ class _ChallengeScreenState extends State<ChallengeScreen>
               iconTheme: const IconThemeData(color: Colors.black),
             )
           : null,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 10, 20, 28),
-        child: Column(
+      body: SafeArea(
+        top: false,
+        bottom: false,
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(
+            20,
+            widget.showAppBar ? 10 : 24,
+            20,
+            widget.showBottomNav ? 120 : 28,
+          ),
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SlideTransition(
-              position: _headerSlide,
-              child: FadeTransition(
-                opacity: _headerOpacity,
-                child: const ProgressHeaderCard(),
-              ),
-            ),
+            const ProgressHeaderCard(),
             const SizedBox(height: 28),
             
             // Learn About Animals Button
@@ -185,7 +158,7 @@ class _ChallengeScreenState extends State<ChallengeScreen>
                 ),
               ),
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 20),
 
             const SectionTitle(title: 'Statistieken'),
             const SizedBox(height: 12),
@@ -225,6 +198,7 @@ class _ChallengeScreenState extends State<ChallengeScreen>
             ),
           ],
         ),
+      ),
       ),
       bottomNavigationBar:
           widget.showBottomNav
