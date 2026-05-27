@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:wildgids/constants/app_colors.dart';
+//import 'package:wildgids/constants/app_colors.dart';
 import 'package:wildgids/models/api_models/my_interaction.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
 import 'package:wildgids/utils/api_datetime.dart';
 import 'package:wildgids/utils/location_label.dart';
+import 'package:wildgids/utils/species_icon_utils.dart';
 
 class InteractionDetailScreen extends StatelessWidget {
   final MyInteraction interaction;
@@ -26,7 +27,6 @@ class InteractionDetailScreen extends StatelessWidget {
   }
 
   String _localizeBehaviour(String behaviour) {
-    // Very basic mapping to Dutch; fallback to original text
     final lower = behaviour.toLowerCase();
     if (lower.contains('nocturnal')) return 'Nachtactief';
     if (lower.contains('diurnal')) return 'Dagactief';
@@ -44,163 +44,231 @@ class InteractionDetailScreen extends StatelessWidget {
     return advice;
   }
 
+  String _animalSummary() {
+    final animals = interaction.reportOfSighting?.involvedAnimals ??
+        interaction.reportOfCollision?.involvedAnimals ??
+        [];
+    return animals.isEmpty ? '1' : animals.length.toString();
+  }
+
+  List<Widget> _animalRows() {
+    final animals = interaction.reportOfSighting?.involvedAnimals ??
+        interaction.reportOfCollision?.involvedAnimals ??
+        [];
+
+    if (animals.isEmpty) return [];
+
+    return animals.asMap().entries.map((entry) {
+      final index = entry.key + 1;
+      final animal = entry.value;
+      final details = [
+        animal.sex,
+        animal.lifeStage,
+        animal.condition,
+      ].where((v) => v.isNotEmpty).join(', ');
+
+      return _buildDetailRow('Dier $index', details);
+    }).toList();
+  }
+
+  void _handleBackNavigation(BuildContext context) {
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final commonName = interaction.species.commonName.isNotEmpty
+        ? interaction.species.commonName
+        : interaction.species.name;
+    final imagePath = getSpeciesCardImagePath(commonName);
+    final animalRows = _animalRows();
+
     return Scaffold(
-      backgroundColor: AppColors.lightMintGreen,
+      backgroundColor: const Color(0xFFF5F6F4),
       body: SafeArea(
         bottom: false,
         child: Column(
           children: [
             CustomAppBar(
-              leftIcon: null,
-              centerText: 'Interactie Details',
+              centerText: _localizeType(interaction.type.name),
+              leftIcon: Icons.arrow_back_ios,
               rightIcon: null,
-              showUserIcon: true,
-              onLeftIconPressed: () {
-                Navigator.of(context).pop();
-              },
-              iconColor: Colors.black,
+              showUserIcon: false,
+              useFixedText: true,
+              onLeftIconPressed: () => _handleBackNavigation(context),
               textColor: Colors.black,
-              fontScale: 1.15,
+              iconColor: Colors.black,
+              fontScale: 1.4,
               iconScale: 1.15,
               userIconScale: 1.15,
-              useFixedText: true,
             ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Type Badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.darkGreen,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        _localizeType(interaction.type.name),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
 
-                    // Species Information
-                    _buildSection(
-                      title: 'Dier Informatie',
-                      children: [
-                        _buildInfoRow(
-                          'Gewone naam',
-                          interaction.species.commonName,
-                        ),
-                        _buildInfoRow(
-                          'Wetenschappelijke naam',
-                          interaction.species.name,
-                        ),
-                        if (interaction.species.category.isNotEmpty)
-                          _buildInfoRow(
-                            'Categorie',
-                            interaction.species.category,
-                          ),
-                        if (interaction.species.description.isNotEmpty)
-                          _buildInfoRow(
-                            'Beschrijving',
-                            interaction.species.description,
-                          ),
-                        if (interaction.species.behaviour.isNotEmpty)
-                          _buildInfoRow(
-                            'Gedrag',
-                            _localizeBehaviour(interaction.species.behaviour),
-                          ),
-                        if (interaction.species.advice.isNotEmpty)
-                          _buildInfoRow('Advies', _localizeAdvice(interaction.species.advice)),
-                        if (interaction.species.roleInNature.isNotEmpty)
-                          _buildInfoRow(
-                            'Rol in de natuur',
-                            interaction.species.roleInNature,
-                          ),
-                      ],
+            // Main card container — styled to match SightingDetailScreen.
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.85,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 2, 16, 16),
+                child: Card(
+                  elevation: 0,
+                  color: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    side: const BorderSide(
+                      color: Color(0xFF999999),
+                      width: 1,
                     ),
-
-                    // Time Information
-                    _buildSection(
-                      title: 'Tijd & Datum',
-                      children: [
-                        _buildInfoRow(
-                          'Moment',
-                          _formatDateTime(interaction.moment),
-                        ),
-                        _buildInfoRow(
-                          'Ingediend op',
-                          _formatDateTime(interaction.timestamp),
-                        ),
-                      ],
-                    ),
-
-                    // Location Information
-                    _buildSection(
-                      title: 'Locatie',
-                      children: [
-                        _buildInfoRow(
-                          'Interactie locatie',
-                          formatFriendlyLocation(
-                            interaction.location.latitude,
-                            interaction.location.longitude,
-                          ),
-                        ),
-                        _buildInfoRow(
-                          'Plaats',
-                          formatFriendlyLocation(
-                            interaction.place.latitude,
-                            interaction.place.longitude,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    // Description
-                    if (interaction.description.isNotEmpty)
-                      _buildSection(
-                        title: 'Beschrijving',
+                  ),
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Text(
-                            interaction.description,
-                            style: const TextStyle(fontSize: 14),
+                          const Text(
+                            'Overzicht',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
                           ),
+                          const SizedBox(height: 20),
+
+                          _AnimalImageCard(
+                            imagePath: imagePath,
+                            label: commonName,
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          Text(
+                            'Aantal: ${_animalSummary()}',
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black87,
+                            ),
+                          ),
+
+                          if (animalRows.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            ...animalRows,
+                            const SizedBox(height: 16),
+                            _divider(),
+                            const SizedBox(height: 16),
+                          ] else ...[
+                            const SizedBox(height: 16),
+                            _divider(),
+                            const SizedBox(height: 16),
+                          ],
+
+                          _buildDetailRow(
+                            'Type',
+                            _localizeType(interaction.type.name),
+                          ),
+                          _buildDetailRow(
+                            'Locatie',
+                            formatFriendlyLocation(
+                              interaction.location.latitude,
+                              interaction.location.longitude,
+                            ),
+                          ),
+                          _buildDetailRow(
+                            'Plaats',
+                            formatFriendlyLocation(
+                              interaction.place.latitude,
+                              interaction.place.longitude,
+                            ),
+                          ),
+                          _buildDetailRow(
+                            'Datum & Tijd',
+                            _formatDateTime(interaction.moment),
+                          ),
+                          _buildDetailRow(
+                            'Ingediend op',
+                            _formatDateTime(interaction.timestamp),
+                          ),
+
+                          if (interaction.description.isNotEmpty)
+                            _buildDetailRow(
+                              'Beschrijving',
+                              interaction.description,
+                            ),
+
+                          const SizedBox(height: 8),
+                          _divider(),
+                          const SizedBox(height: 16),
+
+                          _buildDetailRow(
+                            'Gewone naam',
+                            interaction.species.commonName,
+                          ),
+                          _buildDetailRow(
+                            'Wetenschappelijke naam',
+                            interaction.species.name,
+                          ),
+                          if (interaction.species.category.isNotEmpty)
+                            _buildDetailRow(
+                              'Categorie',
+                              interaction.species.category,
+                            ),
+                          if (interaction.species.description.isNotEmpty)
+                            _buildDetailRow(
+                              'Beschrijving',
+                              interaction.species.description,
+                            ),
+                          if (interaction.species.behaviour.isNotEmpty)
+                            _buildDetailRow(
+                              'Gedrag',
+                              _localizeBehaviour(
+                                interaction.species.behaviour,
+                              ),
+                            ),
+                          if (interaction.species.advice.isNotEmpty)
+                            _buildDetailRow(
+                              'Advies',
+                              _localizeAdvice(interaction.species.advice),
+                            ),
+                          if (interaction.species.roleInNature.isNotEmpty)
+                            _buildDetailRow(
+                              'Rol in de natuur',
+                              interaction.species.roleInNature,
+                            ),
+
+                          if (interaction.reportOfDamage != null) ...[
+                            const SizedBox(height: 8),
+                            _divider(),
+                            const SizedBox(height: 16),
+                            _buildDamageRows(interaction.reportOfDamage!),
+                          ],
+
+                          if (interaction.reportOfCollision != null) ...[
+                            const SizedBox(height: 8),
+                            _divider(),
+                            const SizedBox(height: 16),
+                            _buildCollisionRows(
+                              interaction.reportOfCollision!,
+                            ),
+                          ],
+
+                          if (interaction.questionnaire != null) ...[
+                            const SizedBox(height: 8),
+                            _divider(),
+                            const SizedBox(height: 16),
+                            _buildQuestionnaireRows(interaction.questionnaire!),
+                          ],
+
+                          const SizedBox(height: 8),
+                          _divider(),
+                          const SizedBox(height: 16),
+                          _buildDetailRow('Gebruiker', interaction.user.name),
                         ],
                       ),
-
-                    // Report Details
-                    if (interaction.reportOfCollision != null)
-                      _buildCollisionReport(interaction.reportOfCollision!),
-                    if (interaction.reportOfDamage != null)
-                      _buildDamageReport(interaction.reportOfDamage!),
-                    if (interaction.reportOfSighting != null)
-                      _buildSightingReport(interaction.reportOfSighting!),
-
-                    // Questionnaire Information
-                    if (interaction.questionnaire != null)
-                      _buildQuestionnaireSection(interaction.questionnaire!),
-
-                    // User Information
-                    _buildSection(
-                      title: 'Gebruiker',
-                      children: [
-                        _buildInfoRow('Naam', interaction.user.name),
-                      ],
                     ),
-
-                    const SizedBox(height: 16),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -210,222 +278,178 @@ class InteractionDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSection({
-    required String title,
-    required List<Widget> children,
-  }) {
+  Widget _divider() {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppColors.darkGreen,
-            ),
-          ),
-          const SizedBox(height: 12),
-          ...children,
-        ],
-      ),
+      height: 1,
+      color: const Color(0xFF999999),
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
+  Widget _buildCollisionRows(ReportOfCollision report) {
+    return Column(
+      children: [
+        _buildDetailRow('Intensiteit', report.intensity),
+        _buildDetailRow('Urgentie', report.urgency),
+        _buildDetailRow('Geschatte schade', '€${report.estimatedDamage}'),
+      ],
+    );
+  }
+
+  Widget _buildDamageRows(ReportOfDamage report) {
+    return Column(
+      children: [
+        _buildDetailRow('Bezit', report.belonging),
+        _buildDetailRow('Impact type', report.impactType),
+        _buildDetailRow('Impact waarde', report.impactValue.toString()),
+        _buildDetailRow('Geschatte schade', '€${report.estimatedDamage}'),
+        _buildDetailRow('Geschat verlies', '€${report.estimatedLoss}'),
+      ],
+    );
+  }
+
+  Widget _buildQuestionnaireRows(QuestionnaireInfo questionnaire) {
+    return Column(
+      children: [
+        _buildDetailRow('Vragenlijst', questionnaire.name),
+        _buildDetailRow('Identificatie', questionnaire.identifier),
+        _buildDetailRow('Experiment', questionnaire.experiment.name),
+        if (questionnaire.experiment.description.isNotEmpty)
+          _buildDetailRow(
+            'Beschrijving',
+            questionnaire.experiment.description,
+          ),
+        if (questionnaire.experiment.start != null)
+          _buildDetailRow(
+            'Start',
+            _formatDateTime(questionnaire.experiment.start!),
+          ),
+        if (questionnaire.experiment.end != null)
+          _buildDetailRow(
+            'Einde',
+            _formatDateTime(questionnaire.experiment.end!),
+          ),
+        _buildDetailRow('Onderzoeker', questionnaire.experiment.user.name),
+      ],
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
     if (value.isEmpty) return const SizedBox.shrink();
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 140,
+          Expanded(
             child: Text(
               '$label:',
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.black87,
+              ),
             ),
           ),
-          Expanded(child: Text(value, style: const TextStyle(fontSize: 14))),
+          Expanded(
+            flex: 2,
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.black87,
+              ),
+            ),
+          ),
         ],
       ),
-    );
-  }
-
-  Widget _buildCollisionReport(ReportOfCollision report) {
-    return _buildSection(
-      title: 'Aanrijding Details',
-      children: [
-        _buildInfoRow('Intensiteit', report.intensity),
-        _buildInfoRow('Urgentie', report.urgency),
-        _buildInfoRow('Geschatte schade', 'â‚¬${report.estimatedDamage}'),
-        const SizedBox(height: 8),
-        const Text(
-          'Betrokken dieren:',
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-        ),
-        const SizedBox(height: 8),
-        ...report.involvedAnimals.asMap().entries.map((entry) {
-          final index = entry.key + 1;
-          final animal = entry.value;
-          return Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.lightMintGreen,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Dier $index',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Geslacht: ${animal.sex}',
-                  style: const TextStyle(fontSize: 12),
-                ),
-                Text(
-                  'Levensfase: ${animal.lifeStage}',
-                  style: const TextStyle(fontSize: 12),
-                ),
-                Text(
-                  'Conditie: ${animal.condition}',
-                  style: const TextStyle(fontSize: 12),
-                ),
-              ],
-            ),
-          );
-        }),
-      ],
-    );
-  }
-
-  Widget _buildDamageReport(ReportOfDamage report) {
-    return _buildSection(
-      title: 'Schade Details',
-      children: [
-        _buildInfoRow('Bezit', report.belonging),
-        _buildInfoRow('Impact type', report.impactType),
-        _buildInfoRow('Impact waarde', report.impactValue.toString()),
-        _buildInfoRow('Geschatte schade', 'â‚¬${report.estimatedDamage}'),
-        _buildInfoRow('Geschat verlies', 'â‚¬${report.estimatedLoss}'),
-      ],
-    );
-  }
-
-  Widget _buildSightingReport(ReportOfSighting report) {
-    return _buildSection(
-      title: 'Waarneming Details',
-      children: [
-        const Text(
-          'Betrokken dieren:',
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-        ),
-        const SizedBox(height: 8),
-        ...report.involvedAnimals.asMap().entries.map((entry) {
-          final index = entry.key + 1;
-          final animal = entry.value;
-          return Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.lightMintGreen,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Dier $index',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Geslacht: ${animal.sex}',
-                  style: const TextStyle(fontSize: 12),
-                ),
-                Text(
-                  'Levensfase: ${animal.lifeStage}',
-                  style: const TextStyle(fontSize: 12),
-                ),
-                Text(
-                  'Conditie: ${animal.condition}',
-                  style: const TextStyle(fontSize: 12),
-                ),
-              ],
-            ),
-          );
-        }),
-      ],
-    );
-  }
-
-  Widget _buildQuestionnaireSection(QuestionnaireInfo questionnaire) {
-    return _buildSection(
-      title: 'Vragenlijst',
-      children: [
-        _buildInfoRow('Naam', questionnaire.name),
-        _buildInfoRow('Identificatie', questionnaire.identifier),
-        const SizedBox(height: 8),
-        const Text(
-          'Experiment:',
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: AppColors.lightMintGreen,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildInfoRow('Naam', questionnaire.experiment.name),
-              if (questionnaire.experiment.description.isNotEmpty)
-                _buildInfoRow(
-                  'Beschrijving',
-                  questionnaire.experiment.description,
-                ),
-              if (questionnaire.experiment.start != null)
-                _buildInfoRow(
-                  'Start',
-                  _formatDateTime(questionnaire.experiment.start!),
-                ),
-              if (questionnaire.experiment.end != null)
-                _buildInfoRow(
-                  'Einde',
-                  _formatDateTime(questionnaire.experiment.end!),
-                ),
-              _buildInfoRow('Onderzoeker', questionnaire.experiment.user.name),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }
 
+class _AnimalImageCard extends StatelessWidget {
+  final String? imagePath;
+  final String label;
+
+  const _AnimalImageCard({
+    required this.imagePath,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: SizedBox(
+        width: 140,
+        child: Card(
+          elevation: 0,
+          margin: EdgeInsets.zero,
+          shadowColor:
+              const Color.fromARGB(133, 0, 0, 0).withValues(alpha: 0.1),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(
+              color: Color(0xFF999999),
+              width: 1,
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 140,
+                height: 120,
+                child: imagePath != null
+                    ? Image.asset(
+                        imagePath!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Center(
+                          child: Icon(
+                            Icons.image_not_supported_outlined,
+                            size: 50,
+                            color: Colors.grey[400],
+                          ),
+                        ),
+                      )
+                    : Center(
+                        child: Icon(
+                          Icons.image_not_supported_outlined,
+                          size: 50,
+                          color: Colors.grey[400],
+                        ),
+                      ),
+              ),
+              Container(
+                height: 1,
+                color: const Color(0xFF999999),
+                width: 140,
+              ),
+              Container(
+                width: 140,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                ),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 12,
+                ),
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.black,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
