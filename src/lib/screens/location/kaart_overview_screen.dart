@@ -962,27 +962,38 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
 
   /// Get border color based on detection type
   Color _getBorderColorForDetectionType(String? detectionType) {
+    
     if (detectionType == null) return Colors.white;
     
     final type = detectionType.toLowerCase();
     
     if (type.contains('camera') || type.contains('foto')) {
-      return const Color(0xFFE91E63); // Pink
+      return const Color(0xFF00BFD8); // Aqua
     } else if (type.contains('acoustic') || type.contains('geluid')) {
-      return const Color(0xFF00BCD4); // Aqua
+      return const Color(0xFFFF9100); // Orange
     } else if (type.contains('waarneming') || type.contains('sighting')) {
-      return const Color(0xFF9C27B0); // Purple
+      return const Color(0xFF8613A8); // Purple
     } else if (type.contains('collision') || type.contains('botsing')) {
-      return const Color(0xFFF44336); // Red
+      return const Color(0xFF0078DA); // Blue
     } else if (type.contains('schadamelding') || type.contains('damage')) {
-      return const Color(0xFF4CAF50); // Green
+      return const Color(0xFF008C7B); // teal
     } else if (type.contains('collar')) {
-      return const Color(0xFFFF9800); // Orange
+      return const Color(0xFFFE008E); // pink
     }
     
     return Colors.white;
   }
 
+  int? _eventCountForPin(AnimalPin pin) {
+    final type = pin.reportType?.toLowerCase();
+    final isFixedPin =
+        type?.contains('camera') == true ||
+        type?.contains('foto') == true ||
+        type?.contains('acoustic') == true ||
+        type?.contains('geluid') == true;
+
+    return isFixedPin ? 3 : null;
+  }
   /// Build styled animal pin with white circle and colored border
   Widget _buildStyledAnimalPin(
     String? speciesName,
@@ -991,11 +1002,31 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     {int? eventCount}
   ) {
     final borderColor = _getBorderColorForDetectionType(detectionType);
-    final iconPath = _getAnimalIconPath(speciesName);
+    final type = detectionType?.toLowerCase();
+
+final bool isCamera =
+    type?.contains('camera') == true ||
+    type?.contains('foto') == true;
     
-    return Container(
-      width: style.size + 16,
-      height: style.size + 16,
+
+final bool isAcoustic =
+    type?.contains('acoustic') == true ||
+    type?.contains('geluid') == true;
+    final iconPath = _getAnimalIconPath(speciesName);
+
+final bool isCollar =
+    type?.contains('collar') == true;
+    
+    return SizedBox(
+    width: style.size + 28,
+    height: style.size + 28,
+    child: Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.center,
+      children: [
+      Container(
+        width: style.size + 16,
+        height: style.size + 16,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: Colors.white,
@@ -1015,68 +1046,112 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
         alignment: Alignment.center,
         children: [
           // Center icon
-          if (iconPath != null)
-            SizedBox(
-              width: style.size,
-              height: style.size,
-              child: ColorFiltered(
-                colorFilter: ColorFilter.mode(
-                  style.color,
-                  BlendMode.srcIn,
-                ),
-                child: Image.asset(
-                  iconPath,
-                  width: style.size,
-                  height: style.size,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Icon(
-                      Icons.pets,
-                      size: style.size * 0.9,
-                      color: style.color,
-                    );
-                  },
-                ),
-              ),
-            )
-          else
-            Icon(
-              Icons.pets,
-              size: style.size,
-              color: style.color,
-            ),
+          if (isCamera)
+  Icon(
+    Icons.camera_alt,
+    size: style.size * 0.9,
+    color: style.color,
+  )
+else if (isAcoustic)
+  Icon(
+    Icons.graphic_eq,
+    size: style.size * 0.9,
+    color: style.color,
+  )
+else if (iconPath != null)
+  SizedBox(
+    width: style.size,
+    height: style.size,
+    child: ColorFiltered(
+      colorFilter: ColorFilter.mode(
+        style.color,
+        BlendMode.srcIn,
+      ),
+      child: Image.asset(
+        iconPath,
+        width: style.size,
+        height: style.size,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) {
+          return Icon(
+            Icons.pets,
+            size: style.size * 0.9,
+            color: style.color,
+          );
+        },
+      ),
+    ),
+  )
+else
+  Icon(
+    Icons.pets,
+    size: style.size,
+    color: style.color,
+  ),
           
           // Event count badge (top-right)
-          if (eventCount != null && eventCount > 0)
-            Positioned(
-              top: -4,
-              right: -4,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: borderColor,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2),
-                      blurRadius: 2,
-                    ),
-                  ],
-                ),
-                child: Text(
-                  '$eventCount',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
+if (eventCount != null && eventCount > 0)
+  Positioned(
+    top: -2,
+    right: -2,
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: borderColor,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 2,
+          ),
         ],
       ),
-    );
+      child: Text(
+        '$eventCount',
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    ),
+  ),
+
+// Collar badge
+if (isCollar)
+  Positioned(
+    top: -2,
+    right: -2,
+    child: Container(
+      width: 18,
+      height: 18,
+      decoration: BoxDecoration(
+        color: borderColor,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 2,
+          ),
+        ],
+      ),
+      child: const Icon(
+        Icons.settings_remote,
+        size: 11,
+        color: Colors.white,
+      ),
+    ),
+  )
+            
+              ],
+      ),
+    ), // closes Container
+  ],
+),
+);
+
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -1149,6 +1224,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                                   child: _buildStyledAnimalPin(
                                                     pin.speciesName,
                                                     pin.reportType,
+                                                    eventCount: _eventCountForPin(pin),
                                                     style,
                                                   ),
                                                 ),
@@ -1207,6 +1283,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                                       return _buildStyledAnimalPin(
                                                         pin.speciesName,
                                                         pin.reportType,
+                                                        eventCount: _eventCountForPin(pin),
                                                         style,
                                                       );
                                                     },
@@ -1526,6 +1603,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                                     itx.speciesName,
                                                     itx.typeName,
                                                     style,
+                                                    eventCount: null,
                                                   );
                                                 },
                                               ),
