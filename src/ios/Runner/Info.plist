@@ -14,6 +14,11 @@
 	<key>NSBluetoothPeripheralUsageDescription</key>
 	<string>Bluetooth is nodig om collars te scannen voor contacttracing.</string>
 
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>bluetooth-central</string>
+	</array>
+
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
