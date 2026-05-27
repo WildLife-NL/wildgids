@@ -24,7 +24,7 @@ import 'package:wildgids/widgets/map/detection_detail_dialog.dart';
 import 'package:wildgids/data_managers/tracking_api.dart';
 import 'package:wildgids/interfaces/data_apis/tracking_api_interface.dart';
 import 'package:wildgids/config/app_config.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+//import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/custom_nav_bar.dart';
 import 'package:wildgids/constants/location_sharing_config.dart';
 import 'dart:async';
@@ -252,91 +252,10 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     super.dispose();
   }
 
-  bool get _devDebugToolsEnabled => dotenv.env['DEV_DEBUG_TOOLS'] == 'true' || dotenv.env['DEV_DEBUG_TOOLS'] == '1';
+  //bool get _devDebugToolsEnabled => dotenv.env['DEV_DEBUG_TOOLS'] == 'true' || dotenv.env['DEV_DEBUG_TOOLS'] == '1';
 
-  void _injectMockPins() {
-    final map = context.read<MapProvider>();
-    final center = map.isInitialized
-        ? map.mapController.camera.center
-        : LatLng(
-            LocationMapManager.denBoschCenter.latitude,
-            LocationMapManager.denBoschCenter.longitude,
-          );
 
-    final now = DateTime.now().toUtc();
-    final species = [
-      'Vos',
-      'Wolf',
-      'Das',
-      'Ree',
-      'Wild zwijn',
-      'Damhert',
-      'Egel',
-      'Eekhoorn',
-    ];
-
-    final reportTypes = [
-  'waarneming',
-  'camera',
-  'acoustic',
-  'collision',
-  'schadamelding',
-  'collar',
-];
-
-    final dx = [0.0000, 0.0012, -0.0012, 0.0018, -0.0018, 0.0009, -0.0009, 0.0015];
-    final dy = [0.0000, 0.0010, -0.0010, -0.0016, 0.0016, -0.0008, 0.0008, 0.0013];
-
-    final animals = <AnimalPin>[];
-    for (int i = 0; i < species.length; i++) {
-      final ts = i < 3
-          ? now.subtract(Duration(minutes: (i + 1) * 10))
-          : (i < 6
-              ? now.subtract(Duration(hours: (i - 2) * 6))
-              : now.subtract(Duration(days: 8 + i)));
-
-      animals.add(
-        AnimalPin(
-          id: 'mock-${i + 1}',
-          lat: center.latitude + (dy[i % dy.length]),
-          lon: center.longitude + (dx[i % dx.length]),
-          seenAt: ts,
-          speciesName: species[i],
-          reportType: reportTypes[i % reportTypes.length],
-          
-        ),
-      );
-    }
-
-    map.setMockVicinity(animals: animals);
-
-    if (mounted) {
-      ScaffoldMessenger.of(context)
-        ..clearSnackBars()
-        ..showSnackBar(
-          const SnackBar(
-            content: Text('Mock dieren geplaatst rond de kaart'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-      setState(() {});
-    }
-  }
-
-  void _emitDevTrackingNotice() {
-    final map = context.read<MapProvider>();
-    map.emitMockTrackingNotice('Dier in de buurt (testmelding)', severity: 2);
-    if (mounted) {
-      ScaffoldMessenger.of(context)
-        ..clearSnackBars()
-        ..showSnackBar(
-          const SnackBar(
-            content: Text('Testmelding verstuurd (notificatie)'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-    }
-  }
+  
 
   void _schedulePinsRefresh({bool immediate = false}) {
     _pinsRefreshDebounce?.cancel();
@@ -1974,20 +1893,7 @@ bottom: 45,
                                         ),
                                       ),
                                     ),
-                        if (_devDebugToolsEnabled)
-                          Positioned(
-                            top: 210,
-                            right: 20,
-                            child: GestureDetector(
-                              onTap: _injectMockPins,
-                              onLongPress: _emitDevTrackingNotice,
-                              child: const Icon(
-                                Icons.bug_report,
-                                color: Colors.black54,
-                                size: 20,
-                              ),
-                            ),
-                          ),
+                        
                       ],
                     ),
                   ),
