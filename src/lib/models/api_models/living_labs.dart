@@ -14,16 +14,23 @@ class LivingLabs {
   });
 
   factory LivingLabs.fromJson(Map<String, dynamic> json) => LivingLabs(
-    id: json["ID"],
-    definition:
-        json["definition"] != null
-            ? List<Location>.from(
-              json["definition"].map((x) => Location.fromJson(x)),
-            )
-            : null,
-    name: json["name"],
-    commonName: json["commonName"],
+    id: json['ID']?.toString() ?? '',
+    definition: _parseDefinition(json['definition']),
+    name: json['name']?.toString() ?? '',
+    commonName: json['commonName']?.toString() ?? '',
   );
+
+  static List<Location>? _parseDefinition(dynamic raw) {
+    if (raw == null || raw is! List) return null;
+    return raw
+        .whereType<Map>()
+        .map(
+          (x) => Location.fromJson(
+            x is Map<String, dynamic> ? x : Map<String, dynamic>.from(x),
+          ),
+        )
+        .toList();
+  }
 
   Map<String, dynamic> toJson() {
     return {

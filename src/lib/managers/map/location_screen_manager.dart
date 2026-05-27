@@ -70,9 +70,7 @@ class LocationScreenManager implements LocationScreenInterface {
             accuracy: LocationAccuracy.high,
             timeLimit: Duration(seconds: 5),
           ),
-        ).catchError((error) {
-          throw error;
-        });
+        );
 
         final address = await locationService.getAddressFromPosition(
           currentPosition,

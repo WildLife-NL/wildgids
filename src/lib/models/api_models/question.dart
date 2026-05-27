@@ -22,33 +22,38 @@ class Question {
   });
 
   factory Question.fromJson(Map<String, dynamic> json) => Question(
-    id: json["ID"],
-    allowMultipleResponse: json["allowMultipleResponse"],
-    allowOpenResponse: json["allowOpenResponse"],
-    answers:
-        json["answers"] != null
-            ? List<Answer>.from(json["answers"].map((x) => Answer.fromJson(x)))
+        id: (json['ID'] ?? json['id'])?.toString() ?? '',
+        allowMultipleResponse: json['allowMultipleResponse'] == true,
+        allowOpenResponse: json['allowOpenResponse'] == true,
+        answers: json['answers'] != null && json['answers'] is List
+            ? List<Answer>.from(
+                (json['answers'] as List).map(
+                  (x) => Answer.fromJson(
+                    x is Map<String, dynamic>
+                        ? x
+                        : Map<String, dynamic>.from(x as Map),
+                  ),
+                ),
+              )
             : null,
-    description: json["description"],
-    index: json["index"],
-    openResponseFormat: json["openResponseFormat"],
-    text: json["text"],
-  );
+        description: json['description']?.toString() ?? '',
+        index: (json['index'] is int) ? json['index'] as int : 0,
+        openResponseFormat: json['openResponseFormat']?.toString(),
+        text: json['text']?.toString() ?? '',
+      );
 
   Map<String, dynamic> toJson() {
     return {
-      "ID": id,
-      "allowMultipleResponse": allowMultipleResponse,
-      "allowOpenResponse": allowOpenResponse,
-      "answers":
-          answers != null
-              ? List<dynamic>.from(answers!.map((x) => x.toJson()))
-              : null,
-      "description": description,
-      "index": index,
-      "openResponseFormat": openResponseFormat,
-      "text": text,
+      'ID': id,
+      'allowMultipleResponse': allowMultipleResponse,
+      'allowOpenResponse': allowOpenResponse,
+      'answers': answers != null
+          ? List<dynamic>.from(answers!.map((x) => x.toJson()))
+          : null,
+      'description': description,
+      'index': index,
+      'openResponseFormat': openResponseFormat,
+      'text': text,
     };
   }
 }
-

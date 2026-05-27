@@ -4,8 +4,6 @@ import 'package:wildgids/managers/map/location_map_manager.dart';
 import 'package:wildgids/models/beta_models/sighting_report_model.dart';
 import 'package:wildgids/models/enums/report_type.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:wildgids/constants/mock_location.dart';
-
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wildgids/screens/login/login_screen.dart';
 
@@ -19,9 +17,11 @@ class AppStateProvider with ChangeNotifier {
   DateTime? _lastLocationUpdate;
   static const Duration locationCacheTimeout = Duration(minutes: 15);
 
-  // Location tracking preference
-  bool _isLocationTrackingEnabled = false;
-  bool get isLocationTrackingEnabled => _isLocationTrackingEnabled;
+  // Location sharing is mandatory for WildGids and cannot be disabled in-app.
+  bool get isLocationTrackingEnabled => true;
+
+  bool _notificationsEnabled = true;
+  bool get notificationsEnabled => _notificationsEnabled;
 
   ReportType? get currentReportType => _currentReportType;
   Position? get cachedPosition => _cachedPosition;
@@ -125,14 +125,12 @@ class AppStateProvider with ChangeNotifier {
 
   Future<void> updateLocationCache() async {
     try {
-      final position = MockLocation.enabled
-          ? MockLocation.position()
-          : await Geolocator.getCurrentPosition(
-              locationSettings: const LocationSettings(
-                accuracy: LocationAccuracy.high,
-                timeLimit: Duration(seconds: 5),
-              ),
-            );
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 5),
+        ),
+      );
 
       final locationService = LocationMapManager();
       final address = await locationService.getAddressFromPosition(position);
@@ -157,41 +155,52 @@ class AppStateProvider with ChangeNotifier {
     Timer.periodic(locationCacheTimeout, (_) => updateLocationCache());
   }
 
-  /// Load location tracking preference from SharedPreferences
+  /// Loads notification preference and enforces always-on location sharing.
   Future<void> loadLocationTrackingPreference() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      _isLocationTrackingEnabled = true;
       await prefs.setBool('location_tracking_enabled', true);
+      _notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
       debugPrint(
-        '[AppStateProvider] Loaded location tracking preference: $_isLocationTrackingEnabled',
+        '[AppStateProvider] Location sharing: always enabled; '
+        'notifications: $_notificationsEnabled',
       );
       notifyListeners();
     } catch (e) {
       debugPrint(
-        '[AppStateProvider] Failed to load location tracking preference: $e',
+        '[AppStateProvider] Failed to load preferences: $e',
       );
-      _isLocationTrackingEnabled = true;
+      _notificationsEnabled = true;
     }
   }
 
-  /// Toggle location tracking on/off
+  /// Location sharing cannot be turned off; kept for call-site compatibility.
   Future<void> setLocationTrackingEnabled(bool enabled) async {
+    if (!enabled) {
+      debugPrint(
+        '[AppStateProvider] Ignoring request to disable location sharing',
+      );
+    }
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('location_tracking_enabled', true);
-      _isLocationTrackingEnabled = true;
-      if (!enabled) {
-        debugPrint(
-          '[AppStateProvider] Disable request ignored: location tracking is mandatory',
-        );
-      } else {
-        debugPrint('[AppStateProvider] Location tracking enabled');
-      }
       notifyListeners();
     } catch (e) {
       debugPrint(
-        '[AppStateProvider] Failed to save location tracking preference: $e',
+        '[AppStateProvider] Failed to persist location sharing preference: $e',
+      );
+    }
+  }
+
+  Future<void> setNotificationsEnabled(bool enabled) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('notifications_enabled', enabled);
+      _notificationsEnabled = enabled;
+      notifyListeners();
+    } catch (e) {
+      debugPrint(
+        '[AppStateProvider] Failed to save notifications preference: $e',
       );
     }
   }

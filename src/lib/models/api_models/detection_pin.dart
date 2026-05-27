@@ -1,11 +1,11 @@
 class DetectionPin {
   final String id;
-  final String? deviceType; // camera, acoustic, etc.
-  final String? label; // optional class/species label
+  final String? deviceType;
+  final String? label;
   final double lat;
   final double lon;
   final DateTime detectedAt;
-  final double? confidence; // 0..1 or %
+  final double? confidence;
 
   DetectionPin({
     required this.id,
@@ -18,20 +18,59 @@ class DetectionPin {
   });
 
   factory DetectionPin.fromJson(Map<String, dynamic> j) {
-    final loc = (j['location'] ?? j['place'] ?? {}) as Map<String, dynamic>;
-    final id = (j['id'] ?? j['ID']).toString();
-    final lat = (loc['latitude'] ?? loc['lat']) as num;
-    final lon = (loc['longitude'] ?? loc['lon']) as num;
-    final ts = (j['moment'] ?? j['timestamp'])?.toString();
+    final loc = _locationMap(j['location'] ?? j['place']);
+    if (loc == null) {
+      throw const FormatException('DetectionPin: missing location');
+    }
+
+    final lat = _asDouble(loc['latitude'] ?? loc['lat']);
+    final lon = _asDouble(loc['longitude'] ?? loc['lon']);
+    if (lat == null || lon == null) {
+      throw const FormatException('DetectionPin: missing coordinates');
+    }
+
+    final id = (j['id'] ??
+            j['ID'] ??
+            j['sensorID'] ??
+            j['deploymentID'])
+        ?.toString();
+    if (id == null || id.isEmpty) {
+      throw const FormatException('DetectionPin: missing id');
+    }
+
+    final species = j['species'];
+    final speciesMap = species is Map<String, dynamic>
+        ? species
+        : species is Map
+            ? Map<String, dynamic>.from(species)
+            : null;
+
+    final ts =
+        (j['moment'] ?? j['timestamp'] ?? j['start'] ?? j['end'])?.toString();
+
     return DetectionPin(
       id: id,
-      lat: lat.toDouble(),
-      lon: lon.toDouble(),
+      lat: lat,
+      lon: lon,
       detectedAt:
           DateTime.tryParse(ts ?? '')?.toUtc() ?? DateTime.now().toUtc(),
-      deviceType: j['deviceType']?.toString(),
-      label: j['label']?.toString(),
+      deviceType: (j['deviceType'] ?? j['sensorType'])?.toString(),
+      label: j['label']?.toString() ??
+          speciesMap?['commonName']?.toString() ??
+          speciesMap?['name']?.toString(),
       confidence: (j['confidence'] as num?)?.toDouble(),
     );
+  }
+
+  static Map<String, dynamic>? _locationMap(Object? value) {
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) return Map<String, dynamic>.from(value);
+    return null;
+  }
+
+  static double? _asDouble(Object? value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value.toString());
   }
 }

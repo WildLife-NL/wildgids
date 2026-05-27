@@ -1,3 +1,5 @@
+import 'package:wildgids/utils/api_datetime.dart';
+
 class AnimalInfo {
   final String? sex;
   final String? lifeStage;
@@ -16,8 +18,15 @@ class AnimalInfo {
 
 class InteractionQueryResult {
   final String id;
+  /// Map pin: [eventLat]/[eventLon] (place) or fallback to report GPS.
   final double lat;
   final double lon;
+  /// GPS when the interaction was reported ([location] in the API).
+  final double? reportLat;
+  final double? reportLon;
+  /// Where the interaction happened ([place] in the API).
+  final double? eventLat;
+  final double? eventLon;
   final DateTime moment;
   final String? typeName; // e.g., "Sighting"
   final String? speciesName; // e.g., "Vos"
@@ -26,10 +35,20 @@ class InteractionQueryResult {
   final String? placeName; // Reverse geocoded place name
   final List<AnimalInfo>? involvedAnimals; // Animal details
 
+  /// Stable key for merging pins (avoids collapsing rows when [id] repeats).
+  String get dedupeKey =>
+      id.isNotEmpty
+          ? id
+          : '${lat.toStringAsFixed(5)}|${lon.toStringAsFixed(5)}|${moment.toUtc().millisecondsSinceEpoch}';
+
   InteractionQueryResult({
     required this.id,
     required this.lat,
     required this.lon,
+    this.reportLat,
+    this.reportLon,
+    this.eventLat,
+    this.eventLon,
     required this.moment,
     this.typeName,
     this.speciesName,
@@ -53,31 +72,24 @@ class InteractionQueryResult {
     final locationNode = _asMap(json['location']);
     final placeNodeForCoords = _asMap(json['place']);
 
-    final lat = _asDouble(
-      locationNode['latitude'] ??
-          locationNode['lat'] ??
-          placeNodeForCoords['latitude'] ??
-          placeNodeForCoords['lat'],
-    );
-    final lon = _asDouble(
-      locationNode['longitude'] ??
-          locationNode['lon'] ??
-          locationNode['longtitude'] ??
-          placeNodeForCoords['longitude'] ??
-          placeNodeForCoords['lon'] ??
-          placeNodeForCoords['longtitude'],
-    );
-
-    if (lat == null || lon == null) {
+    final reportCoords = _coordsFromNode(locationNode);
+    final eventCoords = _coordsFromNode(placeNodeForCoords);
+    final mapCoords = eventCoords ?? reportCoords;
+    if (mapCoords == null) {
       throw const FormatException(
         'InteractionQueryResult: missing coordinates',
       );
     }
+    final lat = mapCoords.lat;
+    final lon = mapCoords.lon;
 
-    // moment (ISO8601). If missing/invalid, use now (UTC recommended).
-    final rawMoment = json['moment']?.toString();
+    // moment (when it happened); timestamp (when reported) as fallback.
+    final rawMoment =
+        json['moment']?.toString() ?? json['timestamp']?.toString();
     final parsedMoment =
-        rawMoment != null ? DateTime.tryParse(rawMoment) : null;
+        rawMoment != null && rawMoment.isNotEmpty
+            ? ApiDateTime.parse(rawMoment)
+            : null;
 
     // optional fields
     final typeNode =
@@ -90,34 +102,51 @@ class InteractionQueryResult {
 
     // Parse involved animals from reportOfSighting, reportOfCollision, or reportOfDamage
     List<AnimalInfo>? animals;
-    final reportOfSighting = json['reportOfSighting'] as Map<String, dynamic>?;
-    final reportOfCollision =
-        json['reportOfCollision'] as Map<String, dynamic>?;
-    final reportOfDamage = json['reportOfDamage'] as Map<String, dynamic>?;
+    final reportOfSighting = _asMap(json['reportOfSighting']);
+    final reportOfCollision = _asMap(json['reportOfCollision']);
+    final reportOfDamage = _asMap(json['reportOfDamage']);
 
-    if (reportOfSighting != null &&
-        reportOfSighting['involvedAnimals'] != null) {
+    if (reportOfSighting.isNotEmpty &&
+        reportOfSighting['involvedAnimals'] is List) {
       final animalsList = reportOfSighting['involvedAnimals'] as List;
       animals =
           animalsList
-              .whereType<Map<String, dynamic>>()
-              .map((a) => AnimalInfo.fromJson(a))
+              .whereType<Map>()
+              .map(
+                (a) => AnimalInfo.fromJson(
+                  a is Map<String, dynamic>
+                      ? a
+                      : Map<String, dynamic>.from(a),
+                ),
+              )
               .toList();
-    } else if (reportOfCollision != null &&
-        reportOfCollision['involvedAnimals'] != null) {
+    } else if (reportOfCollision.isNotEmpty &&
+        reportOfCollision['involvedAnimals'] is List) {
       final animalsList = reportOfCollision['involvedAnimals'] as List;
       animals =
           animalsList
-              .whereType<Map<String, dynamic>>()
-              .map((a) => AnimalInfo.fromJson(a))
+              .whereType<Map>()
+              .map(
+                (a) => AnimalInfo.fromJson(
+                  a is Map<String, dynamic>
+                      ? a
+                      : Map<String, dynamic>.from(a),
+                ),
+              )
               .toList();
-    } else if (reportOfDamage != null &&
-        reportOfDamage['involvedAnimals'] != null) {
+    } else if (reportOfDamage.isNotEmpty &&
+        reportOfDamage['involvedAnimals'] is List) {
       final animalsList = reportOfDamage['involvedAnimals'] as List;
       animals =
           animalsList
-              .whereType<Map<String, dynamic>>()
-              .map((a) => AnimalInfo.fromJson(a))
+              .whereType<Map>()
+              .map(
+                (a) => AnimalInfo.fromJson(
+                  a is Map<String, dynamic>
+                      ? a
+                      : Map<String, dynamic>.from(a),
+                ),
+              )
               .toList();
     }
 
@@ -125,7 +154,11 @@ class InteractionQueryResult {
       id: rawId,
       lat: lat,
       lon: lon,
-      moment: (parsedMoment ?? DateTime.now()).toUtc(),
+      reportLat: reportCoords?.lat,
+      reportLon: reportCoords?.lon,
+      eventLat: eventCoords?.lat,
+      eventLon: eventCoords?.lon,
+      moment: parsedMoment ?? DateTime.now().toUtc(),
       typeName: (typeNode['name'] ?? typeNode['displayName'])?.toString(),
       speciesName:
           (speciesNode['commonName'] ?? speciesNode['name'])?.toString(),
@@ -146,6 +179,23 @@ class InteractionQueryResult {
     if (userName != null) 'user': {'name': userName},
     if (placeName != null) 'place': {'name': placeName},
   };
+
+  /// OpenAPI: [location] = reported from, [place] = where it happened.
+  static ({double lat, double lon})? _coordsFromNode(
+    Map<String, dynamic> node,
+  ) {
+    if (node.isEmpty) return null;
+
+    final lat = _asDouble(node['latitude'] ?? node['lat']);
+    final lon = _asDouble(
+      node['longitude'] ?? node['lon'] ?? node['longtitude'],
+    );
+
+    if (lat == null || lon == null) return null;
+    if (!lat.isFinite || !lon.isFinite) return null;
+    if (lat.abs() < 1e-6 && lon.abs() < 1e-6) return null;
+    return (lat: lat, lon: lon);
+  }
 
   static double? _asDouble(Object? v) {
     if (v == null) return null;

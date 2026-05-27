@@ -1,57 +1,101 @@
-﻿import 'dart:convert';
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 import 'package:wildgids/data_managers/api_client.dart';
 import 'package:wildgids/interfaces/data_apis/vicinity_api_interface.dart';
 import 'package:wildgids/models/api_models/vicinity.dart';
+import 'package:wildgids/utils/tracking_reading_timestamp.dart';
+import 'package:wildgids/utils/tracking_vicinity_parser.dart';
 
-class VicinityApi implements VicinityApiInterface {
+/// Loads map pins from tracking-reading API (not /vicinity/me).
+class TrackingReadingsApi implements TrackingReadingsApiInterface {
+  TrackingReadingsApi(this.apiClient);
+
   final ApiClient apiClient;
-  VicinityApi(this.apiClient);
+
+  static const String _tag = 'TrackingReadingsApi';
+  static const String _postReadingPath = '/tracking-reading/';
 
   @override
-  Future<Vicinity> getMyVicinity() async {
-    final res = await apiClient.get('vicinity/me', authenticated: true);
-
-    debugPrint('[VicinityApi] GET vicinity/me => ${res.statusCode}');
-
-    if (res.statusCode == 200) {
-      final body = res.body.trim();
-      debugPrint('[VicinityApi] Response body length: ${body.length}');
-      debugPrint(
-        '[VicinityApi] Raw response: ${body.substring(0, body.length > 500 ? 500 : body.length)}...',
+  Future<Vicinity> getVicinityForCurrentLocation({
+    required double latitude,
+    required double longitude,
+    DateTime? timestamp,
+  }) =>
+      submitTrackingReading(
+        latitude: latitude,
+        longitude: longitude,
+        timestamp: timestamp,
       );
 
-      if (body.isEmpty) {
+  @override
+  Future<Vicinity> submitTrackingReading({
+    required double latitude,
+    required double longitude,
+    DateTime? timestamp,
+  }) async {
+    var ts = TrackingReadingTimestamp.forRequest(preferred: timestamp);
+
+    var res = await _postTrackingReading(
+      latitude: latitude,
+      longitude: longitude,
+      timestamp: ts,
+    );
+
+    if (TrackingReadingTimestamp.isTimestampValidationError(
+      res.statusCode,
+      res.body,
+    )) {
+      final serverNow =
+          TrackingReadingTimestamp.parseServerNowFromErrorBody(res.body);
+      if (serverNow != null) {
+        ts = TrackingReadingTimestamp.beforeServerNow(serverNow);
         debugPrint(
-          '[VicinityApi] Empty response body, returning empty vicinity',
+          '[$_tag] retrying POST with server-adjusted timestamp '
+          '${ts.toIso8601String()}',
         );
-        return Vicinity(animals: [], detections: [], interactions: []);
+        res = await _postTrackingReading(
+          latitude: latitude,
+          longitude: longitude,
+          timestamp: ts,
+        );
       }
-
-      final data = json.decode(body) as Map<String, dynamic>;
-      debugPrint(
-        '[VicinityApi] Parsed JSON - animals: ${(data['animals'] as List?)?.length ?? 0}, '
-        'detections: ${(data['detections'] as List?)?.length ?? 0}, '
-        'interactions: ${(data['interactions'] as List?)?.length ?? 0}',
-      );
-
-      final vicinity = Vicinity.fromJson(data);
-      debugPrint(
-        '[VicinityApi] Created Vicinity object - animals: ${vicinity.animals.length}, '
-        'detections: ${vicinity.detections.length}, '
-        'interactions: ${vicinity.interactions.length}',
-      );
-
-      return vicinity;
     }
 
-    if (res.statusCode == 204) {
-      debugPrint('[VicinityApi] 204 No Content, returning empty vicinity');
-      return Vicinity(animals: [], detections: [], interactions: []);
+    TrackingVicinityParser.logHttpResponse(
+      tag: _tag,
+      endpoint: 'POST $_postReadingPath',
+      statusCode: res.statusCode,
+      body: res.body,
+    );
+
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw Exception(
+        '[$_tag] POST $_postReadingPath failed (${res.statusCode}): ${res.body}',
+      );
     }
 
-    debugPrint('[VicinityApi] Error response: ${res.body}');
-    throw Exception('Vicinity GET failed (${res.statusCode}): ${res.body}');
+    return TrackingVicinityParser.parseResponseBody(
+      res.body,
+      tag: _tag,
+      endpoint: 'POST $_postReadingPath',
+    );
   }
+
+  Future<dynamic> _postTrackingReading({
+    required double latitude,
+    required double longitude,
+    required DateTime timestamp,
+  }) {
+    return apiClient.post(
+      _postReadingPath,
+      {
+        'location': {'latitude': latitude, 'longitude': longitude},
+        'timestamp': timestamp.toUtc().toIso8601String(),
+      },
+      authenticated: true,
+    );
+  }
+
 }
 
+/// Backward-compatible alias while names are migrated.
+typedef VicinityApi = TrackingReadingsApi;

@@ -16,6 +16,10 @@ class AnimalSightingModel {
   final ImageListModel? images;
   /// Count from the "aantal" step (waarneming 2.0).
   final int? animalCount;
+  final String? humanActivity;
+  final String? humanActivityOther;
+  final String? perceivedAnimalActivity;
+  final String? perceivedAnimalActivityOther;
 
   AnimalSightingModel({
     this.animals,
@@ -26,6 +30,10 @@ class AnimalSightingModel {
     this.images,
     this.animalSelected,
     this.animalCount,
+    this.humanActivity,
+    this.humanActivityOther,
+    this.perceivedAnimalActivity,
+    this.perceivedAnimalActivityOther,
   });
 
   AnimalSightingModel copyWith({
@@ -37,6 +45,10 @@ class AnimalSightingModel {
     DateTimeModel? dateTime,
     ImageListModel? images,
     int? animalCount,
+    String? humanActivity,
+    String? humanActivityOther,
+    String? perceivedAnimalActivity,
+    String? perceivedAnimalActivityOther,
   }) {
     return AnimalSightingModel(
       animals: animals ?? this.animals,
@@ -47,6 +59,12 @@ class AnimalSightingModel {
       dateTime: dateTime ?? this.dateTime,
       images: images ?? this.images,
       animalCount: animalCount ?? this.animalCount,
+      humanActivity: humanActivity ?? this.humanActivity,
+      humanActivityOther: humanActivityOther ?? this.humanActivityOther,
+      perceivedAnimalActivity:
+          perceivedAnimalActivity ?? this.perceivedAnimalActivity,
+      perceivedAnimalActivityOther: perceivedAnimalActivityOther ??
+          this.perceivedAnimalActivityOther,
     );
   }
 
@@ -73,6 +91,10 @@ class AnimalSightingModel {
       'dateTime': dateTime?.toJson(),
       'images': images?.toJson(),
       'animalCount': animalCount,
+      'humanActivity': humanActivity,
+      'humanActivityOther': humanActivityOther,
+      'perceivedAnimalActivity': perceivedAnimalActivity,
+      'perceivedAnimalActivityOther': perceivedAnimalActivityOther,
     };
   }
 
@@ -152,6 +174,11 @@ class AnimalSightingModel {
     images:
         json['images'] != null ? ImageListModel.fromJson(json['images']) : null,
     animalCount: json['animalCount'] as int?,
+    humanActivity: json['humanActivity'] as String?,
+    humanActivityOther: json['humanActivityOther'] as String?,
+    perceivedAnimalActivity: json['perceivedAnimalActivity'] as String?,
+    perceivedAnimalActivityOther:
+        json['perceivedAnimalActivityOther'] as String?,
   );
 }
 

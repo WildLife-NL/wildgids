@@ -9,6 +9,7 @@ import 'package:wildgids/interfaces/location/living_lab_interface.dart';
 import 'package:wildgids/managers/map/living_lab_manager.dart';
 import 'package:wildgids/models/beta_models/tracking_reading_model.dart';
 import 'package:wildgids/utils/connection_checker.dart';
+import 'package:wildgids/utils/last_sent_tracking_location.dart';
 
 /// Manages caching of location tracking readings when offline,
 /// and automatically retries sending them when connection is restored.
@@ -119,12 +120,23 @@ class TrackingCacheManager {
 
   /// Cache a tracking reading to local storage
   Future<void> cacheReading(TrackingReading reading) async {
+    if (LastSentTrackingLocation.isUnchanged(
+      reading.latitude,
+      reading.longitude,
+    )) {
+      debugPrint(
+        '$yellowLog[TrackingCacheManager] Skipping cache; location unchanged',
+      );
+      return;
+    }
+
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       final List<String> cachedJson = prefs.getStringList(_cacheKey) ?? <String>[];
       cachedJson.add(jsonEncode(reading.toJson()));
 
       await prefs.setStringList(_cacheKey, cachedJson);
+      LastSentTrackingLocation.record(reading.latitude, reading.longitude);
 
       // Keep logs compact: only every 100 readings, plus first entry.
       final int total = cachedJson.length;
@@ -192,6 +204,7 @@ class TrackingCacheManager {
     List<TrackingReading> failedReadings = [];
     int successCount = 0;
     int skippedOutsideLivingLabs = 0;
+    int skippedUnchangedLocation = 0;
 
     for (int i = 0; i < cachedReadings.length; i++) {
       TrackingReading reading = cachedReadings[i];
@@ -212,6 +225,7 @@ class TrackingCacheManager {
           lon: reading.longitude,
           timestampUtc: reading.timestampUtc,
         );
+        LastSentTrackingLocation.record(reading.latitude, reading.longitude);
         successCount++;
       } catch (e) {
         debugPrint('$redLog[TrackingCacheManager] Reading ${i + 1} failed: $e');
@@ -223,7 +237,8 @@ class TrackingCacheManager {
     debugPrint(
       '$yellowLog[TrackingCacheManager] Total: ${cachedReadings.length}, '
       'Successful: $successCount, Failed: ${failedReadings.length}, '
-      'SkippedOutsideLivingLabs: $skippedOutsideLivingLabs',
+      'SkippedOutsideLivingLabs: $skippedOutsideLivingLabs, '
+      'SkippedUnchangedLocation: $skippedUnchangedLocation',
     );
 
     // Update cache with only failed readings
@@ -246,6 +261,16 @@ class TrackingCacheManager {
     }
   }
 
+  Future<void> clearCache() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_cacheKey);
+      debugPrint('$greenLog[TrackingCacheManager] Cache cleared');
+    } catch (e) {
+      debugPrint('$redLog[TrackingCacheManager] Failed to clear cache: $e');
+    }
+  }
+
   /// Attempt to send a tracking reading immediately, cache if it fails
   Future<TrackingNotice?> sendOrCacheReading({
     required double lat,
@@ -255,6 +280,13 @@ class TrackingCacheManager {
     if (!_isInLivingLab(lat, lon)) {
       debugPrint(
         '$yellowLog[TrackingCacheManager] Skipping tracking reading outside living labs',
+      );
+      return null;
+    }
+
+    if (LastSentTrackingLocation.isUnchanged(lat, lon)) {
+      debugPrint(
+        '$yellowLog[TrackingCacheManager] Skipping tracking reading; location unchanged',
       );
       return null;
     }
@@ -287,6 +319,7 @@ class TrackingCacheManager {
         lon: lon,
         timestampUtc: timestampUtc,
       );
+      LastSentTrackingLocation.record(lat, lon);
       debugPrint('$greenLog[TrackingCacheManager] Reading sent successfully');
 
       // If successful, try to send any cached readings too

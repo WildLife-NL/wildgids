@@ -196,8 +196,9 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                               children: [
                                 fm.TileLayer(
                                   urlTemplate: LocationMapManager.standardTileUrl,
-                                  subdomains: const ['a', 'b', 'c', 'd'],
+                                  subdomains: LocationMapManager.standardTileSubdomains,
                                   userAgentPackageName: 'com.wildgids.app',
+                                  retinaMode: LocationMapManager.tileRetinaMode(context),
                                   keepBuffer: 1,
                                 ),
                                 fm.MarkerLayer(

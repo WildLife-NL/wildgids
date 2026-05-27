@@ -398,6 +398,14 @@ class MockAppStateProvider extends _i1.Mock implements _i16.AppStateProvider {
           as bool);
 
   @override
+  bool get notificationsEnabled =>
+      (super.noSuchMethod(
+            Invocation.getter(#notificationsEnabled),
+            returnValue: false,
+          )
+          as bool);
+
+  @override
   bool get isLocationCacheValid =>
       (super.noSuchMethod(
             Invocation.getter(#isLocationCacheValid),
@@ -488,6 +496,15 @@ class MockAppStateProvider extends _i1.Mock implements _i16.AppStateProvider {
   _i18.Future<void> setLocationTrackingEnabled(bool? enabled) =>
       (super.noSuchMethod(
             Invocation.method(#setLocationTrackingEnabled, [enabled]),
+            returnValue: _i18.Future<void>.value(),
+            returnValueForMissingStub: _i18.Future<void>.value(),
+          )
+          as _i18.Future<void>);
+
+  @override
+  _i18.Future<void> setNotificationsEnabled(bool? enabled) =>
+      (super.noSuchMethod(
+            Invocation.method(#setNotificationsEnabled, [enabled]),
             returnValue: _i18.Future<void>.value(),
             returnValueForMissingStub: _i18.Future<void>.value(),
           )

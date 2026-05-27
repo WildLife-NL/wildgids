@@ -21,17 +21,15 @@ import 'package:wildgids/widgets/map/animal_detail_card.dart';
 import 'package:wildgids/models/animal_waarneming_models/animal_pin.dart';
 import 'package:wildgids/models/animal_waarneming_models/interaction_to_animal_pin.dart';
 import 'package:wildgids/widgets/map/detection_detail_dialog.dart';
-import 'package:wildgids/data_managers/my_interaction_api.dart';
 import 'package:wildgids/data_managers/tracking_api.dart';
 import 'package:wildgids/interfaces/data_apis/tracking_api_interface.dart';
 import 'package:wildgids/config/app_config.dart';
-import 'package:wildgids/models/api_models/interaction_query_result.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/custom_nav_bar.dart';
-import 'package:wildgids/constants/mock_location.dart';
 import 'package:wildgids/constants/location_sharing_config.dart';
 import 'dart:async';
 import 'dart:convert';
+import 'package:wildgids/utils/species_icon_utils.dart';
 import 'dart:math' as math;
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart'
     as cl;
@@ -68,30 +66,20 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
   StreamSubscription<Position>? _posSub;
   VoidCallback? _mpListener;
   bool _listenerAttached = false;
-  Timer? _debounce;
   String? _lastNoticeKey;
+  Timer? _pinsRefreshDebounce;
+  LatLng? _lastPinsRefreshCenter;
+  static const _pinsRefreshDebounceMs = 800;
+  static const _pinsRefreshMinMoveMeters = 25.0;
 
   double? _lastZoom;
-  static const _debounceMs = 450;
 
   bool _useClusters = true;
   static const double _clusterUntilZoom = 17.0;
 
   static const double _initialZoom = 15.0;
-  bool _followUser = true;
+  bool _followUser = false;
 
-  bool _showAnimals = true;
-  bool _showDetections = true;
-  bool _showInteractions = true;
-  bool _showAnimalsNew = true;
-  bool _showAnimalsMedium = false;
-  bool _showAnimalsOld = false;
-  bool _showDetectionsNew = true;
-  bool _showDetectionsMedium = false;
-  bool _showDetectionsOld = false;
-  bool _showInteractionsNew = true;
-  bool _showInteractionsMedium = false;
-  bool _showInteractionsOld = false;
   AnimalPin? _selectedAnimalDetail;
   String? _selectedAnimalIconPath;
 
@@ -154,7 +142,6 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
 
           if (!isProgrammatic && _lastZoom != currentZoom) {
             _lastZoom = currentZoom;
-            _queueFetch();
             final next = currentZoom < _clusterUntilZoom;
             if (next != _useClusters && mounted) {
               setState(() => _useClusters = next);
@@ -173,14 +160,13 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
           }
 
           if (!isProgrammatic && evt is fm.MapEventMoveEnd) {
-            _queueFetch();
             _updateScaleBar();
           }
         },
       );
 
     _mpListener ??= () {
-      debugPrint('[Kaart] ðŸ“¨ Listener triggered');
+      debugPrint('[Kaart] 📨 Listener triggered');
       final n = _mp.lastTrackingNotice;
 
       if (n == null) {
@@ -218,7 +204,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
           if (!mounted) return;
 
           try {
-            debugPrint('[Kaart] ðŸŽ‰ Showing message-style popup: "${n.text}" (web only)');
+            debugPrint('[Kaart] 🎉 Showing message-style popup: "${n.text}" (web only)');
             showDialog(
               context: context,
               barrierDismissible: true,
@@ -233,14 +219,14 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                   ),
             );
           } catch (e) {
-            debugPrint('[Kaart] âŒ Failed to show tracking notice: $e');
+            debugPrint('[Kaart] ❌ Failed to show tracking notice: $e');
           }
         });
       });
     };
 
     if (!_listenerAttached) {
-      debugPrint('[Kaart] ðŸ”— Attaching listener to MapProvider');
+      debugPrint('[Kaart] 🔗 Attaching listener to MapProvider');
       _mp.addListener(_mpListener!);
       _listenerAttached = true;
     }
@@ -256,8 +242,8 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
 
   @override
   void dispose() {
-    _debounce?.cancel();
     _posSub?.cancel();
+    _pinsRefreshDebounce?.cancel();
     if (_listenerAttached && _mpListener != null) {
       _mp.removeListener(_mpListener!);
     }
@@ -288,6 +274,15 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
       'Eekhoorn',
     ];
 
+    final reportTypes = [
+  'waarneming',
+  'camera',
+  'acoustic',
+  'collision',
+  'schadamelding',
+  'collar',
+];
+
     final dx = [0.0000, 0.0012, -0.0012, 0.0018, -0.0018, 0.0009, -0.0009, 0.0015];
     final dy = [0.0000, 0.0010, -0.0010, -0.0016, 0.0016, -0.0008, 0.0008, 0.0013];
 
@@ -306,6 +301,8 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
           lon: center.longitude + (dx[i % dx.length]),
           seenAt: ts,
           speciesName: species[i],
+          reportType: reportTypes[i % reportTypes.length],
+          
         ),
       );
     }
@@ -340,27 +337,53 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     }
   }
 
-  void _queueFetch() {
-    _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: _debounceMs), () {
-      if (mounted) _fetchAllForView();
-    });
+  void _schedulePinsRefresh({bool immediate = false}) {
+    _pinsRefreshDebounce?.cancel();
+    if (immediate) {
+      unawaited(_refreshMapPins());
+      return;
+    }
+    _pinsRefreshDebounce = Timer(
+      const Duration(milliseconds: _pinsRefreshDebounceMs),
+      () {
+        if (mounted) unawaited(_refreshMapPins());
+      },
+    );
+  }
+
+  Future<void> _refreshMapPins() async {
+    final map = context.read<MapProvider>();
+    final pos = map.currentPosition ?? map.selectedPosition;
+    if (pos != null && _lastPinsRefreshCenter != null) {
+      final moved = Geolocator.distanceBetween(
+        _lastPinsRefreshCenter!.latitude,
+        _lastPinsRefreshCenter!.longitude,
+        pos.latitude,
+        pos.longitude,
+      );
+      if (moved < _pinsRefreshMinMoveMeters) {
+        return;
+      }
+    }
+
+    debugPrint('[Map] Refreshing pins via loadAllPinsFromVicinity()');
+    try {
+      await map.loadAllPinsFromVicinity();
+      if (pos != null) {
+        _lastPinsRefreshCenter = LatLng(pos.latitude, pos.longitude);
+      }
+      debugPrint(
+        '[Map] Refreshed pins: animals=${map.animalPins.length} '
+        'detections=${map.detectionPins.length} '
+        'interactions=${map.interactions.length}',
+      );
+    } catch (e) {
+      debugPrint('[Map] loadAllPinsFromVicinity failed: $e');
+    }
   }
 
   void _startFollowingMe() {
     final mp = context.read<MapProvider>();
-    if (MockLocation.enabled) {
-      final pos = MockLocation.position();
-      mp.updatePosition(pos, mp.currentAddress);
-      if (_mapReady && mp.isInitialized) {
-        final z = mp.mapController.camera.zoom;
-        mp.mapController.move(LatLng(pos.latitude, pos.longitude), z);
-      } else {
-        _pendingCenter = LatLng(pos.latitude, pos.longitude);
-        _pendingZoom = _initialZoom;
-      }
-      return;
-    }
     const settings = LocationSettings(
       accuracy: LocationAccuracy.best,
       distanceFilter: 5,
@@ -386,18 +409,18 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
       await mp.updatePosition(pos, mp.currentAddress);
 
       if (appStateProvider.isLocationTrackingEnabled) {
-        debugPrint('[ME/live] ðŸ“¡ Sending tracking ping for position update');
+        debugPrint('[ME/live] 📡 Sending tracking ping for position update');
         final notice = await _mp.sendTrackingPingFromPosition(pos);
         if (notice != null) {
           debugPrint(
-            '[ME/live] ðŸ”” Received notice from tracking ping: "${notice.text}"',
+            '[ME/live] 📔 Received notice from tracking ping: "${notice.text}"',
           );
         } else {
           debugPrint('[ME/live] No notice from position update');
         }
       } else {
         debugPrint(
-          '[ME/live] âš ï¸ Skipping tracking ping - tracking disabled by user',
+          '[ME/live] ⚠️ Skipping tracking ping - tracking disabled by user',
         );
       }
 
@@ -407,100 +430,12 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
         final z = mp.mapController.camera.zoom;
         mp.mapController.move(LatLng(pos.latitude, pos.longitude), z);
       }
+
+      _schedulePinsRefresh();
     });
   }
 
-  Future<void> _fetchAllForView() async {
-    final map = context.read<MapProvider>();
-
-    debugPrint('[Map] Fetching data from vicinity endpoint');
-
-    await map.loadAllPinsFromVicinity();
-    await _mergeMyReportedInteractions(map);
-
-    debugPrint(
-      '[Map] vicinity totals  animals=${map.animalPins.length} '
-      'detections=${map.detectionPins.length} interactions=${map.interactions.length} '
-      'total=${map.totalPins}',
-    );
-
-    debugPrint(
-      'â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•',
-    );
-    debugPrint('[ANIMALS] Total count: ${map.animalPins.length}');
-    debugPrint(
-      'â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•',
-    );
-
-    for (int i = 0; i < map.animalPins.length; i++) {
-      final animal = map.animalPins[i];
-      try {
-        final jsonOutput = jsonEncode({
-          'index': i,
-          'id': animal.id,
-          'speciesName': animal.speciesName,
-          'lat': animal.lat,
-          'lon': animal.lon,
-          'seenAt': animal.seenAt.toIso8601String(),
-        });
-        debugPrint('[ANIMAL $i] JSON: $jsonOutput');
-      } catch (e) {
-        debugPrint('[ANIMAL $i] Error serializing: $e');
-        debugPrint(
-          '[ANIMAL $i] Raw: id=${animal.id}, species=${animal.speciesName}, lat=${animal.lat}, lon=${animal.lon}, seenAt=${animal.seenAt}',
-        );
-      }
-    }
-    debugPrint(
-      'â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•',
-    );
-  }
-
-  Future<void> _mergeMyReportedInteractions(MapProvider map) async {
-    try {
-      final myApi = MyInteractionApi(AppConfig.shared.apiClient);
-      final myInteractions = await myApi.getMyInteractions();
-
-      final List<InteractionQueryResult> fromMine =
-          myInteractions.map((interaction) {
-            final double lat =
-                interaction.location.latitude != 0.0
-                    ? interaction.location.latitude
-                    : interaction.place.latitude;
-            final double lon =
-                interaction.location.longitude != 0.0
-                    ? interaction.location.longitude
-                    : interaction.place.longitude;
-
-            return InteractionQueryResult(
-              id: interaction.id,
-              lat: lat,
-              lon: lon,
-              moment: interaction.moment.toUtc(),
-              typeName: interaction.type.name,
-              speciesName: interaction.species.commonName,
-              description: interaction.description,
-              userName: interaction.user.name,
-            );
-          }).toList();
-
-      final Map<String, InteractionQueryResult> mergedById = {
-        for (final itx in map.interactions) itx.id: itx,
-      };
-      for (final itx in fromMine) {
-        mergedById[itx.id] = itx;
-      }
-
-      map.setMockVicinity(
-        animals: map.animalPins,
-        detections: map.detectionPins,
-        interactions: mergedById.values.toList(),
-      );
-    } catch (e) {
-      debugPrint('[Map] Could not merge my reported interactions: $e');
-    }
-  }
-
+  // (dev helper removed)
   Future<void> _bootstrap() async {
     final map = context.read<MapProvider>();
     final app = context.read<AppStateProvider>();
@@ -539,12 +474,31 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     _pendingZoom = _initialZoom;
     _applyPendingCamera();
 
+    debugPrint('[Kaart/Bootstrap] Loading map pins (POST+GET) before tracking ping');
+    try {
+      await map.loadAllPinsFromVicinity().timeout(
+        const Duration(seconds: 15),
+        onTimeout: () {
+          debugPrint('[Kaart/Bootstrap] Vicinity load timeout after 15s');
+        },
+      );
+      _lastPinsRefreshCenter = LatLng(pos.latitude, pos.longitude);
+      debugPrint(
+        '[Kaart/Bootstrap] Pins loaded: '
+        'animals=${map.animalPins.length} '
+        'detections=${map.detectionPins.length} '
+        'interactions=${map.interactions.length}',
+      );
+    } catch (e) {
+      debugPrint('[Kaart/Bootstrap] Failed to load pins: $e');
+    }
+
     if (app.isLocationTrackingEnabled) {
-      debugPrint('[Kaart/Bootstrap] ðŸ“¡ Sending initial tracking ping');
+      debugPrint('[Kaart/Bootstrap] 📡 Sending initial tracking ping');
       final initialNotice = await map.sendTrackingPingFromPosition(pos);
       if (initialNotice != null) {
         debugPrint(
-          '[Kaart/Bootstrap] ðŸ”” Initial ping returned notice: "${initialNotice.text}"',
+          '[Kaart/Bootstrap] 📔 Initial ping returned notice: "${initialNotice.text}"',
         );
       } else {
         debugPrint('[Kaart/Bootstrap] Initial ping returned no notice');
@@ -556,7 +510,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
       );
       map.startTracking(interval: LocationSharingConfig.updateInterval);
     } else {
-      debugPrint('[Kaart/Bootstrap] âš ï¸ Location tracking is disabled by user');
+      debugPrint('[Kaart/Bootstrap] ⚠️ Location tracking is disabled by user');
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -565,20 +519,18 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
         _pendingZoom = _initialZoom;
         _applyPendingCamera();
 
-        debugPrint('[Bootstrap] Loading data from vicinity endpoint');
+        debugPrint('[Bootstrap] Loading map pins from tracking-reading API');
         try {
           await map.loadAllPinsFromVicinity().timeout(
             const Duration(seconds: 15),
             onTimeout: () {
-              debugPrint('[Bootstrap] âš ï¸ Vicinity API timeout after 15s');
+              debugPrint('[Bootstrap] ⚠️ Vicinity API timeout after 15s');
               return;
             },
           );
         } catch (e) {
-          debugPrint('[Bootstrap] âŒ Failed to load vicinity data: $e');
+          debugPrint('[Bootstrap] ❌ Failed to load vicinity data: $e');
         }
-        await _mergeMyReportedInteractions(map);
-
         debugPrint(
           '[Map] initial totals  '
           'animals=${map.animalPins.length} '
@@ -588,11 +540,11 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
         );
 
         debugPrint(
-          'â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•',
+          '═══════════════════════════════════════════════════════════════',
         );
         debugPrint('[BOOTSTRAP ANIMALS] Total count: ${map.animalPins.length}');
         debugPrint(
-          'â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•',
+          '═══════════════════════════════════════════════════════════════',
         );
 
         for (int i = 0; i < map.animalPins.length; i++) {
@@ -615,10 +567,8 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
           }
         }
         debugPrint(
-          'â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•',
+          '═══════════════════════════════════════════════════════════════',
         );
-
-        _queueFetch();
       } catch (_) {}
     });
 
@@ -668,7 +618,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
       final newest = sorted.last.timestamp;
       final now = DateTime.now();
 
-      debugPrint('[TRACKING] ðŸ”´ CRITICAL DATA:');
+      debugPrint('[TRACKING] CRITICAL DATA:');
       debugPrint('[TRACKING] Now: ${now.toIso8601String()}');
       debugPrint(
         '[TRACKING] Newest in DB: ${newest.toIso8601String()} (${now.difference(newest).inSeconds}s ago)',
@@ -851,34 +801,6 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     );
   }
 
-  bool _within31Days(DateTime timestamp) {
-    return DateTime.now().difference(timestamp) < const Duration(days: 31);
-  }
-
-  bool _shouldShowPin(
-    DateTime timestamp,
-    bool showType,
-    bool showNew,
-    bool showMedium,
-    bool showOld,
-  ) {
-    if (!showType) {
-      debugPrint('[Filter] Type hidden: showType=$showType');
-      return false;
-    }
-
-    final now = DateTime.now();
-    final age = now.difference(timestamp);
-
-    if (age < const Duration(hours: 24)) {
-      return showNew;
-    } else if (age < const Duration(days: 7)) {
-      return showMedium;
-    } else {
-      return showOld;
-    }
-  }
-
   void _updateScaleBar() {
     if (!_mp.isInitialized) return;
 
@@ -970,314 +892,6 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     }
   }
 
-  void _showFilterDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder:
-          (context) => StatefulBuilder(
-            builder: (context, setDialogState) {
-              return Dialog(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Container(
-                  constraints: const BoxConstraints(
-                    maxWidth: 400,
-                    maxHeight: 600,
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: const BoxDecoration(
-                          color: AppColors.darkGreen,
-                          borderRadius: BorderRadius.vertical(
-                            top: Radius.circular(16),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.filter_list, color: Colors.white),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: LayoutBuilder(
-                                builder: (context, constraints) {
-                                  final screenWidth =
-                                      MediaQuery.of(context).size.width;
-                                  double fontSize = 20;
-                                  double iconSize = 24;
-                                  if (screenWidth < 350) {
-                                    fontSize = 16;
-                                    iconSize = 18;
-                                  } else if (screenWidth < 420) {
-                                    fontSize = 14;
-                                    iconSize = 14;
-                                  }
-                                  return Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          'Kaartpictogrammen filteren',
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: fontSize,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ),
-                                      IconButton(
-                                        icon: Icon(
-                                          Icons.check,
-                                          color: Colors.white,
-                                          size: iconSize,
-                                        ),
-                                        tooltip: 'Toepassen',
-                                        onPressed: () => Navigator.pop(context),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Flexible(
-                        child: Scrollbar(
-                          thumbVisibility: true,
-                          child: SingleChildScrollView(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 8),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.pets,
-                                        size: 20,
-                                        color: AppColors.darkGreen,
-                                      ),
-                                      SizedBox(width: 8),
-                                      Text(
-                                        'Dieren',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.darkGreen,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                _buildFilterCheckbox(
-                                  'Nieuw (< 24 uur)',
-                                  _showAnimalsNew,
-                                  (v) => setDialogState(
-                                    () => setState(
-                                      () => _showAnimalsNew = v ?? true,
-                                    ),
-                                  ),
-                                  Icons.fiber_new,
-                                ),
-                                _buildFilterCheckbox(
-                                  'Recent (24u - 1 week)',
-                                  _showAnimalsMedium,
-                                  (v) => setDialogState(
-                                    () => setState(
-                                      () => _showAnimalsMedium = v ?? true,
-                                    ),
-                                  ),
-                                  Icons.access_time,
-                                ),
-                                _buildFilterCheckbox(
-                                  'Oud (> 1 week)',
-                                  _showAnimalsOld,
-                                  (v) => setDialogState(
-                                    () => setState(
-                                      () => _showAnimalsOld = v ?? true,
-                                    ),
-                                  ),
-                                  Icons.history,
-                                ),
-
-                                const SizedBox(height: 16),
-
-                                const Padding(
-                                  padding: EdgeInsets.only(bottom: 8),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.sensors,
-                                        size: 20,
-                                        color: AppColors.darkGreen,
-                                      ),
-                                      SizedBox(width: 8),
-                                      Text(
-                                        'Detecties',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.darkGreen,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                _buildFilterCheckbox(
-                                  'Nieuw (< 24 uur)',
-                                  _showDetectionsNew,
-                                  (v) => setDialogState(
-                                    () => setState(
-                                      () => _showDetectionsNew = v ?? true,
-                                    ),
-                                  ),
-                                  Icons.fiber_new,
-                                ),
-                                _buildFilterCheckbox(
-                                  'Recent (24u - 1 week)',
-                                  _showDetectionsMedium,
-                                  (v) => setDialogState(
-                                    () => setState(
-                                      () => _showDetectionsMedium = v ?? true,
-                                    ),
-                                  ),
-                                  Icons.access_time,
-                                ),
-                                _buildFilterCheckbox(
-                                  'Oud (> 1 week)',
-                                  _showDetectionsOld,
-                                  (v) => setDialogState(
-                                    () => setState(
-                                      () => _showDetectionsOld = v ?? true,
-                                    ),
-                                  ),
-                                  Icons.history,
-                                ),
-
-                                const SizedBox(height: 16),
-
-                                const Padding(
-                                  padding: EdgeInsets.only(bottom: 8),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.place,
-                                        size: 20,
-                                        color: AppColors.darkGreen,
-                                      ),
-                                      SizedBox(width: 8),
-                                      Text(
-                                        'Interacties',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.darkGreen,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                _buildFilterCheckbox(
-                                  'Nieuw (< 24 uur)',
-                                  _showInteractionsNew,
-                                  (v) => setDialogState(
-                                    () => setState(
-                                      () => _showInteractionsNew = v ?? true,
-                                    ),
-                                  ),
-                                  Icons.fiber_new,
-                                ),
-                                _buildFilterCheckbox(
-                                  'Recent (24u - 1 week)',
-                                  _showInteractionsMedium,
-                                  (v) => setDialogState(
-                                    () => setState(
-                                      () => _showInteractionsMedium = v ?? true,
-                                    ),
-                                  ),
-                                  Icons.access_time,
-                                ),
-                                _buildFilterCheckbox(
-                                  'Oud (> 1 week)',
-                                  _showInteractionsOld,
-                                  (v) => setDialogState(
-                                    () => setState(
-                                      () => _showInteractionsOld = v ?? true,
-                                    ),
-                                  ),
-                                  Icons.history,
-                                ),
-
-                                const SizedBox(height: 16),
-
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Expanded(
-                                      child: OutlinedButton(
-                                        onPressed: () {
-                                          setDialogState(() {
-                                            setState(() {
-                                              _showAnimals = true;
-                                              _showDetections = true;
-                                              _showInteractions = true;
-                                              _showAnimalsNew = true;
-                                              _showAnimalsMedium = true;
-                                              _showAnimalsOld = true;
-                                              _showDetectionsNew = true;
-                                              _showDetectionsMedium = true;
-                                              _showDetectionsOld = true;
-                                              _showInteractionsNew = true;
-                                              _showInteractionsMedium = true;
-                                              _showInteractionsOld = true;
-                                            });
-                                          });
-                                        },
-                                        child: const Text('Alles herstellen'),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-    );
-  }
-
-  Widget _buildFilterCheckbox(
-    String label,
-    bool value,
-    Function(bool?) onChanged,
-    IconData icon,
-  ) {
-    return CheckboxListTile(
-      dense: true,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 0),
-      title: Row(
-        children: [
-          Icon(icon, size: 18, color: AppColors.darkGreen),
-          const SizedBox(width: 8),
-          Expanded(child: Text(label)),
-        ],
-      ),
-      value: value,
-      onChanged: onChanged,
-      activeColor: AppColors.darkGreen,
-    );
-  }
-
   void _showAnimalDetailCard(AnimalPin pin, String? iconPath) {
     setState(() {
       _selectedAnimalDetail = pin;
@@ -1346,6 +960,124 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     );
   }
 
+  /// Get border color based on detection type
+  Color _getBorderColorForDetectionType(String? detectionType) {
+    if (detectionType == null) return Colors.white;
+    
+    final type = detectionType.toLowerCase();
+    
+    if (type.contains('camera') || type.contains('foto')) {
+      return const Color(0xFFE91E63); // Pink
+    } else if (type.contains('acoustic') || type.contains('geluid')) {
+      return const Color(0xFF00BCD4); // Aqua
+    } else if (type.contains('waarneming') || type.contains('sighting')) {
+      return const Color(0xFF9C27B0); // Purple
+    } else if (type.contains('collision') || type.contains('botsing')) {
+      return const Color(0xFFF44336); // Red
+    } else if (type.contains('schadamelding') || type.contains('damage')) {
+      return const Color(0xFF4CAF50); // Green
+    } else if (type.contains('collar')) {
+      return const Color(0xFFFF9800); // Orange
+    }
+    
+    return Colors.white;
+  }
+
+  /// Build styled animal pin with white circle and colored border
+  Widget _buildStyledAnimalPin(
+    String? speciesName,
+    String? detectionType,
+    _IconStyle style,
+    {int? eventCount}
+  ) {
+    final borderColor = _getBorderColorForDetectionType(detectionType);
+    final iconPath = _getAnimalIconPath(speciesName);
+    
+    return Container(
+      width: style.size + 16,
+      height: style.size + 16,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white,
+        border: Border.all(
+          color: borderColor,
+          width: 3,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Center icon
+          if (iconPath != null)
+            SizedBox(
+              width: style.size,
+              height: style.size,
+              child: ColorFiltered(
+                colorFilter: ColorFilter.mode(
+                  style.color,
+                  BlendMode.srcIn,
+                ),
+                child: Image.asset(
+                  iconPath,
+                  width: style.size,
+                  height: style.size,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Icon(
+                      Icons.pets,
+                      size: style.size * 0.9,
+                      color: style.color,
+                    );
+                  },
+                ),
+              ),
+            )
+          else
+            Icon(
+              Icons.pets,
+              size: style.size,
+              color: style.color,
+            ),
+          
+          // Event count badge (top-right)
+          if (eventCount != null && eventCount > 0)
+            Positioned(
+              top: -4,
+              right: -4,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: borderColor,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 2,
+                    ),
+                  ],
+                ),
+                child: Text(
+                  '$eventCount',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final map = context.watch<MapProvider>();
@@ -1378,35 +1110,20 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                           children: [
                             fm.TileLayer(
                               urlTemplate: LocationMapManager.standardTileUrl,
-                              subdomains: const ['a', 'b', 'c', 'd'],
+                              subdomains: LocationMapManager.standardTileSubdomains,
                               userAgentPackageName: 'com.wildgids.app',
+                              retinaMode: LocationMapManager.tileRetinaMode(context),
                               keepBuffer: 1,
                             ),
 
                             _useClusters
                                 ? cl.MarkerClusterLayerWidget(
                                   options: cl.MarkerClusterLayerOptions(
-                                    markers:
-                                        map.animalPins
-                                            .where(
-                                              (pin) =>
-                                                  _within31Days(pin.seenAt),
-                                            )
-                                            .where(
-                                              (pin) => _shouldShowPin(
-                                                pin.seenAt,
-                                                _showAnimals,
-                                                _showAnimalsNew,
-                                                _showAnimalsMedium,
-                                                _showAnimalsOld,
-                                              ),
-                                            )
-                                            .map((pin) {
+                                    markers: map.animalPins.map((pin) {
                                               final style =
                                                   _iconStyleForTimestamp(
                                                     pin.seenAt,
                                                   );
-                                              final Color animalColor = Colors.grey;
                                               final mapRotation =
                                                   map
                                                       .mapController
@@ -1414,13 +1131,13 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                                       .rotation;
                                               return fm.Marker(
                                                 point: LatLng(pin.lat, pin.lon),
-                                                width: (style.size + 8).clamp(
-                                                  24.0,
-                                                  44.0,
+                                                width: (style.size + 24).clamp(
+                                                  30.0,
+                                                  56.0,
                                                 ),
-                                                height: (style.size + 8).clamp(
-                                                  24.0,
-                                                  44.0,
+                                                height: (style.size + 24).clamp(
+                                                  30.0,
+                                                  56.0,
                                                 ),
                                                 rotate: false,
                                                 child: Transform.rotate(
@@ -1428,55 +1145,11 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                                       -mapRotation *
                                                       math.pi /
                                                       180,
-                                                  child:
-                                                      _getAnimalIconPath(
-                                                                pin.speciesName,
-                                                              ) !=
-                                                              null
-                                                          ? SizedBox(
-                                                            width: style.size,
-                                                            height: style.size,
-                                                            child: ColorFiltered(
-                                                              colorFilter:
-                                                                  ColorFilter.mode(
-                                                                    style.color,
-                                                                    BlendMode
-                                                                        .srcIn,
-                                                                  ),
-                                                              child: Image.asset(
-                                                                _getAnimalIconPath(
-                                                                  pin.speciesName,
-                                                                )!,
-                                                                width:
-                                                                    style.size,
-                                                                height:
-                                                                    style.size,
-                                                                fit:
-                                                                    BoxFit
-                                                                        .contain,
-                                                                errorBuilder: (
-                                                                  context,
-                                                                  error,
-                                                                  stackTrace,
-                                                                ) {
-                                                                  return Icon(
-                                                                    Icons.pets,
-                                                                    size:
-                                                                        style
-                                                                            .size *
-                                                                        0.9,
-                                                                    color:
-                                                                        animalColor,
-                                                                  );
-                                                                },
-                                                              ),
-                                                            ),
-                                                          )
-                                                          : Icon(
-                                                            Icons.pets,
-                                                            size: style.size,
-                                                            color: animalColor,
-                                                          ),
+                                                  child: _buildStyledAnimalPin(
+                                                    pin.speciesName,
+                                                    pin.reportType,
+                                                    style,
+                                                  ),
                                                 ),
                                               );
                                             })
@@ -1502,21 +1175,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                   ),
                                 )
                                 : fm.MarkerLayer(
-                                  markers:
-                                      map.animalPins
-                                          .where(
-                                            (pin) => _within31Days(pin.seenAt),
-                                          )
-                                          .where(
-                                            (pin) => _shouldShowPin(
-                                              pin.seenAt,
-                                              _showAnimals,
-                                              _showAnimalsNew,
-                                              _showAnimalsMedium,
-                                              _showAnimalsOld,
-                                            ),
-                                          )
-                                          .map((pin) {
+                                  markers: map.animalPins.map((pin) {
                                             final mapRotation =
                                                 map
                                                     .mapController
@@ -1524,8 +1183,8 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                                     .rotation;
                                             return fm.Marker(
                                               point: LatLng(pin.lat, pin.lon),
-                                              width: 44,
-                                              height: 44,
+                                              width: 56,
+                                              height: 56,
                                               rotate: false,
                                               child: Transform.rotate(
                                                 angle:
@@ -1536,10 +1195,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                                   behavior:
                                                       HitTestBehavior.opaque,
                                                   onTap: () {
-                                                    _showAnimalDetailCard(
-                                                      pin,
-                                                      _getAnimalIconPath(pin.speciesName),
-                                                    );
+                                                    _showAnimalDetailCard(pin, getSpeciesCardImagePath(pin.speciesName));
                                                   },
                                                   child: Builder(
                                                     builder: (ctx) {
@@ -1547,55 +1203,11 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                                           _iconStyleForTimestamp(
                                                             pin.seenAt,
                                                           );
-                                                      final Color animalColor = Colors.grey;
-                                                      return _getAnimalIconPath(
-                                                                pin.speciesName,
-                                                              ) !=
-                                                              null
-                                                          ? SizedBox(
-                                                            width: style.size,
-                                                            height: style.size,
-                                                            child: ColorFiltered(
-                                                              colorFilter:
-                                                                  ColorFilter.mode(
-                                                                    animalColor,
-                                                                    BlendMode
-                                                                        .srcIn,
-                                                                  ),
-                                                              child: Image.asset(
-                                                                _getAnimalIconPath(
-                                                                  pin.speciesName,
-                                                                )!,
-                                                                width:
-                                                                    style.size,
-                                                                height:
-                                                                    style.size,
-                                                                fit:
-                                                                    BoxFit
-                                                                        .contain,
-                                                                errorBuilder: (
-                                                                  context,
-                                                                  error,
-                                                                  stackTrace,
-                                                                ) {
-                                                                  return Icon(
-                                                                    Icons.pets,
-                                                                    size:
-                                                                        style
-                                                                            .size *
-                                                                        0.9,
-                                                                    color:
-                                                                        animalColor,
-                                                                  );
-                                                                },
-                                                              ),
-                                                            ),
-                                                          )
-                                                          : Icon(
-                                                            Icons.pets,
-                                                            size: style.size,
-                                                            color: animalColor,
-                                                          );
+                                                      return _buildStyledAnimalPin(
+                                                        pin.speciesName,
+                                                        pin.reportType,
+                                                        style,
+                                                      );
                                                     },
                                                   ),
                                                 ),
@@ -1608,22 +1220,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                             _useClusters
                                 ? cl.MarkerClusterLayerWidget(
                                   options: cl.MarkerClusterLayerOptions(
-                                    markers:
-                                        map.detectionPins
-                                            .where(
-                                              (pin) =>
-                                                  _within31Days(pin.detectedAt),
-                                            )
-                                            .where(
-                                              (pin) => _shouldShowPin(
-                                                pin.detectedAt,
-                                                _showDetections,
-                                                _showDetectionsNew,
-                                                _showDetectionsMedium,
-                                                _showDetectionsOld,
-                                              ),
-                                            )
-                                            .map((pin) {
+                                    markers: map.detectionPins.map((pin) {
                                               final style =
                                                   _iconStyleForTimestamp(
                                                     pin.detectedAt,
@@ -1694,22 +1291,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                   ),
                                 )
                                 : fm.MarkerLayer(
-                                  markers:
-                                      map.detectionPins
-                                          .where(
-                                            (pin) =>
-                                                _within31Days(pin.detectedAt),
-                                          )
-                                          .where(
-                                            (pin) => _shouldShowPin(
-                                              pin.detectedAt,
-                                              _showDetections,
-                                              _showDetectionsNew,
-                                              _showDetectionsMedium,
-                                              _showDetectionsOld,
-                                            ),
-                                          )
-                                          .map((pin) {
+                                  markers: map.detectionPins.map((pin) {
                                             final style =
                                                 _iconStyleForTimestamp(
                                                   pin.detectedAt,
@@ -1857,22 +1439,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                             _useClusters
                                 ? cl.MarkerClusterLayerWidget(
                                   options: cl.MarkerClusterLayerOptions(
-                                    markers:
-                                        map.interactions
-                                            .where(
-                                              (itx) =>
-                                                  _within31Days(itx.moment),
-                                            )
-                                            .where(
-                                              (itx) => _shouldShowPin(
-                                                itx.moment,
-                                                _showInteractions,
-                                                _showInteractionsNew,
-                                                _showInteractionsMedium,
-                                                _showInteractionsOld,
-                                              ),
-                                            )
-                                            .map((itx) {
+                                    markers: map.interactions.map((itx) {
                                               final mapRotation =
                                                   map
                                                       .mapController
@@ -1880,8 +1447,8 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                                       .rotation;
                                               return fm.Marker(
                                                 point: LatLng(itx.lat, itx.lon),
-                                                width: 44,
-                                                height: 44,
+                                                width: 56,
+                                                height: 56,
                                                 rotate: false,
                                                 child: Transform.rotate(
                                                   angle:
@@ -1900,7 +1467,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                                           seenAt: itx.moment,
                                                           speciesName: itx.speciesName,
                                                         ),
-                                                        _getAnimalIconPath(itx.speciesName),
+                                                        getSpeciesCardImagePath(itx.speciesName),
                                                       );
                                                     },
                                                     child: Builder(
@@ -1909,60 +1476,11 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                                             _iconStyleForTimestamp(
                                                               itx.moment,
                                                             );
-                                                        final Color interactionColor = Colors.black;
-                                                        return _getAnimalIconPath(
-                                                                  itx.speciesName,
-                                                                ) !=
-                                                                null
-                                                            ? SizedBox(
-                                                              width: style.size,
-                                                              height:
-                                                                  style.size,
-                                                              child: ColorFiltered(
-                                                                colorFilter:
-                                                                    ColorFilter.mode(
-                                                                      interactionColor,
-                                                                      BlendMode
-                                                                          .srcIn,
-                                                                    ),
-                                                                child: Image.asset(
-                                                                  _getAnimalIconPath(
-                                                                    itx.speciesName,
-                                                                  )!,
-                                                                  width:
-                                                                      style
-                                                                          .size,
-                                                                  height:
-                                                                      style
-                                                                          .size,
-                                                                  fit:
-                                                                      BoxFit
-                                                                          .contain,
-                                                                  errorBuilder: (
-                                                                    context,
-                                                                    error,
-                                                                    stackTrace,
-                                                                  ) {
-                                                                    return Icon(
-                                                                      Icons
-                                                                          .place,
-                                                                      size:
-                                                                          style
-                                                                              .size *
-                                                                          0.9,
-                                                                      color:
-                                                                          interactionColor,
-                                                                    );
-                                                                  },
-                                                                ),
-                                                              ),
-                                                            )
-                                                            : Icon(
-                                                              Icons.place,
-                                                              size: style.size,
-                                                              color:
-                                                                  interactionColor,
-                                                            );
+                                                        return _buildStyledAnimalPin(
+                                                          itx.speciesName,
+                                                          itx.typeName,
+                                                          style,
+                                                        );
                                                       },
                                                     ),
                                                   ),
@@ -1981,24 +1499,13 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                   ),
                                 )
                                 : fm.MarkerLayer(
-                                  markers: map.interactions
-                                      .where((itx) => _within31Days(itx.moment))
-                                      .where(
-                                        (itx) => _shouldShowPin(
-                                          itx.moment,
-                                          _showInteractions,
-                                          _showInteractionsNew,
-                                          _showInteractionsMedium,
-                                          _showInteractionsOld,
-                                        ),
-                                      )
-                                      .map((itx) {
+                                  markers: map.interactions.map((itx) {
                                         final mapRotation =
                                             map.mapController.camera.rotation;
                                         return fm.Marker(
                                           point: LatLng(itx.lat, itx.lon),
-                                          width: 44,
-                                          height: 44,
+                                          width: 56,
+                                          height: 56,
                                           rotate: false,
                                           child: Transform.rotate(
                                             angle: -mapRotation * math.pi / 180,
@@ -2007,42 +1514,18 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                               onTap: () {
                                                 _showAnimalDetailCard(
                                                   itx.toAnimalPin(),
-                                                  _getAnimalIconPath(itx.speciesName),
+                                                  getSpeciesCardImagePath(itx.speciesName),
                                                 );
                                               },
                                               child: Builder(
                                                 builder: (ctx) {
                                                   final style =
                                                       _iconStyleForTimestamp(itx.moment);
-                                                  final Color interactionColor = Colors.black;
-                                                  return _getAnimalIconPath(itx.speciesName) != null
-                                                      ? SizedBox(
-                                                          width: style.size,
-                                                          height: style.size,
-                                                          child: ColorFiltered(
-                                                            colorFilter: ColorFilter.mode(
-                                                              interactionColor,
-                                                              BlendMode.srcIn,
-                                                            ),
-                                                            child: Image.asset(
-                                                              _getAnimalIconPath(itx.speciesName)!,
-                                                              width: style.size,
-                                                              height: style.size,
-                                                              fit: BoxFit.contain,
-                                                              errorBuilder:
-                                                                  (context, error, stackTrace) => Icon(
-                                                                    Icons.place,
-                                                                    size: style.size * 0.9,
-                                                                    color: interactionColor,
-                                                                  ),
-                                                            ),
-                                                          ),
-                                                        )
-                                                      : Icon(
-                                                          Icons.place,
-                                                          size: style.size,
-                                                          color: interactionColor,
-                                                        );
+                                                  return _buildStyledAnimalPin(
+                                                    itx.speciesName,
+                                                    itx.typeName,
+                                                    style,
+                                                  );
                                                 },
                                               ),
                                             ),
@@ -2121,16 +1604,17 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   IconButton(
-                                    tooltip: 'Volgen',
+                                    tooltip: _followUser
+                                        ? 'Kaart volgt je locatie (uit)'
+                                        : 'Kaart volgt je locatie (aan)',
+                                    onLongPress: _loadTrackingHistory,
                                     onPressed: () {
-                                      if (_showTrackingHistory) {
-                                        setState(() {
+                                      setState(() {
+                                        if (_showTrackingHistory) {
                                           _showTrackingHistory = false;
-                                          _followUser = !_followUser;
-                                        });
-                                      } else {
-                                        _loadTrackingHistory();
-                                      }
+                                        }
+                                        _followUser = !_followUser;
+                                      });
                                     },
                                     icon: Icon(
                                       Icons.directions_walk,
@@ -2145,9 +1629,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                     height: 1,
                                     color: Colors.white.withValues(alpha: 0.2),
                                   ),
-                                  GestureDetector(
-                                    onLongPress: () => _showFilterDialog(context),
-                                    child: IconButton(
+                                  IconButton(
                                       tooltip: 'Mijn locatie',
                                       onPressed: () async {
                                         final mp = context.read<MapProvider>();
@@ -2164,7 +1646,6 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                         color: Colors.white,
                                       ),
                                     ),
-                                  ),
                                 ],
                               ),
                             ),
@@ -2318,4 +1799,3 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     return _IconStyle(Colors.grey.shade600, 20.0);
   }
 }
-

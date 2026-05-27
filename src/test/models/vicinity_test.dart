@@ -120,6 +120,31 @@ void main() {
       expect(vicinity.animals[1].speciesName, "Wolf");
     });
 
+    test('should use place for map pin when both location and place exist', () {
+      final json = {
+        "animals": [],
+        "detections": [],
+        "interactions": [
+          {
+            "ID": "interaction-both-1",
+            "location": {"latitude": 51.700088, "longitude": 5.270118},
+            "place": {"latitude": 51.539404, "longitude": 5.618791},
+            "moment": "2026-05-26T09:24:36Z",
+            "species": {"commonName": "Wolf"},
+          },
+        ],
+      };
+
+      final vicinity = Vicinity.fromJson(json);
+      final itx = vicinity.interactions.first;
+
+      expect(vicinity.interactions.length, 1);
+      expect(itx.lat, 51.539404);
+      expect(itx.lon, 5.618791);
+      expect(itx.reportLat, 51.700088);
+      expect(itx.eventLat, 51.539404);
+    });
+
     test('should parse interaction coordinates from place and longtitude', () {
       final json = {
         "animals": [],

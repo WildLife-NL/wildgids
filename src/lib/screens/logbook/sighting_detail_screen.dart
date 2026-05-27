@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:wildgids/models/animal_waarneming_models/animal_sighting_model.dart';
 import 'package:wildgids/models/enums/animal_gender.dart';
+import 'package:wildgids/utils/api_datetime.dart';
 import 'package:wildgids/utils/species_image_resolver.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
 
@@ -53,11 +54,7 @@ class SightingDetailScreen extends StatelessWidget {
       if (dt == null) {
         return 'Datum en tijd nog niet ingesteld';
       }
-      final date =
-          '${dt.day.toString().padLeft(2, '0')}-${dt.month.toString().padLeft(2, '0')}-${dt.year}';
-      final time =
-          '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-      return '$date | $time';
+      return ApiDateTime.formatSummary(dt);
     } catch (e) {
       return 'Datum en tijd nog niet ingesteld';
     }

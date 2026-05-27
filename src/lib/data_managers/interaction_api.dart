@@ -4,7 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:wildgids/data_managers/api_client.dart';
 import 'package:wildgids/interfaces/data_apis/interaction_api_interface.dart';
+import 'package:wildgids/models/api_models/experiment.dart';
+import 'package:wildgids/models/api_models/interaction_type.dart' as api_models;
+import 'package:wildgids/models/api_models/question.dart';
 import 'package:wildgids/models/api_models/questionaire.dart';
+import 'package:wildgids/models/api_models/user.dart';
 import 'package:wildgids/models/beta_models/animal_sighting_report_wrapper.dart';
 import 'package:wildgids/models/beta_models/interaction_model.dart';
 import 'package:wildgids/models/beta_models/interaction_response_model.dart';
@@ -57,7 +61,7 @@ class InteractionApi implements InteractionApiInterface {
         debugPrint("$yellowLog========================================");
         debugPrint("$yellowLog[InteractionAPI]: CHECKING FOR QUESTIONNAIRE");
         final questionnaireJson = json['questionnaire'];
-        final String interactionID = json['ID'];
+        final String interactionID = (json['ID'] ?? json['id'] ?? '').toString();
 
         debugPrint(
           "$yellowLog[InteractionAPI]: InteractionID from backend: $interactionID",
@@ -110,23 +114,28 @@ class InteractionApi implements InteractionApiInterface {
         }
 
         try {
+          final questionnaireMap = questionnaireJson is Map<String, dynamic>
+              ? questionnaireJson
+              : Map<String, dynamic>.from(questionnaireJson as Map);
           return InteractionResponse(
-            questionnaire: Questionnaire.fromJson(questionnaireJson),
+            questionnaire: Questionnaire.fromJson(questionnaireMap),
             interactionID: interactionID,
           );
-        } catch (e) {
+        } catch (e, stack) {
           debugPrint("$redLog Error parsing questionnaire: $e");
-          // Fallback: return an empty questionnaire response instead of failing whole interaction
+          debugPrint("$redLog Stack: $stack");
+          final fallback = _parseQuestionnaireFallback(
+            questionnaireJson,
+            interactionID,
+          );
+          if (fallback != null) {
+            return fallback;
+          }
           return InteractionResponse.empty(interactionID: interactionID);
         }
       } else {
         final errorBody = jsonDecode(response.body);
-        final errorMessages =
-            (errorBody['errors'] as List?)
-                ?.map((e) => e['message'])
-                .join('; ') ??
-            errorBody['detail'] ??
-            'Unknown error';
+        final errorMessages = _formatApiErrorBody(errorBody);
         throw Exception(
           "API request failed with status ${response.statusCode}: $errorMessages",
         );
@@ -138,5 +147,86 @@ class InteractionApi implements InteractionApiInterface {
   }
 
   // Removed fallback questionnaire fetch by hardcoded ID; questionnaires must come from backend response
+
+  static String _formatApiErrorBody(dynamic errorBody) {
+    if (errorBody is! Map) {
+      return errorBody?.toString() ?? 'Unknown error';
+    }
+
+    final detail = errorBody['detail'];
+    if (detail != null) {
+      return detail is String ? detail : detail.toString();
+    }
+
+    final errors = errorBody['errors'];
+    if (errors is String) return errors;
+    if (errors is List) {
+      return errors
+          .map((e) {
+            if (e is Map) {
+              return e['message']?.toString() ?? e.toString();
+            }
+            return e.toString();
+          })
+          .join('; ');
+    }
+    if (errors is Map) {
+      return errors.entries
+          .map((e) => '${e.key}: ${e.value}')
+          .join('; ');
+    }
+
+    return errorBody.toString();
+  }
+
+  static InteractionResponse? _parseQuestionnaireFallback(
+    dynamic questionnaireJson,
+    String interactionID,
+  ) {
+    if (questionnaireJson == null || questionnaireJson is! Map) return null;
+
+    final map = questionnaireJson is Map<String, dynamic>
+        ? questionnaireJson
+        : Map<String, dynamic>.from(questionnaireJson);
+    final rawQuestions = map['questions'] ?? map['Questions'];
+    if (rawQuestions == null || rawQuestions is! List || rawQuestions.isEmpty) {
+      return null;
+    }
+
+    final questions = <Question>[];
+    for (final q in rawQuestions) {
+      try {
+        final qMap =
+            q is Map<String, dynamic> ? q : Map<String, dynamic>.from(q as Map);
+        questions.add(Question.fromJson(qMap));
+      } catch (_) {
+        continue;
+      }
+    }
+    if (questions.isEmpty) return null;
+
+    final questionnaire = Questionnaire(
+      id: (map['ID'] ?? map['id'])?.toString() ?? 'N/A',
+      experiment: Experiment(
+        id: 'N/A',
+        description: '',
+        name: 'N/A',
+        start: DateTime.now(),
+        user: User(id: 'N/A', email: null),
+      ),
+      identifier: map['identifier']?.toString(),
+      interactionType: api_models.InteractionType(
+        id: 0,
+        name: 'N/A',
+        description: '',
+      ),
+      name: map['name']?.toString() ?? 'Vragenlijst',
+      questions: questions,
+    );
+    return InteractionResponse(
+      questionnaire: questionnaire,
+      interactionID: interactionID,
+    );
+  }
 }
 

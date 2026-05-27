@@ -1795,6 +1795,14 @@ class MockAppStateProvider extends _i1.Mock implements _i65.AppStateProvider {
           as bool);
 
   @override
+  bool get notificationsEnabled =>
+      (super.noSuchMethod(
+            Invocation.getter(#notificationsEnabled),
+            returnValue: false,
+          )
+          as bool);
+
+  @override
   bool get isLocationCacheValid =>
       (super.noSuchMethod(
             Invocation.getter(#isLocationCacheValid),
@@ -1885,6 +1893,15 @@ class MockAppStateProvider extends _i1.Mock implements _i65.AppStateProvider {
   _i20.Future<void> setLocationTrackingEnabled(bool? enabled) =>
       (super.noSuchMethod(
             Invocation.method(#setLocationTrackingEnabled, [enabled]),
+            returnValue: _i20.Future<void>.value(),
+            returnValueForMissingStub: _i20.Future<void>.value(),
+          )
+          as _i20.Future<void>);
+
+  @override
+  _i20.Future<void> setNotificationsEnabled(bool? enabled) =>
+      (super.noSuchMethod(
+            Invocation.method(#setNotificationsEnabled, [enabled]),
             returnValue: _i20.Future<void>.value(),
             returnValueForMissingStub: _i20.Future<void>.value(),
           )
@@ -2232,6 +2249,18 @@ class MockMapProvider extends _i1.Mock implements _i67.MapProvider {
   @override
   void stopTracking() => super.noSuchMethod(
     Invocation.method(#stopTracking, []),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void setVicinityNotificationsEnabled(bool? enabled) => super.noSuchMethod(
+    Invocation.method(#setVicinityNotificationsEnabled, [enabled]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void clearUserLocationAndStopTracking() => super.noSuchMethod(
+    Invocation.method(#clearUserLocationAndStopTracking, []),
     returnValueForMissingStub: null,
   );
 
@@ -2702,6 +2731,10 @@ class MockAnimalSightingModel extends _i1.Mock
     _i43.DateTimeModel? dateTime,
     _i78.ImageListModel? images,
     int? animalCount,
+    String? humanActivity,
+    String? humanActivityOther,
+    String? perceivedAnimalActivity,
+    String? perceivedAnimalActivityOther,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#copyWith, [], {
@@ -2713,6 +2746,10 @@ class MockAnimalSightingModel extends _i1.Mock
               #dateTime: dateTime,
               #images: images,
               #animalCount: animalCount,
+              #humanActivity: humanActivity,
+              #humanActivityOther: humanActivityOther,
+              #perceivedAnimalActivity: perceivedAnimalActivity,
+              #perceivedAnimalActivityOther: perceivedAnimalActivityOther,
             }),
             returnValue: _FakeAnimalSightingModel_9(
               this,
@@ -2725,6 +2762,10 @@ class MockAnimalSightingModel extends _i1.Mock
                 #dateTime: dateTime,
                 #images: images,
                 #animalCount: animalCount,
+                #humanActivity: humanActivity,
+                #humanActivityOther: humanActivityOther,
+                #perceivedAnimalActivity: perceivedAnimalActivity,
+                #perceivedAnimalActivityOther: perceivedAnimalActivityOther,
               }),
             ),
           )

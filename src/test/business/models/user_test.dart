@@ -84,8 +84,8 @@ void main() {
 
       // Assert
       expect(user.id, 'user-123');
-      expect(user.email, ""); // The test expects empty string but gets null
-      expect(user.name, ""); // The test expects empty string but gets null
+      expect(user.email, isNull);
+      expect(user.name, isNull);
     });
   });
 }

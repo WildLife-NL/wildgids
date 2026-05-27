@@ -82,7 +82,7 @@ class _TermsScreenState extends State<TermsScreen> {
         reportAppTerms: true,
         recreationAppTerms: base?.recreationAppTerms,
         dateOfBirth: base?.dateOfBirth,
-        description: base?.description,
+        notes: base?.notes,
         location: base?.location,
         locationTimestamp: base?.locationTimestamp,
       );

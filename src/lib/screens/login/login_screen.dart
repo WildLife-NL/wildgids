@@ -2,13 +2,11 @@
 import 'package:provider/provider.dart';
 import 'package:wildgids/constants/app_colors.dart';
 import 'package:wildgids/constants/app_text_theme.dart';
-import 'package:wildgids/models/factories/button_model_factory.dart';
+import 'package:wildgids/screens/location/kaart_overview_screen.dart';
 import 'package:wildgids/screens/login/login_overlay.dart';
-import 'package:wildgids/widgets/shared_ui_widgets/brown_button.dart';
-import 'package:wildgids/widgets/login/verification_code_input.dart';
 import 'package:wildgids/interfaces/other/login_interface.dart';
 import 'package:wildgids/widgets/overlay/error_overlay.dart';
-import 'package:wildgids/utils/responsive_utils.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,6 +17,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
+  final TextEditingController codeController = TextEditingController();
   late final LoginInterface _loginManager;
   bool showVerification = false;
   bool isError = false;
@@ -33,14 +32,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void dispose() {
-    emailController.dispose();
-    super.dispose();
-  }
+  emailController.dispose();
+  codeController.dispose();
+  super.dispose();
+}
 
   void _handleLogin() {
     debugPrint('Login button pressed');
 
     final validationError = _loginManager.validateEmail(emailController.text);
+    
     if (validationError != null) {
       showDialog(
         context: context,
@@ -103,204 +104,307 @@ class _LoginScreenState extends State<LoginScreen> {
         });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    debugPrint('Building LoginScreen, showVerification: $showVerification');
-    return Scaffold(
-      body: ResponsiveUtils.layoutBuilder(
-        context: context,
-        builder: (ctx, constraints, ru) {
-          final isSideBySide =
-              constraints.maxWidth >= 600; // breakpoint for tablet
-          final showTwoColumn =
-              constraints.maxWidth >= 900; // wider layout adjustments
-          final branding = Container(
-            decoration: BoxDecoration(
-              color: AppColors.darkGreen,
-              borderRadius: BorderRadius.zero,
-            ),
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Image.asset(
-                        'assets/LogoWildlifeNL.png',
-                        width: ru.breakpointValue<double>(
-                          small: ru.wp(60),
-                          medium: ru.wp(40),
-                          large: ru.wp(35),
-                          extraLarge: ru.wp(30),
-                        ),
-                        fit: BoxFit.contain,
-                      ),
-                      SizedBox(height: ru.spacing(12)),
-                      Text(
-                        'Wild Gids',
-                        style:
-                            AppTextTheme.textTheme.titleLarge?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
-                              fontSize: ru.adaptiveFont(
-                                small: 22,
-                                medium: 24,
-                                large: 26,
-                                extraLarge: 28,
-                              ),
-                            ) ??
-                            TextStyle(
-                              color: Colors.white,
-                              fontSize: ru.adaptiveFont(
-                                small: 22,
-                                medium: 24,
-                                large: 26,
-                                extraLarge: 28,
-                              ),
-                              fontWeight: FontWeight.w700,
-                            ),
-                      ),
-                    ],
-                  ),
-                ),
-                Positioned(
-                  bottom: ru.hp(-2.5),
-                  right: ru.wp(-2.5),
-                  child: SizedBox.shrink(),
-                ),
-              ],
-            ),
-          );
+void _handleVerifyCode() async {
+  final code = codeController.text.trim();
 
-          final form = Padding(
-            padding: EdgeInsets.all(ru.spacing(20)),
-            child:
-                showVerification
-                    ? VerificationCodeInput(
-                      onBack: () {
-                        setState(() {
-                          showVerification = false;
-                        });
-                      },
-                      email: emailController.text,
-                    )
-                    : Transform.translate(
-                      offset: Offset(0, ru.hp(-2.5)),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Voer uw emailadres in',
-                            textAlign: TextAlign.center,
-                            style: AppTextTheme.textTheme.titleMedium?.copyWith(
-                              fontSize: ru.adaptiveFont(
-                                small: 18,
-                                medium: 20,
-                                large: 22,
-                              ),
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          SizedBox(height: ru.spacing(12)),
-                          if (isError) ...[
-                            Padding(
-                              padding: EdgeInsets.only(
-                                left: ru.wp(2),
-                                bottom: ru.hp(0.6),
-                              ),
-                              child: Text(
-                                errorMessage,
-                                style: TextStyle(
-                                  color: Colors.red.shade600,
-                                  fontSize: ru.fontSize(12),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: ru.spacing(8)),
-                          ],
-                          SizedBox(height: ru.spacing(8)),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Color(0xFFF1F5F2),
-                              borderRadius: BorderRadius.circular(ru.sp(3.1)),
-                              border: Border.all(
-                                color: AppColors.brown,
-                                width: ru.sp(0.19),
-                              ),
-                            ),
-                            child: TextField(
-                              controller: emailController,
-                              minLines: 1,
-                              maxLines: null,
-                              decoration: InputDecoration(
-                                hintText: 'emailadres',
-                                hintStyle: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: ru.fontSize(14),
-                                ),
-                                border: InputBorder.none,
-                                enabledBorder: InputBorder.none,
-                                focusedBorder: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: ru.wp(5),
-                                  vertical: ru.hp(1.9),
-                                ),
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: ru.spacing(24)),
-                          BrownButton(
-                            model: ButtonModelFactory.createLoginButton(
-                              text: 'Aanmelden',
-                            ),
-                            onPressed: _handleLogin,
-                          ),
-                          SizedBox(height: ru.spacing(16)),
-                          Center(
-                            child: InkWell(
-                              onTap: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => const LoginOverlay(),
-                                );
-                              },
-                              child: Text(
-                                'Hoe werkt de registratie?',
-                                style: TextStyle(
-                                  color: AppColors.brown,
-                                  fontSize: ru.fontSize(14),
-                                  decoration: TextDecoration.underline,
-                                  decorationColor: AppColors.brown,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-          );
-
-          if (!isSideBySide) {
-            return Column(
-              children: [
-                Expanded(flex: 1, child: branding),
-                Expanded(flex: 1, child: form),
-              ],
-            );
-          }
-
-          return Row(
-            children: [
-              Expanded(flex: showTwoColumn ? 3 : 2, child: branding),
-              Expanded(flex: showTwoColumn ? 4 : 3, child: form),
-            ],
-          );
-        },
-      ),
-    );
+  if (code.isEmpty) {
+    setState(() {
+      isError = true;
+      errorMessage = 'Voer de verificatiecode in';
+    });
+    return;
   }
+
+  try {
+    await _loginManager.verifyCode(
+      emailController.text.trim(),
+      code,
+    );
+  } catch (_) {
+    if (!mounted) return;
+    setState(() {
+      isError = true;
+      errorMessage = 'Ongeldige verificatiecode';
+    });
+    return;
+  }
+
+  if (!mounted) return;
+
+  Navigator.of(context).pushReplacement(
+  MaterialPageRoute(
+    builder: (context) => const KaartOverviewScreen(),
+  ),
+);
 }
 
+ @override
+Widget build(BuildContext context) {
+  return Scaffold(
+    backgroundColor: const Color(0xFFF5F6F4),
+    body: GestureDetector(
+  behavior: HitTestBehavior.opaque,
+  onTap: () {
+    FocusScope.of(context).unfocus();
+  },
+  child: SafeArea(
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          child: Column(
+            children: [
+              const SizedBox(height: 32),
+
+                SizedBox(
+                  width: 120,
+                  height: 120,
+                  child: SvgPicture.asset(
+                    'assets/logo-wildlife.svg',
+                    fit: BoxFit.contain,
+                    colorFilter: ColorFilter.mode(
+                      AppColors.primaryGreen,
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                ),
+              Text(
+              'Welkom bij Wild Gids',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w600,
+                color: Colors.black,
+              ),
+            ),
+
+              const SizedBox(height: 8),
+
+              Text(
+                'Een app van WildLifeNL',
+                textAlign: TextAlign.center,
+                style: AppTextTheme.textTheme.bodyMedium?.copyWith(
+                  fontSize: 14,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+
+              const SizedBox(height: 40),
+
+              Card(
+                elevation: 0,
+                color: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  side: const BorderSide(
+                    color: Color(0xFF999999),
+                    width: 1,
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: showVerification
+                      ? Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Text(
+        'Voer verificatiecode in',
+        style: TextStyle(
+          fontSize: 15,
+          color: Colors.black,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      const SizedBox(height: 8),
+      Text(
+        'Wij hebben een code naar ${emailController.text} verzonden',
+        style: TextStyle(
+          fontSize: 12,
+          color: Colors.grey,
+        ),
+      ),
+      const SizedBox(height: 16),
+      TextField(
+        controller: codeController,
+        keyboardType: TextInputType.number,
+        textAlign: TextAlign.center,
+        decoration: InputDecoration(
+          hintText: '123456',
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          filled: true,
+          fillColor: Colors.white,
+        ),
+        style: const TextStyle(
+          fontSize: 24,
+          letterSpacing: 8,
+        ),
+      ),
+      const SizedBox(height: 16),
+      SizedBox(
+        width: double.infinity,
+        height: 48,
+        child: ElevatedButton(
+          onPressed: _handleVerifyCode,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primaryGreen,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          child: const Text(
+            'Verifieer',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ),
+      const SizedBox(height: 12),
+      SizedBox(
+        width: double.infinity,
+        child: TextButton(
+          onPressed: () {
+            setState(() {
+              showVerification = false;
+              codeController.clear();
+            });
+          },
+          child: Text(
+            'Terug naar e-mail',
+            style: TextStyle(
+              color: AppColors.primaryGreen,
+              fontSize: 13,
+            ),
+          ),
+        ),
+      ),
+    ],
+  )
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Voer uw e-mailadres in',
+                              style: AppTextTheme.textTheme.bodyMedium?.copyWith(
+                                fontSize: 15,
+                                color: Colors.black,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+
+                            const SizedBox(height: 12),
+
+                            TextField(
+                              controller: emailController,
+                              
+                              keyboardType: TextInputType.emailAddress,
+                              decoration: InputDecoration(
+                                hintText: 'E-mailadres',
+                                hintStyle: TextStyle(
+                                  color: Colors.grey.shade400,
+                                  fontSize: 14,
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF999999),
+                                    width: 1,
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFFD0D0D0),
+                                    width: 1,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: AppColors.darkGreen,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: Colors.white,
+                              ),
+                            ),
+
+                            const SizedBox(height: 16),
+
+                            if (isError)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: Text(
+                                  errorMessage,
+                                  style: TextStyle(
+                                    color: Colors.red.shade600,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+
+                            SizedBox(
+                              width: double.infinity,
+                              height: 48,
+                              child: ElevatedButton(
+                                onPressed: _handleLogin,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primaryGreen,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Aanmelden',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(height: 16),
+
+                            Center(
+                              child: TextButton(
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (_) => const LoginOverlay(),
+                                  );
+                                },
+                                child: const Text(
+                                  'Hoe werkt de registratie?',
+                                  style: TextStyle(
+                                    color: Color.fromARGB(255, 103, 103, 103),
+                                    fontSize: 13,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+              ),
+
+                           const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ),
+    ),
+  ),
+);
+}
+}

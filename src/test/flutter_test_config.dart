@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:wildgids/utils/last_sent_tracking_location.dart';
 
 final Uint8List _transparentImageBytes = Uint8List.fromList(<int>[
   0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D,
@@ -14,9 +15,14 @@ final Uint8List _transparentImageBytes = Uint8List.fromList(<int>[
 
 const String _minimalLottieJson =
     '{"v":"5.7.0","fr":30,"ip":0,"op":1,"w":1,"h":1,"nm":"test","ddd":0,"assets":[],"layers":[]}';
+const String _minimalSvg =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1">'
+    '<rect width="1" height="1" fill="transparent"/>'
+    '</svg>';
 
 Future<void> testExecutable(Future<void> Function() testMain) async {
   TestWidgetsFlutterBinding.ensureInitialized();
+  LastSentTrackingLocation.clear();
   final StandardMessageCodec codec = const StandardMessageCodec();
 
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -44,6 +50,11 @@ Future<void> testExecutable(Future<void> Function() testMain) async {
           final Uint8List bytes = Uint8List.fromList(
             utf8.encode(_minimalLottieJson),
           );
+          return ByteData.sublistView(bytes);
+        }
+
+        if (assetKey.endsWith('.svg')) {
+          final Uint8List bytes = Uint8List.fromList(utf8.encode(_minimalSvg));
           return ByteData.sublistView(bytes);
         }
 

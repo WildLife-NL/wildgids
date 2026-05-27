@@ -430,19 +430,36 @@ class ResponsesListObject {
   ResponsesListObject({required this.responses});
 
   factory ResponsesListObject.fromJson(Map<String, dynamic> json) {
+    final rawResponses = json['responses'];
+    if (rawResponses is! List) {
+      return ResponsesListObject(responses: []);
+    }
+
     return ResponsesListObject(
-      responses:
-          (json['responses'] as List).map((entry) {
-            final mapEntry = entry as Map<String, dynamic>;
-            return mapEntry.map((key, value) {
-              return MapEntry(
-                key,
-                (value as List)
-                    .map((item) => ResponseObject.fromJson(item))
-                    .toList(),
-              );
-            });
-          }).toList(),
+      responses: rawResponses.map((entry) {
+        if (entry is! Map) return <String, List<ResponseObject>>{};
+        final mapEntry = entry is Map<String, dynamic>
+            ? entry
+            : Map<String, dynamic>.from(entry);
+        return mapEntry.map((key, value) {
+          if (value is! List) {
+            return MapEntry(key, <ResponseObject>[]);
+          }
+          return MapEntry(
+            key,
+            value
+                .whereType<Map>()
+                .map(
+                  (item) => ResponseObject.fromJson(
+                    item is Map<String, dynamic>
+                        ? item
+                        : Map<String, dynamic>.from(item),
+                  ),
+                )
+                .toList(),
+          );
+        });
+      }).toList(),
     );
   }
 

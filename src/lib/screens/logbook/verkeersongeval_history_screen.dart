@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:wildgids/constants/app_colors.dart';
 import 'package:wildgids/data_managers/api_client.dart';
 import 'package:wildgids/data_managers/my_interaction_api.dart';
 import 'package:wildgids/models/api_models/my_interaction.dart';
+import 'package:wildgids/utils/api_datetime.dart';
 import 'package:wildgids/utils/location_label.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
 import 'package:wildgids/screens/logbook/logbook_screen.dart';
@@ -132,8 +132,7 @@ class _InteractionTile extends StatelessWidget {
   final MyInteraction interaction;
   const _InteractionTile({required this.interaction});
 
-  String _formatDateTime(DateTime dt) =>
-      DateFormat('dd MMM yyyy, HH:mm').format(dt);
+  String _formatDateTime(DateTime dt) => ApiDateTime.formatNl(dt);
 
   @override
   Widget build(BuildContext context) {
@@ -264,8 +263,7 @@ class _DetailSheet extends StatelessWidget {
   final MyInteraction interaction;
   const _DetailSheet({required this.interaction});
 
-  String _formatDateTime(DateTime dt) =>
-      DateFormat('dd MMM yyyy, HH:mm').format(dt);
+  String _formatDateTime(DateTime dt) => ApiDateTime.formatNl(dt);
 
   @override
   Widget build(BuildContext context) {
