@@ -1093,7 +1093,8 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
         }
       },
       child: Scaffold(
-        extendBody: true,
+        backgroundColor: Colors.white,
+        extendBody: false,
         body:
             pos == null
                 ? const Center(child: CircularProgressIndicator())

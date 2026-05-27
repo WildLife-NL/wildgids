@@ -42,28 +42,59 @@ class _QuestionnaireMultipleChoiceState
   List<String> selectedAnswerIDs = [];
   final Map<String, TextEditingController> _textControllers = {};
   final Map<String, String> _freeTextByAnswer = {};
+  bool _providerInitialized = false;
 
   bool get _allowFreeText => widget.question.allowOpenResponse;
 
   @override
   void initState() {
     super.initState();
+    _initTextControllers();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_providerInitialized) return;
+    _providerInitialized = true;
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      responseProvider = context.read<ResponseProvider>();
-      responseProvider.setInteractionID(widget.interactionID);
-      responseProvider.setQuestionID(widget.question.id);
-      existingResponse = responseProvider.responses.firstWhereOrNull(
-        (response) => response.questionID == widget.question.id,
-      );
-
-      _hydrateExistingText(existingResponse?.text);
-      _initTextControllers();
-
-      setState(() {
-        selectedAnswerID = existingResponse?.answerID;
-        selectedAnswerIDs = existingResponse?.answerID?.split(',') ?? [];
-      });
+      if (!mounted) return;
+      _loadFromProvider();
     });
+  }
+
+  void _loadFromProvider() {
+    responseProvider = context.read<ResponseProvider>();
+    responseProvider.setInteractionID(widget.interactionID);
+    responseProvider.setQuestionID(widget.question.id);
+    existingResponse = responseProvider.responses.firstWhereOrNull(
+      (response) => response.questionID == widget.question.id,
+    );
+
+    _hydrateExistingText(existingResponse?.text);
+    for (final answer in widget.question.answers ?? const []) {
+      final stored = _freeTextByAnswer[answer.id];
+      if (stored != null && stored.isNotEmpty) {
+        _textControllers[answer.id]?.text = stored;
+      }
+    }
+
+    final storedAnswerId = existingResponse?.answerID;
+    if (storedAnswerId != null && storedAnswerId.isNotEmpty) {
+      if (widget.question.allowMultipleResponse) {
+        selectedAnswerIDs = storedAnswerId
+            .split(',')
+            .map((id) => id.trim())
+            .where((id) => id.isNotEmpty)
+            .toList();
+      } else {
+        selectedAnswerID = storedAnswerId;
+        selectedAnswerIDs = [storedAnswerId];
+      }
+    }
+
+    setState(() {});
   }
 
   void _initTextControllers() {

@@ -17,7 +17,6 @@ void main() {
     late List<Answer> testAnswers;
 
     setUp(() {
-      // Create test data
       testAnswers = [
         Answer(id: 'a1', index: 0, text: 'Option 1'),
         Answer(id: 'a2', index: 1, text: 'Option 2'),
@@ -29,7 +28,7 @@ void main() {
         text: 'Select options and provide feedback:',
         description: 'Test question with per-answer text fields',
         allowMultipleResponse: true,
-        allowOpenResponse: true, // Enable per-answer text fields
+        allowOpenResponse: true,
         answers: testAnswers,
         index: 0,
         openResponseFormat: '',
@@ -64,185 +63,103 @@ void main() {
       );
     });
 
-    testWidgets(
-      'should render checkboxes for each answer when allowMultipleResponse=true',
-      (WidgetTester tester) async {
-        // Build the widget
-        await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: ChangeNotifierProvider(
-                create: (_) => ResponseProvider(),
-                child: QuestionnaireMultipleChoice(
-                  question: testQuestion,
-                  questionnaire: testQuestionnaire,
-                  onNextPressed: () {},
-                  onBackPressed: () {},
-                  interactionID: 'interaction123',
-                  index: 0,
-                ),
+    Future<void> pumpWidgetUnderTest(WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ChangeNotifierProvider(
+              create: (_) => ResponseProvider(),
+              child: QuestionnaireMultipleChoice(
+                question: testQuestion,
+                questionnaire: testQuestionnaire,
+                onNextPressed: () {},
+                onBackPressed: () {},
+                interactionID: 'interaction123',
+                index: 0,
               ),
             ),
           ),
-        );
+        ),
+      );
+      await tester.pump();
+    }
 
-        // Verify checkboxes are rendered
-        expect(find.byType(Checkbox), findsWidgets);
-        expect(find.byType(Checkbox), findsNWidgets(testAnswers.length));
+    Finder checkboxTiles() => find.byType(CheckboxListTile);
+
+    testWidgets(
+      'should render checkboxes for each answer when allowMultipleResponse=true',
+      (WidgetTester tester) async {
+        await pumpWidgetUnderTest(tester);
+
+        expect(checkboxTiles(), findsNWidgets(testAnswers.length));
       },
     );
 
     testWidgets(
       'should show text field when an answer is selected and allowOpenResponse=true',
       (WidgetTester tester) async {
-        // Build the widget
-        await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: ChangeNotifierProvider(
-                create: (_) => ResponseProvider(),
-                child: QuestionnaireMultipleChoice(
-                  question: testQuestion,
-                  questionnaire: testQuestionnaire,
-                  onNextPressed: () {},
-                  onBackPressed: () {},
-                  interactionID: 'interaction123',
-                  index: 0,
-                ),
-              ),
-            ),
-          ),
-        );
+        await pumpWidgetUnderTest(tester);
 
-        // Verify initial state - no text fields visible
         expect(find.byType(TextField), findsNothing);
 
-        // Tap the first checkbox to select it
-        await tester.tap(find.byType(Checkbox).first);
+        await tester.tap(checkboxTiles().first);
         await tester.pumpAndSettle();
 
-        // Verify text field now appears for the selected answer
-        expect(find.byType(TextField), findsWidgets);
+        expect(find.byType(TextField), findsOneWidget);
       },
     );
 
     testWidgets(
       'should allow entering text for each selected answer',
       (WidgetTester tester) async {
-        // Build the widget
-        await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: ChangeNotifierProvider(
-                create: (_) => ResponseProvider(),
-                child: QuestionnaireMultipleChoice(
-                  question: testQuestion,
-                  questionnaire: testQuestionnaire,
-                  onNextPressed: () {},
-                  onBackPressed: () {},
-                  interactionID: 'interaction123',
-                  index: 0,
-                ),
-              ),
-            ),
-          ),
-        );
+        await pumpWidgetUnderTest(tester);
 
-        // Select first answer
-        await tester.tap(find.byType(Checkbox).first);
+        await tester.tap(checkboxTiles().first);
         await tester.pumpAndSettle();
 
-        // Type text in the text field
         await tester.enterText(find.byType(TextField).first, 'Test feedback 1');
         await tester.pumpAndSettle();
 
-        // Verify the text was entered
         expect(find.text('Test feedback 1'), findsOneWidget);
 
-        // Select second answer
-        await tester.tap(find.byType(Checkbox).at(1));
+        await tester.tap(checkboxTiles().at(1));
         await tester.pumpAndSettle();
 
-        // Type text in the second text field
-        expect(find.byType(TextField), findsWidgets);
+        expect(find.byType(TextField), findsNWidgets(2));
       },
     );
 
     testWidgets(
       'should hide text field when answer is deselected',
       (WidgetTester tester) async {
-        // Build the widget
-        await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: ChangeNotifierProvider(
-                create: (_) => ResponseProvider(),
-                child: QuestionnaireMultipleChoice(
-                  question: testQuestion,
-                  questionnaire: testQuestionnaire,
-                  onNextPressed: () {},
-                  onBackPressed: () {},
-                  interactionID: 'interaction123',
-                  index: 0,
-                ),
-              ),
-            ),
-          ),
-        );
+        await pumpWidgetUnderTest(tester);
 
-        // Select first answer
-        await tester.tap(find.byType(Checkbox).first);
+        await tester.tap(checkboxTiles().first);
         await tester.pumpAndSettle();
 
-        // Verify text field appears
-        expect(find.byType(TextField), findsWidgets);
+        expect(find.byType(TextField), findsOneWidget);
 
-        // Deselect the answer
-        await tester.tap(find.byType(Checkbox).first);
+        await tester.tap(checkboxTiles().first);
         await tester.pumpAndSettle();
 
-        // Verify text field is hidden (or removed)
-        // Note: This depends on implementation - the field might still exist but be hidden
-        final textFields = find.byType(TextField);
-        expect(textFields, findsNothing);
+        expect(find.byType(TextField), findsNothing);
       },
     );
 
     testWidgets(
       'should support multiple selections with individual text fields',
       (WidgetTester tester) async {
-        // Build the widget
-        await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: ChangeNotifierProvider(
-                create: (_) => ResponseProvider(),
-                child: QuestionnaireMultipleChoice(
-                  question: testQuestion,
-                  questionnaire: testQuestionnaire,
-                  onNextPressed: () {},
-                  onBackPressed: () {},
-                  interactionID: 'interaction123',
-                  index: 0,
-                ),
-              ),
-            ),
-          ),
-        );
+        await pumpWidgetUnderTest(tester);
 
-        // Select first answer
-        await tester.tap(find.byType(Checkbox).first);
+        await tester.tap(checkboxTiles().first);
         await tester.pumpAndSettle();
 
-        // Select third answer (skip second)
-        await tester.ensureVisible(find.byType(Checkbox).at(2));
-        await tester.tap(find.byType(Checkbox).at(2));
+        await tester.ensureVisible(checkboxTiles().at(2));
+        await tester.tap(checkboxTiles().at(2));
         await tester.pumpAndSettle();
 
-        // Should have 2 text fields visible
-        expect(find.byType(TextField), findsWidgets);
+        expect(find.byType(TextField), findsNWidgets(2));
       },
     );
   });
 }
-
