@@ -30,6 +30,7 @@ import 'package:wildgids/constants/mock_location.dart';
 import 'package:wildgids/constants/location_sharing_config.dart';
 import 'dart:async';
 import 'dart:convert';
+import 'package:wildgids/utils/species_icon_utils.dart';
 import 'dart:math' as math;
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart'
     as cl;
@@ -1486,10 +1487,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                                   behavior:
                                                       HitTestBehavior.opaque,
                                                   onTap: () {
-                                                    _showAnimalDetailCard(
-                                                      pin,
-                                                      _getAnimalIconPath(pin.speciesName),
-                                                    );
+                                                     _showAnimalDetailCard(pin, getSpeciesCardImagePath(pin.speciesName));
                                                   },
                                                   child: Builder(
                                                     builder: (ctx) {
@@ -1849,7 +1847,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                                           seenAt: itx.moment,
                                                           speciesName: itx.speciesName,
                                                         ),
-                                                        _getAnimalIconPath(itx.speciesName),
+                                                        getSpeciesCardImagePath(itx.speciesName),
                                                       );
                                                     },
                                                     child: Builder(
@@ -1956,7 +1954,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                               onTap: () {
                                                 _showAnimalDetailCard(
                                                   itx.toAnimalPin(),
-                                                  _getAnimalIconPath(itx.speciesName),
+                                                  getSpeciesCardImagePath(itx.speciesName),
                                                 );
                                               },
                                               child: Builder(
