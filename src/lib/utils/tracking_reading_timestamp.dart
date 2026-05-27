@@ -10,7 +10,7 @@ class TrackingReadingTimestamp {
   static const Duration _safetyBuffer = Duration(seconds: 5);
 
   static final RegExp _serverNowPattern = RegExp(
-    r'timestamp must be before now\s+(\S+)',
+    r'timestamp must be before now\s+(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z?)',
     caseSensitive: false,
   );
 

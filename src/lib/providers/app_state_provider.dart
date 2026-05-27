@@ -4,8 +4,6 @@ import 'package:wildgids/managers/map/location_map_manager.dart';
 import 'package:wildgids/models/beta_models/sighting_report_model.dart';
 import 'package:wildgids/models/enums/report_type.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:wildgids/constants/mock_location.dart';
-
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wildgids/screens/login/login_screen.dart';
 
@@ -26,13 +24,11 @@ class AppStateProvider with ChangeNotifier {
   bool get notificationsEnabled => _notificationsEnabled;
 
   ReportType? get currentReportType => _currentReportType;
-  Position? get cachedPosition =>
-      MockLocation.enabled ? MockLocation.position() : _cachedPosition;
+  Position? get cachedPosition => _cachedPosition;
   String? get cachedAddress => _cachedAddress;
   DateTime? get lastLocationUpdate => _lastLocationUpdate;
 
   bool get isLocationCacheValid {
-    if (MockLocation.enabled) return true;
     if (_lastLocationUpdate == null || _cachedPosition == null) {
       debugPrint(
         '\x1B[33m[AppStateProvider] Cache invalid: No cached data\x1B[0m',
@@ -129,7 +125,7 @@ class AppStateProvider with ChangeNotifier {
 
   Future<void> updateLocationCache() async {
     try {
-      final position = await MockLocation.current(
+      final position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.high,
           timeLimit: Duration(seconds: 5),

@@ -1,5 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wildgids/models/enums/report_type.dart';
 import 'package:wildgids/providers/app_state_provider.dart';
 import '../business/mock_generator.mocks.dart';
@@ -35,6 +36,7 @@ void main() {
       expect(appStateProvider.cachedAddress, isNull);
       expect(appStateProvider.lastLocationUpdate, isNull);
       expect(appStateProvider.isLocationCacheValid, isFalse);
+      expect(appStateProvider.isLocationTrackingEnabled, isTrue);
     });
 
     test('should set and get screen state', () {
@@ -168,8 +170,27 @@ void main() {
       expect(appStateProvider.isLocationCacheValid, isFalse);
     });
 
-    // We can't test the valid case without mocking the internal state
-    // or adding test-specific methods to the AppStateProvider
+    test('loadLocationTrackingPreference always enables location sharing', () async {
+      SharedPreferences.setMockInitialValues({
+        'location_tracking_enabled': false,
+      });
+
+      await appStateProvider.loadLocationTrackingPreference();
+
+      expect(appStateProvider.isLocationTrackingEnabled, isTrue);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getBool('location_tracking_enabled'), isTrue);
+    });
+
+    test('setLocationTrackingEnabled ignores disable requests', () async {
+      SharedPreferences.setMockInitialValues({});
+
+      await appStateProvider.setLocationTrackingEnabled(false);
+
+      expect(appStateProvider.isLocationTrackingEnabled, isTrue);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getBool('location_tracking_enabled'), isTrue);
+    });
   });
 }
 

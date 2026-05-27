@@ -102,7 +102,7 @@ void main() async {
   final interactionApi = InteractionApi(apiClient);
   final questionnaireAPI = QuestionaireApi(apiClient);
   final responseAPI = ResponseApi(apiClient);
-  final vicinityApi = VicinityApi(apiClient);
+  final trackingReadingsApi = TrackingReadingsApi(apiClient);
   final contactApi = ContactApi(apiClient);
   final contactTracingMonitor = ContactTracingMonitor(contactApi);
   final contactTracingCoordinator = ContactTracingCoordinator(
@@ -123,7 +123,7 @@ void main() async {
 
   final submittedSightingsProvider = SubmittedSightingsProvider();
 
-  mapProvider.setVicinityApi(vicinityApi);
+  mapProvider.setTrackingReadingsApi(trackingReadingsApi);
 
   final interactionTypesApi = InteractionTypesApi(apiClient);
   final interactionTypesManager = InteractionTypesManager(interactionTypesApi);

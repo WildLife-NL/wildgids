@@ -9,7 +9,6 @@ import 'package:wildgids/providers/app_state_provider.dart';
 import 'package:wildgids/screens/login/login_screen.dart';
 import 'package:wildgids/widgets/overlay/error_overlay.dart'
     show ErrorOverlay;
-import 'package:wildgids/widgets/login/verification_code_input.dart';
 import '../mock_generator.mocks.dart';
 
 void main() {
@@ -138,9 +137,7 @@ void main() {
       await tester.pump();
       await tester.pumpAndSettle(); // Wait for verification screen
 
-      // Instead of looking for "Verificatiecode" text, check if the verification widget is shown
-      // This is more reliable as it doesn't depend on the exact text
-      expect(find.byType(VerificationCodeInput), findsOneWidget);
+      expect(find.text('Voer verificatiecode in'), findsOneWidget);
     },
   );
 
@@ -198,8 +195,7 @@ void main() {
       // First pump to handle the initial state change (showVerification = true)
       await tester.pump();
 
-      // Verify verification screen is initially shown
-      expect(find.byType(VerificationCodeInput), findsOneWidget);
+      expect(find.text('Voer verificatiecode in'), findsOneWidget);
 
       // Pump again to process the exception and UI update
       await tester.pumpAndSettle();
@@ -207,8 +203,7 @@ void main() {
       // After the exception, we should be back to the login screen
       expect(find.byType(TextField), findsOneWidget);
 
-      // The verification screen should no longer be visible
-      expect(find.byType(VerificationCodeInput), findsNothing);
+      expect(find.text('Voer verificatiecode in'), findsNothing);
     },
   );
 
@@ -238,8 +233,7 @@ void main() {
     // First pump to handle the initial state change (showVerification = true)
     await tester.pump();
 
-    // Verify verification screen is initially shown
-    expect(find.byType(VerificationCodeInput), findsOneWidget);
+    expect(find.text('Voer verificatiecode in'), findsOneWidget);
 
     // Pump again to process the exception
     await tester.pumpAndSettle();
@@ -249,7 +243,7 @@ void main() {
     // 2. We're still on the verification screen (if error isn't properly caught)
     bool foundLoginField = find.byType(TextField).evaluate().isNotEmpty;
     bool foundVerificationScreen =
-        find.byType(VerificationCodeInput).evaluate().isNotEmpty;
+        find.text('Voer verificatiecode in').evaluate().isNotEmpty;
 
     // At least one of these should be true for the app to be in a valid state
     expect(

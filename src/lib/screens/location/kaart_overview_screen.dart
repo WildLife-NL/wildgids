@@ -26,10 +26,8 @@ import 'package:wildgids/interfaces/data_apis/tracking_api_interface.dart';
 import 'package:wildgids/config/app_config.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/custom_nav_bar.dart';
-import 'package:wildgids/constants/mock_location.dart';
 import 'package:wildgids/constants/location_sharing_config.dart';
 import 'dart:async';
-import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart'
     as cl;
@@ -66,11 +64,13 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
   StreamSubscription<Position>? _posSub;
   VoidCallback? _mpListener;
   bool _listenerAttached = false;
-  Timer? _debounce;
   String? _lastNoticeKey;
+  Timer? _pinsRefreshDebounce;
+  LatLng? _lastPinsRefreshCenter;
+  static const _pinsRefreshDebounceMs = 800;
+  static const _pinsRefreshMinMoveMeters = 25.0;
 
   double? _lastZoom;
-  static const _debounceMs = 450;
 
   bool _useClusters = true;
   static const double _clusterUntilZoom = 17.0;
@@ -78,18 +78,6 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
   static const double _initialZoom = 15.0;
   bool _followUser = false;
 
-  bool _showAnimals = true;
-  bool _showDetections = true;
-  bool _showInteractions = true;
-  bool _showAnimalsNew = true;
-  bool _showAnimalsMedium = true;
-  bool _showAnimalsOld = true;
-  bool _showDetectionsNew = true;
-  bool _showDetectionsMedium = true;
-  bool _showDetectionsOld = true;
-  bool _showInteractionsNew = true;
-  bool _showInteractionsMedium = true;
-  bool _showInteractionsOld = true;
   AnimalPin? _selectedAnimalDetail;
   String? _selectedAnimalIconPath;
 
@@ -152,7 +140,6 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
 
           if (!isProgrammatic && _lastZoom != currentZoom) {
             _lastZoom = currentZoom;
-            _queueFetch();
             final next = currentZoom < _clusterUntilZoom;
             if (next != _useClusters && mounted) {
               setState(() => _useClusters = next);
@@ -171,7 +158,6 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
           }
 
           if (!isProgrammatic && evt is fm.MapEventMoveEnd) {
-            _queueFetch();
             _updateScaleBar();
           }
         },
@@ -254,8 +240,8 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
 
   @override
   void dispose() {
-    _debounce?.cancel();
     _posSub?.cancel();
+    _pinsRefreshDebounce?.cancel();
     if (_listenerAttached && _mpListener != null) {
       _mp.removeListener(_mpListener!);
     }
@@ -338,27 +324,53 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     }
   }
 
-  void _queueFetch() {
-    _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: _debounceMs), () {
-      if (mounted) _fetchAllForView();
-    });
+  void _schedulePinsRefresh({bool immediate = false}) {
+    _pinsRefreshDebounce?.cancel();
+    if (immediate) {
+      unawaited(_refreshMapPins());
+      return;
+    }
+    _pinsRefreshDebounce = Timer(
+      const Duration(milliseconds: _pinsRefreshDebounceMs),
+      () {
+        if (mounted) unawaited(_refreshMapPins());
+      },
+    );
+  }
+
+  Future<void> _refreshMapPins() async {
+    final map = context.read<MapProvider>();
+    final pos = map.currentPosition ?? map.selectedPosition;
+    if (pos != null && _lastPinsRefreshCenter != null) {
+      final moved = Geolocator.distanceBetween(
+        _lastPinsRefreshCenter!.latitude,
+        _lastPinsRefreshCenter!.longitude,
+        pos.latitude,
+        pos.longitude,
+      );
+      if (moved < _pinsRefreshMinMoveMeters) {
+        return;
+      }
+    }
+
+    debugPrint('[Map] Refreshing pins via loadAllPinsFromVicinity()');
+    try {
+      await map.loadAllPinsFromVicinity();
+      if (pos != null) {
+        _lastPinsRefreshCenter = LatLng(pos.latitude, pos.longitude);
+      }
+      debugPrint(
+        '[Map] Refreshed pins: animals=${map.animalPins.length} '
+        'detections=${map.detectionPins.length} '
+        'interactions=${map.interactions.length}',
+      );
+    } catch (e) {
+      debugPrint('[Map] loadAllPinsFromVicinity failed: $e');
+    }
   }
 
   void _startFollowingMe() {
     final mp = context.read<MapProvider>();
-    if (MockLocation.enabled) {
-      final pos = MockLocation.position();
-      mp.updatePosition(pos, mp.currentAddress);
-      if (_mapReady && mp.isInitialized) {
-        final z = mp.mapController.camera.zoom;
-        mp.mapController.move(LatLng(pos.latitude, pos.longitude), z);
-      } else {
-        _pendingCenter = LatLng(pos.latitude, pos.longitude);
-        _pendingZoom = _initialZoom;
-      }
-      return;
-    }
     const settings = LocationSettings(
       accuracy: LocationAccuracy.best,
       distanceFilter: 5,
@@ -405,52 +417,9 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
         final z = mp.mapController.camera.zoom;
         mp.mapController.move(LatLng(pos.latitude, pos.longitude), z);
       }
+
+      _schedulePinsRefresh();
     });
-  }
-
-  Future<void> _fetchAllForView() async {
-    final map = context.read<MapProvider>();
-
-    debugPrint('[Map] Fetching map pins from tracking-reading API');
-
-    await map.loadAllPinsFromVicinity();
-
-    debugPrint(
-      '[Map] vicinity totals  animals=${map.animalPins.length} '
-      'detections=${map.detectionPins.length} interactions=${map.interactions.length} '
-      'total=${map.totalPins}',
-    );
-
-    debugPrint(
-      'â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•',
-    );
-    debugPrint('[ANIMALS] Total count: ${map.animalPins.length}');
-    debugPrint(
-      'â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•',
-    );
-
-    for (int i = 0; i < map.animalPins.length; i++) {
-      final animal = map.animalPins[i];
-      try {
-        final jsonOutput = jsonEncode({
-          'index': i,
-          'id': animal.id,
-          'speciesName': animal.speciesName,
-          'lat': animal.lat,
-          'lon': animal.lon,
-          'seenAt': animal.seenAt.toIso8601String(),
-        });
-        debugPrint('[ANIMAL $i] JSON: $jsonOutput');
-      } catch (e) {
-        debugPrint('[ANIMAL $i] Error serializing: $e');
-        debugPrint(
-          '[ANIMAL $i] Raw: id=${animal.id}, species=${animal.speciesName}, lat=${animal.lat}, lon=${animal.lon}, seenAt=${animal.seenAt}',
-        );
-      }
-    }
-    debugPrint(
-      'â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•',
-    );
   }
 
   Future<void> _bootstrap() async {
@@ -491,6 +460,25 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     _pendingZoom = _initialZoom;
     _applyPendingCamera();
 
+    debugPrint('[Kaart/Bootstrap] Loading map pins (POST+GET) before tracking ping');
+    try {
+      await map.loadAllPinsFromVicinity().timeout(
+        const Duration(seconds: 15),
+        onTimeout: () {
+          debugPrint('[Kaart/Bootstrap] Vicinity load timeout after 15s');
+        },
+      );
+      _lastPinsRefreshCenter = LatLng(pos.latitude, pos.longitude);
+      debugPrint(
+        '[Kaart/Bootstrap] Pins loaded: '
+        'animals=${map.animalPins.length} '
+        'detections=${map.detectionPins.length} '
+        'interactions=${map.interactions.length}',
+      );
+    } catch (e) {
+      debugPrint('[Kaart/Bootstrap] Failed to load pins: $e');
+    }
+
     if (app.isLocationTrackingEnabled) {
       debugPrint('[Kaart/Bootstrap] ðŸ“¡ Sending initial tracking ping');
       final initialNotice = await map.sendTrackingPingFromPosition(pos);
@@ -511,65 +499,10 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
       debugPrint('[Kaart/Bootstrap] âš ï¸ Location tracking is disabled by user');
     }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      try {
-        _pendingCenter = LatLng(pos!.latitude, pos.longitude);
-        _pendingZoom = _initialZoom;
-        _applyPendingCamera();
-
-        debugPrint('[Bootstrap] Loading map pins from tracking-reading API');
-        try {
-          await map.loadAllPinsFromVicinity().timeout(
-            const Duration(seconds: 15),
-            onTimeout: () {
-              debugPrint('[Bootstrap] âš ï¸ Vicinity API timeout after 15s');
-              return;
-            },
-          );
-        } catch (e) {
-          debugPrint('[Bootstrap] âŒ Failed to load vicinity data: $e');
-        }
-        debugPrint(
-          '[Map] initial totals  '
-          'animals=${map.animalPins.length} '
-          'detections=${map.detectionPins.length} '
-          'interactions=${map.interactions.length} '
-          'total=${map.totalPins}',
-        );
-
-        debugPrint(
-          'â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•',
-        );
-        debugPrint('[BOOTSTRAP ANIMALS] Total count: ${map.animalPins.length}');
-        debugPrint(
-          'â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•',
-        );
-
-        for (int i = 0; i < map.animalPins.length; i++) {
-          final animal = map.animalPins[i];
-          try {
-            final jsonOutput = jsonEncode({
-              'index': i,
-              'id': animal.id,
-              'speciesName': animal.speciesName,
-              'lat': animal.lat,
-              'lon': animal.lon,
-              'seenAt': animal.seenAt.toIso8601String(),
-            });
-            debugPrint('[BOOTSTRAP ANIMAL $i] JSON: $jsonOutput');
-          } catch (e) {
-            debugPrint('[BOOTSTRAP ANIMAL $i] Error serializing: $e');
-            debugPrint(
-              '[BOOTSTRAP ANIMAL $i] Raw: id=${animal.id}, species=${animal.speciesName}, lat=${animal.lat}, lon=${animal.lon}, seenAt=${animal.seenAt}',
-            );
-          }
-        }
-        debugPrint(
-          'â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•',
-        );
-
-        _queueFetch();
-      } catch (_) {}
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _pendingCenter = LatLng(pos!.latitude, pos.longitude);
+      _pendingZoom = _initialZoom;
+      _applyPendingCamera();
     });
 
     try {
@@ -801,34 +734,6 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     );
   }
 
-  bool _within31Days(DateTime timestamp) {
-    return DateTime.now().difference(timestamp) < const Duration(days: 31);
-  }
-
-  bool _shouldShowPin(
-    DateTime timestamp,
-    bool showType,
-    bool showNew,
-    bool showMedium,
-    bool showOld,
-  ) {
-    if (!showType) {
-      debugPrint('[Filter] Type hidden: showType=$showType');
-      return false;
-    }
-
-    final now = DateTime.now();
-    final age = now.difference(timestamp);
-
-    if (age < const Duration(hours: 24)) {
-      return showNew;
-    } else if (age < const Duration(days: 7)) {
-      return showMedium;
-    } else {
-      return showOld;
-    }
-  }
-
   void _updateScaleBar() {
     if (!_mp.isInitialized) return;
 
@@ -918,314 +823,6 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     } catch (e) {
       debugPrint('[Map] Nudge failed: $e');
     }
-  }
-
-  void _showFilterDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder:
-          (context) => StatefulBuilder(
-            builder: (context, setDialogState) {
-              return Dialog(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Container(
-                  constraints: const BoxConstraints(
-                    maxWidth: 400,
-                    maxHeight: 600,
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: const BoxDecoration(
-                          color: AppColors.darkGreen,
-                          borderRadius: BorderRadius.vertical(
-                            top: Radius.circular(16),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.filter_list, color: Colors.white),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: LayoutBuilder(
-                                builder: (context, constraints) {
-                                  final screenWidth =
-                                      MediaQuery.of(context).size.width;
-                                  double fontSize = 20;
-                                  double iconSize = 24;
-                                  if (screenWidth < 350) {
-                                    fontSize = 16;
-                                    iconSize = 18;
-                                  } else if (screenWidth < 420) {
-                                    fontSize = 14;
-                                    iconSize = 14;
-                                  }
-                                  return Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          'Kaartpictogrammen filteren',
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: fontSize,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ),
-                                      IconButton(
-                                        icon: Icon(
-                                          Icons.check,
-                                          color: Colors.white,
-                                          size: iconSize,
-                                        ),
-                                        tooltip: 'Toepassen',
-                                        onPressed: () => Navigator.pop(context),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Flexible(
-                        child: Scrollbar(
-                          thumbVisibility: true,
-                          child: SingleChildScrollView(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 8),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.pets,
-                                        size: 20,
-                                        color: AppColors.darkGreen,
-                                      ),
-                                      SizedBox(width: 8),
-                                      Text(
-                                        'Dieren',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.darkGreen,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                _buildFilterCheckbox(
-                                  'Nieuw (< 24 uur)',
-                                  _showAnimalsNew,
-                                  (v) => setDialogState(
-                                    () => setState(
-                                      () => _showAnimalsNew = v ?? true,
-                                    ),
-                                  ),
-                                  Icons.fiber_new,
-                                ),
-                                _buildFilterCheckbox(
-                                  'Recent (24u - 1 week)',
-                                  _showAnimalsMedium,
-                                  (v) => setDialogState(
-                                    () => setState(
-                                      () => _showAnimalsMedium = v ?? true,
-                                    ),
-                                  ),
-                                  Icons.access_time,
-                                ),
-                                _buildFilterCheckbox(
-                                  'Oud (> 1 week)',
-                                  _showAnimalsOld,
-                                  (v) => setDialogState(
-                                    () => setState(
-                                      () => _showAnimalsOld = v ?? true,
-                                    ),
-                                  ),
-                                  Icons.history,
-                                ),
-
-                                const SizedBox(height: 16),
-
-                                const Padding(
-                                  padding: EdgeInsets.only(bottom: 8),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.sensors,
-                                        size: 20,
-                                        color: AppColors.darkGreen,
-                                      ),
-                                      SizedBox(width: 8),
-                                      Text(
-                                        'Detecties',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.darkGreen,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                _buildFilterCheckbox(
-                                  'Nieuw (< 24 uur)',
-                                  _showDetectionsNew,
-                                  (v) => setDialogState(
-                                    () => setState(
-                                      () => _showDetectionsNew = v ?? true,
-                                    ),
-                                  ),
-                                  Icons.fiber_new,
-                                ),
-                                _buildFilterCheckbox(
-                                  'Recent (24u - 1 week)',
-                                  _showDetectionsMedium,
-                                  (v) => setDialogState(
-                                    () => setState(
-                                      () => _showDetectionsMedium = v ?? true,
-                                    ),
-                                  ),
-                                  Icons.access_time,
-                                ),
-                                _buildFilterCheckbox(
-                                  'Oud (> 1 week)',
-                                  _showDetectionsOld,
-                                  (v) => setDialogState(
-                                    () => setState(
-                                      () => _showDetectionsOld = v ?? true,
-                                    ),
-                                  ),
-                                  Icons.history,
-                                ),
-
-                                const SizedBox(height: 16),
-
-                                const Padding(
-                                  padding: EdgeInsets.only(bottom: 8),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.place,
-                                        size: 20,
-                                        color: AppColors.darkGreen,
-                                      ),
-                                      SizedBox(width: 8),
-                                      Text(
-                                        'Interacties',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.darkGreen,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                _buildFilterCheckbox(
-                                  'Nieuw (< 24 uur)',
-                                  _showInteractionsNew,
-                                  (v) => setDialogState(
-                                    () => setState(
-                                      () => _showInteractionsNew = v ?? true,
-                                    ),
-                                  ),
-                                  Icons.fiber_new,
-                                ),
-                                _buildFilterCheckbox(
-                                  'Recent (24u - 1 week)',
-                                  _showInteractionsMedium,
-                                  (v) => setDialogState(
-                                    () => setState(
-                                      () => _showInteractionsMedium = v ?? true,
-                                    ),
-                                  ),
-                                  Icons.access_time,
-                                ),
-                                _buildFilterCheckbox(
-                                  'Oud (> 1 week)',
-                                  _showInteractionsOld,
-                                  (v) => setDialogState(
-                                    () => setState(
-                                      () => _showInteractionsOld = v ?? true,
-                                    ),
-                                  ),
-                                  Icons.history,
-                                ),
-
-                                const SizedBox(height: 16),
-
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Expanded(
-                                      child: OutlinedButton(
-                                        onPressed: () {
-                                          setDialogState(() {
-                                            setState(() {
-                                              _showAnimals = true;
-                                              _showDetections = true;
-                                              _showInteractions = true;
-                                              _showAnimalsNew = true;
-                                              _showAnimalsMedium = true;
-                                              _showAnimalsOld = true;
-                                              _showDetectionsNew = true;
-                                              _showDetectionsMedium = true;
-                                              _showDetectionsOld = true;
-                                              _showInteractionsNew = true;
-                                              _showInteractionsMedium = true;
-                                              _showInteractionsOld = true;
-                                            });
-                                          });
-                                        },
-                                        child: const Text('Alles herstellen'),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-    );
-  }
-
-  Widget _buildFilterCheckbox(
-    String label,
-    bool value,
-    Function(bool?) onChanged,
-    IconData icon,
-  ) {
-    return CheckboxListTile(
-      dense: true,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 0),
-      title: Row(
-        children: [
-          Icon(icon, size: 18, color: AppColors.darkGreen),
-          const SizedBox(width: 8),
-          Expanded(child: Text(label)),
-        ],
-      ),
-      value: value,
-      onChanged: onChanged,
-      activeColor: AppColors.darkGreen,
-    );
   }
 
   void _showAnimalDetailCard(AnimalPin pin, String? iconPath) {
@@ -1337,22 +934,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                             _useClusters
                                 ? cl.MarkerClusterLayerWidget(
                                   options: cl.MarkerClusterLayerOptions(
-                                    markers:
-                                        map.animalPins
-                                            .where(
-                                              (pin) =>
-                                                  _within31Days(pin.seenAt),
-                                            )
-                                            .where(
-                                              (pin) => _shouldShowPin(
-                                                pin.seenAt,
-                                                _showAnimals,
-                                                _showAnimalsNew,
-                                                _showAnimalsMedium,
-                                                _showAnimalsOld,
-                                              ),
-                                            )
-                                            .map((pin) {
+                                    markers: map.animalPins.map((pin) {
                                               final style =
                                                   _iconStyleForTimestamp(
                                                     pin.seenAt,
@@ -1452,21 +1034,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                   ),
                                 )
                                 : fm.MarkerLayer(
-                                  markers:
-                                      map.animalPins
-                                          .where(
-                                            (pin) => _within31Days(pin.seenAt),
-                                          )
-                                          .where(
-                                            (pin) => _shouldShowPin(
-                                              pin.seenAt,
-                                              _showAnimals,
-                                              _showAnimalsNew,
-                                              _showAnimalsMedium,
-                                              _showAnimalsOld,
-                                            ),
-                                          )
-                                          .map((pin) {
+                                  markers: map.animalPins.map((pin) {
                                             final mapRotation =
                                                 map
                                                     .mapController
@@ -1557,22 +1125,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                             _useClusters
                                 ? cl.MarkerClusterLayerWidget(
                                   options: cl.MarkerClusterLayerOptions(
-                                    markers:
-                                        map.detectionPins
-                                            .where(
-                                              (pin) =>
-                                                  _within31Days(pin.detectedAt),
-                                            )
-                                            .where(
-                                              (pin) => _shouldShowPin(
-                                                pin.detectedAt,
-                                                _showDetections,
-                                                _showDetectionsNew,
-                                                _showDetectionsMedium,
-                                                _showDetectionsOld,
-                                              ),
-                                            )
-                                            .map((pin) {
+                                    markers: map.detectionPins.map((pin) {
                                               final style =
                                                   _iconStyleForTimestamp(
                                                     pin.detectedAt,
@@ -1643,22 +1196,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                   ),
                                 )
                                 : fm.MarkerLayer(
-                                  markers:
-                                      map.detectionPins
-                                          .where(
-                                            (pin) =>
-                                                _within31Days(pin.detectedAt),
-                                          )
-                                          .where(
-                                            (pin) => _shouldShowPin(
-                                              pin.detectedAt,
-                                              _showDetections,
-                                              _showDetectionsNew,
-                                              _showDetectionsMedium,
-                                              _showDetectionsOld,
-                                            ),
-                                          )
-                                          .map((pin) {
+                                  markers: map.detectionPins.map((pin) {
                                             final style =
                                                 _iconStyleForTimestamp(
                                                   pin.detectedAt,
@@ -1806,22 +1344,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                             _useClusters
                                 ? cl.MarkerClusterLayerWidget(
                                   options: cl.MarkerClusterLayerOptions(
-                                    markers:
-                                        map.interactions
-                                            .where(
-                                              (itx) =>
-                                                  _within31Days(itx.moment),
-                                            )
-                                            .where(
-                                              (itx) => _shouldShowPin(
-                                                itx.moment,
-                                                _showInteractions,
-                                                _showInteractionsNew,
-                                                _showInteractionsMedium,
-                                                _showInteractionsOld,
-                                              ),
-                                            )
-                                            .map((itx) {
+                                    markers: map.interactions.map((itx) {
                                               final mapRotation =
                                                   map
                                                       .mapController
@@ -1930,18 +1453,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                   ),
                                 )
                                 : fm.MarkerLayer(
-                                  markers: map.interactions
-                                      .where((itx) => _within31Days(itx.moment))
-                                      .where(
-                                        (itx) => _shouldShowPin(
-                                          itx.moment,
-                                          _showInteractions,
-                                          _showInteractionsNew,
-                                          _showInteractionsMedium,
-                                          _showInteractionsOld,
-                                        ),
-                                      )
-                                      .map((itx) {
+                                  markers: map.interactions.map((itx) {
                                         final mapRotation =
                                             map.mapController.camera.rotation;
                                         return fm.Marker(
@@ -2095,9 +1607,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                     height: 1,
                                     color: Colors.white.withValues(alpha: 0.2),
                                   ),
-                                  GestureDetector(
-                                    onLongPress: () => _showFilterDialog(context),
-                                    child: IconButton(
+                                  IconButton(
                                       tooltip: 'Mijn locatie',
                                       onPressed: () async {
                                         final mp = context.read<MapProvider>();
@@ -2114,7 +1624,6 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                         color: Colors.white,
                                       ),
                                     ),
-                                  ),
                                 ],
                               ),
                             ),

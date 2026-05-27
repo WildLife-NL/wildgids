@@ -18,8 +18,15 @@ class AnimalInfo {
 
 class InteractionQueryResult {
   final String id;
+  /// Map pin: [eventLat]/[eventLon] (place) or fallback to report GPS.
   final double lat;
   final double lon;
+  /// GPS when the interaction was reported ([location] in the API).
+  final double? reportLat;
+  final double? reportLon;
+  /// Where the interaction happened ([place] in the API).
+  final double? eventLat;
+  final double? eventLon;
   final DateTime moment;
   final String? typeName; // e.g., "Sighting"
   final String? speciesName; // e.g., "Vos"
@@ -28,10 +35,20 @@ class InteractionQueryResult {
   final String? placeName; // Reverse geocoded place name
   final List<AnimalInfo>? involvedAnimals; // Animal details
 
+  /// Stable key for merging pins (avoids collapsing rows when [id] repeats).
+  String get dedupeKey =>
+      id.isNotEmpty
+          ? id
+          : '${lat.toStringAsFixed(5)}|${lon.toStringAsFixed(5)}|${moment.toUtc().millisecondsSinceEpoch}';
+
   InteractionQueryResult({
     required this.id,
     required this.lat,
     required this.lon,
+    this.reportLat,
+    this.reportLon,
+    this.eventLat,
+    this.eventLon,
     required this.moment,
     this.typeName,
     this.speciesName,
@@ -55,27 +72,16 @@ class InteractionQueryResult {
     final locationNode = _asMap(json['location']);
     final placeNodeForCoords = _asMap(json['place']);
 
-    // Prefer `place` (where the interaction happened) over `location` (reported from).
-    final lat = _asDouble(
-      placeNodeForCoords['latitude'] ??
-          placeNodeForCoords['lat'] ??
-          locationNode['latitude'] ??
-          locationNode['lat'],
-    );
-    final lon = _asDouble(
-      placeNodeForCoords['longitude'] ??
-          placeNodeForCoords['lon'] ??
-          placeNodeForCoords['longtitude'] ??
-          locationNode['longitude'] ??
-          locationNode['lon'] ??
-          locationNode['longtitude'],
-    );
-
-    if (lat == null || lon == null) {
+    final reportCoords = _coordsFromNode(locationNode);
+    final eventCoords = _coordsFromNode(placeNodeForCoords);
+    final mapCoords = eventCoords ?? reportCoords;
+    if (mapCoords == null) {
       throw const FormatException(
         'InteractionQueryResult: missing coordinates',
       );
     }
+    final lat = mapCoords.lat;
+    final lon = mapCoords.lon;
 
     // moment (when it happened); timestamp (when reported) as fallback.
     final rawMoment =
@@ -148,6 +154,10 @@ class InteractionQueryResult {
       id: rawId,
       lat: lat,
       lon: lon,
+      reportLat: reportCoords?.lat,
+      reportLon: reportCoords?.lon,
+      eventLat: eventCoords?.lat,
+      eventLon: eventCoords?.lon,
       moment: parsedMoment ?? DateTime.now().toUtc(),
       typeName: (typeNode['name'] ?? typeNode['displayName'])?.toString(),
       speciesName:
@@ -169,6 +179,23 @@ class InteractionQueryResult {
     if (userName != null) 'user': {'name': userName},
     if (placeName != null) 'place': {'name': placeName},
   };
+
+  /// OpenAPI: [location] = reported from, [place] = where it happened.
+  static ({double lat, double lon})? _coordsFromNode(
+    Map<String, dynamic> node,
+  ) {
+    if (node.isEmpty) return null;
+
+    final lat = _asDouble(node['latitude'] ?? node['lat']);
+    final lon = _asDouble(
+      node['longitude'] ?? node['lon'] ?? node['longtitude'],
+    );
+
+    if (lat == null || lon == null) return null;
+    if (!lat.isFinite || !lon.isFinite) return null;
+    if (lat.abs() < 1e-6 && lon.abs() < 1e-6) return null;
+    return (lat: lat, lon: lon);
+  }
 
   static double? _asDouble(Object? v) {
     if (v == null) return null;

@@ -8,7 +8,6 @@ import 'package:wildgids/utils/api_datetime.dart';
 import 'package:wildgids/utils/location_label.dart';
 import 'package:wildgids/screens/logbook/logbook_screen.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
-import 'package:intl/intl.dart';
 import 'package:wildgids/screens/shared/interaction_detail_screen.dart';
 // Removed filter dependencies
 

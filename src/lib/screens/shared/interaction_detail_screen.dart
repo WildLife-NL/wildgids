@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:wildgids/constants/app_colors.dart';
 import 'package:wildgids/models/api_models/my_interaction.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
-import 'package:intl/intl.dart';
 import 'package:wildgids/utils/api_datetime.dart';
 import 'package:wildgids/utils/location_label.dart';
 

@@ -1,10 +1,7 @@
 ﻿import 'package:wildgids/models/api_models/vicinity.dart';
 
-/// Map vicinity from tracking-reading endpoints (OpenAPI TrackingReading schema).
-abstract class VicinityApiInterface {
-  /// Latest reading from GET /tracking-readings/me/.
-  Future<Vicinity> getMyVicinity();
-
+/// Map pins from tracking-reading endpoints (OpenAPI TrackingReading schema).
+abstract class TrackingReadingsApiInterface {
   /// POST /tracking-reading/ for the current coordinates.
   Future<Vicinity> getVicinityForCurrentLocation({
     required double latitude,
@@ -18,3 +15,6 @@ abstract class VicinityApiInterface {
     DateTime? timestamp,
   });
 }
+
+/// Backward-compatible alias while names are migrated.
+typedef VicinityApiInterface = TrackingReadingsApiInterface;

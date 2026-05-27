@@ -7,7 +7,6 @@ import 'package:wildgids/models/enums/location_type.dart';
 import 'package:wildgids/models/enums/date_time_type.dart';
 import 'package:provider/provider.dart';
 import 'package:wildgids/providers/map_provider.dart';
-import 'package:wildgids/constants/mock_location.dart';
 import 'package:wildgids/providers/app_state_provider.dart';
 
 class LocationScreenManager implements LocationScreenInterface {
@@ -66,7 +65,7 @@ class LocationScreenManager implements LocationScreenInterface {
               }
             : null;
       } else {
-        currentPosition = await MockLocation.current(
+        currentPosition = await Geolocator.getCurrentPosition(
           locationSettings: const LocationSettings(
             accuracy: LocationAccuracy.high,
             timeLimit: Duration(seconds: 5),

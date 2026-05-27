@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wildgids/managers/api_managers/tracking_cache_manager.dart';
 import 'package:wildgids/models/beta_models/tracking_reading_model.dart';
 import 'package:wildgids/interfaces/data_apis/tracking_api_interface.dart';
+import 'package:wildgids/utils/last_sent_tracking_location.dart';
 import 'dart:convert';
 
 /// Mock implementation of TrackingApiInterface for testing
@@ -46,9 +47,12 @@ void main() {
 
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
+      LastSentTrackingLocation.clear();
       mockApi = MockTrackingApi();
       cacheManager = TrackingCacheManager(trackingApi: mockApi);
     });
+
+    tearDown(LastSentTrackingLocation.clear);
 
     test('should handle 100 cached readings', () async {
       print('\n=== Testing 100 readings ===');
@@ -270,8 +274,8 @@ void main() {
         for (int i = 0; i < sampledReadings; i++) {
           await cacheManager.cacheReading(
             TrackingReading(
-              latitude: 52.0 + (i * 0.00001),
-              longitude: 5.0 + (i * 0.00001),
+              latitude: 52.0 + (i * 0.0002),
+              longitude: 5.0 + (i * 0.0002),
               timestampUtc: DateTime.utc(
                 2025,
                 11,

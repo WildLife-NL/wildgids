@@ -83,6 +83,7 @@ void main() {
     });
 
     tearDown(() async {
+      LastSentTrackingLocation.clear();
       // Reset ConnectionChecker to default implementation
       ConnectionChecker.setHasInternetConnection = ([amount]) async {
         try {

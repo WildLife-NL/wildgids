@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:wildgids/constants/mock_location.dart';
 import 'package:wildgids/constants/location_sharing_config.dart';
 import 'package:wildgids/managers/map/living_lab_manager.dart';
 
@@ -106,7 +105,7 @@ class MapProvider extends ChangeNotifier {
 
         if (notice != null) {
           if (notice.vicinity != null) {
-            _applyVicinity(notice.vicinity!);
+            _mergeVicinityFromPing(notice.vicinity!);
           }
           _lastTrackingNotice = notice;
           if (notice.hasMessage) {
@@ -152,7 +151,7 @@ class MapProvider extends ChangeNotifier {
 
       if (notice != null) {
         if (notice.vicinity != null) {
-          _applyVicinity(notice.vicinity!);
+          _mergeVicinityFromPing(notice.vicinity!);
         }
         _lastTrackingNotice = notice;
         LastSentTrackingLocation.record(pos.latitude, pos.longitude);
@@ -191,14 +190,19 @@ class MapProvider extends ChangeNotifier {
   String? _animalPinsError;
   String? _detectionPinsError;
 
-  VicinityApiInterface? _vicinityApi;
+  TrackingReadingsApiInterface? _trackingReadingsApi;
   String? _lastPinsLoadSource;
 
-  /// Last API used for map pins, e.g. `GET /tracking-readings/me/`.
+  /// Last API used for map pins, e.g. `POST /tracking-reading/`.
   String? get lastPinsLoadSource => _lastPinsLoadSource;
 
+  void setTrackingReadingsApi(TrackingReadingsApiInterface api) {
+    _trackingReadingsApi = api;
+  }
+
+  // Backward-compatible setter name.
   void setVicinityApi(VicinityApiInterface api) {
-    _vicinityApi = api;
+    setTrackingReadingsApi(api);
   }
 
   List<AnimalPin> get animalPins => List.unmodifiable(_animalPins);
@@ -330,6 +334,14 @@ class MapProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  int _pinsLoadEpoch = 0;
+
+  Vicinity _currentVicinity() => Vicinity(
+        animals: List<AnimalPin>.from(_animalPins),
+        detections: List<DetectionPin>.from(_detectionPins),
+        interactions: List<InteractionQueryResult>.from(_interactions),
+      );
+
   void _applyVicinity(Vicinity vicinity) {
     _animalPins
       ..clear()
@@ -348,12 +360,33 @@ class MapProvider extends ChangeNotifier {
     _interactionsLoading = false;
   }
 
+  /// Tracking pings may return an empty or partial vicinity; never wipe map pins.
+  void _mergeVicinityFromPing(Vicinity vicinity) {
+    if (TrackingVicinityParser.isEmpty(vicinity)) {
+      debugPrint(
+        '[MapProvider] Tracking ping returned empty vicinity; keeping '
+        '${_animalPins.length} animals, ${_detectionPins.length} detections, '
+        '${_interactions.length} interactions',
+      );
+      return;
+    }
+
+    final merged = TrackingVicinityParser.merge(_currentVicinity(), vicinity);
+    _applyVicinity(merged);
+    debugPrint(
+      '[MapProvider] Merged ping vicinity: '
+      '${_animalPins.length} animals, ${_detectionPins.length} detections, '
+      '${_interactions.length} interactions',
+    );
+  }
+
   /// Loads map pins from the tracking-reading API.
   ///
-  /// With a known position, always [POST /tracking-reading/] first so the
-  /// response includes `animals`, `detections` and `interactions` in the
-  /// vicinity of that reading (OpenAPI). Falls back to
-  /// [GET /tracking-readings/me/] on failure.
+  /// Loads map pins from the location-based tracking-reading endpoint:
+  /// [POST /tracking-reading/].
+  ///
+  /// This endpoint returns animals/detections/interactions in the vicinity of
+  /// the current location reading.
   ///
   /// Periodic background pings are separate ([startTracking]) and follow
   /// the profile "Locatie delen" setting.
@@ -361,6 +394,8 @@ class MapProvider extends ChangeNotifier {
     debugPrint(
       '[MapProvider] Loading map pins via tracking-reading API',
     );
+
+    final loadEpoch = ++_pinsLoadEpoch;
 
     _animalPinsLoading = true;
     _detectionPinsLoading = true;
@@ -370,9 +405,9 @@ class MapProvider extends ChangeNotifier {
     _interactionsError = null;
     notifyListeners();
 
-    final vicinityApi = _vicinityApi;
-    if (vicinityApi == null) {
-      const message = 'Geen kaartdata (VicinityApi niet beschikbaar)';
+    final trackingReadingsApi = _trackingReadingsApi;
+    if (trackingReadingsApi == null) {
+      const message = 'Geen kaartdata (TrackingReadingsApi niet beschikbaar)';
       _animalPinsError = message;
       _detectionPinsError = message;
       _interactionsError = message;
@@ -388,35 +423,40 @@ class MapProvider extends ChangeNotifier {
       String source;
 
       final pos = currentPosition ?? selectedPosition;
-      final getVicinity = await vicinityApi.getMyVicinity();
+      if (pos == null) {
+        throw Exception(
+          '[MapProvider] Geen locatie beschikbaar voor POST /tracking-reading/',
+        );
+      }
+      vicinity = await trackingReadingsApi.getVicinityForCurrentLocation(
+        latitude: pos.latitude,
+        longitude: pos.longitude,
+      );
+      source = 'POST /tracking-reading/';
 
-      if (pos != null) {
-        if (LastSentTrackingLocation.isUnchanged(pos.latitude, pos.longitude)) {
-          debugPrint(
-            '[MapProvider] Skipping POST for map pins; location unchanged',
-          );
-          vicinity = getVicinity;
-          source = 'GET /tracking-readings/me/ (unchanged location)';
-        } else {
-          try {
-            final postVicinity = await vicinityApi.getVicinityForCurrentLocation(
-              latitude: pos.latitude,
-              longitude: pos.longitude,
-            );
-            LastSentTrackingLocation.record(pos.latitude, pos.longitude);
-            vicinity = TrackingVicinityParser.merge(postVicinity, getVicinity);
-            source = TrackingVicinityParser.isEmpty(postVicinity)
-                ? 'GET /tracking-readings/me/ (POST empty)'
-                : 'POST /tracking-reading/ + GET /tracking-readings/me/';
-          } catch (e) {
-            debugPrint('[MapProvider] POST /tracking-reading/ failed: $e');
-            vicinity = getVicinity;
-            source = 'GET /tracking-readings/me/';
-          }
-        }
-      } else {
-        vicinity = getVicinity;
-        source = 'GET /tracking-readings/me/';
+      final before = vicinity.interactions.length;
+      vicinity = TrackingVicinityParser.filterNearReading(
+        vicinity,
+        pos.latitude,
+        pos.longitude,
+      );
+      final after = vicinity.interactions.length;
+      if (before > after) {
+        debugPrint(
+          '[MapProvider] Filtered interactions by distance to reading: '
+          '$before → $after (max '
+          '${TrackingVicinityParser.defaultMaxDistanceFromReadingMeters.round()}m)',
+        );
+      }
+
+      if (loadEpoch != _pinsLoadEpoch) {
+        debugPrint(
+          '[MapProvider] Discarding stale pins load (epoch $loadEpoch)',
+        );
+        _animalPinsLoading = false;
+        _detectionPinsLoading = false;
+        _interactionsLoading = false;
+        return;
       }
 
       _lastPinsLoadSource = source;
@@ -434,7 +474,8 @@ class MapProvider extends ChangeNotifier {
       try {
         final currentAnimalIds = _animalPins.map((a) => a.id).toSet();
         final newAnimalIds = currentAnimalIds.difference(_prevAnimalIds);
-        if (newAnimalIds.isNotEmpty) {
+        final isFirstAnimalBaseline = _prevAnimalIds.isEmpty;
+        if (newAnimalIds.isNotEmpty && !isFirstAnimalBaseline) {
           final count = newAnimalIds.length;
           final sample = _animalPins.firstWhere(
             (a) => newAnimalIds.contains(a.id),
@@ -462,7 +503,8 @@ class MapProvider extends ChangeNotifier {
       try {
         final currentDetIds = _detectionPins.map((d) => d.id).toSet();
         final newDetIds = currentDetIds.difference(_prevDetectionIds);
-        if (newDetIds.isNotEmpty) {
+        final isFirstDetectionBaseline = _prevDetectionIds.isEmpty;
+        if (newDetIds.isNotEmpty && !isFirstDetectionBaseline) {
           final count = newDetIds.length;
           final sample = _detectionPins.firstWhere(
             (d) => newDetIds.contains(d.id),
@@ -490,7 +532,8 @@ class MapProvider extends ChangeNotifier {
       try {
         final currentIds = _interactions.map((i) => i.id).toSet();
         final newIds = currentIds.difference(_prevInteractionIds);
-        if (newIds.isNotEmpty) {
+        final isFirstInteractionBaseline = _prevInteractionIds.isEmpty;
+        if (newIds.isNotEmpty && !isFirstInteractionBaseline) {
           final count = newIds.length;
           final sample = _interactions.firstWhere(
             (i) => newIds.contains(i.id),
@@ -558,7 +601,7 @@ class MapProvider extends ChangeNotifier {
   Future<void> _sendTrackingNow() async {
     try {
       final pos = currentPosition ??
-          await MockLocation.current(
+          await Geolocator.getCurrentPosition(
             locationSettings: const LocationSettings(
               accuracy: LocationAccuracy.medium,
               timeLimit: Duration(seconds: 7),

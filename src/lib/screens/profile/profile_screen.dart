@@ -105,17 +105,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   String _bluetoothContactSubtitle(ContactTracingCoordinator tracing) {
     if (_bluetoothActivating || tracing.backgroundScanning) {
-      final msg = tracing.statusMessage;
-      if (msg.contains('Scannen') || msg.contains('collar')) {
-        return msg;
-      }
       return 'Scannen naar collars…';
     }
     if (tracing.backgroundEnabled) {
       final msg = tracing.statusMessage;
-      if (msg.isNotEmpty &&
-          msg != 'Uit' &&
-          !msg.startsWith('Achtergrondscan elke')) {
+      // Only show positive/neutral runtime states here.
+      if (msg.startsWith('Contact:') || msg.startsWith('Actief contact:')) {
         return msg;
       }
       return 'Achtergrond elke ${tracing.backgroundIntervalSeconds} s · melding bij dier';

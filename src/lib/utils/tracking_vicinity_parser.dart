@@ -93,13 +93,10 @@ class TrackingVicinityParser {
     );
   }
 
-  /// Aligns with map pin age filter (31 days) in [KaartOverviewScreen].
-  static const Duration _mapVicinityMaxReadingAge = Duration(days: 31);
-
-  /// Merges pins from all tracking readings within [_mapVicinityMaxReadingAge].
+  /// Merges pins from all tracking readings returned by the API.
   ///
   /// The API already returns animals/detections/interactions in the vicinity of
-  /// each reading; do not apply an extra client-side distance filter here.
+  /// each reading; do not apply client-side age or distance filters here.
   static Vicinity vicinityFromReadingsList(
     List<dynamic> readings, {
     String tag = 'TrackingVicinityParser',
@@ -110,14 +107,10 @@ class TrackingVicinityParser {
         .toList();
     if (maps.isEmpty) return empty();
 
-    final cutoff = DateTime.now().toUtc().subtract(_mapVicinityMaxReadingAge);
     var merged = empty();
     var readingsUsed = 0;
 
     for (final reading in maps) {
-      final ts = DateTime.tryParse(reading['timestamp']?.toString() ?? '');
-      if (ts != null && ts.isBefore(cutoff)) continue;
-
       final raw = vicinityFromReadingJson(reading);
       if (raw == null) continue;
 
@@ -160,10 +153,10 @@ class TrackingVicinityParser {
       if (detectionIds.add(pin.id)) detections.add(pin);
     }
 
-    final interactionIds = <String>{};
+    final interactionKeys = <String>{};
     final interactions = <InteractionQueryResult>[];
     for (final pin in [...a.interactions, ...b.interactions]) {
-      if (interactionIds.add(pin.id)) interactions.add(pin);
+      if (interactionKeys.add(pin.dedupeKey)) interactions.add(pin);
     }
 
     return Vicinity(
@@ -248,24 +241,47 @@ class TrackingVicinityParser {
           .where((d) => near(d.lat, d.lon, 'detection', d.id))
           .toList(),
       interactions: vicinity.interactions
-          .where((i) => near(i.lat, i.lon, 'interaction', i.id))
+          .where(
+            (i) => _interactionNearReading(
+              i,
+              readingLat,
+              readingLon,
+              maxMeters,
+              near,
+            ),
+          )
           .toList(),
     );
 
-    final rawTotal = vicinity.animals.length +
-        vicinity.detections.length +
-        vicinity.interactions.length;
-    final filteredTotal = filtered.animals.length +
-        filtered.detections.length +
-        filtered.interactions.length;
-    if (rawTotal > 0 && filteredTotal == 0) {
-      debugPrint(
-        '[$tag] distance filter removed all $rawTotal pins; keeping unfiltered',
-      );
-      return vicinity;
-    }
-
     return filtered;
+  }
+
+  /// Uses [InteractionQueryResult.eventLat]/[eventLon] (place) when set — matches
+  /// "where it happened". Falls back to report GPS only without a place.
+  static bool _interactionNearReading(
+    InteractionQueryResult interaction,
+    double readingLat,
+    double readingLon,
+    double maxMeters,
+    bool Function(double lat, double lon, String kind, String id) near,
+  ) {
+    if (interaction.eventLat != null && interaction.eventLon != null) {
+      return near(
+        interaction.eventLat!,
+        interaction.eventLon!,
+        'interaction',
+        interaction.id,
+      );
+    }
+    if (interaction.reportLat != null && interaction.reportLon != null) {
+      return near(
+        interaction.reportLat!,
+        interaction.reportLon!,
+        'interaction',
+        interaction.id,
+      );
+    }
+    return near(interaction.lat, interaction.lon, 'interaction', interaction.id);
   }
 
   static double? _asDouble(Object? value) {

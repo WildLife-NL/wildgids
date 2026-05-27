@@ -220,13 +220,6 @@ class TrackingCacheManager {
           skippedOutsideLivingLabs++;
           continue;
         }
-        if (LastSentTrackingLocation.isUnchanged(
-          reading.latitude,
-          reading.longitude,
-        )) {
-          skippedUnchangedLocation++;
-          continue;
-        }
         await trackingApi.addTrackingReading(
           lat: reading.latitude,
           lon: reading.longitude,
