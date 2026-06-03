@@ -16,6 +16,8 @@ import 'package:wildgids/screens/logbook/logbook_screen.dart';
 import 'package:wildgids/screens/waarneming/waarneming_start_screen.dart';
 import 'package:wildgids/widgets/overlay/encounter_message_overlay.dart';
 import 'package:wildgids/managers/map/location_map_manager.dart';
+import 'package:wildlifenl_map_logic_components/wildlifenl_map_logic_components.dart'
+    show MapStateInterface;
 import 'package:wildgids/screens/profile/profile_screen.dart';
 import 'package:wildgids/widgets/map/animal_detail_card.dart';
 import 'package:wildgids/models/animal_waarneming_models/animal_pin.dart';
@@ -104,9 +106,9 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     _mapOptions ??= fm.MapOptions(
         initialCenter: LatLng(
           _mp.currentPosition?.latitude ??
-              LocationMapManager.denBoschCenter.latitude,
+              MapStateInterface.defaultCenter.latitude,
           _mp.currentPosition?.longitude ??
-              LocationMapManager.denBoschCenter.longitude,
+              MapStateInterface.defaultCenter.longitude,
         ),
         initialZoom: _initialZoom,
         minZoom: _minMapZoom,
@@ -328,6 +330,10 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
       final appStateProvider = context.read<AppStateProvider>();
       await mp.updatePosition(pos, mp.currentAddress);
 
+      if (appStateProvider.isLocationTrackingEnabled && !mp.isTracking) {
+        mp.startTracking(interval: LocationSharingConfig.updateInterval);
+      }
+
       if (appStateProvider.isLocationTrackingEnabled) {
         debugPrint('[ME/live] 📡 Sending tracking ping for position update');
         final notice = await _mp.sendTrackingPingFromPosition(pos);
@@ -368,30 +374,22 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
 
     debugPrint('[Loc] raw=${pos?.latitude},${pos?.longitude}');
 
-    if (pos == null ||
-        !mgr.isLocationInNetherlands(pos.latitude, pos.longitude)) {
-      pos = Position(
-        latitude: LocationMapManager.denBoschCenter.latitude,
-        longitude: LocationMapManager.denBoschCenter.longitude,
-        timestamp: DateTime.now(),
-        accuracy: 100,
-        altitude: 0,
-        heading: 0,
-        speed: 0,
-        speedAccuracy: 0,
-        altitudeAccuracy: 0,
-        headingAccuracy: 0,
-      );
+    final hasGps = pos != null;
+    if (hasGps) {
+      var address = map.currentAddress;
+      if (address.isEmpty) {
+        address = await mgr.getAddressFromPosition(pos);
+      }
+      await map.resetToCurrentLocation(pos, address);
+      _pendingCenter = LatLng(pos.latitude, pos.longitude);
+      _pendingZoom = _initialZoom;
+    } else {
       debugPrint(
-        '[Loc] using fallback center: '
-        '${pos.latitude},${pos.longitude}',
+        '[Loc] No GPS fix yet; map centered on NL overview (not device location)',
       );
+      _pendingCenter = MapStateInterface.defaultCenter;
+      _pendingZoom = 8.0;
     }
-
-    await map.resetToCurrentLocation(pos, 'Locatie gevonden');
-
-    _pendingCenter = LatLng(pos.latitude, pos.longitude);
-    _pendingZoom = _initialZoom;
     _applyPendingCamera();
 
     debugPrint('[Kaart/Bootstrap] Loading map pins (POST+GET) before tracking ping');
@@ -402,7 +400,9 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
           debugPrint('[Kaart/Bootstrap] Vicinity load timeout after 15s');
         },
       );
-      _lastPinsRefreshCenter = LatLng(pos.latitude, pos.longitude);
+      if (hasGps) {
+        _lastPinsRefreshCenter = LatLng(pos.latitude, pos.longitude);
+      }
       debugPrint(
         '[Kaart/Bootstrap] Pins loaded: '
         'animals=${map.animalPins.length} '
@@ -413,7 +413,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
       debugPrint('[Kaart/Bootstrap] Failed to load pins: $e');
     }
 
-    if (app.isLocationTrackingEnabled) {
+    if (hasGps && app.isLocationTrackingEnabled) {
       debugPrint('[Kaart/Bootstrap] 📡 Sending initial tracking ping');
       final initialNotice = await map.sendTrackingPingFromPosition(pos);
       if (initialNotice != null) {
@@ -429,15 +429,22 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
         '(every ${LocationSharingConfig.updateInterval.inMinutes} minutes)',
       );
       map.startTracking(interval: LocationSharingConfig.updateInterval);
+    } else if (!hasGps) {
+      debugPrint(
+        '[Kaart/Bootstrap] Skipping tracking ping until GPS is available',
+      );
     } else {
       debugPrint('[Kaart/Bootstrap] ⚠️ Location tracking is disabled by user');
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       try {
-        _pendingCenter = LatLng(pos!.latitude, pos.longitude);
-        _pendingZoom = _initialZoom;
-        _applyPendingCamera();
+        final gps = pos;
+        if (hasGps && gps != null) {
+          _pendingCenter = LatLng(gps.latitude, gps.longitude);
+          _pendingZoom = _initialZoom;
+          _applyPendingCamera();
+        }
 
         debugPrint('[Bootstrap] Loading map pins from tracking-reading API');
         try {
@@ -492,12 +499,14 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
       } catch (_) {}
     });
 
-    try {
-      final address = await mgr.getAddressFromPosition(pos);
-      if (!mounted) return;
-      map.setSelectedLocation(pos, address);
-    } catch (e) {
-      debugPrint('[Kaart] Reverse geocoding failed: $e');
+    if (hasGps) {
+      try {
+        final address = await mgr.getAddressFromPosition(pos);
+        if (!mounted) return;
+        map.setSelectedLocation(pos, address);
+      } catch (e) {
+        debugPrint('[Kaart] Reverse geocoding failed: $e');
+      }
     }
   }
 
