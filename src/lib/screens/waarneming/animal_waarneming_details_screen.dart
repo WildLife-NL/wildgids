@@ -30,6 +30,7 @@ class _AnimalWaarnemingDetailsScreenState
     extends State<AnimalWaarnemingDetailsScreen> {
   AnimalAge selectedAge = AnimalAge.onbekend;
   AnimalGender selectedGender = AnimalGender.onbekend;
+  AnimalCondition? selectedCondition;
 
   void _handleBackNavigation() {
     if (widget.animalIndex > 0) {
@@ -86,7 +87,7 @@ class _AnimalWaarnemingDetailsScreenState
       animalName: currentAnimal.animalName,
       category: currentAnimal.category,
       genderViewCounts: [genderViewCount],
-      condition: currentAnimal.condition,
+      condition: selectedCondition,
     );
     
     sightingManager.updateSelectedAnimal(updatedAnimal);
@@ -101,7 +102,7 @@ class _AnimalWaarnemingDetailsScreenState
       animalName: currentAnimal.animalName,
       category: currentAnimal.category,
       genderViewCounts: [],
-      condition: currentAnimal.condition,
+      condition: null,
     );
     sightingManager.updateSelectedAnimal(freshAnimal);
     
@@ -110,6 +111,7 @@ class _AnimalWaarnemingDetailsScreenState
       setState(() {
         selectedAge = AnimalAge.onbekend;
         selectedGender = AnimalGender.onbekend;
+        selectedCondition = null;
       });
       
       // Go to next animal details
@@ -326,6 +328,16 @@ class _AnimalWaarnemingDetailsScreenState
                                 selectedGender = gender as AnimalGender);
                           }, selectedGender),
                           const SizedBox(height: 20),
+                          _buildSelectorSection('Gezondheid:', [
+                            AnimalCondition.gezond,
+                            AnimalCondition.ziek,
+                            AnimalCondition.dood,
+                            AnimalCondition.andere,
+                          ], (condition) {
+                            setState(() =>
+                                selectedCondition = condition as AnimalCondition);
+                          }, selectedCondition),
+                          const SizedBox(height: 16),
                           // Next animal button - only show if not the final animal
                           if (widget.animalIndex < widget.totalCount - 1)
                             SizedBox(
@@ -521,10 +533,10 @@ Widget _buildSelectorSection(
           return 'Gewond/Ziek';
         case AnimalCondition.dood:
           return 'Dood';
-        case AnimalCondition.levend:
-          return 'Levend';
         case AnimalCondition.andere:
           return 'Anders';
+        case AnimalCondition.levend:
+          return 'Levend';
       }
     }
     return 'Onbekend';
