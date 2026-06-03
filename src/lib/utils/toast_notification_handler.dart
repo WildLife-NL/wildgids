@@ -15,7 +15,7 @@ class ToastNotificationHandler {
 
     // Also surface as a system notification on the device
     NotificationService.instance.show(
-      title: 'Wild Gids',
+      title: 'WildGids',
       body: toastMessage,
     );
   }
