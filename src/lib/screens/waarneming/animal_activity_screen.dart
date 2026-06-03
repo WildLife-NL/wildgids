@@ -26,6 +26,8 @@ class _AnimalActivityScreenState extends State<AnimalActivityScreen> {
   String _humanActivity = SightingReportActivityCatalog.defaultHumanActivity;
   String _perceivedAnimalActivity =
       SightingReportActivityCatalog.defaultPerceivedAnimalActivity;
+  late TextEditingController _humanActivityOtherController;
+  late TextEditingController _perceivedActivityOtherController;
 
   @override
   void initState() {
@@ -39,6 +41,8 @@ class _AnimalActivityScreenState extends State<AnimalActivityScreen> {
 
     _perceivedAnimalActivity = sighting?.perceivedAnimalActivity ??
         SightingReportActivityCatalog.defaultPerceivedAnimalActivity;
+    _humanActivityOtherController = TextEditingController(text: sighting?.humanActivityOther ?? '');
+    _perceivedActivityOtherController = TextEditingController(text: sighting?.perceivedAnimalActivityOther ?? '');
   }
 
   void _handleNext() {
@@ -48,7 +52,13 @@ class _AnimalActivityScreenState extends State<AnimalActivityScreen> {
     if (sighting != null) {
       final updatedSighting = sighting.copyWith(
         humanActivity: _humanActivity,
+        humanActivityOther: SightingReportActivityCatalog.isOtherHuman(_humanActivity)
+            ? (_humanActivityOtherController.text.isNotEmpty ? _humanActivityOtherController.text : null)
+            : null,
         perceivedAnimalActivity: _perceivedAnimalActivity,
+        perceivedAnimalActivityOther: SightingReportActivityCatalog.isOtherPerceivedAnimal(_perceivedAnimalActivity)
+            ? (_perceivedActivityOtherController.text.isNotEmpty ? _perceivedActivityOtherController.text : null)
+            : null,
       );
 
       sightingManager.updateCurrentanimalSighting(updatedSighting);
@@ -79,6 +89,13 @@ class _AnimalActivityScreenState extends State<AnimalActivityScreen> {
 
   void _handleBack() {
     Navigator.of(context).pop();
+  }
+
+  @override
+  void dispose() {
+    _humanActivityOtherController.dispose();
+    _perceivedActivityOtherController.dispose();
+    super.dispose();
   }
 
   @override
@@ -138,6 +155,27 @@ class _AnimalActivityScreenState extends State<AnimalActivityScreen> {
                             setState(() => _humanActivity = v);
                           },
                         ),
+                        if (SightingReportActivityCatalog.isOtherHuman(_humanActivity)) ...[
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: _humanActivityOtherController,
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor: Colors.white,
+                              hintText: 'Omschrijf wat je deed',
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(15),
+                                borderSide: const BorderSide(color: Color(0xFF999999), width: 1.2),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(15),
+                                borderSide: const BorderSide(color: Color(0xFF37A904), width: 2),
+                              ),
+                            ),
+                            maxLines: 2,
+                          ),
+                        ],
                         const SizedBox(height: 16),
                         _activityDropdown(
                           label: 'Wat deed het dier?',
@@ -149,6 +187,27 @@ class _AnimalActivityScreenState extends State<AnimalActivityScreen> {
                             setState(() => _perceivedAnimalActivity = v);
                           },
                         ),
+                        if (SightingReportActivityCatalog.isOtherPerceivedAnimal(_perceivedAnimalActivity)) ...[
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: _perceivedActivityOtherController,
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor: Colors.white,
+                              hintText: 'Omschrijf wat het dier deed',
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(15),
+                                borderSide: const BorderSide(color: Color(0xFF999999), width: 1.2),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(15),
+                                borderSide: const BorderSide(color: Color(0xFF37A904), width: 2),
+                              ),
+                            ),
+                            maxLines: 2,
+                          ),
+                        ],
                       ],
                     ),
                   ),

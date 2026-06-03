@@ -79,6 +79,7 @@ flutter:
   uses-material-design: true
 
   assets:
+    
     - assets/app-icon.png
     - assets/loaders/loading_paw.json
     - assets/LogoWildlifeNL.png
@@ -105,6 +106,7 @@ flutter:
     - assets/animals/
     - assets/black_icons_animal/
     - assets/real_animal_pics_no_bg/
+    - assets/images/map-pic.png
     # Use correct casing for Category folder
     - assets/icons/Category/
     - assets/icons/questionnaire/arrow.png

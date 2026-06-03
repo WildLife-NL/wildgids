@@ -10,6 +10,7 @@ class AnimalModel {
   final String? category;
   final List<AnimalGenderViewCount> genderViewCounts;
   final AnimalCondition? condition;
+  final String? conditionDetail;
 
   AnimalModel({
     this.animalId,
@@ -18,6 +19,7 @@ class AnimalModel {
     this.category,
     required this.genderViewCounts,
     this.condition,
+    this.conditionDetail,
   });
 
   // Helper methods
@@ -44,6 +46,7 @@ class AnimalModel {
         ),
       ],
       condition: condition,
+      conditionDetail: conditionDetail,
     );
   }
 
@@ -60,6 +63,7 @@ class AnimalModel {
         ),
       ],
       condition: condition,
+      conditionDetail: conditionDetail,
     );
   }
 }

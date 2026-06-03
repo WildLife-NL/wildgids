@@ -198,7 +198,7 @@ void _onTabSelected(NavTab tab) {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(16),
                         child: Image.asset(
-                          'assets/icons/map-pic.jpg',
+                          'assets/images/map-pic.png',
                           height: 320,
                           width: double.infinity,
                           fit: BoxFit.cover,
