@@ -14,7 +14,12 @@ String? getSpeciesIconPath(String? speciesName) {
     _log(speciesName, path);
     return path;
   }
-
+if (name.contains('bever') || name.contains('beaver')) {
+  const path =
+      'packages/wildlifenl_assets/assets/icons/animals/bever.png';
+  _log(speciesName, path);
+  return path;
+}
   final path = getAnimalIconPath(speciesName);
   _log(speciesName, path);
   return path;
