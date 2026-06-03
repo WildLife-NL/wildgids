@@ -1290,11 +1290,11 @@ Widget _legendRow(
                                     ),
                                     zoomToBoundsOnClick: true,
                                     markerChildBehavior: true,
-                                    builder:
+                                        builder:
                                         (context, markers) => _clusterBadge(
                                           icon: Icons.pets,
                                           count: markers.length,
-                                          color: AppColors.darkGreen,
+                                          color: AppColors.primaryGreen,
                                           mapRotation:
                                               map.mapController.camera.rotation,
                                         ),
@@ -1405,11 +1405,11 @@ Widget _legendRow(
                                     ),
                                     zoomToBoundsOnClick: true,
                                     markerChildBehavior: true,
-                                    builder:
+                                        builder:
                                         (context, markers) => _clusterBadge(
                                           icon: Icons.sensors,
                                           count: markers.length,
-                                          color: AppColors.darkGreen,
+                                          color: AppColors.primaryGreen,
                                           mapRotation:
                                               map.mapController.camera.rotation,
                                         ),
@@ -1604,11 +1604,11 @@ Widget _legendRow(
                                               );
                                             })
                                             .toList(),
-                                    builder:
+                                        builder:
                                         (context, markers) => _clusterBadge(
                                           icon: Icons.place,
                                           count: markers.length,
-                                          color: AppColors.darkGreen,
+                                          color: AppColors.primaryGreen,
                                           mapRotation:
                                               map.mapController.camera.rotation,
                                         ),
