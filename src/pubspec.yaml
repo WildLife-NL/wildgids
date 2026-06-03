@@ -9,6 +9,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  wildlifenl_assets:
+    git:
+      url: https://github.com/WildLife-NL/wildlifenl-components.git
+      ref: Wildlife-rapport-Components
+      path: wildlifenl_assets_components
   auto_size_text: ^3.0.0
   cupertino_icons: ^1.0.8
   flutter_dotenv: ^6.0.0

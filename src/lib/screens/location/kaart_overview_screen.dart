@@ -932,7 +932,7 @@ final bool isCamera =
 final bool isAcoustic =
     type?.contains('acoustic') == true ||
     type?.contains('geluid') == true;
-    final iconPath = _getAnimalIconPath(speciesName);
+    final iconPath = getSpeciesIconPath(speciesName);
 
 final bool isCollar =
     type?.contains('collar') == true;
@@ -1913,47 +1913,7 @@ bottom: 45,
     );
   }
 
-  String? _getAnimalIconPath(String? speciesName) {
-    if (speciesName == null) return null;
-
-    final name = speciesName.toLowerCase();
-
-    if (name.contains('wolf')) return 'assets/icons/animals/wolf.png';
-    if (name.contains('vos') || name.contains('fox')) {
-      return 'assets/icons/animals/vos.png';
-    }
-    if (name.contains('das') || name.contains('badger')) {
-      return 'assets/icons/animals/das.png';
-    }
-    if (name.contains('ree') || name.contains('deer')) {
-      return 'assets/icons/animals/ree.png';
-    }
-    if (name.contains('zwijn') || name.contains('boar')) {
-      return 'assets/icons/animals/wild_zwijn.png';
-    }
-    if (name.contains('damhert')) return 'assets/icons/animals/damhert.png';
-    if (name.contains('egel') || name.contains('hedgehog')) {
-      return 'assets/icons/animals/egel.png';
-    }
-    if (name.contains('eekhoorn') || name.contains('squirrel')) {
-      return 'assets/icons/animals/eekhoorn.png';
-    }
-    if (name.contains('bever') || name.contains('beaver')) {
-      return 'assets/icons/animals/beaver.png';
-    }
-    if (name.contains('boommarten') || name.contains('marten')) {
-      return 'assets/icons/animals/boommarten.png';
-    }
-    if (name.contains('hooglander') || name.contains('highlander')) {
-      return 'assets/icons/animals/hooglander.png';
-    }
-    if (name.contains('wisent') || name.contains('bison')) {
-      return 'assets/icons/animals/winsent.png';
-    }
-
-    return null;
-  }
-
+  
   _IconStyle _iconStyleForTimestamp(DateTime timestamp) {
     final now = DateTime.now();
     final age = now.difference(timestamp);
