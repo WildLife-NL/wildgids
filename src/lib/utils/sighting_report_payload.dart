@@ -15,8 +15,17 @@ class SightingReportPayload {
       sighting.perceivedAnimalActivity,
     );
 
-    reportOfSighting['humanActivity'] = human;
-    reportOfSighting['perceivedAnimalActivity'] = perceived;
+    if (human != 'unknown') {
+  reportOfSighting['humanActivity'] = human;
+} else {
+  reportOfSighting.remove('humanActivity');
+}
+
+if (perceived != 'unknown') {
+  reportOfSighting['perceivedAnimalActivity'] = perceived;
+} else {
+  reportOfSighting.remove('perceivedAnimalActivity');
+}
     reportOfSighting['involvedAnimals'] ??= [];
 
     if (SightingReportActivityCatalog.isOtherHuman(human)) {

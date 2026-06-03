@@ -96,7 +96,7 @@ class SightingApiTransformer {
     }
 
     final apiPayload = {
-      "description": sighting.description ?? '',
+      "description": _safeDescription(sighting.description),
       "location": {
         "latitude": systemLocation.latitude,
         "longitude": systemLocation.longitude,
@@ -208,6 +208,16 @@ class SightingApiTransformer {
         return 'unknown';
     }
   }
+
+  static String _safeDescription(String? description) {
+  final trimmed = description?.trim();
+
+  if (trimmed != null && trimmed.isNotEmpty) {
+    return trimmed;
+  }
+
+  return 'Geen beschrijving opgegeven';
+}
 
   static String _mapLifeStage(String age) {
     switch (age.toLowerCase()) {
