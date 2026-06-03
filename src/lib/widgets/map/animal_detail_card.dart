@@ -299,23 +299,33 @@ final imagePath = iconPath ?? getSpeciesCardImagePath(animal?.speciesName);
       children: [
         _smallIcon(Icons.calendar_today_outlined),
         const SizedBox(width: 5),
-        Text(
-          formattedDate,
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+        Flexible(
+          fit: FlexFit.loose,
+          child: Text(
+            formattedDate,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
           ),
         ),
         const SizedBox(width: 14),
         _smallIcon(Icons.access_time),
         const SizedBox(width: 5),
-        Text(
-          formattedTime,
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+        Flexible(
+          fit: FlexFit.loose,
+          child: Text(
+            formattedTime,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
           ),
         ),
       ],
