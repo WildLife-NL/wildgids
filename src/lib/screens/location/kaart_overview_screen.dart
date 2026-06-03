@@ -21,6 +21,7 @@ import 'package:wildlifenl_map_logic_components/wildlifenl_map_logic_components.
 import 'package:wildgids/screens/profile/profile_screen.dart';
 import 'package:wildgids/widgets/map/animal_detail_card.dart';
 import 'package:wildgids/models/animal_waarneming_models/animal_pin.dart';
+import 'package:wildgids/models/api_models/detection_pin.dart';
 import 'package:wildgids/models/animal_waarneming_models/interaction_to_animal_pin.dart';
 import 'package:wildgids/widgets/map/detection_detail_dialog.dart';
 import 'package:wildgids/data_managers/tracking_api.dart';
@@ -84,6 +85,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
 
   AnimalPin? _selectedAnimalDetail;
   String? _selectedAnimalIconPath;
+  DetectionPin? _selectedDetectionDetail;
 
   bool _showTrackingHistory = false;
   bool _showLegend = false;
@@ -829,10 +831,10 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
   }
 
   void _closeAnimalDetailCard() {
-    if (_selectedAnimalDetail == null) return;
     setState(() {
       _selectedAnimalDetail = null;
       _selectedAnimalIconPath = null;
+      _selectedDetectionDetail = null;
     });
   }
 
@@ -896,9 +898,9 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     
     final type = detectionType.toLowerCase();
     
-    if (type.contains('camera') || type.contains('foto')) {
-      return const Color(0xFF00BFD8); // Aqua
-    } else if (type.contains('acoustic') || type.contains('geluid')) {
+    if (type.contains('visual') ||type.contains('camera') ||type.contains('foto') ||type.contains('image')) {
+  return const Color(0xFF00BFD8); // Aqua
+} else if (type.contains('acoustic') || type.contains('geluid')) {
       return const Color(0xFFFF9100); // Orange
     } else if (type.contains('waarneming') || type.contains('sighting')) {
       return const Color(0xFF8613A8); // Purple
@@ -1080,6 +1082,57 @@ if (isCollar)
 );
 
   }
+bool _isVisualDetection(String? value) {
+  final lower = value?.toLowerCase() ?? '';
+  return lower.contains('visual') ||
+      lower.contains('camera') ||
+      lower.contains('foto') ||
+      lower.contains('image');
+}
+
+Widget _buildStyledDetectionPin(
+  DetectionPin pin,
+  _IconStyle style,
+) {
+  final borderColor = _getBorderColorForDetectionType(pin.deviceType);
+
+  return SizedBox(
+    width: style.size + 28,
+    height: style.size + 28,
+    child: Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.center,
+      children: [
+        Container(
+          width: style.size + 16,
+          height: style.size + 16,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white,
+            border: Border.all(
+              color: borderColor,
+              width: 3,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Icon(
+  _isVisualDetection(pin.deviceType)
+      ? Icons.camera_alt
+      : Icons.sensors,
+  size: style.size * 0.8,
+  color: style.color,
+),
+        ),
+      ],
+    ),
+  );
+}
 
 Widget _legendRow(
   Color color,
@@ -1247,6 +1300,7 @@ Widget _legendRow(
                                         ),
                                   ),
                                 )
+                                
                                 : fm.MarkerLayer(
                                   markers: map.animalPins.map((pin) {
                                             final mapRotation =
@@ -1269,6 +1323,7 @@ Widget _legendRow(
                                                       HitTestBehavior.opaque,
                                                   onTap: () {
                                                     _showAnimalDetailCard(pin, getSpeciesCardImagePath(pin.speciesName));
+                                                    _selectedDetectionDetail = null;
                                                   },
                                                   child: Builder(
                                                     builder: (ctx) {
@@ -1325,21 +1380,17 @@ Widget _legendRow(
                                                     behavior:
                                                         HitTestBehavior.opaque,
                                                     onTap: () {
-                                                      showDialog(
-                                                        context: context,
-                                                        builder:
-                                                            (_) =>
-                                                                DetectionDetailDialog(
-                                                                  detection:
-                                                                      pin,
-                                                                ),
-                                                      );
+                                                      setState(() {
+                                                        _selectedAnimalDetail = null;
+                                                        _selectedAnimalIconPath = null;
+                                                        _selectedDetectionDetail = pin;
+                                                      });
                                                     },
-                                                    child: Icon(
-                                                      Icons.sensors,
-                                                      size: style.size,
-                                                      color: Colors.white,
+                                                    child: _buildStyledDetectionPin(
+                                                      pin,
+                                                      style,
                                                     ),
+                                                    
                                                   ),
                                                 ),
                                               );
@@ -1396,19 +1447,15 @@ Widget _legendRow(
                                                   behavior:
                                                       HitTestBehavior.opaque,
                                                   onTap: () {
-                                                    showDialog(
-                                                      context: context,
-                                                      builder:
-                                                          (_) =>
-                                                              DetectionDetailDialog(
-                                                                detection: pin,
-                                                              ),
-                                                    );
+                                                    setState(() {
+                                                      _selectedAnimalDetail = null;
+                                                      _selectedAnimalIconPath = null;
+                                                      _selectedDetectionDetail = pin;
+                                                    });
                                                   },
-                                                  child: Icon(
-                                                    Icons.sensors,
-                                                    size: style.size,
-                                                    color: Colors.white,
+                                                  child: _buildStyledDetectionPin(
+                                                    pin,
+                                                    style,
                                                   ),
                                                 ),
                                               ),
@@ -1534,15 +1581,10 @@ Widget _legendRow(
                                                         HitTestBehavior.opaque,
                                                     onTap: () {
                                                       _showAnimalDetailCard(
-                                                        AnimalPin(
-                                                          id: itx.id,
-                                                          lat: itx.lat,
-                                                          lon: itx.lon,
-                                                          seenAt: itx.moment,
-                                                          speciesName: itx.speciesName,
-                                                        ),
+                                                        itx.toAnimalPin(),
                                                         getSpeciesCardImagePath(itx.speciesName),
                                                       );
+                                                      _selectedDetectionDetail = null;
                                                     },
                                                     child: Builder(
                                                       builder: (ctx) {
@@ -1590,6 +1632,7 @@ Widget _legendRow(
                                                   itx.toAnimalPin(),
                                                   getSpeciesCardImagePath(itx.speciesName),
                                                 );
+                                                _selectedDetectionDetail = null;
                                               },
                                               child: Builder(
                                                 builder: (ctx) {
@@ -1903,6 +1946,44 @@ bottom: 45,
                                       ),
                                     ),
                         
+
+                                  if (_selectedDetectionDetail != null)
+                                    Positioned(
+                                      bottom: 105,
+                                      left: 0,
+                                      right: 0,
+                                      child: Center(
+                                        child: SizedBox(
+                                          width: math.min(
+                                            460,
+                                            MediaQuery.of(context).size.width - 12,
+                                          ),
+                                          child: Material(
+                                            color: Colors.transparent,
+                                            child: Stack(
+                                              children: [
+                                                DetectionDetailDialog(
+                                                  detection: _selectedDetectionDetail!,
+                                                ),
+                                                Positioned(
+                                                  top: 8,
+                                                  right: 8,
+                                                  child: IconButton(
+                                                    icon: const Icon(Icons.close, color: Colors.grey),
+                                                    splashRadius: 20,
+                                                    onPressed: () {
+                                                      setState(() {
+                                                        _selectedDetectionDetail = null;
+                                                      });
+                                                    },
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                       ],
                     ),
                   ),

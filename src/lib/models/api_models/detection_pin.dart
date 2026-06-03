@@ -6,6 +6,7 @@ class DetectionPin {
   final double lon;
   final DateTime detectedAt;
   final double? confidence;
+  final String? speciesLatinName;
 
   DetectionPin({
     required this.id,
@@ -15,6 +16,7 @@ class DetectionPin {
     this.deviceType,
     this.label,
     this.confidence,
+    this.speciesLatinName,
   });
 
   factory DetectionPin.fromJson(Map<String, dynamic> j) {
@@ -22,7 +24,7 @@ class DetectionPin {
     if (loc == null) {
       throw const FormatException('DetectionPin: missing location');
     }
-
+    
     final lat = _asDouble(loc['latitude'] ?? loc['lat']);
     final lon = _asDouble(loc['longitude'] ?? loc['lon']);
     if (lat == null || lon == null) {
@@ -45,21 +47,31 @@ class DetectionPin {
             ? Map<String, dynamic>.from(species)
             : null;
 
+    final speciesLatinName = speciesMap?['latinName']?.toString() ??
+      speciesMap?['latin_name']?.toString() ??
+      speciesMap?['scientificName']?.toString() ??
+      speciesMap?['name']?.toString();
+
     final ts =
         (j['moment'] ?? j['timestamp'] ?? j['start'] ?? j['end'])?.toString();
 
-    return DetectionPin(
-      id: id,
-      lat: lat,
-      lon: lon,
-      detectedAt:
-          DateTime.tryParse(ts ?? '')?.toUtc() ?? DateTime.now().toUtc(),
-      deviceType: (j['deviceType'] ?? j['sensorType'])?.toString(),
-      label: j['label']?.toString() ??
-          speciesMap?['commonName']?.toString() ??
-          speciesMap?['name']?.toString(),
-      confidence: (j['confidence'] as num?)?.toDouble(),
-    );
+   return DetectionPin(
+  id: id,
+  lat: lat,
+  lon: lon,
+  detectedAt:
+      DateTime.tryParse(ts ?? '')?.toUtc() ?? DateTime.now().toUtc(),
+  deviceType: (j['deviceType'] ?? j['sensorType'])?.toString(),
+  label: j['label']?.toString() ??
+      speciesMap?['commonName']?.toString() ??
+      speciesMap?['name']?.toString(),
+
+  speciesLatinName: speciesLatinName,
+
+  confidence: (j['confidence'] as num?)?.toDouble(),
+);
+
+    
   }
 
   static Map<String, dynamic>? _locationMap(Object? value) {

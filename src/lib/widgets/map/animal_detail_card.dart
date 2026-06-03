@@ -7,6 +7,7 @@ import 'package:wildgids/utils/species_icon_utils.dart';
 class AnimalDetailCard extends StatelessWidget {
   static const double _cardHeight = 230;
   static const double _imageWidth = 150;
+  static const int _maxDetailedAnimals = 5;
 
   final AnimalPin? animal;
   final String? iconPath;
@@ -22,8 +23,10 @@ class AnimalDetailCard extends StatelessWidget {
     final reportedBy = animal?.reportedByName ?? 'Onbekende gebruiker';
 final displayName = animal?.speciesName ?? 'Onbekend dier';
 final latinName = animal?.speciesLatinName ?? '';
-final groupSummary = animal?.groupSummary ??
+    final fallbackGroupSummary = animal?.groupSummary ??
     '${animal?.animalCount ?? 1} ${(animal?.animalCount ?? 1) == 1 ? 'dier' : 'dieren'}';
+    final detailedGroupSummary = _buildDetailedAnimalSummary(animal);
+    final groupSummary = detailedGroupSummary ?? fallbackGroupSummary;
 
 final formattedDate = _formatDate(animal?.seenAt);
 final formattedTime = _formatTime(animal?.seenAt);
@@ -96,7 +99,7 @@ final imagePath = iconPath ?? getSpeciesCardImagePath(animal?.speciesName);
                       icon: Icons.pets,
                       child: Text(
                         groupSummary,
-                        maxLines: 2,
+                        maxLines: 3,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontSize: 12,
@@ -147,6 +150,73 @@ final imagePath = iconPath ?? getSpeciesCardImagePath(animal?.speciesName);
         ),
       ),
     );
+  }
+
+  String? _buildDetailedAnimalSummary(AnimalPin? pin) {
+    final animals = pin?.involvedAnimals;
+    if (animals == null || animals.isEmpty || animals.length > _maxDetailedAnimals) {
+      return null;
+    }
+
+    final grouped = <String, int>{};
+    var knownCount = 0;
+    for (final animal in animals) {
+      final parts = <String>[];
+
+      final lifeStage = _normalizeLifeStage(animal.lifeStage);
+      if (lifeStage != null) parts.add(lifeStage);
+
+      final sex = _normalizeSex(animal.sex);
+      if (sex != null) parts.add(sex);
+
+      final condition = _normalizeCondition(animal.condition);
+      if (condition != null) parts.add(condition);
+
+      if (parts.isEmpty) continue;
+
+      final key = parts.join(' ');
+      grouped.update(key, (value) => value + 1, ifAbsent: () => 1);
+      knownCount++;
+    }
+
+    final totalCount = pin?.animalCount ?? animals.length;
+    final unknownCount = totalCount > knownCount ? totalCount - knownCount : 0;
+
+    if (grouped.isEmpty && unknownCount <= 0) return null;
+
+    final chunks = grouped.entries
+        .map((e) => '${e.value} ${e.key}')
+        .toList();
+    if (unknownCount > 0) {
+      chunks.add('$unknownCount onbekend');
+    }
+    return chunks.join(', ');
+  }
+
+  String? _normalizeSex(String? value) {
+    final lower = value?.trim().toLowerCase() ?? '';
+    if (lower.isEmpty || lower == 'unknown' || lower == 'onbekend') return null;
+    if (lower == 'male' || lower == 'man' || lower == 'mannetje') return 'mannetje';
+    if (lower == 'female' || lower == 'vrouw' || lower == 'vrouwtje') return 'vrouwtje';
+    return lower;
+  }
+
+  String? _normalizeLifeStage(String? value) {
+    final lower = value?.trim().toLowerCase() ?? '';
+    if (lower.isEmpty || lower == 'unknown' || lower == 'onbekend') return null;
+    if (lower == 'adult' || lower == 'volwassen') return 'volwassen';
+    if (lower == 'juvenile' || lower == 'young' || lower == 'jong') return 'jong';
+    return lower;
+  }
+
+  String? _normalizeCondition(String? value) {
+    final lower = value?.trim().toLowerCase() ?? '';
+    if (lower.isEmpty || lower == 'unknown' || lower == 'onbekend') return null;
+    if (lower == 'healthy' || lower == 'gezond') return 'gezond';
+    if (lower == 'sick' || lower == 'ziek') return 'ziek';
+    if (lower == 'dead' || lower == 'dood') return 'dood';
+    if (lower == 'alive' || lower == 'levend') return 'levend';
+    return lower;
   }
 
   

@@ -3,6 +3,7 @@ class AnimalPin {
   final String? speciesName;
   final String? speciesLatinName;
   final int? animalCount;
+  final List<AnimalObservedDetail>? involvedAnimals;
   final double lat;
   final double lon;
   final DateTime seenAt;
@@ -21,6 +22,7 @@ class AnimalPin {
     this.speciesName,
     this.speciesLatinName,
     this.animalCount,
+    this.involvedAnimals,
     this.locationLabel,
     this.reportType,
     this.reportedByName,
@@ -52,6 +54,14 @@ class AnimalPin {
             ? Map<String, dynamic>.from(species)
             : null;
 
+    final speciesLatinName = speciesMap?['latinName']?.toString() ??
+      speciesMap?['latin_name']?.toString() ??
+      speciesMap?['scientificName']?.toString() ??
+      speciesMap?['name']?.toString() ??
+      j['speciesLatinName']?.toString() ??
+      j['latinName']?.toString() ??
+      j['latin_name']?.toString();
+
     final user = j['user'];
     final userMap = user is Map<String, dynamic>
         ? user
@@ -70,8 +80,9 @@ class AnimalPin {
       seenAt: DateTime.tryParse(ts ?? '')?.toUtc() ?? DateTime.now().toUtc(),
       speciesName: speciesMap?['commonName']?.toString() ??
           speciesMap?['name']?.toString(),
-      speciesLatinName: speciesMap?['name']?.toString(),
+      speciesLatinName: speciesLatinName,
       animalCount: _extractAnimalCount(j),
+      involvedAnimals: _extractInvolvedAnimals(j),
       imageUrl: j['imageUrl']?.toString(),
       reportedByName: userMap?['name']?.toString(),
       groupSummary: _buildGroupSummary(j),
@@ -81,28 +92,88 @@ class AnimalPin {
   }
 
   static int? _extractAnimalCount(Map<String, dynamic> j) {
-    final report = j['reportOfSighting'];
-    final reportMap = report is Map<String, dynamic>
-        ? report
-        : report is Map
-            ? Map<String, dynamic>.from(report)
-            : null;
+    final listCount = _extractInvolvedAnimals(j)?.length;
 
-    final animals = reportMap?['involvedAnimals'];
-    if (animals is List && animals.isNotEmpty) {
-      return animals.length;
+    final rawCandidates = <Object?>[
+      j['animalCount'],
+      j['count'],
+      j['reportOfSighting'] is Map
+          ? (j['reportOfSighting'] as Map)['animalCount']
+          : null,
+      j['reportOfCollision'] is Map
+          ? (j['reportOfCollision'] as Map)['animalCount']
+          : null,
+      j['reportOfDamage'] is Map
+          ? (j['reportOfDamage'] as Map)['animalCount']
+          : null,
+    ];
+
+    int? rawCount;
+    for (final raw in rawCandidates) {
+      final parsed = _asInt(raw);
+      if (parsed != null) {
+        rawCount = parsed;
+        break;
+      }
     }
 
-    final raw = j['animalCount'] ?? j['count'];
-    if (raw is int) return raw;
-    if (raw is num) return raw.toInt();
-    return int.tryParse(raw?.toString() ?? '');
+    if (rawCount != null && listCount != null) {
+      return rawCount > listCount ? rawCount : listCount;
+    }
+
+    return rawCount ?? listCount;
   }
 
   static String? _buildGroupSummary(Map<String, dynamic> j) {
     final count = _extractAnimalCount(j);
     if (count == null || count <= 0) return null;
     return '$count ${count == 1 ? 'dier' : 'dieren'}';
+  }
+
+  static List<AnimalObservedDetail>? _extractInvolvedAnimals(
+    Map<String, dynamic> j,
+  ) {
+    final candidates = <Object?>[
+      j['reportOfSighting'],
+      j['reportOfCollision'],
+      j['reportOfDamage'],
+    ];
+
+    for (final report in candidates) {
+      final reportMap = report is Map<String, dynamic>
+          ? report
+          : report is Map
+              ? Map<String, dynamic>.from(report)
+              : null;
+
+      final animals = reportMap?['involvedAnimals'];
+      if (animals is List && animals.isNotEmpty) {
+        final parsed = animals
+            .whereType<Map>()
+            .map((a) => AnimalObservedDetail.fromJson(
+                  a is Map<String, dynamic>
+                      ? a
+                      : Map<String, dynamic>.from(a),
+                ))
+            .toList();
+        if (parsed.isNotEmpty) return parsed;
+      }
+    }
+
+    final topLevel = j['involvedAnimals'];
+    if (topLevel is List && topLevel.isNotEmpty) {
+      final parsed = topLevel
+          .whereType<Map>()
+          .map((a) => AnimalObservedDetail.fromJson(
+                a is Map<String, dynamic>
+                    ? a
+                    : Map<String, dynamic>.from(a),
+              ))
+          .toList();
+      if (parsed.isNotEmpty) return parsed;
+    }
+
+    return null;
   }
 
   static Map<String, dynamic>? _locationMap(Object? value) {
@@ -115,5 +186,32 @@ class AnimalPin {
     if (value == null) return null;
     if (value is num) return value.toDouble();
     return double.tryParse(value.toString());
+  }
+
+  static int? _asInt(Object? value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value.toString());
+  }
+}
+
+class AnimalObservedDetail {
+  final String? sex;
+  final String? lifeStage;
+  final String? condition;
+
+  const AnimalObservedDetail({
+    this.sex,
+    this.lifeStage,
+    this.condition,
+  });
+
+  factory AnimalObservedDetail.fromJson(Map<String, dynamic> json) {
+    return AnimalObservedDetail(
+      sex: (json['sex'] ?? json['gender'])?.toString(),
+      lifeStage: (json['lifeStage'] ?? json['life_stage'])?.toString(),
+      condition: json['condition']?.toString(),
+    );
   }
 }

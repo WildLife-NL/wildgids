@@ -30,6 +30,7 @@ class InteractionQueryResult {
   final DateTime moment;
   final String? typeName; // e.g., "Sighting"
   final String? speciesName; // e.g., "Vos"
+  final String? speciesLatinName;
   final String? description; // optional
   final String? userName; // User who reported
   final String? placeName; // Reverse geocoded place name
@@ -52,6 +53,7 @@ class InteractionQueryResult {
     required this.moment,
     this.typeName,
     this.speciesName,
+    this.speciesLatinName,
     this.description,
     this.userName,
     this.placeName,
@@ -162,6 +164,11 @@ class InteractionQueryResult {
       typeName: (typeNode['name'] ?? typeNode['displayName'])?.toString(),
       speciesName:
           (speciesNode['commonName'] ?? speciesNode['name'])?.toString(),
+        speciesLatinName: (speciesNode['latinName'] ??
+            speciesNode['latin_name'] ??
+                speciesNode['scientificName'] ??
+                speciesNode['name'])
+          ?.toString(),
       description: json['description']?.toString(),
       userName: (userNode['name'] ?? userNode['username'])?.toString(),
       placeName: placeNode['name']?.toString(),
@@ -175,6 +182,7 @@ class InteractionQueryResult {
     'moment': moment.toIso8601String(),
     if (typeName != null) 'type': {'name': typeName},
     if (speciesName != null) 'species': {'commonName': speciesName},
+    if (speciesLatinName != null) 'speciesLatinName': speciesLatinName,
     if (description != null) 'description': description,
     if (userName != null) 'user': {'name': userName},
     if (placeName != null) 'place': {'name': placeName},

@@ -83,6 +83,12 @@ class SpeciesImageResolver {
   static String _normalize(String? name) =>
       (name ?? '').trim().toLowerCase();
 
+  /// Canonical list of common-name keys that this resolver understands.
+  static List<String> supportedCommonNames() {
+    final names = _base.keys.toList()..sort();
+    return names;
+  }
+
   /// Used in grid (initial hidden/preview state)
   static String? drawingForCommonName(String? commonName) {
     final normalized = _normalize(commonName);
