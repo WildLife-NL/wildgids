@@ -1,44 +1,55 @@
 import 'package:flutter/material.dart';
 import 'package:wildgids/models/animal_waarneming_models/animal_model.dart';
-import 'package:wildgids/constants/app_colors.dart';
 import 'package:wildgids/utils/species_image_resolver.dart';
 
 class AnimalTile extends StatefulWidget {
   final AnimalModel animal;
   final VoidCallback onTap;
+  final bool isSelected;
+  final int? selectionNumber;
 
-  const AnimalTile({super.key, required this.animal, required this.onTap});
+  const AnimalTile({
+    super.key,
+    required this.animal,
+    required this.onTap,
+    this.isSelected = false,
+    this.selectionNumber,
+  });
 
   @override
   State<AnimalTile> createState() => _AnimalTileState();
 }
 
 class _AnimalTileState extends State<AnimalTile> {
-  bool _imageError = false;
-
   String? get _resolvedImagePath =>
       SpeciesImageResolver.drawingForCommonName(widget.animal.animalName) ??
       widget.animal.animalImagePath;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: InkWell(
-        onTap: widget.onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Card(
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: widget.onTap,
+      child: Stack(
+        fit: StackFit.expand,
+        clipBehavior: Clip.none,
+        children: [
+          Card(
+            margin: EdgeInsets.zero,
             elevation: 0,
+            color: Colors.white,
             shadowColor: Colors.black.withValues(alpha: 0.1),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
-              side: const BorderSide(
-                color: AppColors.borderDefault,
-                width: 1,
+              side: BorderSide(
+                color: widget.isSelected
+                    ? const Color(0xFF4CAF50)
+                    : const Color.fromARGB(64, 0, 0, 0),
+                width: widget.isSelected ? 3 : 1,
               ),
             ),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize: MainAxisSize.max,
               children: [
                 Expanded(
                   child: Container(
@@ -47,7 +58,7 @@ class _AnimalTileState extends State<AnimalTile> {
                         topLeft: Radius.circular(14),
                         topRight: Radius.circular(14),
                       ),
-                      color: Colors.white,
+                      color: Color(0xFFE6DCCD),
                     ),
                     child: ClipRRect(
                       borderRadius: const BorderRadius.only(
@@ -55,8 +66,7 @@ class _AnimalTileState extends State<AnimalTile> {
                         topRight: Radius.circular(14),
                       ),
                       child: SizedBox.expand(
-                        child: _resolvedImagePath != null &&
-                                !_imageError
+                        child: _resolvedImagePath != null
                             ? _buildImageWithFallback()
                             : Center(
                                 child: Column(
@@ -69,7 +79,7 @@ class _AnimalTileState extends State<AnimalTile> {
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
-                                      'No image',
+                                      'Geen afbeelding',
                                       style: TextStyle(
                                         color: Colors.grey[500],
                                         fontSize: 12,
@@ -84,24 +94,32 @@ class _AnimalTileState extends State<AnimalTile> {
                 ),
                 Container(
                   height: 1,
-                  color: AppColors.borderDefault,
+                  color: widget.isSelected
+                      ? const Color(0xFF4CAF50)
+                      : const Color.fromARGB(84, 0, 0, 0),
                 ),
                 Container(
                   width: double.infinity,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
+                  decoration: BoxDecoration(
+                    color: widget.isSelected ? const Color(0xFFF0F4ED) : Colors.white,
+                    borderRadius: const BorderRadius.only(
                       bottomLeft: Radius.circular(14),
                       bottomRight: Radius.circular(14),
                     ),
                   ),
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 6,
+                    horizontal: 12,
+                  ),
                   child: Text(
                     widget.animal.animalName,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.black,
+                      fontWeight:
+                          widget.isSelected ? FontWeight.w600 : FontWeight.w400,
+                      color: widget.isSelected
+                          ? const Color(0xFF2E7D32)
+                          : Colors.black,
                     ),
                     textAlign: TextAlign.center,
                     maxLines: 1,
@@ -111,6 +129,30 @@ class _AnimalTileState extends State<AnimalTile> {
               ],
             ),
           ),
+
+          if (widget.isSelected && widget.selectionNumber != null)
+            Positioned(
+              top: 8,
+              left: 8,
+              child: Container(
+                width: 28,
+                height: 28,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF4CAF50),
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  '${widget.selectionNumber}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -125,8 +167,6 @@ class _AnimalTileState extends State<AnimalTile> {
       image: AssetImage(imagePath),
       fit: BoxFit.cover,
       frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-        if (wasSynchronouslyLoaded) return child;
-
         return AnimatedOpacity(
           opacity: frame == null ? 0 : 1,
           duration: const Duration(milliseconds: 500),
@@ -138,16 +178,6 @@ class _AnimalTileState extends State<AnimalTile> {
         debugPrint(
           '[AnimalTile] Error loading image: $imagePath',
         );
-
-        if (!_imageError) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              setState(() {
-                _imageError = true;
-              });
-            }
-          });
-        }
 
         return Center(
           child: Column(
