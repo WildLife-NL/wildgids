@@ -29,6 +29,10 @@ class AnimalSightingReportingManager
     DateTimeModel? dateTime,
     dynamic images,
     int? animalCount,
+    String? humanActivity,
+    String? humanActivityOther,
+    String? perceivedAnimalActivity,
+    String? perceivedAnimalActivityOther,
     bool logChanges = false,
     String logPrefix = '',
   }) {
@@ -49,6 +53,14 @@ class AnimalSightingReportingManager
       dateTime: dateTime ?? _currentanimalSighting!.dateTime,
       images: images ?? _currentanimalSighting!.images,
       animalCount: animalCount ?? _currentanimalSighting!.animalCount,
+      humanActivity:
+          humanActivity ?? _currentanimalSighting!.humanActivity,
+      humanActivityOther:
+          humanActivityOther ?? _currentanimalSighting!.humanActivityOther,
+      perceivedAnimalActivity: perceivedAnimalActivity ??
+          _currentanimalSighting!.perceivedAnimalActivity,
+      perceivedAnimalActivityOther: perceivedAnimalActivityOther ??
+          _currentanimalSighting!.perceivedAnimalActivityOther,
     );
 
     if (logChanges) {

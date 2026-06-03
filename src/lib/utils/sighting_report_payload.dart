@@ -15,37 +15,31 @@ class SightingReportPayload {
       sighting.perceivedAnimalActivity,
     );
 
-    if (human != 'unknown') {
-  reportOfSighting['humanActivity'] = human;
-} else {
-  reportOfSighting.remove('humanActivity');
-}
-
-if (perceived != 'unknown') {
-  reportOfSighting['perceivedAnimalActivity'] = perceived;
-} else {
-  reportOfSighting.remove('perceivedAnimalActivity');
-}
+    // API requires both fields; "unknown" is a valid enum value.
+    reportOfSighting['humanActivity'] = human;
+    reportOfSighting['perceivedAnimalActivity'] = perceived;
     reportOfSighting['involvedAnimals'] ??= [];
 
     if (SightingReportActivityCatalog.isOtherHuman(human)) {
       final other = sighting.humanActivityOther?.trim() ?? '';
-      if (other.isNotEmpty) {
-        reportOfSighting['humanActivityOther'] = other;
-      } else {
-        reportOfSighting.remove('humanActivityOther');
+      if (other.isEmpty) {
+        throw StateError(
+          'Vul een toelichting in bij "Anders" voor jouw activiteit.',
+        );
       }
+      reportOfSighting['humanActivityOther'] = other;
     } else {
       reportOfSighting.remove('humanActivityOther');
     }
 
     if (SightingReportActivityCatalog.isOtherPerceivedAnimal(perceived)) {
       final other = sighting.perceivedAnimalActivityOther?.trim() ?? '';
-      if (other.isNotEmpty) {
-        reportOfSighting['perceivedAnimalActivityOther'] = other;
-      } else {
-        reportOfSighting.remove('perceivedAnimalActivityOther');
+      if (other.isEmpty) {
+        throw StateError(
+          'Vul een toelichting in bij "Anders" voor de activiteit van het dier.',
+        );
       }
+      reportOfSighting['perceivedAnimalActivityOther'] = other;
     } else {
       reportOfSighting.remove('perceivedAnimalActivityOther');
     }

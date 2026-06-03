@@ -164,7 +164,12 @@ class InteractionApi implements InteractionApiInterface {
       return errors
           .map((e) {
             if (e is Map) {
-              return e['message']?.toString() ?? e.toString();
+              final loc = e['location']?.toString();
+              final msg = e['message']?.toString();
+              if (loc != null && loc.isNotEmpty && msg != null) {
+                return '$loc: $msg';
+              }
+              return msg ?? e.toString();
             }
             return e.toString();
           })
