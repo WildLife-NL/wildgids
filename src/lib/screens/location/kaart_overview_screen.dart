@@ -904,9 +904,15 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
       return const Color(0xFFFF9100); // Orange
     } else if (type.contains('waarneming') || type.contains('sighting')) {
       return const Color(0xFF8613A8); // Purple
-    } else if (type.contains('collision') || type.contains('botsing')) {
+    } else if (type.contains('collision') ||
+        type.contains('botsing') ||
+        type.contains('aanrijding') ||
+        type.contains('dieraanrijding')) {
       return const Color(0xFF0078DA); // Blue
-    } else if (type.contains('schadamelding') || type.contains('damage')) {
+    } else if (type.contains('schade') ||
+        type.contains('schadamelding') ||
+        type.contains('gewasschade') ||
+        type.contains('damage')) {
       return const Color(0xFF008C7B); // teal
     } else if (type.contains('collar')) {
       return const Color(0xFFFE008E); // pink
