@@ -364,7 +364,7 @@ class MapProvider extends ChangeNotifier {
     }
 
     final merged = TrackingVicinityParser.merge(_currentVicinity(), vicinity);
-    _applyVicinity(merged);
+    _applyVicinity(TrackingVicinityParser.forMapDisplay(merged));
     debugPrint(
       '[MapProvider] Merged ping vicinity: '
       '${_animalPins.length} animals, ${_detectionPins.length} detections, '
@@ -452,7 +452,7 @@ class MapProvider extends ChangeNotifier {
       }
 
       _lastPinsLoadSource = source;
-      _applyVicinity(vicinity);
+      _applyVicinity(TrackingVicinityParser.forMapDisplay(vicinity));
 
       debugPrint(
         '[MapProvider] Pins from $_lastPinsLoadSource: '

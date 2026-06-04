@@ -87,8 +87,32 @@ class AnimalPin {
       reportedByName: userMap?['name']?.toString(),
       groupSummary: _buildGroupSummary(j),
       locationLabel: j['locationLabel']?.toString(),
-      reportType: j['reportType']?.toString() ?? 'waarneming',
+      reportType: _resolveReportType(j),
     );
+  }
+
+  /// Vicinity [animals] from tracking-reading are collar/GPS updates unless
+  /// the payload is clearly a user report (waarneming, collision, schade).
+  static String _resolveReportType(Map<String, dynamic> j) {
+    final explicit = j['reportType']?.toString().trim();
+    if (explicit != null && explicit.isNotEmpty) return explicit;
+
+    final hasUserReport = j['reportOfSighting'] != null ||
+        j['reportOfCollision'] != null ||
+        j['reportOfDamage'] != null;
+    if (hasUserReport) {
+      if (j['reportOfSighting'] != null) return 'waarneming';
+      if (j['reportOfCollision'] != null) return 'dieraanrijding';
+      if (j['reportOfDamage'] != null) return 'schademelding';
+    }
+
+    // Collar / tracker ping (locationTimestamp, no user report block).
+    if (j['locationTimestamp'] != null) return 'collar';
+
+    final user = j['user'];
+    if (user is! Map) return 'collar';
+
+    return 'waarneming';
   }
 
   static int? _extractAnimalCount(Map<String, dynamic> j) {

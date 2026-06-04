@@ -27,7 +27,7 @@ extension InteractionToAnimalPin on InteractionQueryResult {
       groupSummary: count != null && count > 0
           ? '$count ${count == 1 ? 'dier' : 'dieren'}'
           : null,
-      reportType: typeName,
+      reportType: 'waarneming',
     );
   }
 }

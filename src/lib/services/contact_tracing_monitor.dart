@@ -23,6 +23,7 @@ class ContactTracingMonitor extends ChangeNotifier {
   String? _activeContactId;
   String? _activeContactMac;
   Contact? _activeContact;
+  DateTime? _sessionStartedAt;
   DateTime? _lastSeenAt;
   int? _lastAdvertisementRssi;
   bool _isScanning = false;
@@ -102,6 +103,7 @@ class ContactTracingMonitor extends ChangeNotifier {
     _activeContactId = contactId;
     _activeContactMac = formattedMac;
     _activeContact = contact;
+    _sessionStartedAt = DateTime.now();
     _lastSeenAt = null;
     _lastAdvertisementRssi = null;
     _lastAutoEndMessage = null;
@@ -157,6 +159,7 @@ class ContactTracingMonitor extends ChangeNotifier {
     _activeContactId = null;
     _activeContactMac = null;
     _activeContact = null;
+    _sessionStartedAt = null;
     _lastSeenAt = null;
     _lastAdvertisementRssi = null;
     if (notify) notifyListeners();
@@ -214,10 +217,19 @@ class ContactTracingMonitor extends ChangeNotifier {
 
   Future<void> _checkSignalLoss() async {
     if (_activeContactId == null || _busyEnding) return;
-    final last = _lastSeenAt;
-    if (last == null) return;
-    if (DateTime.now().difference(last) <= _signalLossAfter) return;
+    final started = _sessionStartedAt;
+    if (started == null) return;
 
+    final last = _lastSeenAt;
+    if (last == null) {
+      // Geen enkele BLE-advertentie gezien — na grace toch beëindigen (anders blijft
+      // het contact op de server actief, bv. na herstart zonder collar in bereik).
+      if (DateTime.now().difference(started) <= _signalLossAfter) return;
+      await endActiveContact(automatic: true);
+      return;
+    }
+
+    if (DateTime.now().difference(last) <= _signalLossAfter) return;
     await endActiveContact(automatic: true);
   }
 

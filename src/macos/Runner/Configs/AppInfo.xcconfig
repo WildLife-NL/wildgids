@@ -8,7 +8,7 @@
 PRODUCT_NAME = Wild Gids
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.wildgids
+PRODUCT_BUNDLE_IDENTIFIER = com.wildlife.wildgids
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2025 com.example. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2025 Wildlife NL. All rights reserved.
