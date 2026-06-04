@@ -14,9 +14,8 @@ import 'package:wildgids/models/beta_models/location_model.dart';
 import 'package:wildgids/providers/map_provider.dart';
 import 'package:wildgids/screens/shared/rapporteren.dart';
 // Removed collision details screen import (flow deprecated)
-import 'package:wildgids/screens/questionnaire/questionnaire_screen.dart';
-import 'package:wildgids/screens/location/kaart_overview_screen.dart';
 import 'package:wildgids/utils/sighting_api_transformer.dart';
+import 'package:wildgids/utils/sighting_submit_navigation.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/bottom_app_bar.dart';
 import 'package:wildgids/widgets/location/location_screen_ui_widget.dart';
@@ -188,28 +187,15 @@ class _LocationScreenState extends State<LocationScreen> {
 
       // 8. handle backend result
       if (responseModel != null) {
-        if (responseModel.questionnaire.questions == null ||
-            responseModel.questionnaire.questions!.isEmpty) {
-          debugPrint(
-            '\x1B[33m[LocationScreen] No questionnaire returned, skipping questionnaire screen\x1B[0m',
+        animalSightingManager.clearCurrentanimalSighting();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          navigateAfterSightingSubmit(
+            context,
+            responseModel,
+            showSuccessToast: true,
           );
-          _pendingSnackBarMessage = 'Melding succesvol verstuurd';
-          _pendingNavigationScreen = const KaartOverviewScreen();
-          _pendingRemoveUntil = true;
-        } else {
-          debugPrint(
-            '\x1B[34m[LocationScreen] Received valid questionnaire: ${responseModel.questionnaire.name}\x1B[0m',
-          );
-          _pendingNavigationScreen = QuestionnaireScreen(
-            questionnaire: responseModel.questionnaire,
-            interactionID: responseModel.interactionID,
-          );
-          _pendingRemoveUntil = true;
-        }
-
-        WidgetsBinding.instance.addPostFrameCallback(
-          (_) => _handlePendingActions(),
-        );
+        });
       }
     } catch (e, stackTrace) {
       debugPrint('\x1B[31m[LocationScreen] Error: $e\x1B[0m');
