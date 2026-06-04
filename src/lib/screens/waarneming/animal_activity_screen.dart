@@ -100,7 +100,10 @@ class _AnimalActivityScreenState extends State<AnimalActivityScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: const Color(0xFFF5F6F4),
       body: SafeArea(
         bottom: false,
@@ -118,10 +121,10 @@ class _AnimalActivityScreenState extends State<AnimalActivityScreen> {
               iconScale: 1.15,
               userIconScale: 1.15,
             ),
-            SizedBox(
-              height: MediaQuery.of(context).size.height * 0.75,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 2, 16, 16),
+            Expanded(
+              child: SingleChildScrollView(
+                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: EdgeInsets.fromLTRB(16, 2, 16, 16 + keyboardInset),
                 child: Card(
                   elevation: 0,
                   color: Colors.white,
@@ -174,6 +177,7 @@ class _AnimalActivityScreenState extends State<AnimalActivityScreen> {
                               ),
                             ),
                             maxLines: 2,
+                            textInputAction: TextInputAction.next,
                           ),
                         ],
                         const SizedBox(height: 16),
@@ -206,8 +210,10 @@ class _AnimalActivityScreenState extends State<AnimalActivityScreen> {
                               ),
                             ),
                             maxLines: 2,
+                            textInputAction: TextInputAction.done,
                           ),
                         ],
+                        SizedBox(height: keyboardInset > 0 ? 8 : 0),
                       ],
                     ),
                   ),
