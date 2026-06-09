@@ -5,7 +5,6 @@ import 'package:wildgids/interfaces/data_apis/species_api_interface.dart';
 import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
 import 'package:wildgids/models/api_models/species.dart';
 import 'package:wildgids/models/animal_waarneming_models/animal_model.dart';
-//import 'package:wildgids/screens/shared/overzicht_screen.dart';
 import 'package:wildgids/utils/species_click_tracker.dart';
 import 'package:wildgids/utils/species_image_resolver.dart';
 import 'package:wildgids/widgets/animals/scrollable_animal_grid.dart';
@@ -19,12 +18,10 @@ import 'package:wildgids/widgets/shared_ui_widgets/custom_nav_bar.dart';
 import 'package:wildgids/screens/game/challenge_screen.dart';
 
 class SpeciesListScreen extends StatefulWidget {
-  final bool showBottomNav; 
+  final bool showBottomNav;
 
-  const SpeciesListScreen({
-    super.key,
-    this.showBottomNav = true, 
-  });
+  const SpeciesListScreen({super.key, this.showBottomNav = true});
+
   @override
   State<SpeciesListScreen> createState() => _SpeciesListScreenState();
 }
@@ -41,49 +38,30 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
   bool _isLoading = true;
   String? _error;
 
-void _onTabSelected(NavTab tab) {
-  final nav = context.read<NavigationStateInterface>();
+  void _onTabSelected(NavTab tab) {
+    final nav = context.read<NavigationStateInterface>();
 
-  switch (tab) {
-    case NavTab.ontdekken:
-      nav.pushReplacementForward(
-        context,
-        const ChallengeScreen(),
-      );
-      break;
-    case NavTab.zones:
-      return;
-
-    case NavTab.waarneming:
-      nav.pushReplacementForward(
-        context,
-        const WaarnemmingStartScreen(),
-      );
-      break;
-
-    case NavTab.kaart:
-      nav.pushReplacementForward(
-        context,
-        const KaartOverviewScreen(),
-      );
-      break;
-
-    case NavTab.logboek:
-      nav.pushReplacementForward(
-        context,
-        const LogbookScreen(),
-      );
-      break;
-
-    case NavTab.instellingen:
-    case NavTab.profile:
-      nav.pushReplacementForward(
-        context,
-        const ProfileScreen(),
-      );
-      break;
+    switch (tab) {
+      case NavTab.ontdekken:
+        nav.pushReplacementForward(context, const ChallengeScreen());
+        break;
+      case NavTab.zones:
+        return;
+      case NavTab.waarneming:
+        nav.pushReplacementForward(context, const WaarnemmingStartScreen());
+        break;
+      case NavTab.kaart:
+        nav.pushReplacementForward(context, const KaartOverviewScreen());
+        break;
+      case NavTab.logboek:
+        nav.pushReplacementForward(context, const LogbookScreen());
+        break;
+      case NavTab.instellingen:
+      case NavTab.profile:
+        nav.pushReplacementForward(context, const ProfileScreen());
+        break;
+    }
   }
-}
 
   @override
   void initState() {
@@ -123,16 +101,14 @@ void _onTabSelected(NavTab tab) {
           : species.where((s) => s.category == _selectedCategory).toList();
 
       final animals = filteredSpecies.map((s) {
-        final name = s.commonName.isNotEmpty
-            ? s.commonName
-            : (s.latinName ?? 'Onbekend');
+        final name =
+            s.commonName.isNotEmpty ? s.commonName : (s.latinName ?? 'Onbekend');
 
         return AnimalModel(
           animalId: s.id,
           animalName: name,
-          animalImagePath: SpeciesImageResolver.drawingForCommonName(
-            s.commonName,
-          ),
+          animalImagePath:
+              SpeciesImageResolver.drawingForCommonName(s.commonName),
           genderViewCounts: [],
         );
       }).toList();
@@ -155,20 +131,17 @@ void _onTabSelected(NavTab tab) {
   }
 
   void _handleBackNavigation() {
-  Navigator.of(context).pop();
-}
+    Navigator.of(context).pop();
+  }
 
   Future<void> _handleSpeciesSelection(AnimalModel animal) async {
     final selectedSpecies = _allSpecies.firstWhere(
       (s) => s.id == animal.animalId,
-      orElse: () => _allSpecies.firstWhere(
-        (s) {
-          final name = s.commonName.isNotEmpty
-              ? s.commonName
-              : (s.latinName ?? 'Onbekend');
-          return name == animal.animalName;
-        },
-      ),
+      orElse: () => _allSpecies.firstWhere((s) {
+        final name =
+            s.commonName.isNotEmpty ? s.commonName : (s.latinName ?? 'Onbekend');
+        return name == animal.animalName;
+      }),
     );
 
     await SpeciesClickTracker.markClicked(selectedSpecies.id);
@@ -176,14 +149,9 @@ void _onTabSelected(NavTab tab) {
     if (!mounted) return;
 
     await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => SpeciesDetailScreen(species: selectedSpecies),
-      ),
-    );
+        MaterialPageRoute(builder: (_) => SpeciesDetailScreen(species: selectedSpecies)));
 
-    if (mounted) {
-      setState(() {});
-    }
+    if (mounted) setState(() {});
   }
 
   Future<void> _handleCategoryChanged(String value) async {
@@ -231,10 +199,8 @@ void _onTabSelected(NavTab tab) {
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Card(
                   elevation: 0,
                   color: Colors.white,
@@ -252,10 +218,7 @@ void _onTabSelected(NavTab tab) {
                       children: [
                         const SizedBox(height: 8),
                         Padding(
-                          padding: const EdgeInsets.only(
-                            left: 4,
-                            bottom: 8,
-                          ),
+                          padding: const EdgeInsets.only(left: 4, bottom: 8),
                           child: Text(
                             'Categorie',
                             style:
@@ -271,9 +234,8 @@ void _onTabSelected(NavTab tab) {
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: Colors.black.withValues(alpha: 0.15),
-                              width: 1.2,
-                            ),
+                                color: AppColors.borderDefault,
+                                width: 1.2),
                           ),
                           child: DropdownButtonHideUnderline(
                             child: DropdownButton<String>(
@@ -282,29 +244,22 @@ void _onTabSelected(NavTab tab) {
                               borderRadius: BorderRadius.circular(12),
                               dropdownColor: Colors.white,
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 5,
-                              ),
+                                  horizontal: 16, vertical: 5),
                               icon: Icon(
                                 Icons.keyboard_arrow_down,
-                                color: Colors.black.withValues(alpha: 0.6),
+                                color: Colors.black,
                                 size: 24,
                               ),
                               style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.black87,
-                              ),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.black87),
                               items: _categories.map((category) {
                                 return DropdownMenuItem<String>(
-                                  value: category,
-                                  child: Text(category),
-                                );
+                                    value: category, child: Text(category));
                               }).toList(),
                               onChanged: (value) {
-                                if (value != null) {
-                                  _handleCategoryChanged(value);
-                                }
+                                if (value != null) _handleCategoryChanged(value);
                               },
                             ),
                           ),
@@ -329,18 +284,20 @@ void _onTabSelected(NavTab tab) {
           ],
         ),
       ),
-  bottomNavigationBar: widget.showBottomNav
-    ? SafeArea(
-        top: false,
-        child: CustomNavBar(
-          currentTab: NavTab.ontdekken,
-          onTabSelected: _onTabSelected,
-        ),
-      )
-    : null,
+      bottomNavigationBar: widget.showBottomNav
+          ? SafeArea(
+              top: false,
+              child: CustomNavBar(
+                  currentTab: NavTab.ontdekken, onTabSelected: _onTabSelected),
+            )
+          : null,
     );
   }
 }
+
+// ─────────────────────────────────────────────────────────────
+//  Detail screen
+// ─────────────────────────────────────────────────────────────
 
 class SpeciesDetailScreen extends StatefulWidget {
   final Species species;
@@ -352,58 +309,94 @@ class SpeciesDetailScreen extends StatefulWidget {
 }
 
 class _SpeciesDetailScreenState extends State<SpeciesDetailScreen> {
-  late final PageController _pageController;
-  int _currentPage = 0;
+  final List<bool> _expanded = [true, false, false, false];
 
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PageController(initialPage: 0);
+  String _composeText(Species s, {required List<String> include}) {
+    final parts = <String?>[];
+    if (include.contains('description')) parts.add(s.description);
+    if (include.contains('behaviour')) parts.add(s.behaviour);
+    if (include.contains('roleInNature')) parts.add(s.roleInNature);
+    if (include.contains('advice')) parts.add(s.advice);
+    return parts
+        .where((p) => (p ?? '').isNotEmpty)
+        .cast<String>()
+        .join('\n\n');
   }
 
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  void _showImageViewer(BuildContext context, String path) {
-    showGeneralDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierLabel: 'Sluiten',
-      barrierColor: Colors.black87,
-      transitionDuration: const Duration(milliseconds: 200),
-      pageBuilder: (ctx, animation, secondaryAnimation) {
-        return GestureDetector(
-          onTap: () => Navigator.of(ctx).pop(),
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: InteractiveViewer(
-                  panEnabled: true,
-                  minScale: 0.8,
-                  maxScale: 5.0,
-                  child: Center(
-                    child: Image.asset(
-                      path,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
+  // ── Slick section tile ──────────────────────────────────────
+  Widget _buildSection({
+    required String title,
+    required String body,
+    required int index,
+    required IconData icon,
+  }) {
+    final isOpen = _expanded[index];
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      margin: const EdgeInsets.only(bottom: 6),
+      decoration: BoxDecoration(
+        color: isOpen ? const Color(0xFFF7FAF7) : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isOpen
+              ? AppColors.primaryGreen
+              : AppColors.borderDefault,
+          width: 1,
+        ),
+      ),
+      child: Theme(
+        // Remove default ExpansionTile dividers
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          initiallyExpanded: _expanded[index],
+          onExpansionChanged: (v) => setState(() => _expanded[index] = v),
+          tilePadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+          childrenPadding:
+              const EdgeInsets.fromLTRB(16, 0, 16, 14),
+          leading: Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: AppColors.backgroundLight,
+              borderRadius: BorderRadius.circular(9),
+              border: Border.all(
+                color: AppColors.borderDefault,
+                width: 1,
               ),
-              Positioned(
-                top: 24,
-                right: 24,
-                child: IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white, size: 28),
-                  onPressed: () => Navigator.of(ctx).pop(),
-                ),
-              ),
-            ],
+            ),
+            child: Icon(icon, color: AppColors.darkCharcoal, size: 18),
           ),
-        );
-      },
+          title: Text(
+            title,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                  letterSpacing: 0.1,
+                ),
+          ),
+          trailing: AnimatedRotation(
+            turns: isOpen ? 0.5 : 0,
+            duration: const Duration(milliseconds: 200),
+            child: Icon(
+              Icons.keyboard_arrow_down_rounded,
+              color: AppColors.darkGreen,
+              size: 22,
+            ),
+          ),
+          children: [
+            Text(
+              body.isNotEmpty ? body : '—',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.black87,
+                    height: 1.75,
+                    fontSize: 15,
+                  ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -413,365 +406,187 @@ class _SpeciesDetailScreenState extends State<SpeciesDetailScreen> {
     final title = species.commonName.isNotEmpty
         ? species.commonName
         : (species.latinName ?? 'Soort');
-
     final headerImageDrawing =
         SpeciesImageResolver.drawingForCommonName(species.commonName);
-
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F6F4),
       body: Column(
         children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(16),
-              topRight: Radius.circular(16),
-            ),
-            child: Container(
-              padding: const EdgeInsets.only(
-                top: 48,
-                left: 8,
-                right: 20,
-                bottom: 16,
-              ),
-              color: AppColors.darkGreen,
-              child: SizedBox(
-                height: 80,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: IconButton(
-                        icon: const Icon(Icons.arrow_back, color: Colors.white),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                    ),
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          title,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w700,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          species.category,
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          width: 72,
-                          height: 72,
-                          color: Colors.white.withValues(alpha: 0.2),
-                          child: FutureBuilder<bool>(
-                            future: SpeciesClickTracker.isClicked(species.id),
-                            builder: (context, snapshot) {
-                              final clicked = snapshot.data ?? false;
-
-                              final path = clicked
-                                  ? SpeciesImageResolver.realForCommonName(
-                                      species.commonName,
-                                    )
-                                  : headerImageDrawing;
-
-                              if (path == null) {
-                                return const Center(
-                                  child: Icon(
-                                    Icons.pets,
-                                    color: Colors.white,
-                                    size: 36,
-                                  ),
-                                );
-                              }
-
-                              return GestureDetector(
-                                onTap: () => _showImageViewer(context, path),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(6.0),
-                                  child: Image.asset(
-                                    path,
-                                    fit: BoxFit.contain,
-                                    errorBuilder: (_, __, ___) =>
-                                        const Center(
-                                      child: Icon(
-                                        Icons.pets,
-                                        color: Colors.white,
-                                        size: 36,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+          // ── Header ─────────────────────────────────────────
+          Container(
+            color: Colors.white,
+            padding:
+                const EdgeInsets.only(top: 48, left: 8, right: 20, bottom: 16),
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                      color: AppColors.darkGreen, size: 20),
+                  onPressed: () => Navigator.of(context).pop(),
                 ),
-              ),
-            ),
-          ),
-          Container(height: 6, color: Colors.white),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20.0,
-                vertical: 16.0,
-              ),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: Stack(
-                      children: [
-                        Positioned(
-                          right: 0,
-                          top: 24,
-                          child: _stackedLayer(widthFactor: 0.92),
-                        ),
-                        Positioned(
-                          right: 8,
-                          top: 12,
-                          child: _stackedLayer(widthFactor: 0.96),
-                        ),
-                        _pageCardContainer(
-                          child: Stack(
-                            children: [
-                              PageView.builder(
-                                controller: _pageController,
-                                itemCount: 4,
-                                onPageChanged: (i) {
-                                  setState(() => _currentPage = i);
-                                },
-                                itemBuilder: (context, index) {
-                                  final titles = const [
-                                    'Omschrijving',
-                                    'Gedrag',
-                                    'Rol in de natuur',
-                                    'Advies',
-                                  ];
-
-                                  final includes = const [
-                                    ['description'],
-                                    ['behaviour'],
-                                    ['roleInNature'],
-                                    ['advice'],
-                                  ];
-
-                                  return AnimatedBuilder(
-                                    animation: _pageController,
-                                    builder: (context, child) {
-                                      double t = 0.0;
-
-                                      if (_pageController
-                                          .position.hasContentDimensions) {
-                                        final current = _pageController.page ??
-                                            _currentPage.toDouble();
-                                        t = current - index.toDouble();
-                                      } else {
-                                        t = _currentPage.toDouble() -
-                                            index.toDouble();
-                                      }
-
-                                      final scale = 1.0 -
-                                          (t.abs() * 0.06).clamp(0.0, 0.06);
-                                      final opacity = 1.0 -
-                                          (t.abs() * 0.35).clamp(0.0, 0.35);
-
-                                      return Transform.scale(
-                                        scale: scale,
-                                        child: Opacity(
-                                          opacity: opacity,
-                                          child: _contentCard(
-                                            title: titles[index],
-                                            text: _composeText(
-                                              species,
-                                              include: includes[index],
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  );
-                                },
-                              ),
-                              Positioned(
-                                left: 8,
-                                bottom: 8,
-                                child: IconButton(
-                                  icon: const Icon(
-                                    Icons.chevron_left,
-                                    color: Colors.white,
-                                    size: 28,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        title,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleLarge
+                            ?.copyWith(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 22,
+                              letterSpacing: -0.3,
+                            ),
+                      ),
+                      if (species.latinName != null &&
+                          species.latinName!.isNotEmpty) ...[
+                        const SizedBox(height: 3),
+                        Text(
+                          species.latinName!,
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Colors.black38,
+                                    fontSize: 12,
+                                    fontStyle: FontStyle.italic,
+                                    letterSpacing: 0.2,
                                   ),
-                                  onPressed: _currentPage > 0
-                                      ? () => _pageController.previousPage(
-                                            duration: const Duration(
-                                              milliseconds: 250,
-                                            ),
-                                            curve: Curves.easeInOut,
-                                          )
-                                      : null,
-                                ),
-                              ),
-                              Positioned(
-                                right: 8,
-                                bottom: 8,
-                                child: IconButton(
-                                  icon: const Icon(
-                                    Icons.chevron_right,
-                                    color: Colors.white,
-                                    size: 28,
-                                  ),
-                                  onPressed: _currentPage < 3
-                                      ? () => _pageController.nextPage(
-                                            duration: const Duration(
-                                              milliseconds: 250,
-                                            ),
-                                            curve: Curves.easeInOut,
-                                          )
-                                      : null,
-                                ),
-                              ),
-                            ],
-                          ),
                         ),
                       ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Column(
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(child: _chip('OMSCHRIJVING', 0)),
-                          const SizedBox(width: 12),
-                          Expanded(child: _chip('GEDRAG', 1)),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(child: _chip('ROL IN DE NATUUR', 2)),
-                          const SizedBox(width: 12),
-                          Expanded(child: _chip('ADVIES', 3)),
-                        ],
-                      ),
+                      const SizedBox(height: 5),
+                      if (species.category.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: AppColors.backgroundLight,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            species.category,
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelSmall
+                                ?.copyWith(
+                                  color: AppColors.textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 11,
+                                  letterSpacing: 0.4,
+                                ),
+                          ),
+                        ),
                     ],
                   ),
-                ],
+                ),
+                // Invisible spacer to keep title centred
+                const SizedBox(width: 48),
+              ],
+            ),
+          ),
+
+          const Divider(height: 1, color: Color(0xFFE8E8E8)),
+
+          // ── Card ───────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: SizedBox(
+              height: MediaQuery.of(context).size.height * 0.80,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                      color: AppColors.borderDefault, width: 1),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(19),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(14, 20, 14, 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // ── Species image ─────────────────
+                        Center(
+                          child: Container(
+                            width: 168,
+                            height: 168,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF7FAF7),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: AppColors.borderDefault,
+                                width: 1,
+                              ),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(14),
+                              child: FutureBuilder<bool>(
+                                future:
+                                    SpeciesClickTracker.isClicked(species.id),
+                                builder: (context, snapshot) {
+                                  final clicked = snapshot.data ?? false;
+                                  final path = clicked
+                                      ? SpeciesImageResolver
+                                          .realForCommonName(species.commonName)
+                                      : headerImageDrawing;
+                                  if (path == null) {
+                                    return const Center(
+                                      child: Icon(Icons.pets,
+                                          color: AppColors.darkCharcoal, size: 48),
+                                    );
+                                  }
+                                  return Image.asset(path, fit: BoxFit.cover);
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // ── Sections ──────────────────────
+                        _buildSection(
+                          title: 'Omschrijving',
+                          body: _composeText(species,
+                              include: ['description']),
+                          index: 0,
+                          icon: Icons.info_outline_rounded,
+                        ),
+                        _buildSection(
+                          title: 'Gedrag',
+                          body: _composeText(species,
+                              include: ['behaviour']),
+                          index: 1,
+                          icon: Icons.psychology_outlined,
+                        ),
+                        _buildSection(
+                          title: 'Rol in de natuur',
+                          body: _composeText(species,
+                              include: ['roleInNature']),
+                          index: 2,
+                          icon: Icons.park_outlined,
+                        ),
+                        _buildSection(
+                          title: 'Advies',
+                          body: _composeText(species,
+                              include: ['advice']),
+                          index: 3,
+                          icon: Icons.lightbulb_outline_rounded,
+                        ),
+
+                        const SizedBox(height: 8),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
         ],
       ),
-    );
-  }
-
-  String _composeText(Species s, {required List<String> include}) {
-    final parts = <String?>[];
-
-    if (include.contains('description')) parts.add(s.description);
-    if (include.contains('behaviour')) parts.add(s.behaviour);
-    if (include.contains('roleInNature')) parts.add(s.roleInNature);
-    if (include.contains('advice')) parts.add(s.advice);
-
-    return parts.where((p) => (p ?? '').isNotEmpty).cast<String>().join('\n\n');
-  }
-
-  Widget _chip(String label, int page) {
-    final selected = _currentPage == page;
-
-    return ElevatedButton(
-      onPressed: () => _pageController.animateToPage(
-        page,
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeInOut,
-      ),
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        backgroundColor:
-            selected ? AppColors.darkGreen : AppColors.lightMintGreen,
-        foregroundColor: selected ? Colors.white : AppColors.brown,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: AppColors.darkGreen),
-        ),
-        elevation: 0,
-      ),
-      child: Text(label),
-    );
-  }
-
-  Widget _pageCardContainer({required Widget child}) {
-    return Container(
-      width: double.infinity,
-      height: 440,
-      decoration: BoxDecoration(
-        color: AppColors.darkGreen,
-        borderRadius: BorderRadius.circular(18),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: child,
-    );
-  }
-
-  Widget _stackedLayer({required double widthFactor}) {
-    return FractionallySizedBox(
-      widthFactor: widthFactor,
-      child: Container(
-        height: 420,
-        decoration: BoxDecoration(
-          color: AppColors.darkGreen,
-          borderRadius: BorderRadius.circular(18),
-        ),
-      ),
-    );
-  }
-
-  Widget _contentCard({
-    required String title,
-    required String text,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Center(
-          child: Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Expanded(
-          child: SingleChildScrollView(
-            child: Text(
-              text.isNotEmpty ? text : '—',
-              style: const TextStyle(
-                color: Colors.white,
-                height: 1.4,
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
