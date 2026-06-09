@@ -2,6 +2,10 @@ class DetectionPin {
   final String id;
   final String? deviceType;
   final String? label;
+  final String? sex;
+  final String? lifeStage;
+  final String? condition;
+  final String? reportedByName;
   final double lat;
   final double lon;
   final DateTime detectedAt;
@@ -15,6 +19,10 @@ class DetectionPin {
     required this.detectedAt,
     this.deviceType,
     this.label,
+    this.sex,
+    this.lifeStage,
+    this.condition,
+    this.reportedByName,
     this.confidence,
     this.speciesLatinName,
   });
@@ -52,6 +60,35 @@ class DetectionPin {
       speciesMap?['scientificName']?.toString() ??
       speciesMap?['name']?.toString();
 
+    // Additional optional animal detail fields
+    final sex = j['sex']?.toString() ??
+      speciesMap?['sex']?.toString() ??
+      speciesMap?['gender']?.toString();
+
+    final lifeStage = j['lifeStage']?.toString() ??
+      speciesMap?['lifeStage']?.toString() ??
+      speciesMap?['ageClass']?.toString();
+
+    final condition = j['condition']?.toString() ??
+      speciesMap?['condition']?.toString() ??
+      speciesMap?['conditionStatus']?.toString();
+
+    final userNode = j['user'];
+    final userMap = userNode is Map<String, dynamic>
+      ? userNode
+      : userNode is Map
+        ? Map<String, dynamic>.from(userNode)
+        : null;
+
+    final reportedByName = (j['reportedByName'] ??
+        j['reportedBy'] ??
+        j['reporterName'] ??
+        j['reporter'] ??
+        j['createdBy'] ??
+        j['createdByName'])
+      ?.toString() ??
+      (userMap?['name'] ?? userMap?['username'])?.toString();
+
     final ts =
         (j['moment'] ?? j['timestamp'] ?? j['start'] ?? j['end'])?.toString();
 
@@ -65,7 +102,10 @@ class DetectionPin {
   label: j['label']?.toString() ??
       speciesMap?['commonName']?.toString() ??
       speciesMap?['name']?.toString(),
-
+  sex: sex,
+  lifeStage: lifeStage,
+  condition: condition,
+  reportedByName: reportedByName,
   speciesLatinName: speciesLatinName,
 
   confidence: (j['confidence'] as num?)?.toDouble(),

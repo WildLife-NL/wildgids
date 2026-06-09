@@ -20,7 +20,7 @@ class AnimalDetailCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final reportedBy = animal?.reportedByName ?? 'Onbekende gebruiker';
+    final reportedBy = animal?.reportedByName ?? 'SmartParks';
 final displayName = animal?.speciesName ?? 'Onbekend dier';
 final latinName = animal?.speciesLatinName ?? '';
     final fallbackGroupSummary = animal?.groupSummary ??

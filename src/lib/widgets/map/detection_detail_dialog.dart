@@ -15,7 +15,7 @@ class DetectionDetailDialog extends StatelessWidget {
  @override
 Widget build(BuildContext context) {
   final label = detection.label ?? 'Onbekende detectie';
-  final deviceLabel = _deviceTypeLabel(detection.deviceType);
+  final reportedBy = _reportedByLabel();
   final latinName = detection.speciesLatinName ?? '';
 
   final iconPath = detection.label != null
@@ -93,9 +93,9 @@ Widget build(BuildContext context) {
                             ),
                             const SizedBox(height: 13),
                             _infoRow(
-                              icon: Icons.devices,
+                              icon: Icons.pets,
                               child: Text(
-                                deviceLabel,
+                                _animalDetailsString(),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
@@ -130,16 +130,27 @@ Widget build(BuildContext context) {
                               color: Color(0xFFE8E8E8),
                             ),
                             _infoRow(
-                              icon: Icons.location_on_outlined,
+                              icon: Icons.person_outline,
                               iconSize: 17,
-                              child: Text(
-                                '${detection.lat.toStringAsFixed(6)}, ${detection.lon.toStringAsFixed(6)}',
+                              child: RichText(
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: Color(0xFF777777),
-                                  height: 1.2,
+                                text: TextSpan(
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: Color(0xFF777777),
+                                    height: 1.2,
+                                  ),
+                                  children: [
+                                    const TextSpan(text: 'Gemeld door: '),
+                                    TextSpan(
+                                      text: reportedBy,
+                                      style: const TextStyle(
+                                        color: AppColors.textPrimary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
@@ -166,7 +177,6 @@ Widget build(BuildContext context) {
       lower.contains('image')) {
     return 'Cameraval';
   }
-
   if (lower.contains('acoustic') ||
       lower.contains('akoestisch')) {
     return 'Akoestische sensor';
@@ -233,6 +243,38 @@ Widget build(BuildContext context) {
 
   return const Color(0xFF777777);
 }
+
+  String _animalDetailsString() {
+    final parts = <String>[];
+    final sex = detection.sex?.trim();
+    final lifeStage = detection.lifeStage?.trim();
+    final condition = detection.condition?.trim();
+
+    if (sex != null && sex.isNotEmpty) parts.add(sex);
+    if (lifeStage != null && lifeStage.isNotEmpty) parts.add(lifeStage);
+    if (condition != null && condition.isNotEmpty) parts.add(condition);
+
+    if (parts.isEmpty) return _deviceTypeLabel(detection.deviceType);
+    return parts.join(' • ');
+  }
+
+  String _reportedByLabel() {
+    if (_isCollarSensor(detection.deviceType) ||
+        _deviceTypeLabel(detection.deviceType)
+            .toLowerCase()
+            .contains('diergedragen')) {
+      return 'SmartParks';
+    }
+
+    return detection.reportedByName ?? 'SmartParks';
+  }
+
+  bool _isCollarSensor(String? deviceType) {
+    final value = deviceType?.toLowerCase() ?? '';
+    return value.contains('collar') ||
+        value.contains('wearable') ||
+        value.contains('diergedragen');
+  }
 
   Widget _dateTimeRow() {
     final local = detection.detectedAt.toLocal();
