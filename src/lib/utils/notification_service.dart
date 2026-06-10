@@ -11,6 +11,13 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
 
   bool _initialized = false;
+  bool _pushEnabled = true;
+
+  bool get pushEnabled => _pushEnabled;
+
+  void setPushEnabled(bool enabled) {
+    _pushEnabled = enabled;
+  }
 
   Future<void> init() async {
     if (_initialized) return;
@@ -65,6 +72,7 @@ class NotificationService {
     Importance importance = Importance.defaultImportance,
     Priority priority = Priority.defaultPriority,
   }) async {
+    if (!_pushEnabled) return;
     if (!_initialized) await init();
 
     final AndroidNotificationDetails androidDetails = AndroidNotificationDetails(

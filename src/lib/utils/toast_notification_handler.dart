@@ -2,10 +2,13 @@
 import 'package:wildgids/utils/notification_service.dart';
 
 class ToastNotificationHandler {
+  /// In-app snackbar; optional system push only when [asSystemNotification] is true
+  /// and the user has Meldingen enabled in profile.
   static void sendToastNotification(
     context,
     String toastMessage, [
     int? amount,
+    bool asSystemNotification = false,
   ]) {
     SnackBarWithProgressBar.show(
       context: context,
@@ -13,7 +16,8 @@ class ToastNotificationHandler {
       duration: Duration(seconds: amount ?? 3),
     );
 
-    // Also surface as a system notification on the device
+    if (!asSystemNotification) return;
+
     NotificationService.instance.show(
       title: 'WildGids',
       body: toastMessage,

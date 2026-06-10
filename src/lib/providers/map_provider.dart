@@ -34,10 +34,17 @@ class MapProvider extends ChangeNotifier {
 
   Timer? _trackingTimer;
   bool _isTracking = false;
+  bool _vicinityNotificationsEnabled = true;
   Duration _trackingInterval = LocationSharingConfig.updateInterval;
 
   bool get isTracking => _isTracking;
+  bool get vicinityNotificationsEnabled => _vicinityNotificationsEnabled;
   Duration get trackingInterval => _trackingInterval;
+
+  void _maybeShowMapNotification({required String title, required String body}) {
+    if (!_vicinityNotificationsEnabled) return;
+    NotificationService.instance.show(title: title, body: body);
+  }
 
   bool get isLoading => _isLoading;
   bool get isInitialized => _mapController != null;
@@ -116,7 +123,7 @@ class MapProvider extends ChangeNotifier {
                 notice.severity == 1
                     ? 'Waarschuwing'
                     : (notice.severity == 2 ? 'Melding' : 'Informatie');
-            NotificationService.instance.show(title: title, body: notice.text);
+            _maybeShowMapNotification(title: title, body: notice.text);
           }
           notifyListeners();
         } else if (LastSentTrackingLocation.hasSent) {
@@ -160,7 +167,7 @@ class MapProvider extends ChangeNotifier {
               notice.severity == 1
                   ? 'Waarschuwing'
                   : (notice.severity == 2 ? 'Melding' : 'Informatie');
-          NotificationService.instance.show(title: title, body: notice.text);
+          _maybeShowMapNotification(title: title, body: notice.text);
         }
         notifyListeners();
       } else {
@@ -485,7 +492,7 @@ class MapProvider extends ChangeNotifier {
               ? 'Nieuw dier in de buurt'
               : '$count nieuwe dieren in de buurt';
           final body = count == 1 ? species : 'Bijv. $species en meer';
-          NotificationService.instance.show(title: title, body: body);
+          _maybeShowMapNotification(title: title, body: body);
         }
         _prevAnimalIds = currentAnimalIds;
       } catch (e) {
@@ -514,7 +521,7 @@ class MapProvider extends ChangeNotifier {
               ? 'Nieuwe detectie in de buurt'
               : '$count nieuwe detecties in de buurt';
           final body = count == 1 ? label : 'Bijv. $label en meer';
-          NotificationService.instance.show(title: title, body: body);
+          _maybeShowMapNotification(title: title, body: body);
         }
         _prevDetectionIds = currentDetIds;
       } catch (e) {
@@ -545,7 +552,7 @@ class MapProvider extends ChangeNotifier {
           final body = count == 1
               ? 'Interactie gezien: $species'
               : 'Bijv. $species en meer';
-          NotificationService.instance.show(title: title, body: body);
+          _maybeShowMapNotification(title: title, body: body);
         }
         _prevInteractionIds = currentIds;
       } catch (e) {
@@ -614,7 +621,7 @@ class MapProvider extends ChangeNotifier {
   }
 
   void setVicinityNotificationsEnabled(bool enabled) {
-    // Vicinity map notifications are controlled elsewhere; kept for profile UI wiring.
+    _vicinityNotificationsEnabled = enabled;
   }
 
   void clearUserLocationAndStopTracking() {

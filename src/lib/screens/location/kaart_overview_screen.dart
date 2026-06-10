@@ -105,6 +105,11 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
       _mp.initialize();
     }
 
+    final app = context.read<AppStateProvider>();
+    _mp.setVicinityNotificationsEnabled(
+      app.isLocationTrackingEnabled && app.notificationsEnabled,
+    );
+
     _mapOptions ??= fm.MapOptions(
         initialCenter: LatLng(
           _mp.currentPosition?.latitude ??
@@ -512,6 +517,42 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     }
   }
 
+  Future<void> _centerOnMyLocation() async {
+    final mp = context.read<MapProvider>();
+    if (!mp.isInitialized) return;
+
+    final app = context.read<AppStateProvider>();
+    Position? pos = mp.currentPosition ?? mp.selectedPosition;
+    pos ??= app.isLocationCacheValid ? app.cachedPosition : null;
+    pos ??= await Geolocator.getLastKnownPosition();
+    pos ??= await _location.determinePosition();
+
+    if (!mounted) return;
+    if (pos == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Locatie niet beschikbaar. Schakel GPS in.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    await mp.updatePosition(pos, mp.currentAddress);
+    mp.mapController.move(
+      LatLng(pos.latitude, pos.longitude),
+      mp.mapController.camera.zoom,
+    );
+  }
+
+  Future<void> _toggleTrackingHistory() async {
+    if (_showTrackingHistory) {
+      setState(() => _showTrackingHistory = false);
+      return;
+    }
+    await _loadTrackingHistory();
+  }
+
   Future<void> _loadTrackingHistory() async {
     if (_loadingTrackingHistory) return;
 
@@ -532,12 +573,6 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
       if (!mounted) return;
 
       if (readings.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Geen tracking gegevens beschikbaar'),
-            duration: Duration(seconds: 3),
-          ),
-        );
         setState(() => _loadingTrackingHistory = false);
         return;
       }
@@ -581,15 +616,6 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
             _loadingTrackingHistory = false;
           });
 
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                '${recentOnlyReadings.length} locaties van laatste 24 uur (geen recente in 5min)',
-              ),
-              duration: const Duration(seconds: 3),
-            ),
-          );
           return;
         }
       }
@@ -600,28 +626,6 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
         _loadingTrackingHistory = false;
       });
 
-      if (!mounted) return;
-
-      String message;
-      if (filteredReadings.isEmpty) {
-        final oneDayAgo = now.subtract(const Duration(days: 1));
-        final recentOnlyReadings =
-            readings.where((r) => r.timestamp.isAfter(oneDayAgo)).toList();
-
-      if (recentOnlyReadings.isNotEmpty) {
-          message =
-              '${recentOnlyReadings.length} locaties van vandaag (geen pingen in $_trackingHistoryMinutes min)';
-        } else {
-          message = 'Geen locaties in laatste $_trackingHistoryMinutes minuten';
-        }
-      } else {
-        message =
-            '${filteredReadings.length} locaties van laatste $_trackingHistoryMinutes minuten';
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message), duration: const Duration(seconds: 3)),
-      );
     } on TimeoutException {
       if (!mounted) return;
       setState(() {
@@ -1774,19 +1778,14 @@ bottom: 45,
                                     tooltip: _followUser
                                         ? 'Kaart volgt je locatie (uit)'
                                         : 'Kaart volgt je locatie (aan)',
-                                    onLongPress: _loadTrackingHistory,
+                                    onLongPress: _toggleTrackingHistory,
                                     onPressed: () {
-                                      setState(() {
-                                        if (_showTrackingHistory) {
-                                          _showTrackingHistory = false;
-                                        }
-                                        _followUser = !_followUser;
-                                      });
+                                      setState(() => _followUser = !_followUser);
                                     },
                                     icon: Icon(
                                       Icons.directions_walk,
                                       color:
-                                          _followUser
+                                          _followUser || _showTrackingHistory
                                               ? const Color(0xFF37A904)
                                               : Colors.white,
                                     ),
@@ -1797,22 +1796,13 @@ bottom: 45,
                                     color: Colors.white.withValues(alpha: 0.2),
                                   ),
                                   IconButton(
-                                      tooltip: 'Mijn locatie',
-                                      onPressed: () async {
-                                        final mp = context.read<MapProvider>();
-                                        final target =
-                                            mp.currentPosition ?? mp.selectedPosition;
-                                        if (target == null || !mp.isInitialized) return;
-                                        mp.mapController.move(
-                                          LatLng(target.latitude, target.longitude),
-                                          mp.mapController.camera.zoom,
-                                        );
-                                      },
-                                      icon: const Icon(
-                                        Icons.my_location,
-                                        color: Colors.white,
-                                      ),
+                                    tooltip: 'Mijn locatie',
+                                    onPressed: _centerOnMyLocation,
+                                    icon: const Icon(
+                                      Icons.my_location,
+                                      color: Colors.white,
                                     ),
+                                  ),
                                 ],
                               ),
                             ),

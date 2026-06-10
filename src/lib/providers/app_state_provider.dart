@@ -6,6 +6,7 @@ import 'package:wildgids/models/enums/report_type.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wildgids/screens/login/login_screen.dart';
+import 'package:wildgids/utils/notification_service.dart';
 
 class AppStateProvider with ChangeNotifier {
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -161,6 +162,7 @@ class AppStateProvider with ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('location_tracking_enabled', true);
       _notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
+      NotificationService.instance.setPushEnabled(_notificationsEnabled);
       debugPrint(
         '[AppStateProvider] Location sharing: always enabled; '
         'notifications: $_notificationsEnabled',
@@ -197,6 +199,7 @@ class AppStateProvider with ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('notifications_enabled', enabled);
       _notificationsEnabled = enabled;
+      NotificationService.instance.setPushEnabled(enabled);
       notifyListeners();
     } catch (e) {
       debugPrint(

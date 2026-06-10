@@ -6,12 +6,10 @@ import 'package:wildgids/models/enums/nav_tab.dart';
 import 'package:wildgids/screens/game/challenge_screen.dart';
 import 'package:wildgids/screens/location/kaart_overview_screen.dart';
 import 'package:wildgids/screens/profile/profile_screen.dart';
-import 'package:wildgids/screens/shared/my_interaction_history_screen.dart';
 import 'package:wildgids/screens/logbook/saved_questionnaires_screen.dart';
 import 'package:wildgids/screens/logbook/my_responses_screen.dart';
 import 'package:wildgids/screens/logbook/my_contacts_screen.dart';
 import 'package:wildgids/screens/logbook/recent_sightings_screen.dart';
-import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/custom_nav_bar.dart';
 import 'package:wildgids/screens/waarneming/waarneming_start_screen.dart';
 
@@ -33,13 +31,6 @@ class LogbookScreen extends StatefulWidget {
 
 class _LogbookScreenState extends State<LogbookScreen> {
   bool _hasNavigated = false;
-
-  void _openAllInteractions(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const MyInteractionHistoryScreen()),
-    );
-  }
 
   void _openMyResponses(BuildContext context) {
     Navigator.push(
@@ -116,26 +107,6 @@ class _LogbookScreenState extends State<LogbookScreen> {
         bottom: false,
         child: Column(
           children: [
-            CustomAppBar(
-              centerText: 'Logboek',
-              rightIcon: null,
-              showUserIcon: false,
-              onLeftIconPressed: () {
-                if (widget.onBackPressed != null) {
-                  widget.onBackPressed!();
-                  return;
-                }
-                if (Navigator.of(context).canPop()) {
-                  Navigator.of(context).pop();
-                }
-              },
-              iconColor: AppColors.textPrimary,
-              textColor: AppColors.textPrimary,
-              fontScale: 1.15,
-              iconScale: 1.15,
-              userIconScale: 1.15,
-              useFixedText: true,
-            ),
             Expanded(
               child: Center(
                 child: ConstrainedBox(
@@ -160,14 +131,6 @@ class _LogbookScreenState extends State<LogbookScreen> {
                               'Bluetooth-contacten met collars (Smart Parks)',
                           icon: Icons.bluetooth_connected,
                           onTap: () => _openContactMoments(context),
-                        ),
-                        const SizedBox(height: 12),
-                        _ReportButton(
-                          label: 'Mijn interacties',
-                          subtitle:
-                              'Bekijk al je schademeldingen en waarnemingen',
-                          icon: Icons.history_toggle_off,
-                          onTap: () => _openAllInteractions(context),
                         ),
                         const SizedBox(height: 12),
                         _ReportButton(
