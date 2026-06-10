@@ -68,9 +68,17 @@ class _BluetoothContactSettingsScreenState
     try {
       final ended = await _coordinator.endAllActiveContacts();
       if (!mounted) return;
-      _showSnack(
-        ended ? 'Contact beëindigd' : 'Geen actief contact gevonden',
-      );
+      if (!ended) {
+        _showSnack('Geen actief contact gevonden');
+      } else {
+        final contact = _monitor.lastEndedContact;
+        final label = contact?.animalDisplayLabel;
+        _showSnack(
+          label != null
+              ? 'Contact met $label beëindigd'
+              : 'Contact beëindigd',
+        );
+      }
       setState(() {});
     } catch (e) {
       if (!mounted) return;
@@ -329,7 +337,7 @@ class _BluetoothContactSettingsScreenState
                     contentPadding: EdgeInsets.zero,
                     title: const Text('Melding bij dier gevonden'),
                     subtitle: const Text(
-                      'Pushmelding wanneer een collar-contact is gestart.',
+                      'Pushmelding bij start en einde van een collar-contact.',
                     ),
                     value: coordinator.notifyOnAnimalFound,
                     activeThumbColor: Colors.white,

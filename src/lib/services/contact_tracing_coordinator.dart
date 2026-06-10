@@ -33,7 +33,16 @@ class ContactTracingCoordinator extends ChangeNotifier {
   late ContactTracingSettings _settings;
   bool _backgroundScanning = false;
   bool _registerInFlight = false;
+  int _registrationEpoch = 0;
+  String? _inFlightContactId;
+  String? _inFlightRegistrationMac;
   String _statusMessage = 'Uit';
+
+  /// Na handmatig beëindigen: zelfde MAC niet opnieuw registreren tot signaal weg-tijd.
+  final Map<String, DateTime> _manualEndBlockUntil = {};
+
+  /// Korte onderdrukking van "Contact gestart" voor dezelfde MAC na handmatig einde.
+  final Map<String, DateTime> _suppressContactStartedForMac = {};
 
   final Map<String, ScanResult> _discoveryDevices = {};
   final Map<String, ScanResult> _discoveryDevicesRaw = {};
@@ -62,6 +71,9 @@ class ContactTracingCoordinator extends ChangeNotifier {
     _initialized = true;
     _settings = await ContactTracingPreferences.loadAll();
     _applySettingsToMonitor();
+    _monitor.onContactEnded = (contact, {required automatic}) {
+      unawaited(_onContactEnded(contact, automatic: automatic));
+    };
     _monitor.addListener(_onMonitorChanged);
     await _closeStaleActiveContactsOnServer();
     await _restoreActiveContactFromServer();
@@ -83,8 +95,73 @@ class ContactTracingCoordinator extends ChangeNotifier {
     );
   }
 
+  bool _isMacBlockedFromReconnect(String mac) {
+    final until = _manualEndBlockUntil[mac];
+    if (until == null) return false;
+    if (DateTime.now().isAfter(until)) {
+      _manualEndBlockUntil.remove(mac);
+      return false;
+    }
+    return true;
+  }
+
+  bool _shouldSuppressContactStarted(Contact contact) {
+    final mac = _macFromContact(contact);
+    if (mac == null) return false;
+    if (_isMacBlockedFromReconnect(mac)) return true;
+    final until = _suppressContactStartedForMac[mac];
+    if (until == null) return false;
+    if (DateTime.now().isAfter(until)) {
+      _suppressContactStartedForMac.remove(mac);
+      return false;
+    }
+    return true;
+  }
+
+  String? _macFromContact(Contact contact) {
+    final raw = contact.contactHardwareAddress;
+    if (raw == null || raw.isEmpty) return null;
+    return formatBleHardwareAddress(raw);
+  }
+
+  void _blockMacAfterManualEnd(String mac) {
+    final blockUntil = DateTime.now().add(
+      Duration(seconds: _settings.signalLossSeconds),
+    );
+    _manualEndBlockUntil[mac] = blockUntil;
+    _suppressContactStartedForMac[mac] = DateTime.now().add(
+      const Duration(seconds: 8),
+    );
+  }
+
+  Future<void> _safeEndContact(String contactId) async {
+    try {
+      await _contactApi.endContact(contactId);
+    } catch (e) {
+      debugPrint('[ContactTracingCoordinator] safe end $contactId: $e');
+    }
+  }
+
+  Future<void> _cancelInFlightRegistration() async {
+    _registrationEpoch++;
+    final orphanId = _inFlightContactId;
+    _inFlightContactId = null;
+    _inFlightRegistrationMac = null;
+    _registerInFlight = false;
+    if (orphanId != null && orphanId.isNotEmpty) {
+      await _safeEndContact(orphanId);
+    }
+  }
+
   /// Beëindigt elk actief contact (lokaal + server). Retourneert true als er iets gesloten is.
   Future<bool> endAllActiveContacts() async {
+    final endedMac =
+        _monitor.activeContactMac ?? _inFlightRegistrationMac;
+    await _cancelInFlightRegistration();
+    if (endedMac != null && endedMac.isNotEmpty) {
+      _blockMacAfterManualEnd(endedMac);
+    }
+
     await _stopBackgroundLoop();
     var ended = false;
 
@@ -128,6 +205,9 @@ class ContactTracingCoordinator extends ChangeNotifier {
 
     _statusMessage = ended ? 'Contact beëindigd' : 'Geen actief contact';
     notifyListeners();
+    if (_settings.backgroundEnabled && !_monitor.hasActiveSession) {
+      await _scheduleBackgroundLoop();
+    }
     return ended;
   }
 
@@ -388,8 +468,11 @@ class ContactTracingCoordinator extends ChangeNotifier {
 
     final mac = formatBleHardwareAddress(result.device.remoteId.str);
     if (!isValidBleHardwareAddress(mac)) return;
+    if (_isMacBlockedFromReconnect(mac)) return;
 
+    final epoch = _registrationEpoch;
     _registerInFlight = true;
+    _inFlightRegistrationMac = mac;
     _statusMessage = 'Collar gevonden — contact registreren…';
     notifyListeners();
 
@@ -397,12 +480,43 @@ class ContactTracingCoordinator extends ChangeNotifier {
 
     try {
       final contact = await _contactApi.startContact(mac);
+      if (epoch != _registrationEpoch) {
+        await _safeEndContact(contact.id);
+        return;
+      }
+
+      _inFlightContactId = contact.id;
+      if (epoch != _registrationEpoch) {
+        await _safeEndContact(contact.id);
+        return;
+      }
+
+      if (_shouldSuppressContactStarted(contact)) {
+        await _safeEndContact(contact.id);
+        _statusMessage = 'Contact beëindigd — even geen herverbinding';
+        if (_settings.backgroundEnabled) {
+          await _scheduleBackgroundLoop();
+        }
+        return;
+      }
+
       await _monitor.start(
         contactId: contact.id,
         mac: mac,
         contact: contact,
       );
+      if (epoch != _registrationEpoch) {
+        if (_monitor.hasActiveSession) {
+          final rollbackId = _monitor.activeContactId;
+          await _monitor.stop(notify: false);
+          if (rollbackId != null) {
+            await _safeEndContact(rollbackId);
+          }
+        }
+        return;
+      }
 
+      _inFlightContactId = null;
       _statusMessage = 'Contact met ${contact.animalDisplayLabel}';
       await _onContactStarted(contact);
     } catch (e) {
@@ -412,18 +526,53 @@ class ContactTracingCoordinator extends ChangeNotifier {
         await _scheduleBackgroundLoop();
       }
     } finally {
-      _registerInFlight = false;
+      if (epoch == _registrationEpoch) {
+        _registerInFlight = false;
+        _inFlightContactId = null;
+        _inFlightRegistrationMac = null;
+      }
       notifyListeners();
     }
   }
 
   Future<void> _onContactStarted(Contact contact) async {
+    if (_shouldSuppressContactStarted(contact)) {
+      await _safeEndContact(contact.id);
+      if (_monitor.hasActiveSession) {
+        await _monitor.stop(notify: false);
+      }
+      if (_settings.backgroundEnabled) {
+        await _scheduleBackgroundLoop();
+      }
+      return;
+    }
     await _notifyContactStarted(contact);
     _showContactStartedSheet(contact);
   }
 
+  Future<void> _onContactEnded(Contact contact, {required bool automatic}) async {
+    await _notifyContactEnded(contact, automatic: automatic);
+  }
+
+  Future<void> _notifyContactEnded(Contact contact, {required bool automatic}) async {
+    if (!_settings.notifyOnAnimalFound) return;
+
+    final label = contact.animalDisplayLabel;
+    final body = automatic
+        ? 'Signaal weg — contact met $label beëindigd.'
+        : 'Contact met $label beëindigd.';
+
+    await NotificationService.instance.show(
+      title: 'Contact beëindigd',
+      body: body,
+      importance: Importance.high,
+      priority: Priority.high,
+    );
+  }
+
   Future<void> _notifyContactStarted(Contact contact) async {
     if (!_settings.notifyOnAnimalFound) return;
+    if (_shouldSuppressContactStarted(contact)) return;
 
     final messages = contact.conveyances
         .map((c) => c.displayText)
@@ -449,6 +598,7 @@ class ContactTracingCoordinator extends ChangeNotifier {
   }
 
   void _showContactStartedSheet(Contact contact) {
+    if (_shouldSuppressContactStarted(contact)) return;
     final ctx = _navigatorKey?.currentContext;
     if (ctx == null || !ctx.mounted) return;
     unawaited(ContactStartedSheet.show(ctx, contact));

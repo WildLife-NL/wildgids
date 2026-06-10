@@ -8,11 +8,18 @@ import 'package:wildgids/models/api_models/contact_model.dart';
 import 'package:wildgids/services/contact_tracing_ble.dart';
 import 'package:wildgids/utils/ble_mac_format.dart';
 
+typedef ContactEndedCallback = void Function(
+  Contact contact, {
+  required bool automatic,
+});
+
 /// Volgt een actief contact via BLE-advertenties (geen GATT-verbinding).
 class ContactTracingMonitor extends ChangeNotifier {
   ContactTracingMonitor(this._contactApi);
 
   final ContactApi _contactApi;
+
+  ContactEndedCallback? onContactEnded;
 
   static const Duration presenceCheckInterval = Duration(seconds: 5);
   static const Duration scanDuration = Duration(seconds: 8);
@@ -128,9 +135,14 @@ class ContactTracingMonitor extends ChangeNotifier {
       await FlutterBluePlus.stopScan();
       result = await _contactApi.endContact(id);
       _lastEndedContact = result;
-      _lastAutoEndMessage =
-          automatic ? 'Signaal weg — contact beëindigd.' : null;
+      if (automatic) {
+        final label = activeAnimalLabel ?? 'collar';
+        _lastAutoEndMessage = 'Signaal weg — contact met $label beëindigd.';
+      } else {
+        _lastAutoEndMessage = null;
+      }
       debugPrint('[ContactTracingMonitor] Ended contact $id');
+      onContactEnded?.call(result, automatic: automatic);
     } catch (e) {
       _lastAutoEndMessage = automatic
           ? 'Automatisch beëindigen mislukt: $e'
