@@ -16,9 +16,12 @@ import 'package:wildgids/screens/logbook/logbook_screen.dart';
 import 'package:wildgids/screens/waarneming/waarneming_start_screen.dart';
 import 'package:wildgids/widgets/overlay/encounter_message_overlay.dart';
 import 'package:wildgids/managers/map/location_map_manager.dart';
+import 'package:wildlifenl_map_logic_components/wildlifenl_map_logic_components.dart'
+    show MapStateInterface;
 import 'package:wildgids/screens/profile/profile_screen.dart';
 import 'package:wildgids/widgets/map/animal_detail_card.dart';
 import 'package:wildgids/models/animal_waarneming_models/animal_pin.dart';
+import 'package:wildgids/models/api_models/detection_pin.dart';
 import 'package:wildgids/models/animal_waarneming_models/interaction_to_animal_pin.dart';
 import 'package:wildgids/widgets/map/detection_detail_dialog.dart';
 import 'package:wildgids/data_managers/tracking_api.dart';
@@ -82,6 +85,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
 
   AnimalPin? _selectedAnimalDetail;
   String? _selectedAnimalIconPath;
+  DetectionPin? _selectedDetectionDetail;
 
   bool _showTrackingHistory = false;
   bool _showLegend = false;
@@ -104,9 +108,9 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     _mapOptions ??= fm.MapOptions(
         initialCenter: LatLng(
           _mp.currentPosition?.latitude ??
-              LocationMapManager.denBoschCenter.latitude,
+              MapStateInterface.defaultCenter.latitude,
           _mp.currentPosition?.longitude ??
-              LocationMapManager.denBoschCenter.longitude,
+              MapStateInterface.defaultCenter.longitude,
         ),
         initialZoom: _initialZoom,
         minZoom: _minMapZoom,
@@ -328,6 +332,10 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
       final appStateProvider = context.read<AppStateProvider>();
       await mp.updatePosition(pos, mp.currentAddress);
 
+      if (appStateProvider.isLocationTrackingEnabled && !mp.isTracking) {
+        mp.startTracking(interval: LocationSharingConfig.updateInterval);
+      }
+
       if (appStateProvider.isLocationTrackingEnabled) {
         debugPrint('[ME/live] 📡 Sending tracking ping for position update');
         final notice = await _mp.sendTrackingPingFromPosition(pos);
@@ -368,30 +376,22 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
 
     debugPrint('[Loc] raw=${pos?.latitude},${pos?.longitude}');
 
-    if (pos == null ||
-        !mgr.isLocationInNetherlands(pos.latitude, pos.longitude)) {
-      pos = Position(
-        latitude: LocationMapManager.denBoschCenter.latitude,
-        longitude: LocationMapManager.denBoschCenter.longitude,
-        timestamp: DateTime.now(),
-        accuracy: 100,
-        altitude: 0,
-        heading: 0,
-        speed: 0,
-        speedAccuracy: 0,
-        altitudeAccuracy: 0,
-        headingAccuracy: 0,
-      );
+    final hasGps = pos != null;
+    if (hasGps) {
+      var address = map.currentAddress;
+      if (address.isEmpty) {
+        address = await mgr.getAddressFromPosition(pos);
+      }
+      await map.resetToCurrentLocation(pos, address);
+      _pendingCenter = LatLng(pos.latitude, pos.longitude);
+      _pendingZoom = _initialZoom;
+    } else {
       debugPrint(
-        '[Loc] using fallback center: '
-        '${pos.latitude},${pos.longitude}',
+        '[Loc] No GPS fix yet; map centered on NL overview (not device location)',
       );
+      _pendingCenter = MapStateInterface.defaultCenter;
+      _pendingZoom = 8.0;
     }
-
-    await map.resetToCurrentLocation(pos, 'Locatie gevonden');
-
-    _pendingCenter = LatLng(pos.latitude, pos.longitude);
-    _pendingZoom = _initialZoom;
     _applyPendingCamera();
 
     debugPrint('[Kaart/Bootstrap] Loading map pins (POST+GET) before tracking ping');
@@ -402,7 +402,9 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
           debugPrint('[Kaart/Bootstrap] Vicinity load timeout after 15s');
         },
       );
-      _lastPinsRefreshCenter = LatLng(pos.latitude, pos.longitude);
+      if (hasGps) {
+        _lastPinsRefreshCenter = LatLng(pos.latitude, pos.longitude);
+      }
       debugPrint(
         '[Kaart/Bootstrap] Pins loaded: '
         'animals=${map.animalPins.length} '
@@ -413,7 +415,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
       debugPrint('[Kaart/Bootstrap] Failed to load pins: $e');
     }
 
-    if (app.isLocationTrackingEnabled) {
+    if (hasGps && app.isLocationTrackingEnabled) {
       debugPrint('[Kaart/Bootstrap] 📡 Sending initial tracking ping');
       final initialNotice = await map.sendTrackingPingFromPosition(pos);
       if (initialNotice != null) {
@@ -429,15 +431,22 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
         '(every ${LocationSharingConfig.updateInterval.inMinutes} minutes)',
       );
       map.startTracking(interval: LocationSharingConfig.updateInterval);
+    } else if (!hasGps) {
+      debugPrint(
+        '[Kaart/Bootstrap] Skipping tracking ping until GPS is available',
+      );
     } else {
       debugPrint('[Kaart/Bootstrap] ⚠️ Location tracking is disabled by user');
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       try {
-        _pendingCenter = LatLng(pos!.latitude, pos.longitude);
-        _pendingZoom = _initialZoom;
-        _applyPendingCamera();
+        final gps = pos;
+        if (hasGps && gps != null) {
+          _pendingCenter = LatLng(gps.latitude, gps.longitude);
+          _pendingZoom = _initialZoom;
+          _applyPendingCamera();
+        }
 
         debugPrint('[Bootstrap] Loading map pins from tracking-reading API');
         try {
@@ -492,12 +501,14 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
       } catch (_) {}
     });
 
-    try {
-      final address = await mgr.getAddressFromPosition(pos);
-      if (!mounted) return;
-      map.setSelectedLocation(pos, address);
-    } catch (e) {
-      debugPrint('[Kaart] Reverse geocoding failed: $e');
+    if (hasGps) {
+      try {
+        final address = await mgr.getAddressFromPosition(pos);
+        if (!mounted) return;
+        map.setSelectedLocation(pos, address);
+      } catch (e) {
+        debugPrint('[Kaart] Reverse geocoding failed: $e');
+      }
     }
   }
 
@@ -820,10 +831,10 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
   }
 
   void _closeAnimalDetailCard() {
-    if (_selectedAnimalDetail == null) return;
     setState(() {
       _selectedAnimalDetail = null;
       _selectedAnimalIconPath = null;
+      _selectedDetectionDetail = null;
     });
   }
 
@@ -887,15 +898,21 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     
     final type = detectionType.toLowerCase();
     
-    if (type.contains('camera') || type.contains('foto')) {
-      return const Color(0xFF00BFD8); // Aqua
-    } else if (type.contains('acoustic') || type.contains('geluid')) {
+    if (type.contains('visual') ||type.contains('camera') ||type.contains('foto') ||type.contains('image')) {
+  return const Color(0xFF00BFD8); // Aqua
+} else if (type.contains('acoustic') || type.contains('geluid')) {
       return const Color(0xFFFF9100); // Orange
     } else if (type.contains('waarneming') || type.contains('sighting')) {
       return const Color(0xFF8613A8); // Purple
-    } else if (type.contains('collision') || type.contains('botsing')) {
+    } else if (type.contains('collision') ||
+        type.contains('botsing') ||
+        type.contains('aanrijding') ||
+        type.contains('dieraanrijding')) {
       return const Color(0xFF0078DA); // Blue
-    } else if (type.contains('schadamelding') || type.contains('damage')) {
+    } else if (type.contains('schade') ||
+        type.contains('schadamelding') ||
+        type.contains('gewasschade') ||
+        type.contains('damage')) {
       return const Color(0xFF008C7B); // teal
     } else if (type.contains('collar')) {
       return const Color(0xFFFE008E); // pink
@@ -932,7 +949,7 @@ final bool isCamera =
 final bool isAcoustic =
     type?.contains('acoustic') == true ||
     type?.contains('geluid') == true;
-    final iconPath = _getAnimalIconPath(speciesName);
+    final iconPath = getSpeciesIconPath(speciesName);
 
 final bool isCollar =
     type?.contains('collar') == true;
@@ -1071,6 +1088,57 @@ if (isCollar)
 );
 
   }
+bool _isVisualDetection(String? value) {
+  final lower = value?.toLowerCase() ?? '';
+  return lower.contains('visual') ||
+      lower.contains('camera') ||
+      lower.contains('foto') ||
+      lower.contains('image');
+}
+
+Widget _buildStyledDetectionPin(
+  DetectionPin pin,
+  _IconStyle style,
+) {
+  final borderColor = _getBorderColorForDetectionType(pin.deviceType);
+
+  return SizedBox(
+    width: style.size + 28,
+    height: style.size + 28,
+    child: Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.center,
+      children: [
+        Container(
+          width: style.size + 16,
+          height: style.size + 16,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white,
+            border: Border.all(
+              color: borderColor,
+              width: 3,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Icon(
+  _isVisualDetection(pin.deviceType)
+      ? Icons.camera_alt
+      : Icons.sensors,
+  size: style.size * 0.8,
+  color: style.color,
+),
+        ),
+      ],
+    ),
+  );
+}
 
 Widget _legendRow(
   Color color,
@@ -1228,16 +1296,17 @@ Widget _legendRow(
                                     ),
                                     zoomToBoundsOnClick: true,
                                     markerChildBehavior: true,
-                                    builder:
+                                        builder:
                                         (context, markers) => _clusterBadge(
                                           icon: Icons.pets,
                                           count: markers.length,
-                                          color: AppColors.darkGreen,
+                                          color: AppColors.primaryGreen,
                                           mapRotation:
                                               map.mapController.camera.rotation,
                                         ),
                                   ),
                                 )
+                                
                                 : fm.MarkerLayer(
                                   markers: map.animalPins.map((pin) {
                                             final mapRotation =
@@ -1260,6 +1329,7 @@ Widget _legendRow(
                                                       HitTestBehavior.opaque,
                                                   onTap: () {
                                                     _showAnimalDetailCard(pin, getSpeciesCardImagePath(pin.speciesName));
+                                                    _selectedDetectionDetail = null;
                                                   },
                                                   child: Builder(
                                                     builder: (ctx) {
@@ -1316,21 +1386,17 @@ Widget _legendRow(
                                                     behavior:
                                                         HitTestBehavior.opaque,
                                                     onTap: () {
-                                                      showDialog(
-                                                        context: context,
-                                                        builder:
-                                                            (_) =>
-                                                                DetectionDetailDialog(
-                                                                  detection:
-                                                                      pin,
-                                                                ),
-                                                      );
+                                                      setState(() {
+                                                        _selectedAnimalDetail = null;
+                                                        _selectedAnimalIconPath = null;
+                                                        _selectedDetectionDetail = pin;
+                                                      });
                                                     },
-                                                    child: Icon(
-                                                      Icons.sensors,
-                                                      size: style.size,
-                                                      color: Colors.white,
+                                                    child: _buildStyledDetectionPin(
+                                                      pin,
+                                                      style,
                                                     ),
+                                                    
                                                   ),
                                                 ),
                                               );
@@ -1345,11 +1411,11 @@ Widget _legendRow(
                                     ),
                                     zoomToBoundsOnClick: true,
                                     markerChildBehavior: true,
-                                    builder:
+                                        builder:
                                         (context, markers) => _clusterBadge(
                                           icon: Icons.sensors,
                                           count: markers.length,
-                                          color: AppColors.darkGreen,
+                                          color: AppColors.primaryGreen,
                                           mapRotation:
                                               map.mapController.camera.rotation,
                                         ),
@@ -1387,19 +1453,15 @@ Widget _legendRow(
                                                   behavior:
                                                       HitTestBehavior.opaque,
                                                   onTap: () {
-                                                    showDialog(
-                                                      context: context,
-                                                      builder:
-                                                          (_) =>
-                                                              DetectionDetailDialog(
-                                                                detection: pin,
-                                                              ),
-                                                    );
+                                                    setState(() {
+                                                      _selectedAnimalDetail = null;
+                                                      _selectedAnimalIconPath = null;
+                                                      _selectedDetectionDetail = pin;
+                                                    });
                                                   },
-                                                  child: Icon(
-                                                    Icons.sensors,
-                                                    size: style.size,
-                                                    color: Colors.white,
+                                                  child: _buildStyledDetectionPin(
+                                                    pin,
+                                                    style,
                                                   ),
                                                 ),
                                               ),
@@ -1525,15 +1587,10 @@ Widget _legendRow(
                                                         HitTestBehavior.opaque,
                                                     onTap: () {
                                                       _showAnimalDetailCard(
-                                                        AnimalPin(
-                                                          id: itx.id,
-                                                          lat: itx.lat,
-                                                          lon: itx.lon,
-                                                          seenAt: itx.moment,
-                                                          speciesName: itx.speciesName,
-                                                        ),
+                                                        itx.toAnimalPin(),
                                                         getSpeciesCardImagePath(itx.speciesName),
                                                       );
+                                                      _selectedDetectionDetail = null;
                                                     },
                                                     child: Builder(
                                                       builder: (ctx) {
@@ -1553,11 +1610,11 @@ Widget _legendRow(
                                               );
                                             })
                                             .toList(),
-                                    builder:
+                                        builder:
                                         (context, markers) => _clusterBadge(
                                           icon: Icons.place,
                                           count: markers.length,
-                                          color: AppColors.darkGreen,
+                                          color: AppColors.primaryGreen,
                                           mapRotation:
                                               map.mapController.camera.rotation,
                                         ),
@@ -1581,6 +1638,7 @@ Widget _legendRow(
                                                   itx.toAnimalPin(),
                                                   getSpeciesCardImagePath(itx.speciesName),
                                                 );
+                                                _selectedDetectionDetail = null;
                                               },
                                               child: Builder(
                                                 builder: (ctx) {
@@ -1825,22 +1883,22 @@ bottom: 45,
                       ),
                       _legendRow(
                         const Color(0xFF00BFD8),
-                        'Camera',
+                        'Cameraval',
                         icon: Icons.camera_alt,
                       ),
                       _legendRow(
                         const Color(0xFFFF9100),
-                        'Acoustic',
+                        'Akoestische sensor',
                         icon: Icons.graphic_eq,
                       ),
                       _legendRow(
                         const Color(0xFFFE008E),
-                        'Collar',
+                        'Diergedragen sensor',
                         badgeIcon: Icons.settings_remote,
                       ),
                       _legendRow(
                         const Color(0xFF0078DA),
-                        'Aanrijding',
+                        'Dieraanrijding',
                       ),
                       _legendRow(
                         const Color(0xFF008C7B),
@@ -1894,6 +1952,44 @@ bottom: 45,
                                       ),
                                     ),
                         
+
+                                  if (_selectedDetectionDetail != null)
+                                    Positioned(
+                                      bottom: 105,
+                                      left: 0,
+                                      right: 0,
+                                      child: Center(
+                                        child: SizedBox(
+                                          width: math.min(
+                                            460,
+                                            MediaQuery.of(context).size.width - 12,
+                                          ),
+                                          child: Material(
+                                            color: Colors.transparent,
+                                            child: Stack(
+                                              children: [
+                                                DetectionDetailDialog(
+                                                  detection: _selectedDetectionDetail!,
+                                                ),
+                                                Positioned(
+                                                  top: 8,
+                                                  right: 8,
+                                                  child: IconButton(
+                                                    icon: const Icon(Icons.close, color: Colors.grey),
+                                                    splashRadius: 20,
+                                                    onPressed: () {
+                                                      setState(() {
+                                                        _selectedDetectionDetail = null;
+                                                      });
+                                                    },
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                       ],
                     ),
                   ),
@@ -1913,47 +2009,7 @@ bottom: 45,
     );
   }
 
-  String? _getAnimalIconPath(String? speciesName) {
-    if (speciesName == null) return null;
-
-    final name = speciesName.toLowerCase();
-
-    if (name.contains('wolf')) return 'assets/icons/animals/wolf.png';
-    if (name.contains('vos') || name.contains('fox')) {
-      return 'assets/icons/animals/vos.png';
-    }
-    if (name.contains('das') || name.contains('badger')) {
-      return 'assets/icons/animals/das.png';
-    }
-    if (name.contains('ree') || name.contains('deer')) {
-      return 'assets/icons/animals/ree.png';
-    }
-    if (name.contains('zwijn') || name.contains('boar')) {
-      return 'assets/icons/animals/wild_zwijn.png';
-    }
-    if (name.contains('damhert')) return 'assets/icons/animals/damhert.png';
-    if (name.contains('egel') || name.contains('hedgehog')) {
-      return 'assets/icons/animals/egel.png';
-    }
-    if (name.contains('eekhoorn') || name.contains('squirrel')) {
-      return 'assets/icons/animals/eekhoorn.png';
-    }
-    if (name.contains('bever') || name.contains('beaver')) {
-      return 'assets/icons/animals/beaver.png';
-    }
-    if (name.contains('boommarten') || name.contains('marten')) {
-      return 'assets/icons/animals/boommarten.png';
-    }
-    if (name.contains('hooglander') || name.contains('highlander')) {
-      return 'assets/icons/animals/hooglander.png';
-    }
-    if (name.contains('wisent') || name.contains('bison')) {
-      return 'assets/icons/animals/winsent.png';
-    }
-
-    return null;
-  }
-
+  
   _IconStyle _iconStyleForTimestamp(DateTime timestamp) {
     final now = DateTime.now();
     final age = now.difference(timestamp);

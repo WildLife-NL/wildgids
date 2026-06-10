@@ -1,7 +1,7 @@
 name: wildgids
 description: "A new Flutter project."
 publish_to: 'none'
-version: 1.0.0+20260527
+version: 1.0.0+20260605
 
 environment:
   sdk: ^3.7.0
@@ -9,6 +9,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  wildlifenl_assets:
+    git:
+      url: https://github.com/WildLife-NL/wildlifenl-components.git
+      ref: Wildlife-rapport-Components
+      path: wildlifenl_assets_components
   auto_size_text: ^3.0.0
   cupertino_icons: ^1.0.8
   flutter_dotenv: ^6.0.0
@@ -74,6 +79,7 @@ flutter:
   uses-material-design: true
 
   assets:
+    
     - assets/app-icon.png
     - assets/loaders/loading_paw.json
     - assets/LogoWildlifeNL.png
@@ -100,6 +106,7 @@ flutter:
     - assets/animals/
     - assets/black_icons_animal/
     - assets/real_animal_pics_no_bg/
+    - assets/images/map-pic.png
     # Use correct casing for Category folder
     - assets/icons/Category/
     - assets/icons/questionnaire/arrow.png

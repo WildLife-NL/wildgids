@@ -30,6 +30,8 @@ class _AnimalWaarnemingDetailsScreenState
     extends State<AnimalWaarnemingDetailsScreen> {
   AnimalAge selectedAge = AnimalAge.onbekend;
   AnimalGender selectedGender = AnimalGender.onbekend;
+  AnimalCondition? selectedCondition;
+  late TextEditingController otherConditionController;
 
   void _handleBackNavigation() {
     if (widget.animalIndex > 0) {
@@ -86,7 +88,10 @@ class _AnimalWaarnemingDetailsScreenState
       animalName: currentAnimal.animalName,
       category: currentAnimal.category,
       genderViewCounts: [genderViewCount],
-      condition: currentAnimal.condition,
+      condition: selectedCondition,
+      conditionDetail: selectedCondition == AnimalCondition.andere && otherConditionController.text.isNotEmpty
+          ? otherConditionController.text
+          : null,
     );
     
     sightingManager.updateSelectedAnimal(updatedAnimal);
@@ -101,7 +106,8 @@ class _AnimalWaarnemingDetailsScreenState
       animalName: currentAnimal.animalName,
       category: currentAnimal.category,
       genderViewCounts: [],
-      condition: currentAnimal.condition,
+      condition: null,
+      conditionDetail: null,
     );
     sightingManager.updateSelectedAnimal(freshAnimal);
     
@@ -110,6 +116,8 @@ class _AnimalWaarnemingDetailsScreenState
       setState(() {
         selectedAge = AnimalAge.onbekend;
         selectedGender = AnimalGender.onbekend;
+        selectedCondition = null;
+        otherConditionController.text = '';
       });
       
       // Go to next animal details
@@ -134,7 +142,36 @@ class _AnimalWaarnemingDetailsScreenState
   }
 
   @override
+  void initState() {
+    super.initState();
+    otherConditionController = TextEditingController();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final sightingManager =
+        context.read<AnimalSightingReportingInterface>();
+    final sighting = sightingManager.getCurrentanimalSighting();
+    final current = sighting?.animalSelected;
+    if (current != null) {
+      selectedCondition = current.condition;
+      if (current.conditionDetail != null) {
+        otherConditionController.text = current.conditionDetail!;
+      }
+
+      final viewCount = current.viewCount;
+      if (viewCount != null) {
+        selectedAge = viewCount.getAge();
+      }
+      final gender = current.gender;
+      if (gender != null) selectedGender = gender;
+    }
+  }
+
+  @override
   void dispose() {
+    otherConditionController.dispose();
     super.dispose();
   }
 
@@ -326,6 +363,55 @@ class _AnimalWaarnemingDetailsScreenState
                                 selectedGender = gender as AnimalGender);
                           }, selectedGender),
                           const SizedBox(height: 20),
+                          _buildSelectorSection('Gezondheid:', [
+                            AnimalCondition.gezond,
+                            AnimalCondition.ziek,
+                            AnimalCondition.dood,
+                            AnimalCondition.andere,
+                          ], (condition) {
+                            setState(() =>
+                                selectedCondition = condition as AnimalCondition);
+                          }, selectedCondition),
+                          if (selectedCondition == AnimalCondition.andere) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              'Toelichting:',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: otherConditionController,
+                              maxLines: 3,
+                              decoration: InputDecoration(
+                                filled: true,
+                                fillColor: Colors.white,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 10,
+                                ),
+                                hintText: 'Omschrijf de gezondheidstoestand',
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF999999),
+                                    width: 1.2,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF37A904),
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 16),
                           // Next animal button - only show if not the final animal
                           if (widget.animalIndex < widget.totalCount - 1)
                             SizedBox(
@@ -521,10 +607,10 @@ Widget _buildSelectorSection(
           return 'Gewond/Ziek';
         case AnimalCondition.dood:
           return 'Dood';
-        case AnimalCondition.levend:
-          return 'Levend';
         case AnimalCondition.andere:
           return 'Anders';
+        case AnimalCondition.levend:
+          return 'Levend';
       }
     }
     return 'Onbekend';

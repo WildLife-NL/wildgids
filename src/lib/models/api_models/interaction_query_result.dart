@@ -29,11 +29,22 @@ class InteractionQueryResult {
   final double? eventLon;
   final DateTime moment;
   final String? typeName; // e.g., "Sighting"
+  final int? typeId;
+  final bool hasReportOfSighting;
   final String? speciesName; // e.g., "Vos"
+  final String? speciesLatinName;
   final String? description; // optional
   final String? userName; // User who reported
   final String? placeName; // Reverse geocoded place name
   final List<AnimalInfo>? involvedAnimals; // Animal details
+
+  /// User-submitted waarneming (not a collar/tracker animal from [vicinity.animals]).
+  bool get isUserWaarneming {
+    if (hasReportOfSighting) return true;
+    if (typeId == 1) return true;
+    final type = typeName?.toLowerCase() ?? '';
+    return type.contains('waarneming') || type.contains('sighting');
+  }
 
   /// Stable key for merging pins (avoids collapsing rows when [id] repeats).
   String get dedupeKey =>
@@ -51,7 +62,10 @@ class InteractionQueryResult {
     this.eventLon,
     required this.moment,
     this.typeName,
+    this.typeId,
+    this.hasReportOfSighting = false,
     this.speciesName,
+    this.speciesLatinName,
     this.description,
     this.userName,
     this.placeName,
@@ -150,6 +164,15 @@ class InteractionQueryResult {
               .toList();
     }
 
+    final typeIdRaw =
+        typeNode['id'] ??
+        typeNode['ID'] ??
+        typeNode['typeID'] ??
+        typeNode['typeId'];
+    final typeId = typeIdRaw is int
+        ? typeIdRaw
+        : int.tryParse(typeIdRaw?.toString() ?? '');
+
     return InteractionQueryResult(
       id: rawId,
       lat: lat,
@@ -159,9 +182,19 @@ class InteractionQueryResult {
       eventLat: eventCoords?.lat,
       eventLon: eventCoords?.lon,
       moment: parsedMoment ?? DateTime.now().toUtc(),
-      typeName: (typeNode['name'] ?? typeNode['displayName'])?.toString(),
+      typeName: (typeNode['name'] ??
+              typeNode['displayName'] ??
+              (json['type'] is String ? json['type'] : null))
+          ?.toString(),
+      typeId: typeId,
+      hasReportOfSighting: reportOfSighting.isNotEmpty,
       speciesName:
           (speciesNode['commonName'] ?? speciesNode['name'])?.toString(),
+        speciesLatinName: (speciesNode['latinName'] ??
+            speciesNode['latin_name'] ??
+                speciesNode['scientificName'] ??
+                speciesNode['name'])
+          ?.toString(),
       description: json['description']?.toString(),
       userName: (userNode['name'] ?? userNode['username'])?.toString(),
       placeName: placeNode['name']?.toString(),
@@ -175,6 +208,7 @@ class InteractionQueryResult {
     'moment': moment.toIso8601String(),
     if (typeName != null) 'type': {'name': typeName},
     if (speciesName != null) 'species': {'commonName': speciesName},
+    if (speciesLatinName != null) 'speciesLatinName': speciesLatinName,
     if (description != null) 'description': description,
     if (userName != null) 'user': {'name': userName},
     if (placeName != null) 'place': {'name': placeName},

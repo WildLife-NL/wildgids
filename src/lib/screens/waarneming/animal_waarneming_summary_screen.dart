@@ -1,11 +1,11 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wildgids/interfaces/reporting/interaction_interface.dart';
-import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
 import 'package:wildgids/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
+import 'package:wildgids/constants/sighting_report_activities.dart';
 import 'package:wildgids/screens/location/location_screen.dart';
-import 'package:wildgids/screens/logbook/logbook_screen.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
+import 'package:wildgids/utils/sighting_submit_navigation.dart';
 import 'package:wildgids/models/enums/animal_gender.dart';
 import 'package:wildgids/models/animal_waarneming_models/animal_model.dart';
 import 'package:wildgids/models/animal_waarneming_models/animal_gender_view_count_model.dart';
@@ -99,13 +99,12 @@ class _AnimalWaarnemingSummaryScreenState
         final submittedProvider = context.read<SubmittedSightingsProvider>();
         submittedProvider.addSighting(sighting);
 
-        // Clear the current sighting and navigate to logbook
         sightingManager.clearCurrentanimalSighting();
-        debugPrint('[AnimalWaarnemingSummaryScreen] Navigating to logbook');
-        context.read<NavigationStateInterface>().pushAndRemoveUntil(
-              context,
-              const LogbookScreen(),
-            );
+        debugPrint(
+          '[AnimalWaarnemingSummaryScreen] Submit OK — '
+          'questionnaire: ${response.questionnaire.questions?.length ?? 0} questions',
+        );
+        navigateAfterSightingSubmit(context, response);
       } else {
         debugPrint('[AnimalWaarnemingSummaryScreen] No sighting found to submit');
       }
@@ -326,6 +325,13 @@ class _AnimalWaarnemingSummaryScreenState
                             color: const Color(0xFF999999),
                           ),
                           const SizedBox(height: 16),
+                          _buildActivitySection(sighting),
+                          const SizedBox(height: 16),
+                          Container(
+                            height: 1,
+                            color: const Color(0xFF999999),
+                          ),
+                          const SizedBox(height: 16),
                           // Individual animal details
                           ..._buildAnimalDetailsList(sighting?.animals ?? []),
                           const SizedBox(height: 16),
@@ -433,7 +439,7 @@ class _AnimalWaarnemingSummaryScreenState
                     const SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: _handleSubmit,
+                        onPressed: _isSubmitting ? null : _handleSubmit,
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           backgroundColor: const Color(0xFF37A904),
@@ -442,13 +448,22 @@ class _AnimalWaarnemingSummaryScreenState
                           ),
                           foregroundColor: Colors.white,
                         ),
-                        child: const Text(
-                          'Versturen',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                        child: _isSubmitting
+                            ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text(
+                                'Versturen',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                       ),
                     ),
                   ],
@@ -460,6 +475,90 @@ class _AnimalWaarnemingSummaryScreenState
       ),
       bottomNavigationBar: SizedBox.shrink(),
     );
+  }
+
+  Widget _buildActivitySection(dynamic sighting) {
+    final human = _humanActivityDisplay(
+      sighting?.humanActivity,
+      sighting?.humanActivityOther,
+    );
+    final animal = _perceivedAnimalActivityDisplay(
+      sighting?.perceivedAnimalActivity,
+      sighting?.perceivedAnimalActivityOther,
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Activiteit',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 12),
+        _summaryRow('Wat deed jij?', human),
+        const SizedBox(height: 8),
+        _summaryRow('Wat deed het dier?', animal),
+      ],
+    );
+  }
+
+  Widget _summaryRow(String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+            ),
+          ),
+        ),
+        Expanded(
+          flex: 2,
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.black87,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _humanActivityDisplay(String? apiValue, String? other) {
+    if (apiValue == null || apiValue.isEmpty) {
+      return 'Niet ingevuld';
+    }
+    final label = SightingReportActivityCatalog.labelNlForHuman(apiValue);
+    if (SightingReportActivityCatalog.isOtherHuman(apiValue) &&
+        other != null &&
+        other.trim().isNotEmpty) {
+      return '$label $other';
+    }
+    return label;
+  }
+
+  String _perceivedAnimalActivityDisplay(String? apiValue, String? other) {
+    if (apiValue == null || apiValue.isEmpty) {
+      return 'Niet ingevuld';
+    }
+    final label =
+        SightingReportActivityCatalog.labelNlForPerceivedAnimal(apiValue);
+    if (SightingReportActivityCatalog.isOtherPerceivedAnimal(apiValue) &&
+        other != null &&
+        other.trim().isNotEmpty) {
+      return '$label $other';
+    }
+    return label;
   }
 
 List<Widget> _buildAnimalDetailsList(List animals) {

@@ -95,8 +95,8 @@ class SightingApiTransformer {
       }
     }
 
+    // POST /interaction/ does not accept top-level "description" (422 unexpected property).
     final apiPayload = {
-      "description": sighting.description ?? '',
       "location": {
         "latitude": systemLocation.latitude,
         "longitude": systemLocation.longitude,

@@ -173,14 +173,6 @@ class MapProvider extends ChangeNotifier {
     }
   }
 
-  void emitMockTrackingNotice(String text, {int? severity}) {
-    _lastTrackingNotice = TrackingNotice(text, severity: severity);
-    final title =
-        severity == 1 ? 'Waarschuwing' : (severity == 2 ? 'Melding' : 'Informatie');
-    NotificationService.instance.show(title: title, body: text);
-    notifyListeners();
-  }
-
   final List<AnimalPin> _animalPins = [];
   final List<DetectionPin> _detectionPins = [];
 
@@ -372,7 +364,7 @@ class MapProvider extends ChangeNotifier {
     }
 
     final merged = TrackingVicinityParser.merge(_currentVicinity(), vicinity);
-    _applyVicinity(merged);
+    _applyVicinity(TrackingVicinityParser.forMapDisplay(merged));
     debugPrint(
       '[MapProvider] Merged ping vicinity: '
       '${_animalPins.length} animals, ${_detectionPins.length} detections, '
@@ -460,7 +452,7 @@ class MapProvider extends ChangeNotifier {
       }
 
       _lastPinsLoadSource = source;
-      _applyVicinity(vicinity);
+      _applyVicinity(TrackingVicinityParser.forMapDisplay(vicinity));
 
       debugPrint(
         '[MapProvider] Pins from $_lastPinsLoadSource: '
@@ -570,31 +562,6 @@ class MapProvider extends ChangeNotifier {
     _animalPinsLoading = false;
     _detectionPinsLoading = false;
     _interactionsLoading = false;
-    notifyListeners();
-  }
-
-  void setMockVicinity({
-    List<AnimalPin> animals = const [],
-    List<DetectionPin> detections = const [],
-    List<InteractionQueryResult> interactions = const [],
-  }) {
-    _animalPins
-      ..clear()
-      ..addAll(animals);
-    _detectionPins
-      ..clear()
-      ..addAll(detections);
-    _interactions
-      ..clear()
-      ..addAll(interactions);
-
-    _animalPinsError = null;
-    _detectionPinsError = null;
-    _interactionsError = null;
-    _animalPinsLoading = false;
-    _detectionPinsLoading = false;
-    _interactionsLoading = false;
-
     notifyListeners();
   }
 

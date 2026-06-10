@@ -228,7 +228,7 @@ class _MyAppState extends State<MyApp> {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         navigatorKey: context.read<AppStateProvider>().navigatorKey,
-        title: 'Wild Gids',
+        title: 'WildGids',
         theme: ThemeData(
           scaffoldBackgroundColor: AppColors.lightMintGreen,
           colorScheme: ColorScheme.fromSeed(

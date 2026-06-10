@@ -169,6 +169,29 @@ class TrackingVicinityParser {
   static bool isEmpty(Vicinity v) =>
       v.animals.isEmpty && v.detections.isEmpty && v.interactions.isEmpty;
 
+  /// Map layer: collar animals stay on [animals]; only user waarnemingen on [interactions].
+  static Vicinity forMapDisplay(Vicinity vicinity) {
+    final animalIds = vicinity.animals.map((a) => a.id).toSet();
+    final interactions = vicinity.interactions
+        .where((i) => i.isUserWaarneming)
+        .where((i) => !animalIds.contains(i.id))
+        .toList();
+
+    if (interactions.length != vicinity.interactions.length) {
+      debugPrint(
+        '[TrackingVicinityParser] Map interactions: '
+        '${vicinity.interactions.length} → ${interactions.length} '
+        '(user waarnemingen only, no collar duplicates)',
+      );
+    }
+
+    return Vicinity(
+      animals: vicinity.animals,
+      detections: vicinity.detections,
+      interactions: interactions,
+    );
+  }
+
   static Map<String, dynamic>? latestReadingMap(List<dynamic> readings) {
     Map<String, dynamic>? latest;
     DateTime? latestTime;

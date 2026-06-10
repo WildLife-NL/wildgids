@@ -26,6 +26,8 @@ class _AnimalActivityScreenState extends State<AnimalActivityScreen> {
   String _humanActivity = SightingReportActivityCatalog.defaultHumanActivity;
   String _perceivedAnimalActivity =
       SightingReportActivityCatalog.defaultPerceivedAnimalActivity;
+  late TextEditingController _humanActivityOtherController;
+  late TextEditingController _perceivedActivityOtherController;
 
   @override
   void initState() {
@@ -39,6 +41,8 @@ class _AnimalActivityScreenState extends State<AnimalActivityScreen> {
 
     _perceivedAnimalActivity = sighting?.perceivedAnimalActivity ??
         SightingReportActivityCatalog.defaultPerceivedAnimalActivity;
+    _humanActivityOtherController = TextEditingController(text: sighting?.humanActivityOther ?? '');
+    _perceivedActivityOtherController = TextEditingController(text: sighting?.perceivedAnimalActivityOther ?? '');
   }
 
   void _handleNext() {
@@ -48,7 +52,13 @@ class _AnimalActivityScreenState extends State<AnimalActivityScreen> {
     if (sighting != null) {
       final updatedSighting = sighting.copyWith(
         humanActivity: _humanActivity,
+        humanActivityOther: SightingReportActivityCatalog.isOtherHuman(_humanActivity)
+            ? (_humanActivityOtherController.text.isNotEmpty ? _humanActivityOtherController.text : null)
+            : null,
         perceivedAnimalActivity: _perceivedAnimalActivity,
+        perceivedAnimalActivityOther: SightingReportActivityCatalog.isOtherPerceivedAnimal(_perceivedAnimalActivity)
+            ? (_perceivedActivityOtherController.text.isNotEmpty ? _perceivedActivityOtherController.text : null)
+            : null,
       );
 
       sightingManager.updateCurrentanimalSighting(updatedSighting);
@@ -82,8 +92,18 @@ class _AnimalActivityScreenState extends State<AnimalActivityScreen> {
   }
 
   @override
+  void dispose() {
+    _humanActivityOtherController.dispose();
+    _perceivedActivityOtherController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: const Color(0xFFF5F6F4),
       body: SafeArea(
         bottom: false,
@@ -101,10 +121,10 @@ class _AnimalActivityScreenState extends State<AnimalActivityScreen> {
               iconScale: 1.15,
               userIconScale: 1.15,
             ),
-            SizedBox(
-              height: MediaQuery.of(context).size.height * 0.75,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 2, 16, 16),
+            Expanded(
+              child: SingleChildScrollView(
+                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: EdgeInsets.fromLTRB(16, 2, 16, 16 + keyboardInset),
                 child: Card(
                   elevation: 0,
                   color: Colors.white,
@@ -138,6 +158,28 @@ class _AnimalActivityScreenState extends State<AnimalActivityScreen> {
                             setState(() => _humanActivity = v);
                           },
                         ),
+                        if (SightingReportActivityCatalog.isOtherHuman(_humanActivity)) ...[
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: _humanActivityOtherController,
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor: Colors.white,
+                              hintText: 'Omschrijf wat je deed',
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(15),
+                                borderSide: const BorderSide(color: Color(0xFF999999), width: 1.2),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(15),
+                                borderSide: const BorderSide(color: Color(0xFF37A904), width: 2),
+                              ),
+                            ),
+                            maxLines: 2,
+                            textInputAction: TextInputAction.next,
+                          ),
+                        ],
                         const SizedBox(height: 16),
                         _activityDropdown(
                           label: 'Wat deed het dier?',
@@ -149,6 +191,29 @@ class _AnimalActivityScreenState extends State<AnimalActivityScreen> {
                             setState(() => _perceivedAnimalActivity = v);
                           },
                         ),
+                        if (SightingReportActivityCatalog.isOtherPerceivedAnimal(_perceivedAnimalActivity)) ...[
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: _perceivedActivityOtherController,
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor: Colors.white,
+                              hintText: 'Omschrijf wat het dier deed',
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(15),
+                                borderSide: const BorderSide(color: Color(0xFF999999), width: 1.2),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(15),
+                                borderSide: const BorderSide(color: Color(0xFF37A904), width: 2),
+                              ),
+                            ),
+                            maxLines: 2,
+                            textInputAction: TextInputAction.done,
+                          ),
+                        ],
+                        SizedBox(height: keyboardInset > 0 ? 8 : 0),
                       ],
                     ),
                   ),

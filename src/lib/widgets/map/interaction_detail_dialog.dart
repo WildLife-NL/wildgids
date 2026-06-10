@@ -23,6 +23,16 @@ class InteractionDetailDialog extends StatelessWidget {
       lon: interaction.lon,
       seenAt: interaction.moment,
       speciesName: interaction.speciesName,
+      speciesLatinName: interaction.speciesLatinName,
+      involvedAnimals: interaction.involvedAnimals
+          ?.map(
+            (a) => AnimalObservedDetail(
+              sex: a.sex,
+              lifeStage: a.lifeStage,
+              condition: a.condition,
+            ),
+          )
+          .toList(),
     );
 
     return Dialog(

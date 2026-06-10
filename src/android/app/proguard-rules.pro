@@ -1,4 +1,4 @@
--keep class com.example.wildrapport.** { *; }
+-keep class com.wildlife.wildgids.** { *; }
 -keep class io.flutter.** { *; }
 -keep class io.flutter.plugins.** { *; }
 -keep class io.flutter.plugin.** { *; }

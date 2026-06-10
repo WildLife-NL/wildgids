@@ -15,6 +15,8 @@ import 'package:wildgids/widgets/contact/contact_started_sheet.dart';
 
 /// Achtergrond-BLE: periodiek scannen, contact starten, melding bij dier.
 class ContactTracingCoordinator extends ChangeNotifier {
+  /// Actieve server-contacten ouder dan dit worden bij start automatisch gesloten.
+  static const Duration staleActiveContactMaxAge = Duration(hours: 12);
   ContactTracingCoordinator({
     required ContactApi contactApi,
     required ContactTracingMonitor monitor,
@@ -61,6 +63,7 @@ class ContactTracingCoordinator extends ChangeNotifier {
     _settings = await ContactTracingPreferences.loadAll();
     _applySettingsToMonitor();
     _monitor.addListener(_onMonitorChanged);
+    await _closeStaleActiveContactsOnServer();
     await _restoreActiveContactFromServer();
     await _applyBackgroundState();
     notifyListeners();
@@ -192,12 +195,40 @@ class ContactTracingCoordinator extends ChangeNotifier {
     return true;
   }
 
+  bool _isStaleServerContact(Contact c) {
+    if (!c.isActive) return false;
+    return DateTime.now().difference(c.start) > staleActiveContactMaxAge;
+  }
+
+  Future<void> _closeStaleActiveContactsOnServer() async {
+    try {
+      final contacts = await _contactApi.getMyContacts();
+      for (final c in contacts) {
+        if (!_isStaleServerContact(c)) continue;
+        try {
+          await _contactApi.endContact(c.id);
+          debugPrint(
+            '[ContactTracingCoordinator] Closed stale contact ${c.id} '
+            '(started ${c.start})',
+          );
+        } catch (e) {
+          debugPrint(
+            '[ContactTracingCoordinator] Stale end failed ${c.id}: $e',
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('[ContactTracingCoordinator] stale sweep failed: $e');
+    }
+  }
+
   Future<void> _restoreActiveContactFromServer() async {
     if (_monitor.hasActiveSession) return;
     try {
       final contacts = await _contactApi.getMyContacts();
       for (final c in contacts) {
         if (!c.isActive) continue;
+        if (_isStaleServerContact(c)) continue;
         final mac = c.contactHardwareAddress;
         if (mac == null || mac.isEmpty) continue;
         await _monitor.start(

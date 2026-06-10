@@ -81,7 +81,7 @@ void main() {
 
       // Assert
       expect(json, isA<Map<String, dynamic>>());
-      expect(json['description'], 'Test description');
+      expect(json['description'], isNull);
       expect(json['speciesID'], '1');
       expect(json['typeID'], 1);
       expect(json['location'], isNotNull);
@@ -349,10 +349,7 @@ void main() {
 
       // Assert
       expect(json, isA<Map<String, dynamic>>());
-      expect(
-        json['description'],
-        'Pack of wolves and foxes spotted near the forest',
-      );
+      expect(json.containsKey('description'), isFalse);
       expect(json['speciesID'], '1');
       expect(json['location']['latitude'], 52.0);
       expect(json['location']['longitude'], 4.0);
@@ -403,7 +400,7 @@ void main() {
 
       // Assert
       expect(json, isA<Map<String, dynamic>>());
-      expect(json['description'], '');
+      expect(json.containsKey('description'), isFalse);
       expect(json['speciesID'], '1');
     });
   });

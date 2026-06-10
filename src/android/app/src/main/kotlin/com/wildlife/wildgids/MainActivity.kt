@@ -1,4 +1,4 @@
-package com.example.wildgids
+package com.wildlife.wildgids
 
 import io.flutter.embedding.android.FlutterActivity
 import android.os.Bundle

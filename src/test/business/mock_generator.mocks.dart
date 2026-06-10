@@ -2125,17 +2125,6 @@ class MockMapProvider extends _i1.Mock implements _i67.MapProvider {
           as _i20.Future<_i71.TrackingNotice?>);
 
   @override
-  void emitMockTrackingNotice(String? text, {int? severity}) =>
-      super.noSuchMethod(
-        Invocation.method(
-          #emitMockTrackingNotice,
-          [text],
-          {#severity: severity},
-        ),
-        returnValueForMissingStub: null,
-      );
-
-  @override
   void setVicinityApi(_i73.VicinityApiInterface? api) => super.noSuchMethod(
     Invocation.method(#setVicinityApi, [api]),
     returnValueForMissingStub: null,
@@ -2225,20 +2214,6 @@ class MockMapProvider extends _i1.Mock implements _i67.MapProvider {
             returnValueForMissingStub: _i20.Future<void>.value(),
           )
           as _i20.Future<void>);
-
-  @override
-  void setMockVicinity({
-    List<_i68.AnimalPin>? animals = const [],
-    List<_i69.DetectionPin>? detections = const [],
-    List<_i70.InteractionQueryResult>? interactions = const [],
-  }) => super.noSuchMethod(
-    Invocation.method(#setMockVicinity, [], {
-      #animals: animals,
-      #detections: detections,
-      #interactions: interactions,
-    }),
-    returnValueForMissingStub: null,
-  );
 
   @override
   void startTracking({Duration? interval}) => super.noSuchMethod(
