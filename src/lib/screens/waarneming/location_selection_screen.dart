@@ -1,4 +1,6 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'dart:async';
+
+import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart' as fm;
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
@@ -8,6 +10,8 @@ import 'package:wildgids/interfaces/waarneming_flow/animal_sighting_reporting_in
 import 'package:wildgids/managers/map/location_map_manager.dart';
 import 'package:wildgids/models/beta_models/location_model.dart';
 import 'package:wildgids/models/enums/location_source.dart';
+import 'package:wildgids/providers/app_state_provider.dart';
+import 'package:wildgids/providers/map_provider.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
 import 'package:wildgids/screens/waarneming/location_datetime_screen.dart';
 
@@ -22,9 +26,11 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
   late fm.MapController _mapController;
   LatLng? _selectedLocation;
   LatLng? _currentLocation;
+  bool _userPickedLocation = false;
+  bool _locating = true;
   late final LocationMapManager _locationService;
 
-  // Default center (Netherlands)
+  // Fallback map center (NL) only when no GPS/cache is available yet.
   static const LatLng defaultCenter = LatLng(52.0116, 5.8020);
 
   @override
@@ -32,20 +38,57 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     super.initState();
     _mapController = fm.MapController();
     _locationService = LocationMapManager();
-    _loadCurrentLocation();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_bootstrapLocation());
+    });
   }
 
-  Future<void> _loadCurrentLocation() async {
+  Position? _cachedPositionFromApp() {
+    final app = context.read<AppStateProvider>();
+    if (app.isLocationCacheValid && app.cachedPosition != null) {
+      return app.cachedPosition;
+    }
+    return context.read<MapProvider>().currentPosition;
+  }
+
+  void _applyGpsPoint(LatLng point) {
+    setState(() {
+      _currentLocation = point;
+      if (!_userPickedLocation) {
+        _selectedLocation = point;
+      }
+    });
     try {
-      final Position? position = await _locationService.determinePosition();
-      if (!mounted || position == null) return;
-      final gpsPoint = LatLng(position.latitude, position.longitude);
-      setState(() {
-        _currentLocation = gpsPoint;
-      });
-      _mapController.move(gpsPoint, 15.0);
+      _mapController.move(point, 15.0);
     } catch (_) {
-      // Keep default center when GPS is unavailable.
+      // Map may not be ready on the first frame.
+    }
+  }
+
+  Future<void> _bootstrapLocation() async {
+    if (!mounted) return;
+
+    final cached = _cachedPositionFromApp();
+    if (cached != null) {
+      _applyGpsPoint(LatLng(cached.latitude, cached.longitude));
+      if (mounted) setState(() => _locating = false);
+    }
+
+    try {
+      final lastKnown = await Geolocator.getLastKnownPosition();
+      if (lastKnown != null && mounted) {
+        _applyGpsPoint(LatLng(lastKnown.latitude, lastKnown.longitude));
+      }
+    } catch (_) {}
+
+    try {
+      final position = await _locationService.determinePosition();
+      if (!mounted || position == null) return;
+      _applyGpsPoint(LatLng(position.latitude, position.longitude));
+    } catch (_) {
+      // No GPS — user can still pick on the map.
+    } finally {
+      if (mounted) setState(() => _locating = false);
     }
   }
 
@@ -60,6 +103,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
 
   void _onMapTap(LatLng latlng) {
     setState(() {
+      _userPickedLocation = true;
       _selectedLocation = latlng;
     });
   }
@@ -117,6 +161,15 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       final navigationManager = context.read<NavigationStateInterface>();
       navigationManager.resetToHome(context);
     }
+  }
+
+  LatLng _mapInitialCenter() {
+    if (_currentLocation != null) return _currentLocation!;
+    final cached = _cachedPositionFromApp();
+    if (cached != null) {
+      return LatLng(cached.latitude, cached.longitude);
+    }
+    return defaultCenter;
   }
 
   @override
@@ -185,7 +238,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                             fm.FlutterMap(
                               mapController: _mapController,
                               options: fm.MapOptions(
-                                initialCenter: defaultCenter,
+                                initialCenter: _mapInitialCenter(),
                                 initialZoom: 15.0,
                                 interactionOptions: const fm.InteractionOptions(
                                   flags: fm.InteractiveFlag.pinchZoom |
@@ -237,6 +290,16 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                               ],
                             ),
 
+                            if (_locating && _currentLocation == null)
+                              const Positioned.fill(
+                                child: ColoredBox(
+                                  color: Color(0x33FFFFFF),
+                                  child: Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                ),
+                              ),
+
                             // Crosshair button (bottom right)
                             Positioned(
                               bottom: 16,
@@ -283,7 +346,9 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: Text(
-                          'Tik op de kaart om de locatie van\nde dierwarneming te bepalen.',
+                          _currentLocation != null
+                              ? 'Je locatie staat op de kaart. Pas aan door ergens anders te tikken.'
+                              : 'Tik op de kaart om de locatie van\nde dierwaarneming te bepalen.',
                           textAlign: TextAlign.center,
                           style: Theme.of(context)
                               .textTheme

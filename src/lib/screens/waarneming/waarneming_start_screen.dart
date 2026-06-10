@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:geolocator/geolocator.dart';
@@ -41,7 +43,9 @@ class _WaarnemmingStartScreenState extends State<WaarnemmingStartScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      context.read<AppStateProvider>().initializeReport(ReportType.waarneming);
+      final app = context.read<AppStateProvider>();
+      app.initializeReport(ReportType.waarneming);
+      unawaited(app.updateLocationCache());
     });
     _loadRecentSightings();
   }
