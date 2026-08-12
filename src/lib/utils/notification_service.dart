@@ -36,7 +36,16 @@ class NotificationService {
       iOS: iosInit,
     );
 
-    await _plugin.initialize(settings);
+    await _plugin.initialize(
+      settings,
+      onDidReceiveNotificationResponse: (NotificationResponse response) {
+        final payload = response.payload;
+        if (payload != null && payload.isNotEmpty) {
+          // handle tap here
+          // e.g. print(payload);
+        }
+      },
+    );
 
     // Android 13+ runtime permission
     if (!kIsWeb && Platform.isAndroid) {
