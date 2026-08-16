@@ -36,9 +36,9 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
     Navigator.of(context).push(
       PageRouteBuilder(
         pageBuilder:
-            (_, __, ___) => SpeciesListScreen(showBottomNav: widget.showBottomNav),
+            (_, _, _) => SpeciesListScreen(showBottomNav: widget.showBottomNav),
         transitionDuration: const Duration(milliseconds: 300),
-        transitionsBuilder: (_, animation, __, child) {
+        transitionsBuilder: (_, animation, _, child) {
           final tween = Tween<Offset>(
             begin: const Offset(1.0, 0.0), // Species enters from right
             end: Offset.zero,

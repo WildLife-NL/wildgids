@@ -873,8 +873,8 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 230),
         reverseTransitionDuration: const Duration(milliseconds: 180),
-        pageBuilder: (_, animation, __) => page,
-        transitionsBuilder: (_, animation, __, child) {
+        pageBuilder: (_, animation, _) => page,
+        transitionsBuilder: (_, animation, _, child) {
           final curvedAnimation = CurvedAnimation(
             parent: animation,
             curve: Curves.easeOutCubic,

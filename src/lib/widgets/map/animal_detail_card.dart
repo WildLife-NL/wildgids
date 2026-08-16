@@ -365,7 +365,7 @@ final imagePath = iconPath ?? getSpeciesCardImagePath(animal?.speciesName);
         child: Image.asset(
           iconPath,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => const Icon(
+          errorBuilder: (_, _, _) => const Icon(
             Icons.pets,
             size: 38,
             color: AppColors.darkCharcoal,

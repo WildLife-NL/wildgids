@@ -1,3 +1,4 @@
+// name=src/lib/utils/notification_service.dart url=https://github.com/WildLife-NL/wildgids/blob/653781fbe36a823ce6f8bcbf286b4c3b3f806bdc/src/lib/utils/notification_service.dart
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -36,8 +37,9 @@ class NotificationService {
       iOS: iosInit,
     );
 
+    // Initialize on each platform separately (v22.3.0 pattern)
     await _plugin.initialize(
-      settings,
+      settings: settings,
       onDidReceiveNotificationResponse: (NotificationResponse response) {
         final payload = response.payload;
         if (payload != null && payload.isNotEmpty) {
@@ -99,11 +101,12 @@ class NotificationService {
       iOS: iosDetails,
     );
 
+    // Use named parameters for show()
     await _plugin.show(
-      DateTime.now().millisecondsSinceEpoch ~/ 1000,
-      title,
-      body,
-      details,
+      id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      title: title,
+      body: body,
+      notificationDetails: details,
     );
   }
 
