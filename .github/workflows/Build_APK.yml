@@ -41,6 +41,9 @@ jobs:
         run: |
           echo "DEV_BASE_URL=${{ secrets.API_KEY }}" > .env
           echo "DEV_DEBUG_TOOLS=false" >> .env
+          echo "REVIEWER_EMAIL=${{ secrets.REVIEWER_EMAIL }}" >> .env
+          echo "REVIEWER_TOKEN=${{ secrets.REVIEWER_TOKEN }}" >> .env
+          echo "REVIEWER_PIN=${{ secrets.REVIEWER_PIN }}" >> .env
 
       - name: Install dependencies
         run: flutter pub get

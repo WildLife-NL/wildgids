@@ -1,4 +1,5 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wildgids/interfaces/data_apis/auth_api_interface.dart';
 import 'package:wildgids/interfaces/data_apis/profile_api_interface.dart';
 import 'package:wildgids/interfaces/other/login_interface.dart';
@@ -6,6 +7,7 @@ import 'package:wildgids/models/ui_models/brown_button_model.dart';
 import 'package:wildgids/constants/app_colors.dart';
 import 'package:wildgids/models/api_models/user.dart';
 import 'package:wildgids/exceptions/validation_exception.dart';
+import 'package:wildgids/utils/reviewer_auth.dart';
 
 class LoginManager implements LoginInterface {
   final AuthApiInterface authApi;
@@ -74,6 +76,9 @@ class LoginManager implements LoginInterface {
     }
 
     try {
+      if (ReviewerAuth.isReviewerEmail(email)) {
+        return true;
+      }
       await authApi.authenticate("Wild Gids", email.trim());
       return true;
     } catch (e) {
@@ -86,6 +91,10 @@ class LoginManager implements LoginInterface {
   /// Throws specific exceptions based on error type
   @override
   Future<User> verifyCode(String email, String code) async {
+    if (ReviewerAuth.isReviewerEmail(email)) {
+      return _completeReviewerLogin(email, code);
+    }
+
     try {
       User response = await authApi.authorize(email, code);
       await profileApi.setProfileDataInDeviceStorage();
@@ -116,11 +125,30 @@ class LoginManager implements LoginInterface {
     }
 
     try {
+      if (ReviewerAuth.isReviewerEmail(email)) {
+        return true;
+      }
       await authApi.authenticate("Wild Gids", email.trim());
       return true;
     } catch (e) {
       throw Exception("Resend code failed: $e");
     }
+  }
+
+  Future<User> _completeReviewerLogin(String email, String code) async {
+    if (!ReviewerAuth.isValidPin(code)) {
+      throw Exception("Invalid verification code");
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('bearer_token', ReviewerAuth.token);
+    await profileApi.setProfileDataInDeviceStorage();
+
+    return User(
+      id: 'reviewer',
+      email: email.trim(),
+      name: 'App Reviewer',
+    );
   }
 
   /// Sets the visibility state of the verification screen

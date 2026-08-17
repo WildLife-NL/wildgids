@@ -261,7 +261,7 @@ class _BelongingDropdownState extends State<BelongingDropdown> {
     overlay.insert(overlayEntry!);
   }
 
-  void setItemState(item) {
+  void setItemState(Map<String, String> item) {
     debugPrint("$greenLog [PossesionDropdown]: line 197");
     setState(() {
       selectedValue = item['value']!;

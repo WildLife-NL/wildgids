@@ -1,5 +1,7 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+﻿import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wildgids/exceptions/validation_exception.dart';
 import 'package:wildgids/interfaces/other/login_interface.dart';
 import 'package:wildgids/models/api_models/user.dart';
@@ -157,6 +159,63 @@ void main() {
       loginManager.setError(true, 'Test error');
 
       expect(listenerCalled, true);
+    });
+  });
+
+  group('Reviewer login', () {
+    const reviewerEmail = 'appreviewer-1@example.com';
+    const reviewerPin = '654321';
+    const reviewerToken = 'reviewer-test-token';
+
+    setUp(() async {
+      SharedPreferences.setMockInitialValues({});
+      dotenv.loadFromString(envString: '''
+REVIEWER_EMAIL=$reviewerEmail
+REVIEWER_TOKEN=$reviewerToken
+REVIEWER_PIN=$reviewerPin
+''');
+    });
+
+    test('should skip authenticate for the reviewer email', () async {
+      final result = await loginManager.sendLoginCode(reviewerEmail);
+
+      expect(result, true);
+      verifyNever(mockAuthApi.authenticate(any, any));
+    });
+
+    test('should still authenticate a normal email', () async {
+      TestHelpers.setupSuccessfulAuthentication(mockAuthApi);
+
+      final result = await loginManager.sendLoginCode('test@example.com');
+
+      expect(result, true);
+      verify(
+        mockAuthApi.authenticate('Wild Gids', 'test@example.com'),
+      ).called(1);
+    });
+
+    test('should store the reviewer token and skip authorize', () async {
+      when(
+        mockProfileApi.setProfileDataInDeviceStorage(),
+      ).thenAnswer((_) => Future.value());
+
+      final result = await loginManager.verifyCode(reviewerEmail, reviewerPin);
+
+      verifyNever(mockAuthApi.authorize(any, any));
+      verify(mockProfileApi.setProfileDataInDeviceStorage()).called(1);
+      expect(result.email, reviewerEmail);
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('bearer_token'), reviewerToken);
+    });
+
+    test('should reject an invalid reviewer pin', () async {
+      expect(
+        () => loginManager.verifyCode(reviewerEmail, '000000'),
+        throwsA(isA<Exception>()),
+      );
+      verifyNever(mockAuthApi.authorize(any, any));
+      verifyNever(mockProfileApi.setProfileDataInDeviceStorage());
     });
   });
 }

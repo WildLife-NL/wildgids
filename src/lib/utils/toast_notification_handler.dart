@@ -1,11 +1,12 @@
-﻿import 'package:wildgids/widgets/toasts/snack_bar_with_progress_bar.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:wildgids/widgets/toasts/snack_bar_with_progress_bar.dart';
 import 'package:wildgids/utils/notification_service.dart';
 
 class ToastNotificationHandler {
   /// In-app snackbar; optional system push only when [asSystemNotification] is true
   /// and the user has Meldingen enabled in profile.
   static void sendToastNotification(
-    context,
+    BuildContext context,
     String toastMessage, [
     int? amount,
     bool asSystemNotification = false,

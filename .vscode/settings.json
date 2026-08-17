@@ -2,5 +2,11 @@
     "cSpell.words": [
         "gids"
     ],
-    "cmake.sourceDirectory": "${workspaceFolder}/src/linux"
+    "cmake.sourceDirectory": "${workspaceFolder}/src/linux",
+    "dart.analysisExcludedFolders": [
+        "wild_gids"
+    ],
+    "dart.projectSearchExclude": {
+        "**/wild_gids": true
+    }
 }

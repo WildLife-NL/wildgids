@@ -5,6 +5,7 @@ import 'package:wildgids/constants/app_text_theme.dart';
 import 'package:wildgids/screens/location/kaart_overview_screen.dart';
 import 'package:wildgids/screens/login/login_overlay.dart';
 import 'package:wildgids/interfaces/other/login_interface.dart';
+import 'package:wildgids/utils/reviewer_auth.dart';
 import 'package:wildgids/widgets/overlay/error_overlay.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -216,7 +217,9 @@ Widget build(BuildContext context) {
       ),
       const SizedBox(height: 8),
       Text(
-        'Wij hebben een code naar ${emailController.text} verzonden',
+        ReviewerAuth.isReviewerEmail(emailController.text)
+            ? 'Voer de verificatiecode in uit de testhandleiding'
+            : 'Wij hebben een code naar ${emailController.text} verzonden',
         style: TextStyle(
           fontSize: 12,
           color: Colors.grey,
