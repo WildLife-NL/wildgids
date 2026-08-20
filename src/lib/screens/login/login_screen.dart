@@ -63,6 +63,10 @@ class _LoginScreenState extends State<LoginScreen> {
         .then((response) {
           if (!response) {
             _pendingErrorMessage = 'Login mislukt. Probeer het later opnieuw.';
+          } else if (ReviewerAuth.isReviewerEmail(emailController.text)) {
+            debugPrint(
+              'Reviewer login: skipping e-mail code (token length ${ReviewerAuth.token.length})',
+            );
           } else {
             debugPrint("Verification Code Sent To Email!");
           }

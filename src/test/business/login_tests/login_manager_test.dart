@@ -165,7 +165,7 @@ void main() {
   group('Reviewer login', () {
     const reviewerEmail = 'appreviewer-1@example.com';
     const reviewerPin = '654321';
-    const reviewerToken = 'reviewer-test-token';
+    const reviewerToken = 'reviewer-test-token-not-an-otp';
 
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
@@ -216,6 +216,20 @@ REVIEWER_PIN=$reviewerPin
       );
       verifyNever(mockAuthApi.authorize(any, any));
       verifyNever(mockProfileApi.setProfileDataInDeviceStorage());
+    });
+
+    test('should not treat a 6-digit mail code as a reviewer token', () async {
+      TestHelpers.setupSuccessfulAuthentication(mockAuthApi);
+      dotenv.loadFromString(envString: '''
+REVIEWER_EMAIL=$reviewerEmail
+REVIEWER_TOKEN=996766
+REVIEWER_PIN=$reviewerPin
+''');
+
+      final result = await loginManager.sendLoginCode(reviewerEmail);
+
+      expect(result, true);
+      verify(mockAuthApi.authenticate('Wild Gids', reviewerEmail)).called(1);
     });
   });
 }

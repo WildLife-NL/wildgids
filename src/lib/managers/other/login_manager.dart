@@ -76,6 +76,7 @@ class LoginManager implements LoginInterface {
     }
 
     try {
+      ReviewerAuth.logStatusFor(email);
       if (ReviewerAuth.isReviewerEmail(email)) {
         return true;
       }
@@ -91,6 +92,7 @@ class LoginManager implements LoginInterface {
   /// Throws specific exceptions based on error type
   @override
   Future<User> verifyCode(String email, String code) async {
+    ReviewerAuth.logStatusFor(email);
     if (ReviewerAuth.isReviewerEmail(email)) {
       return _completeReviewerLogin(email, code);
     }
