@@ -6,22 +6,84 @@ on:
       - main
 
 jobs:
-  build-apk:
+  # ============================================================
+  # TEST
+  # ============================================================
+  test:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Create TEST .env
+        run: |
+          echo "DEV_BASE_URL=${{ secrets.TEST_API_KEY }}" > .env
+          echo "DEV_DEBUG_TOOLS=false" >> .env
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate test mocks
+        run: dart run build_runner build
+
+      - name: Run tests
+        run: flutter test --coverage
+
+  # ============================================================
+  # ANALYZE
+  # ============================================================
+  analyze:
+    needs: test
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Create TEST .env
+        run: |
+          echo "DEV_BASE_URL=${{ secrets.TEST_API_KEY }}" > .env
+          echo "DEV_DEBUG_TOOLS=false" >> .env
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze project
+        run: flutter analyze
+
+  # ============================================================
+  # BUILD TEST APK
+  # ============================================================
+  build-test-apk:
+    needs: analyze
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
 
     permissions:
       contents: write
 
-    defaults:
-      run:
-        working-directory: ./src
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -37,61 +99,143 @@ jobs:
       - name: Flutter version
         run: flutter --version
 
-      - name: Create .env
+      - name: Create TEST .env
         run: |
-          echo "DEV_BASE_URL=${{ secrets.API_KEY }}" > .env
+          echo "DEV_BASE_URL=${{ secrets.TEST_API_KEY }}" > .env
           echo "DEV_DEBUG_TOOLS=false" >> .env
-          echo "REVIEWER_EMAIL=${{ secrets.REVIEWER_EMAIL }}" >> .env
-          echo "REVIEWER_TOKEN=${{ secrets.REVIEWER_TOKEN }}" >> .env
-          echo "REVIEWER_PIN=${{ secrets.REVIEWER_PIN }}" >> .env
 
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Run tests
-        run: flutter test
-
-      - name: Set version build number to today
+      - name: Set TEST version
         run: |
-          TODAY=$(date +%Y%m%d)
           CURRENT_VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}')
-          NAME_PART=$(echo "$CURRENT_VERSION" | cut -d '+' -f1)
-          NEW_VERSION="${NAME_PART}+${TODAY}"
-          sed -i "s/^version: .*/version: ${NEW_VERSION}/" pubspec.yaml
-          echo "NEW_VERSION=${NEW_VERSION}" >> $GITHUB_ENV
-          echo "RELEASE_TAG=v${NEW_VERSION}" >> $GITHUB_ENV
-          echo "New version: ${NEW_VERSION}"
+          VERSION_NAME=$(echo "$CURRENT_VERSION" | cut -d '+' -f1)
+          BUILD_NUMBER=${{ github.run_number }}
 
-      - name: Commit updated pubspec version
+          echo "VERSION_NAME=${VERSION_NAME}" >> $GITHUB_ENV
+          echo "BUILD_NUMBER=${BUILD_NUMBER}" >> $GITHUB_ENV
+
+          echo "TEST version: ${VERSION_NAME}+${BUILD_NUMBER}"
+
+      - name: Build TEST APK
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add pubspec.yaml
-          git commit -m "Set version to ${NEW_VERSION}" || echo "No changes to commit"
-          git push
+          flutter build apk --release \
+            --build-name="${VERSION_NAME}" \
+            --build-number="${BUILD_NUMBER}"
 
-      - name: Build APK
-        run: flutter build apk --release
-
-      - name: Rename APK
+      - name: Rename TEST APK
         run: |
-          mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/wildgids.apk
+          mv build/app/outputs/flutter-apk/app-release.apk \
+             build/app/outputs/flutter-apk/wildgids-test-${VERSION_NAME}-${BUILD_NUMBER}.apk
 
-      - name: Upload APK artifact
+      - name: Upload TEST APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-release-apk-wildgids
-          path: src/build/app/outputs/flutter-apk/wildgids.apk
+          name: wildgids-test-${{ env.VERSION_NAME }}-${{ env.BUILD_NUMBER }}
+          path: build/app/outputs/flutter-apk/wildgids-test-${{ env.VERSION_NAME }}-${{ env.BUILD_NUMBER }}.apk
 
-      - name: Create GitHub Release
+      - name: Create TEST GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ env.RELEASE_TAG }}
-          name: Release ${{ env.NEW_VERSION }}
+          tag_name: test-${{ env.VERSION_NAME }}-${{ env.BUILD_NUMBER }}
+          name: TEST ${{ env.VERSION_NAME }} (${{ env.BUILD_NUMBER }})
           body: |
-            Automatische release voor versie ${{ env.NEW_VERSION }}.
+            Automatische TEST release.
 
-            APK: wildgids.apk
-          files: src/build/app/outputs/flutter-apk/wildgids.apk
+            API: TEST
+            Versie: ${{ env.VERSION_NAME }}
+            Build: ${{ env.BUILD_NUMBER }}
+            Commit: ${{ github.sha }}
+          prerelease: true
+          files: build/app/outputs/flutter-apk/wildgids-test-${{ env.VERSION_NAME }}-${{ env.BUILD_NUMBER }}.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ============================================================
+  # BUILD LIVE APK
+  # ============================================================
+  build-live-apk:
+    needs:
+      - analyze
+      - build-test-apk
+
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Create LIVE .env
+        run: |
+          echo "DEV_BASE_URL=${{ secrets.LIVE_API_KEY }}" > .env
+          echo "DEV_DEBUG_TOOLS=false" >> .env
+
+      - name: Set LIVE version
+        run: |
+          TODAY=$(date +%Y%m%d)
+          RELEASE_DATE=$(date +%Y-%m-%d)
+
+          CURRENT_VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}')
+          VERSION_NAME=$(echo "$CURRENT_VERSION" | cut -d '+' -f1)
+
+          echo "VERSION_NAME=${VERSION_NAME}" >> $GITHUB_ENV
+          echo "BUILD_NUMBER=${TODAY}" >> $GITHUB_ENV
+          echo "RELEASE_DATE=${RELEASE_DATE}" >> $GITHUB_ENV
+
+          echo "LIVE version: ${VERSION_NAME}+${TODAY}"
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build LIVE APK
+        run: |
+          flutter build apk --release \
+            --build-name="${VERSION_NAME}" \
+            --build-number="${BUILD_NUMBER}"
+
+      - name: Rename LIVE APK
+        run: |
+          mv build/app/outputs/flutter-apk/app-release.apk \
+             build/app/outputs/flutter-apk/wildgids-live-${VERSION_NAME}-${BUILD_NUMBER}.apk
+
+      - name: Upload LIVE APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: wildgids-live-${{ env.VERSION_NAME }}-${{ env.BUILD_NUMBER }}
+          path: build/app/outputs/flutter-apk/wildgids-live-${{ env.VERSION_NAME }}-${{ env.BUILD_NUMBER }}.apk
+
+      - name: Create LIVE GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: live-${{ env.VERSION_NAME }}-${{ env.BUILD_NUMBER }}
+          name: LIVE ${{ env.VERSION_NAME }} (${{ env.BUILD_NUMBER }})
+          body: |
+            Automatische LIVE release.
+
+            API: LIVE
+            Versie: ${{ env.VERSION_NAME }}
+            Build: ${{ env.BUILD_NUMBER }}
+            Datum: ${{ env.RELEASE_DATE }}
+            Commit: ${{ github.sha }}
+          files: build/app/outputs/flutter-apk/wildgids-live-${{ env.VERSION_NAME }}-${{ env.BUILD_NUMBER }}.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
