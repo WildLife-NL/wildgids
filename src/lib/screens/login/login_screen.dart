@@ -1,13 +1,13 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:wildgids/constants/app_colors.dart';
-import 'package:wildgids/constants/app_text_theme.dart';
-import 'package:wildgids/screens/location/kaart_overview_screen.dart';
-import 'package:wildgids/screens/login/login_overlay.dart';
 import 'package:wildgids/interfaces/other/login_interface.dart';
+import 'package:wildgids/screens/gate/location_gate_screen.dart';
+import 'package:wildgids/screens/login/login_overlay.dart';
+import 'package:wildgids/screens/main/main_tab_shell.dart';
 import 'package:wildgids/utils/reviewer_auth.dart';
 import 'package:wildgids/widgets/overlay/error_overlay.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,6 +17,10 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  static const _deepGreen = Color(0xFF003B2B);
+  static const _mutedText = Color(0xFF667064);
+  static const _fieldBorder = Color(0xFFE7E2D8);
+
   final TextEditingController emailController = TextEditingController();
   final TextEditingController codeController = TextEditingController();
   late final LoginInterface _loginManager;
@@ -33,16 +37,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void dispose() {
-  emailController.dispose();
-  codeController.dispose();
-  super.dispose();
-}
+    emailController.dispose();
+    codeController.dispose();
+    super.dispose();
+  }
 
   void _handleLogin() {
     debugPrint('Login button pressed');
 
     final validationError = _loginManager.validateEmail(emailController.text);
-    
+
     if (validationError != null) {
       showDialog(
         context: context,
@@ -68,7 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
               'Reviewer login: skipping e-mail code (token length ${ReviewerAuth.token.length})',
             );
           } else {
-            debugPrint("Verification Code Sent To Email!");
+            debugPrint('Verification Code Sent To Email!');
           }
         })
         .catchError((e) {
@@ -109,309 +113,454 @@ class _LoginScreenState extends State<LoginScreen> {
         });
   }
 
-void _handleVerifyCode() async {
-  final code = codeController.text.trim();
+  void _handleVerifyCode() async {
+    final code = codeController.text.trim();
 
-  if (code.isEmpty) {
-    setState(() {
-      isError = true;
-      errorMessage = 'Voer de verificatiecode in';
-    });
-    return;
-  }
+    if (code.isEmpty) {
+      setState(() {
+        isError = true;
+        errorMessage = 'Voer de verificatiecode in';
+      });
+      return;
+    }
 
-  try {
-    await _loginManager.verifyCode(
-      emailController.text.trim(),
-      code,
-    );
-  } catch (_) {
+    try {
+      await _loginManager.verifyCode(emailController.text.trim(), code);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        isError = true;
+        errorMessage = 'Ongeldige verificatiecode';
+      });
+      return;
+    }
+
     if (!mounted) return;
-    setState(() {
-      isError = true;
-      errorMessage = 'Ongeldige verificatiecode';
-    });
-    return;
+
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (context) => const LocationGateScreen(next: MainTabShell()),
+      ),
+    );
   }
 
-  if (!mounted) return;
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    final compact = size.height < 760;
+    final titleSize =
+        showVerification
+            ? (size.width * 0.078).clamp(29.0, 32.0)
+            : (size.width * 0.098).clamp(34.0, 40.0);
+    final deerHeight = (size.height * (compact ? 0.22 : 0.25)).clamp(
+      172.0,
+      250.0,
+    );
+    final topGap = compact ? 18.0 : 28.0;
+    final contentGap = compact ? 6.0 : 8.0;
+    final fieldGap = compact ? 10.0 : 14.0;
+    final linkTopGap = compact ? 10.0 : 14.0;
+    final afterLinkGap = compact ? 14.0 : 18.0;
 
-  Navigator.of(context).pushReplacement(
-  MaterialPageRoute(
-    builder: (context) => const KaartOverviewScreen(),
-  ),
-);
-}
-
- @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    backgroundColor: const Color(0xFFF5F6F4),
-    body: GestureDetector(
-  behavior: HitTestBehavior.opaque,
-  onTap: () {
-    FocusScope.of(context).unfocus();
-  },
-  child: SafeArea(
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-          child: Column(
-            children: [
-              const SizedBox(height: 32),
-
-                SizedBox(
-                  width: 120,
-                  height: 120,
-                  child: SvgPicture.asset(
-                    'assets/logo-wildlife.svg',
-                    fit: BoxFit.contain,
-                    colorFilter: ColorFilter.mode(
-                      AppColors.primaryGreen,
-                      BlendMode.srcIn,
+    return Scaffold(
+      backgroundColor: AppColors.offWhite,
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            physics: const ClampingScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(22, 18, 22, 22),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: size.height - MediaQuery.paddingOf(context).vertical,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _LogoHeader(),
+                  SizedBox(height: topGap),
+                  Text(
+                    showVerification ? 'Controleer uw e-mail' : 'Welkom terug',
+                    maxLines: 1,
+                    style: TextStyle(
+                      color: _deepGreen,
+                      fontSize: titleSize,
+                      height: 1.05,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0,
                     ),
                   ),
-                ),
-              Text(
-              'Welkom bij Wild Gids',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w600,
-                color: Colors.black,
+                  SizedBox(height: contentGap),
+                  Text(
+                    showVerification
+                        ? 'Voer de verificatiecode in om verder te gaan.'
+                        : 'Meld u aan om de natuur verder te ontdekken.',
+                    style: const TextStyle(
+                      color: _mutedText,
+                      fontSize: 16,
+                      height: 1.25,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 0,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: deerHeight,
+                    width: double.infinity,
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Positioned.fill(
+                          child: CustomPaint(painter: _NatureShapesPainter()),
+                        ),
+                        Positioned(
+                          right: -18,
+                          bottom: -24,
+                          child: Image.asset(
+                            'assets/real_animal_pics_no_bg/real_Damhert.png',
+                            height: deerHeight + 42,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                        Positioned.fill(
+                          child: CustomPaint(
+                            painter: _ForegroundGrassPainter(),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1, color: Color(0xFFECE8DE)),
+                  SizedBox(height: fieldGap),
+                  if (showVerification) ...[
+                    _LoginField(
+                      controller: codeController,
+                      hintText: 'Verificatiecode',
+                      icon: Icons.lock_outline_rounded,
+                      keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      ReviewerAuth.isReviewerEmail(emailController.text)
+                          ? 'Gebruik de verificatiecode uit de testhandleiding.'
+                          : 'Verzonden naar ${emailController.text.trim()}',
+                      style: const TextStyle(
+                        color: _mutedText,
+                        fontSize: 14,
+                        height: 1.3,
+                      ),
+                    ),
+                  ] else ...[
+                    _LoginField(
+                      controller: emailController,
+                      hintText: 'E-mailadres',
+                      icon: Icons.mail_outline_rounded,
+                      keyboardType: TextInputType.emailAddress,
+                    ),
+                  ],
+                  if (isError) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      errorMessage,
+                      style: const TextStyle(
+                        color: AppColors.error,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                  SizedBox(height: linkTopGap),
+                  Center(
+                    child: TextButton(
+                      style: TextButton.styleFrom(
+                        minimumSize: Size.zero,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 6,
+                        ),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      onPressed: () {
+                        if (showVerification) {
+                          setState(() {
+                            showVerification = false;
+                            codeController.clear();
+                            isError = false;
+                            errorMessage = '';
+                          });
+                        } else {
+                          showDialog(
+                            context: context,
+                            builder: (_) => const LoginOverlay(),
+                          );
+                        }
+                      },
+                      child: Text(
+                        showVerification
+                            ? 'E-mailadres wijzigen'
+                            : 'Hoe werkt de registratie?',
+                        style: const TextStyle(
+                          color: _deepGreen,
+                          decoration: TextDecoration.underline,
+                          decorationColor: _deepGreen,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: afterLinkGap),
+                  _PrimaryLoginButton(
+                    label: showVerification ? 'Verifieer' : 'Code versturen',
+                    onPressed:
+                        showVerification ? _handleVerifyCode : _handleLogin,
+                  ),
+                ],
               ),
             ),
-
-              const SizedBox(height: 8),
-
-              Text(
-                'Een app van WildLifeNL',
-                textAlign: TextAlign.center,
-                style: AppTextTheme.textTheme.bodyMedium?.copyWith(
-                  fontSize: 14,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-
-              const SizedBox(height: 40),
-
-              Card(
-                elevation: 0,
-                color: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  side: const BorderSide(
-                    color: Color(0xFF999999),
-                    width: 1,
-                  ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: showVerification
-                      ? Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      const Text(
-        'Voer verificatiecode in',
-        style: TextStyle(
-          fontSize: 15,
-          color: Colors.black,
-          fontWeight: FontWeight.w500,
+          ),
         ),
       ),
-      const SizedBox(height: 8),
-      Text(
-        ReviewerAuth.isReviewerEmail(emailController.text)
-            ? 'Voer de verificatiecode in uit de testhandleiding'
-            : 'Wij hebben een code naar ${emailController.text} verzonden',
-        style: TextStyle(
-          fontSize: 12,
-          color: Colors.grey,
+    );
+  }
+}
+
+class _LogoHeader extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: 54,
+          height: 54,
+          child: SvgPicture.asset(
+            'assets/logo-wildlife.svg',
+            fit: BoxFit.contain,
+            colorFilter: const ColorFilter.mode(
+              _LoginScreenState._deepGreen,
+              BlendMode.srcIn,
+            ),
+          ),
         ),
-      ),
-      const SizedBox(height: 16),
-      TextField(
-        controller: codeController,
-        keyboardType: TextInputType.number,
-        textAlign: TextAlign.center,
+        const SizedBox(width: 12),
+        const Text(
+          'Wild Gids',
+          style: TextStyle(
+            color: _LoginScreenState._deepGreen,
+            fontSize: 34,
+            height: 1.18,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _LoginField extends StatelessWidget {
+  const _LoginField({
+    required this.controller,
+    required this.hintText,
+    required this.icon,
+    required this.keyboardType,
+    this.textAlign = TextAlign.start,
+  });
+
+  final TextEditingController controller;
+  final String hintText;
+  final IconData icon;
+  final TextInputType keyboardType;
+  final TextAlign textAlign;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 64,
+      child: TextField(
+        controller: controller,
+        keyboardType: keyboardType,
+        textAlign: textAlign,
+        style: const TextStyle(
+          color: _LoginScreenState._deepGreen,
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+        ),
         decoration: InputDecoration(
-          hintText: '123456',
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+          hintText: hintText,
+          hintStyle: const TextStyle(
+            color: Color(0xFF9EA59B),
+            fontSize: 18,
+            fontWeight: FontWeight.w500,
+          ),
+          prefixIcon: Icon(icon, color: _LoginScreenState._deepGreen, size: 28),
+          prefixIconConstraints: const BoxConstraints(
+            minWidth: 64,
+            minHeight: 64,
           ),
           filled: true,
-          fillColor: Colors.white,
-        ),
-        style: const TextStyle(
-          fontSize: 24,
-          letterSpacing: 8,
+          fillColor: AppColors.offWhite,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 18,
+            vertical: 18,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: const BorderSide(color: _LoginScreenState._fieldBorder),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: const BorderSide(color: _LoginScreenState._fieldBorder),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: const BorderSide(
+              color: _LoginScreenState._deepGreen,
+              width: 1.4,
+            ),
+          ),
         ),
       ),
-      const SizedBox(height: 16),
-      SizedBox(
-        width: double.infinity,
-        height: 48,
+    );
+  }
+}
+
+class _PrimaryLoginButton extends StatelessWidget {
+  const _PrimaryLoginButton({required this.label, required this.onPressed});
+
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 60,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(32),
+          gradient: const LinearGradient(
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+            colors: [Color(0xFF1A704B), Color(0xFF0E5137), Color(0xFF0A3D2E)],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0A3D2E).withValues(alpha: 0.18),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
         child: ElevatedButton(
-          onPressed: _handleVerifyCode,
+          onPressed: onPressed,
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primaryGreen,
+            backgroundColor: Colors.transparent,
+            shadowColor: Colors.transparent,
+            foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(32),
             ),
           ),
-          child: const Text(
-            'Verifieer',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
-          ),
-        ),
-      ),
-      const SizedBox(height: 12),
-      SizedBox(
-        width: double.infinity,
-        child: TextButton(
-          onPressed: () {
-            setState(() {
-              showVerification = false;
-              codeController.clear();
-            });
-          },
-          child: Text(
-            'Terug naar e-mail',
-            style: TextStyle(
-              color: AppColors.primaryGreen,
-              fontSize: 13,
-            ),
-          ),
-        ),
-      ),
-    ],
-  )
-                      : Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Voer uw e-mailadres in',
-                              style: AppTextTheme.textTheme.bodyMedium?.copyWith(
-                                fontSize: 15,
-                                color: Colors.black,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-
-                            const SizedBox(height: 12),
-
-                            TextField(
-                              controller: emailController,
-                              
-                              keyboardType: TextInputType.emailAddress,
-                              decoration: InputDecoration(
-                                hintText: 'E-mailadres',
-                                hintStyle: TextStyle(
-                                  color: Colors.grey.shade400,
-                                  fontSize: 14,
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(
-                                    color: Color(0xFF999999),
-                                    width: 1,
-                                  ),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(
-                                    color: Color(0xFFD0D0D0),
-                                    width: 1,
-                                  ),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: AppColors.darkGreen,
-                                    width: 1.5,
-                                  ),
-                                ),
-                                filled: true,
-                                fillColor: Colors.white,
-                              ),
-                            ),
-
-                            const SizedBox(height: 16),
-
-                            if (isError)
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: Text(
-                                  errorMessage,
-                                  style: TextStyle(
-                                    color: Colors.red.shade600,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ),
-
-                            SizedBox(
-                              width: double.infinity,
-                              height: 48,
-                              child: ElevatedButton(
-                                onPressed: _handleLogin,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.primaryGreen,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                child: const Text(
-                                  'Aanmelden',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ),
-
-                            const SizedBox(height: 16),
-
-                            Center(
-                              child: TextButton(
-                                onPressed: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (_) => const LoginOverlay(),
-                                  );
-                                },
-                                child: const Text(
-                                  'Hoe werkt de registratie?',
-                                  style: TextStyle(
-                                    color: Color.fromARGB(255, 103, 103, 103),
-                                    fontSize: 13,
-                                    decoration: TextDecoration.underline,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0,
                 ),
               ),
-
-                           const SizedBox(height: 20),
+              const SizedBox(width: 14),
+              const Icon(Icons.arrow_forward_rounded, size: 32),
             ],
           ),
         ),
       ),
-    ),
-  ),
-);
+    );
+  }
 }
+
+class _NatureShapesPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final softShapePaint = Paint()..color = const Color(0xFFEAF0E3);
+
+    final leftShape =
+        Path()
+          ..moveTo(size.width * 0.14, size.height * 0.94)
+          ..cubicTo(
+            size.width * 0.18,
+            size.height * 0.52,
+            size.width * 0.29,
+            size.height * 0.66,
+            size.width * 0.33,
+            size.height * 0.86,
+          )
+          ..cubicTo(
+            size.width * 0.41,
+            size.height * 0.74,
+            size.width * 0.50,
+            size.height * 0.86,
+            size.width * 0.49,
+            size.height * 0.98,
+          )
+          ..close();
+    canvas.drawPath(leftShape, softShapePaint);
+
+    final rightShape =
+        Path()
+          ..moveTo(size.width * 0.73, size.height * 0.96)
+          ..cubicTo(
+            size.width * 0.72,
+            size.height * 0.48,
+            size.width * 0.96,
+            size.height * 0.42,
+            size.width * 0.91,
+            size.height * 0.95,
+          )
+          ..close();
+    canvas.drawPath(rightShape, softShapePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _ForegroundGrassPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final grassPaint = Paint()..color = const Color(0xFF87B392);
+    void drawLeaf(
+      double x,
+      double y,
+      double width,
+      double height,
+      double tilt,
+    ) {
+      canvas.save();
+      canvas.translate(x, y);
+      canvas.rotate(tilt);
+      final leaf =
+          Path()
+            ..moveTo(0, 0)
+            ..quadraticBezierTo(width * 0.35, -height * 0.55, width, -height)
+            ..quadraticBezierTo(width * 0.75, -height * 0.26, 0, 0);
+      canvas.drawPath(leaf, grassPaint);
+      canvas.restore();
+    }
+
+    drawLeaf(size.width * 0.20, size.height * 0.99, 28, 92, -0.36);
+    drawLeaf(size.width * 0.25, size.height * 0.99, 24, 68, 0.10);
+    drawLeaf(size.width * 0.78, size.height * 1.00, 30, 116, -0.08);
+    drawLeaf(size.width * 0.86, size.height * 1.00, 24, 78, 0.42);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
