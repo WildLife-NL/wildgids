@@ -1,5 +1,6 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -7,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:wildgids/data_managers/api_client.dart';
 import 'package:wildgids/interfaces/data_apis/auth_api_interface.dart';
 import 'package:wildgids/models/api_models/user.dart';
+import 'package:wildgids/exceptions/login_code_delivery_uncertain_exception.dart';
 
 class AuthApi implements AuthApiInterface {
   final ApiClient client;
@@ -17,10 +19,20 @@ class AuthApi implements AuthApiInterface {
     String displayNameApp,
     String email,
   ) async {
-    http.Response response = await client.post('auth/', {
-      "displayNameApp": displayNameApp,
-      "email": email,
-    }, authenticated: false);
+    late final http.Response response;
+    try {
+      response = await client
+          .post('auth/', {
+            "displayNameApp": displayNameApp,
+            "email": email,
+          }, authenticated: false)
+          .timeout(const Duration(seconds: 30));
+    } on TimeoutException {
+      throw const LoginCodeDeliveryUncertainException();
+    }
+    if (response.statusCode == HttpStatus.gatewayTimeout) {
+      throw const LoginCodeDeliveryUncertainException();
+    }
 
     Map<String, dynamic>? json;
     try {
@@ -61,7 +73,9 @@ class AuthApi implements AuthApiInterface {
       debugPrint("[AuthApi] Token saved to SharedPreferences");
       // Verify it was saved
       final savedToken = prefs.getString('bearer_token');
-      debugPrint("[AuthApi] Verification - token in storage: ${savedToken == token ? "✓ MATCHES" : "✗ MISMATCH"}");
+      debugPrint(
+        "[AuthApi] Verification - token in storage: ${savedToken == token ? "✓ MATCHES" : "✗ MISMATCH"}",
+      );
       debugPrint("Code stored in shared prefrences");
       debugPrint(json.toString());
       User user = User.fromJson(json);
@@ -72,4 +86,3 @@ class AuthApi implements AuthApiInterface {
     }
   }
 }
-

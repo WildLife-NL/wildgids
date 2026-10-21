@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -40,16 +41,25 @@ class ChallengeScreen extends StatefulWidget {
 class _ChallengeScreenState extends State<ChallengeScreen> {
   static const _eindhovenLatitude = 51.4416;
   static const _eindhovenLongitude = 5.4697;
+  static _WeatherCache? _cachedWeather;
 
   final _locationManager = LocationMapManager();
-  String _displayName = 'Yvette';
-  String _locationLabel = 'Eindhoven';
+  String _displayName = '';
+  String _locationLabel = 'Locatie bepalen...';
   _WeatherInfo _weather = _WeatherInfo.loading();
   bool _isLoadingLocation = true;
+  bool _showLoading = false;
+  String? _weatherNote;
+  Timer? _loadingTimer;
 
   @override
   void initState() {
     super.initState();
+    _loadingTimer = Timer(const Duration(milliseconds: 600), () {
+      if (mounted && _weather.isLoading) {
+        setState(() => _showLoading = true);
+      }
+    });
     _loadProfileName();
     _loadLocation();
   }
@@ -57,62 +67,54 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
   Future<void> _loadProfileName() async {
     final prefs = await SharedPreferences.getInstance();
     final userName = prefs.getString('userName')?.trim();
-    final email = prefs.getString('email')?.trim();
-    final nextName =
-        userName != null && userName.isNotEmpty
-            ? userName.split(' ').first
-            : _nameFromEmail(email);
-
     if (!mounted) return;
-    setState(() => _displayName = nextName);
+    setState(() => _displayName = userName ?? '');
   }
 
-  String _nameFromEmail(String? email) {
-    if (email == null || email.isEmpty) return 'Yvette';
-    final local = email.split('@').first;
-    if (local.toLowerCase().startsWith('ivet')) return 'Yvette';
-    final cleaned =
-        local
-            .replaceAll(RegExp(r'[0-9._-]+'), ' ')
-            .trim()
-            .split(' ')
-            .where((part) => part.isNotEmpty)
-            .firstOrNull;
-    if (cleaned == null || cleaned.isEmpty) return 'Yvette';
-    return cleaned[0].toUpperCase() + cleaned.substring(1).toLowerCase();
+  @override
+  void dispose() {
+    _loadingTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadLocation() async {
     final mapProvider = context.read<MapProvider>();
     try {
+      final permission = await Geolocator.checkPermission().timeout(
+        const Duration(seconds: 3),
+      );
+      if (permission != LocationPermission.whileInUse &&
+          permission != LocationPermission.always) {
+        throw Exception('Locatietoegang niet toegestaan');
+      }
       Position? position = mapProvider.currentPosition;
-      position ??= await Geolocator.getLastKnownPosition();
-      position ??= await _locationManager.determinePosition();
+      position ??= await Geolocator.getLastKnownPosition().timeout(
+        const Duration(seconds: 3),
+      );
+      position ??= await _locationManager.determinePosition().timeout(
+        const Duration(seconds: 6),
+      );
       if (position == null) {
         throw Exception('Geen locatie beschikbaar');
       }
 
-      var latitude = position.latitude;
-      var longitude = position.longitude;
-      var label = 'Eindhoven';
-      if (!_looksLikeSimulatorDefault(latitude, longitude)) {
-        label =
-            '${position.latitude.toStringAsFixed(4)}, '
-            '${position.longitude.toStringAsFixed(4)}';
-        try {
-          final address = await _locationManager.getAddressFromPosition(
-            position,
-          );
-          if (address.trim().isNotEmpty) {
-            label = _shortLocation(address);
-            await mapProvider.updatePosition(position, address);
-          }
-        } catch (_) {
-          await mapProvider.updatePosition(position, label);
+      final latitude = position.latitude;
+      final longitude = position.longitude;
+      var label =
+          '${position.latitude.toStringAsFixed(4)}, '
+          '${position.longitude.toStringAsFixed(4)}';
+      try {
+        final address = await _locationManager
+            .getAddressFromPosition(position)
+            .timeout(const Duration(seconds: 3));
+        if (address.trim().isNotEmpty &&
+            address != 'Adres niet beschikbaar' &&
+            address != 'Address not found') {
+          label = _shortLocation(address);
+          await mapProvider.updatePosition(position, address);
         }
-      } else {
-        latitude = _eindhovenLatitude;
-        longitude = _eindhovenLongitude;
+      } catch (_) {
+        await mapProvider.updatePosition(position, label);
       }
 
       if (!mounted) return;
@@ -124,21 +126,28 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _locationLabel = 'Eindhoven';
+        _locationLabel = 'Eindhoven (standaardlocatie)';
         _isLoadingLocation = false;
       });
       await _loadWeather(_eindhovenLatitude, _eindhovenLongitude);
     }
   }
 
-  bool _looksLikeSimulatorDefault(double latitude, double longitude) {
-    return latitude > 36 &&
-        latitude < 39 &&
-        longitude > -123 &&
-        longitude < -121;
-  }
-
   Future<void> _loadWeather(double latitude, double longitude) async {
+    final locationKey =
+        '${latitude.toStringAsFixed(2)},${longitude.toStringAsFixed(2)}';
+    final cached = _cachedWeather;
+    final age =
+        cached == null ? null : DateTime.now().difference(cached.fetchedAt);
+    final usableCache =
+        cached != null &&
+        cached.locationKey == locationKey &&
+        age! >= Duration.zero &&
+        age < const Duration(hours: 1);
+    if (usableCache && mounted) {
+      setState(() => _weather = cached.weather);
+      if (age < const Duration(minutes: 10)) return;
+    }
     try {
       final uri = Uri.https('api.open-meteo.com', '/v1/forecast', {
         'latitude': latitude.toStringAsFixed(4),
@@ -157,11 +166,21 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
         code: weatherCode,
         isDay: isDay,
       );
+      _cachedWeather = _WeatherCache(locationKey, nextWeather, DateTime.now());
       if (!mounted) return;
-      setState(() => _weather = nextWeather);
+      setState(() {
+        _weather = nextWeather;
+        _weatherNote = null;
+      });
     } catch (_) {
       if (!mounted) return;
-      setState(() => _weather = _WeatherInfo.unavailable());
+      setState(() {
+        if (usableCache) {
+          _weatherNote = 'Laatst opgehaald; bijwerken mislukt';
+        } else {
+          _weather = _WeatherInfo.unavailable();
+        }
+      });
     }
   }
 
@@ -256,6 +275,8 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                 weather: _weather,
                 locationLabel: _locationLabel,
                 isLoadingLocation: _isLoadingLocation,
+                showLoading: _showLoading,
+                note: _weatherNote,
               ),
               const SizedBox(height: 12),
               const _AttentionCard(),
@@ -333,7 +354,7 @@ class _HomeHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '$greeting,',
+                name.isEmpty ? greeting : '$greeting,',
                 style: const TextStyle(
                   color: ChallengeScreen.mutedText,
                   fontSize: 18,
@@ -341,24 +362,31 @@ class _HomeHeader extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              Text(
-                name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: ChallengeScreen.deepGreen,
-                  fontSize: 38,
-                  height: 1.05,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0,
+              if (name.isNotEmpty)
+                Text(
+                  name,
+                  style: const TextStyle(
+                    color: ChallengeScreen.deepGreen,
+                    fontSize: 38,
+                    height: 1.05,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0,
+                  ),
                 ),
-              ),
             ],
           ),
         ),
       ],
     );
   }
+}
+
+class _WeatherCache {
+  const _WeatherCache(this.locationKey, this.weather, this.fetchedAt);
+
+  final String locationKey;
+  final _WeatherInfo weather;
+  final DateTime fetchedAt;
 }
 
 class _WeatherInfo {
@@ -468,18 +496,22 @@ class _WeatherLocationPanel extends StatelessWidget {
     required this.weather,
     required this.locationLabel,
     required this.isLoadingLocation,
+    required this.showLoading,
+    this.note,
   });
 
   final _WeatherInfo weather;
   final String locationLabel;
   final bool isLoadingLocation;
+  final bool showLoading;
+  final String? note;
 
   @override
   Widget build(BuildContext context) {
     final palette = _weatherPalette(weather.condition);
     return Container(
       width: double.infinity,
-      height: 132,
+      constraints: const BoxConstraints(minHeight: 132),
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: palette.base,
@@ -514,7 +546,7 @@ class _WeatherLocationPanel extends StatelessWidget {
                     borderRadius: BorderRadius.circular(32),
                   ),
                   child:
-                      weather.isLoading
+                      weather.isLoading && showLoading
                           ? const Padding(
                             padding: EdgeInsets.all(20),
                             child: CircularProgressIndicator(
@@ -530,8 +562,9 @@ class _WeatherLocationPanel extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                      Wrap(
+                        spacing: 8,
+                        crossAxisAlignment: WrapCrossAlignment.end,
                         children: [
                           Text(
                             weather.temperatureLabel,
@@ -542,17 +575,14 @@ class _WeatherLocationPanel extends StatelessWidget {
                               fontWeight: FontWeight.w800,
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              weather.description,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 17,
-                                fontWeight: FontWeight.w800,
-                              ),
+                          Text(
+                            weather.isLoading && !showLoading
+                                ? 'Weer'
+                                : weather.description,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w800,
                             ),
                           ),
                         ],
@@ -560,7 +590,7 @@ class _WeatherLocationPanel extends StatelessWidget {
                       const SizedBox(height: 10),
                       Row(
                         children: [
-                          if (isLoadingLocation)
+                          if (isLoadingLocation && showLoading)
                             const SizedBox(
                               width: 12,
                               height: 12,
@@ -579,8 +609,6 @@ class _WeatherLocationPanel extends StatelessWidget {
                           Expanded(
                             child: Text(
                               locationLabel,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
                                 color: Colors.white70,
                                 fontSize: 14,
@@ -590,6 +618,17 @@ class _WeatherLocationPanel extends StatelessWidget {
                           ),
                         ],
                       ),
+                      if (note != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Text(
+                            note!,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -796,26 +835,39 @@ class _HomeActionPanels extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _QuickActionTile(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final stack =
+            constraints.maxWidth < 300 ||
+            MediaQuery.textScalerOf(context).scale(18) > 24;
+        final tiles = [
+          _QuickActionTile(
             icon: Icons.visibility_outlined,
             title: 'Waarneming',
             assetPath: 'assets/real_animal_pics_no_bg/real_eekhoorn.png',
             onTap: onReportTap,
           ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _QuickActionTile(
+          _QuickActionTile(
             icon: Icons.school_outlined,
             title: 'Leer over dieren',
             assetPath: 'assets/real_animal_pics_no_bg/real_egel.png',
             onTap: onLearnTap,
           ),
-        ),
-      ],
+        ];
+        if (stack) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [tiles[0], const SizedBox(height: 12), tiles[1]],
+          );
+        }
+        return Row(
+          children: [
+            Expanded(child: tiles[0]),
+            const SizedBox(width: 12),
+            Expanded(child: tiles[1]),
+          ],
+        );
+      },
     );
   }
 }
@@ -839,7 +891,13 @@ class _QuickActionTile extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Ink(
-        height: 154,
+        height:
+            154 +
+            (MediaQuery.textScalerOf(context).scale(18) - 18).clamp(
+                  0,
+                  double.infinity,
+                ) *
+                2.1,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             colors: [Colors.white, Color(0xFFFBFCF8)],
@@ -903,18 +961,15 @@ class _QuickActionTile extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    SizedBox(
-                      width: 124,
-                      child: Text(
-                        title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: ChallengeScreen.deepGreen,
-                          fontSize: 18,
-                          height: 1.05,
-                          fontWeight: FontWeight.w800,
-                        ),
+                    Text(
+                      title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: ChallengeScreen.deepGreen,
+                        fontSize: 18,
+                        height: 1.05,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                     const Spacer(),
@@ -1048,31 +1103,39 @@ class _StatsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GridView.count(
-      crossAxisCount: 2,
-      childAspectRatio: 1.48,
-      crossAxisSpacing: 12,
-      mainAxisSpacing: 12,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      children: const [
-        _StatCard(
-          icon: Icons.visibility_outlined,
-          value: '27',
-          label: 'Waarnemingen',
-        ),
-        _StatCard(
-          icon: Icons.pets_outlined,
-          value: '14',
-          label: 'Soorten gezien',
-        ),
-        _StatCard(icon: Icons.place_outlined, value: '8', label: 'Locaties'),
-        _StatCard(
-          icon: Icons.workspace_premium_outlined,
-          value: '6',
-          label: 'Badges',
-        ),
-      ],
+    const cards = [
+      _StatCard(
+        icon: Icons.visibility_outlined,
+        value: '27',
+        label: 'Waarnemingen',
+      ),
+      _StatCard(
+        icon: Icons.pets_outlined,
+        value: '14',
+        label: 'Soorten gezien',
+      ),
+      _StatCard(icon: Icons.place_outlined, value: '8', label: 'Locaties'),
+      _StatCard(
+        icon: Icons.workspace_premium_outlined,
+        value: '6',
+        label: 'Badges',
+      ),
+    ];
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final stack =
+            constraints.maxWidth < 300 ||
+            MediaQuery.textScalerOf(context).scale(12) > 16;
+        final width =
+            stack ? constraints.maxWidth : (constraints.maxWidth - 12) / 2;
+        return Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            for (final card in cards) SizedBox(width: width, child: card),
+          ],
+        );
+      },
     );
   }
 }
@@ -1091,6 +1154,7 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      constraints: const BoxConstraints(minHeight: 96),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Colors.white, Color(0xFFFCFDF9)],
@@ -1134,6 +1198,7 @@ class _StatCard extends StatelessWidget {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -1149,8 +1214,6 @@ class _StatCard extends StatelessWidget {
                         const SizedBox(height: 5),
                         Text(
                           label,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             color: ChallengeScreen.mutedText,
                             fontSize: 12,
@@ -1183,8 +1246,10 @@ class _BadgeRow extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: ChallengeScreen.fieldBorder),
       ),
-      child: const Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: const Wrap(
+        alignment: WrapAlignment.spaceBetween,
+        spacing: 12,
+        runSpacing: 12,
         children: [
           _BadgeItem(icon: Icons.forest_outlined, label: 'Bos'),
           _BadgeItem(icon: Icons.pets_outlined, label: 'Dieren'),

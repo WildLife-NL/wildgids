@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/exceptions/login_code_delivery_uncertain_exception.dart';
 import 'package:wildgids/interfaces/other/login_interface.dart';
 import 'package:wildgids/screens/gate/location_gate_screen.dart';
 import 'package:wildgids/screens/login/login_overlay.dart';
@@ -27,7 +28,9 @@ class _LoginScreenState extends State<LoginScreen> {
   bool showVerification = false;
   bool isError = false;
   String errorMessage = '';
-  String? _pendingErrorMessage;
+  bool _isSendingCode = false;
+  bool _deliveryDelayed = false;
+  int _loginRequest = 0;
 
   @override
   void initState() {
@@ -42,10 +45,10 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _handleLogin() {
-    debugPrint('Login button pressed');
-
-    final validationError = _loginManager.validateEmail(emailController.text);
+  Future<void> _handleLogin() async {
+    if (_isSendingCode) return;
+    final email = emailController.text.trim();
+    final validationError = _loginManager.validateEmail(email);
 
     if (validationError != null) {
       showDialog(
@@ -55,62 +58,48 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
+    final request = ++_loginRequest;
     setState(() {
       isError = false;
       errorMessage = '';
       showVerification = true;
-      _pendingErrorMessage = null;
+      _isSendingCode = true;
+      _deliveryDelayed = false;
     });
 
-    _loginManager
-        .sendLoginCode(emailController.text)
-        .then((response) {
-          if (!response) {
-            _pendingErrorMessage = 'Login mislukt. Probeer het later opnieuw.';
-          } else if (ReviewerAuth.isReviewerEmail(emailController.text)) {
-            debugPrint(
-              'Reviewer login: skipping e-mail code (token length ${ReviewerAuth.token.length})',
-            );
-          } else {
-            debugPrint('Verification Code Sent To Email!');
-          }
-        })
-        .catchError((e) {
-          String userFriendlyMessage =
-              'Er is een fout opgetreden. Probeer het later opnieuw.';
-          debugPrint('Login error: $e');
-
-          if (e.toString().contains('SocketException') ||
-              e.toString().contains('Connection refused') ||
-              e.toString().contains('Network is unreachable')) {
-            userFriendlyMessage =
-                'Geen internetverbinding. Controleer uw netwerk en probeer het opnieuw.';
-          } else if (e.toString().contains('timed out')) {
-            userFriendlyMessage =
-                'De server reageert niet. Probeer het later opnieuw.';
-          } else if (e.toString().contains('Unauthorized') ||
-              e.toString().contains('401')) {
-            userFriendlyMessage =
-                'Ongeldige inloggegevens. Controleer uw emailadres en probeer het opnieuw.';
-          }
-
-          _pendingErrorMessage = userFriendlyMessage;
-        })
-        .whenComplete(() {
-          if (_pendingErrorMessage != null) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              setState(() {
-                showVerification = false;
-              });
-              showDialog(
-                context: context,
-                builder:
-                    (context) =>
-                        ErrorOverlay(messages: [_pendingErrorMessage!]),
-              );
-            });
-          }
-        });
+    String? failureMessage;
+    try {
+      final response = await _loginManager.sendLoginCode(email);
+      if (!response) {
+        failureMessage = 'Login mislukt. Probeer het later opnieuw.';
+      }
+    } on LoginCodeDeliveryUncertainException {
+      if (!mounted || request != _loginRequest) return;
+      setState(() => _deliveryDelayed = true);
+    } catch (e) {
+      failureMessage = 'Er is een fout opgetreden. Probeer het later opnieuw.';
+      if (e.toString().contains('SocketException') ||
+          e.toString().contains('Connection refused') ||
+          e.toString().contains('Network is unreachable')) {
+        failureMessage =
+            'Geen internetverbinding. Controleer uw netwerk en probeer het opnieuw.';
+      } else if (e.toString().contains('Unauthorized') ||
+          e.toString().contains('401')) {
+        failureMessage =
+            'Ongeldige inloggegevens. Controleer uw emailadres en probeer het opnieuw.';
+      }
+    }
+    if (!mounted || request != _loginRequest) return;
+    setState(() {
+      _isSendingCode = false;
+      if (failureMessage != null) showVerification = false;
+    });
+    if (failureMessage != null) {
+      showDialog(
+        context: context,
+        builder: (_) => ErrorOverlay(messages: [failureMessage!]),
+      );
+    }
   }
 
   void _handleVerifyCode() async {
@@ -194,7 +183,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   SizedBox(height: contentGap),
                   Text(
                     showVerification
-                        ? 'Voer de verificatiecode in om verder te gaan.'
+                        ? (_deliveryDelayed
+                            ? 'De e-mail kan vertraagd zijn. Controleer uw inbox en spammap.'
+                            : 'Voer de verificatiecode in om verder te gaan.')
                         : 'Meld u aan om de natuur verder te ontdekken.',
                     style: const TextStyle(
                       color: _mutedText,
@@ -245,7 +236,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Text(
                       ReviewerAuth.isReviewerEmail(emailController.text)
                           ? 'Gebruik de verificatiecode uit de testhandleiding.'
-                          : 'Verzonden naar ${emailController.text.trim()}',
+                          : '${_isSendingCode || _deliveryDelayed ? 'Code aangevraagd voor' : 'Verzonden naar'} ${emailController.text.trim()}',
                       style: const TextStyle(
                         color: _mutedText,
                         fontSize: 14,
@@ -286,6 +277,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         if (showVerification) {
                           setState(() {
                             showVerification = false;
+                            _loginRequest++;
+                            _isSendingCode = false;
+                            _deliveryDelayed = false;
                             codeController.clear();
                             isError = false;
                             errorMessage = '';
@@ -313,9 +307,18 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   SizedBox(height: afterLinkGap),
                   _PrimaryLoginButton(
-                    label: showVerification ? 'Verifieer' : 'Code versturen',
+                    label:
+                        _isSendingCode
+                            ? 'Code aanvragen...'
+                            : (showVerification
+                                ? 'Verifieer'
+                                : 'Code versturen'),
                     onPressed:
-                        showVerification ? _handleVerifyCode : _handleLogin,
+                        _isSendingCode
+                            ? null
+                            : (showVerification
+                                ? _handleVerifyCode
+                                : _handleLogin),
                   ),
                 ],
               ),
@@ -346,14 +349,19 @@ class _LogoHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        const Text(
-          'Wild Gids',
-          style: TextStyle(
-            color: _LoginScreenState._deepGreen,
-            fontSize: 34,
-            height: 1.18,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0,
+        const Flexible(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              'Wild Gids',
+              style: TextStyle(
+                color: _LoginScreenState._deepGreen,
+                fontSize: 34,
+                height: 1.18,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0,
+              ),
+            ),
           ),
         ),
       ],
@@ -432,7 +440,7 @@ class _PrimaryLoginButton extends StatelessWidget {
   const _PrimaryLoginButton({required this.label, required this.onPressed});
 
   final String label;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -468,12 +476,17 @@ class _PrimaryLoginButton extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0,
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 14),
