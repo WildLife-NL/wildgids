@@ -235,9 +235,9 @@ class MapProvider extends ChangeNotifier {
       return;
     }
     _mapController = MapController();
-    Future.microtask(() {
-      if (!_isDisposed) notifyListeners();
-    });
+    if (!_isDisposed) {
+      notifyListeners();
+    }
   }
 
   void setMapController(MapController controller) {
