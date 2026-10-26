@@ -1,0 +1,368 @@
+[
+  {
+    "type": "parking",
+    "name": "Parkeren bij ingang Duin en Kruidberg",
+    "latitude": 52.4315969,
+    "longitude": 4.6236027
+  },
+  {
+    "type": "parking",
+    "name": "Parkeren bij Parnassia",
+    "latitude": 52.4156197,
+    "longitude": 4.5535487
+  },
+  {
+    "type": "parking",
+    "name": "Parkeren bij Bloemendaal aan Zee",
+    "latitude": 52.4038589,
+    "longitude": 4.5469666
+  },
+  {
+    "type": "parking",
+    "name": "Parkeren bij Bloemendaal aan Zee",
+    "latitude": 52.4020523,
+    "longitude": 4.544735
+  },
+  {
+    "type": "parking",
+    "name": "Parkeren bij ingang Koevlak",
+    "latitude": 52.3953358,
+    "longitude": 4.5924675
+  },
+  {
+    "type": "parking",
+    "name": "Parkeren bij Koningshof",
+    "latitude": 52.3764114,
+    "longitude": 4.5905256
+  },
+  {
+    "type": "parking",
+    "name": "Parkeren bij Elswout",
+    "latitude": 52.3756516,
+    "longitude": 4.5986366
+  },
+  {
+    "type": "parking",
+    "name": "Parkeren bij Middenduin",
+    "latitude": 52.3863919,
+    "longitude": 4.5971775
+  },
+  {
+    "type": "parking",
+    "name": "Parkeren bij ingang Bleek en Berg",
+    "latitude": 52.417236,
+    "longitude": 4.6134531
+  },
+  {
+    "type": "parking",
+    "name": "Parkeren bij ingang Heerenduinen",
+    "latitude": 52.4540415,
+    "longitude": 4.6156096
+  },
+  {
+    "type": "parking",
+    "name": "Parkeerplaats Kraantje Lek",
+    "latitude": 52.3830326,
+    "longitude": 4.5916951
+  },
+  {
+    "type": "parking",
+    "name": "Parkeerplaats Restaurant De Bokkedoorns",
+    "latitude": 52.39874,
+    "longitude": 4.5665145
+  },
+  {
+    "type": "parking",
+    "name": "Parkeren Midden-Herenduin",
+    "latitude": 52.4417415,
+    "longitude": 4.6288705
+  },
+  {
+    "type": "entrance",
+    "name": "NP ingang De Moriaan",
+    "latitude": 52.4496542,
+    "longitude": 4.6038294
+  },
+  {
+    "type": "entrance",
+    "name": "NP ingang Heerenduinen",
+    "latitude": 52.4546103,
+    "longitude": 4.6154594
+  },
+  {
+    "type": "entrance",
+    "name": "NP ingang Midden-Herenduin",
+    "latitude": 52.4393609,
+    "longitude": 4.630394
+  },
+  {
+    "type": "entrance",
+    "name": "NP ingang Duin en Kruidberg",
+    "latitude": 52.4310277,
+    "longitude": 4.6269715
+  },
+  {
+    "type": "entrance",
+    "name": "NP ingang Bleek en Berg",
+    "latitude": 52.4165882,
+    "longitude": 4.615041
+  },
+  {
+    "type": "entrance",
+    "name": "NP ingang Caprera",
+    "latitude": 52.4109538,
+    "longitude": 4.60796
+  },
+  {
+    "type": "entrance",
+    "name": "NP ingang Koevlak",
+    "latitude": 52.3948644,
+    "longitude": 4.5941305
+  },
+  {
+    "type": "entrance",
+    "name": "NP ingang Zanderij Middenduin",
+    "latitude": 52.3943865,
+    "longitude": 4.5898122
+  },
+  {
+    "type": "entrance",
+    "name": "NP ingang Middenduin/Duinlust",
+    "latitude": 52.3857109,
+    "longitude": 4.5988941
+  },
+  {
+    "type": "entrance",
+    "name": "Ingang Kraantje Lek",
+    "latitude": 52.3831046,
+    "longitude": 4.5918775
+  },
+  {
+    "type": "entrance",
+    "name": "Ingang Buitenplaats Duinvliet/ Koepad",
+    "latitude": 52.3782754,
+    "longitude": 4.6016344
+  },
+  {
+    "type": "entrance",
+    "name": "NP ingang Buitenplaats Elswout",
+    "latitude": 52.3769615,
+    "longitude": 4.5989799
+  },
+  {
+    "type": "entrance",
+    "name": "NP ingang Koningshof",
+    "latitude": 52.3765751,
+    "longitude": 4.5906329
+  },
+  {
+    "type": "entrance",
+    "name": "NP ingang Buitenplaats Duinvliet",
+    "latitude": 52.376765,
+    "longitude": 4.5998919
+  },
+  {
+    "type": "entrance",
+    "name": "NP ingang Blinkertweg",
+    "latitude": 52.3676995,
+    "longitude": 4.5623088
+  },
+  {
+    "type": "entrance",
+    "name": "NP ingang Zandvoortselaan",
+    "latitude": 52.3651441,
+    "longitude": 4.5539663
+  },
+  {
+    "type": "entrance",
+    "name": "NP ingang Visscherspad",
+    "latitude": 52.3744333,
+    "longitude": 4.5416236
+  },
+  {
+    "type": "entrance",
+    "name": "NP ingang Wurmenveld / Visscherspad",
+    "latitude": 52.3772038,
+    "longitude": 4.5574701
+  },
+  {
+    "type": "entrance",
+    "name": "NP ingang Kieftenvlak / Duinpieperpad",
+    "latitude": 52.3842178,
+    "longitude": 4.5561075
+  },
+  {
+    "type": "entrance",
+    "name": "NP ingang Noordduinen",
+    "latitude": 52.3937776,
+    "longitude": 4.5400572
+  },
+  {
+    "type": "entrance",
+    "name": "NP ingang Duinpieperpad",
+    "latitude": 52.4029164,
+    "longitude": 4.548254
+  },
+  {
+    "type": "entrance",
+    "name": "NP ingang Parnassiaweg",
+    "latitude": 52.4169154,
+    "longitude": 4.5556354
+  },
+  {
+    "type": "estate",
+    "name": "Caprera",
+    "latitude": 52.4122365,
+    "longitude": 4.6068335
+  },
+  {
+    "type": "estate",
+    "name": "Duin en Kruidberg",
+    "latitude": 52.434197,
+    "longitude": 4.6249652
+  },
+  {
+    "type": "estate",
+    "name": "Buitenplaats Duinlust",
+    "latitude": 52.3858746,
+    "longitude": 4.5945328
+  },
+  {
+    "type": "estate",
+    "name": "Buitenplaats Elswout",
+    "latitude": 52.3778391,
+    "longitude": 4.5958256
+  },
+  {
+    "type": "estate",
+    "name": "Heerenduinen",
+    "latitude": 52.4492488,
+    "longitude": 4.6192575
+  },
+  {
+    "type": "estate",
+    "name": "Middenduin",
+    "latitude": 52.3906807,
+    "longitude": 4.5888841
+  },
+  {
+    "type": "estate",
+    "name": "Koningshof",
+    "latitude": 52.3739683,
+    "longitude": 4.587779
+  },
+  {
+    "type": "estate",
+    "name": "Midden-Herenduin",
+    "latitude": 52.4373857,
+    "longitude": 4.5897961
+  },
+  {
+    "type": "point_of_interest",
+    "name": "'t Wed",
+    "latitude": 52.3995386,
+    "longitude": 4.5881868
+  },
+  {
+    "type": "point_of_interest",
+    "name": "Brouwerskolkpark",
+    "latitude": 52.3889515,
+    "longitude": 4.6021312
+  },
+  {
+    "type": "point_of_interest",
+    "name": "Cremermeer",
+    "latitude": 52.4346647,
+    "longitude": 4.5794964
+  },
+  {
+    "type": "point_of_interest",
+    "name": "Eerebegraafplaats",
+    "latitude": 52.4006531,
+    "longitude": 4.5786408
+  },
+  {
+    "type": "point_of_interest",
+    "name": "Kennemermeer",
+    "latitude": 52.4538126,
+    "longitude": 4.5633602
+  },
+  {
+    "type": "point_of_interest",
+    "name": "Kraansvlak",
+    "latitude": 52.39328,
+    "longitude": 4.5651197
+  },
+  {
+    "type": "point_of_interest",
+    "name": "Strand Oosterplas",
+    "latitude": 52.4171346,
+    "longitude": 4.6056801
+  },
+  {
+    "type": "viewpoint",
+    "name": "Uitkijkpunt wisenten",
+    "latitude": 52.3876753,
+    "longitude": 4.5805907
+  },
+  {
+    "type": "viewpoint",
+    "name": "Uitzichtpunt bij het Duinmeer",
+    "latitude": 52.439688,
+    "longitude": 4.5780373
+  },
+  {
+    "type": "bird_hide",
+    "name": "Vogelkijkhut bij Vogelmeer",
+    "latitude": 52.4127862,
+    "longitude": 4.5691109
+  },
+  {
+    "type": "bird_hide",
+    "name": "Vogelkijkhut bij Spartelmeer",
+    "latitude": 52.4084667,
+    "longitude": 4.5635748
+  },
+  {
+    "type": "point_of_interest",
+    "name": "Vergaderlocatie werkschuur De Bosuil",
+    "latitude": 52.4329117,
+    "longitude": 4.6120692
+  },
+  {
+    "type": "drinking_water",
+    "name": "Watertappunt Parnassia",
+    "latitude": 52.4169541,
+    "longitude": 4.5553403
+  },
+  {
+    "type": "drinking_water",
+    "name": "Watertappunt Koevlak",
+    "latitude": 52.3962815,
+    "longitude": 4.5926437
+  },
+  {
+    "type": "drinking_water",
+    "name": "Watertappunt Bleek en Berg",
+    "latitude": 52.4173079,
+    "longitude": 4.6132962
+  },
+  {
+    "type": "toilet",
+    "name": "Openbaar toilet Duincafé",
+    "latitude": 52.3960819,
+    "longitude": 4.592633
+  },
+  {
+    "type": "toilet",
+    "name": "Openbaar toilet",
+    "latitude": 52.398072,
+    "longitude": 4.5909673
+  },
+  {
+    "type": "visitor_centre",
+    "name": "Bezoekerscentrum De Kennemerduinen en Duincafé",
+    "latitude": 52.3960832,
+    "longitude": 4.5924403
+  }
+]

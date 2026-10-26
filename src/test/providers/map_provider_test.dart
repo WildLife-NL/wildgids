@@ -1,68 +1,25 @@
-﻿import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:wildgids/providers/map_provider.dart';
 
-// Mock Position for testing
-class MockPosition implements Position {
-  final double lat;
-  final double lng;
-  final DateTime time;
-
-  MockPosition({required this.lat, required this.lng, required this.time});
-
-  @override
-  double get latitude => lat;
-
-  @override
-  double get longitude => lng;
-
-  @override
-  DateTime get timestamp => time;
-
-  @override
-  double get accuracy => 0;
-
-  @override
-  double get altitude => 0;
-
-  @override
-  double get altitudeAccuracy => 0;
-
-  @override
-  double get heading => 0;
-
-  @override
-  double get headingAccuracy => 0;
-
-  @override
-  double get speed => 0;
-
-  @override
-  double get speedAccuracy => 0;
-
-  @override
-  bool get isMocked => true;
-
-  @override
-  int? get floor => null;
-
-  @override
-  Map<String, dynamic> toJson() => {
-    'latitude': latitude,
-    'longitude': longitude,
-    'timestamp': timestamp.toIso8601String(),
-    'accuracy': accuracy,
-    'altitude': altitude,
-    'altitudeAccuracy': altitudeAccuracy,
-    'heading': heading,
-    'headingAccuracy': headingAccuracy,
-    'speed': speed,
-    'speedAccuracy': speedAccuracy,
-    'floor': floor,
-    'isMocked': isMocked,
-  };
-}
+Position mockPosition({
+  required double lat,
+  required double lng,
+  required DateTime time,
+}) => Position(
+  latitude: lat,
+  longitude: lng,
+  timestamp: time,
+  accuracy: 0,
+  altitude: 0,
+  altitudeAccuracy: 0,
+  heading: 0,
+  headingAccuracy: 0,
+  speed: 0,
+  speedAccuracy: 0,
+  isMocked: true,
+);
 
 void main() {
   late MapProvider mapProvider;
@@ -118,7 +75,7 @@ void main() {
 
     test('should update position and address', () async {
       // Arrange
-      final position = MockPosition(
+      final position = mockPosition(
         lat: 52.3676,
         lng: 4.9041,
         time: DateTime.now(),
@@ -143,7 +100,7 @@ void main() {
       () async {
         // Arrange
         mapProvider.selectedAddress = '';
-        final position = MockPosition(
+        final position = mockPosition(
           lat: 52.3676,
           lng: 4.9041,
           time: DateTime.now(),
@@ -163,7 +120,7 @@ void main() {
 
     test('should set selected location', () {
       // Arrange
-      final position = MockPosition(
+      final position = mockPosition(
         lat: 52.3676,
         lng: 4.9041,
         time: DateTime.now(),
@@ -204,4 +161,3 @@ void main() {
     });
   });
 }
-

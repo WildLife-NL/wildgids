@@ -22,7 +22,7 @@ class LivingLabManager implements LivingLabInterface {
     ),
     LivingLabArea(
       id: "grenspark-kempenbroek",
-      name: "Grenspark Kempen~Broek",
+      name: "Grenspark KempenBroek",
       center: LatLng(51.1950, 5.7230), // Use this as map center
       areaKm2: 250.0,
       boundary: [

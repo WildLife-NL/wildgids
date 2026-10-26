@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
@@ -9,6 +10,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wildgids/constants/app_colors.dart';
 import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
 import 'package:wildgids/managers/map/location_map_manager.dart';
+import 'package:wildgids/data_managers/api_client.dart';
+import 'package:wildgids/data_managers/living_labs_api.dart';
+import 'package:wildgids/models/ui_models/weather_living_lab.dart';
 import 'package:wildgids/models/enums/nav_tab.dart';
 import 'package:wildgids/providers/map_provider.dart';
 import 'package:wildgids/screens/location/kaart_overview_screen.dart';
@@ -39,29 +43,29 @@ class ChallengeScreen extends StatefulWidget {
 }
 
 class _ChallengeScreenState extends State<ChallengeScreen> {
-  static const _eindhovenLatitude = 51.4416;
-  static const _eindhovenLongitude = 5.4697;
-  static _WeatherCache? _cachedWeather;
+  static const _preferredLabKey = 'home_preferred_living_lab';
 
   final _locationManager = LocationMapManager();
+  List<WeatherLivingLab> _labs = const [];
+  WeatherLivingLab? _selectedLab;
+  bool _isLoadingLabs = false;
+  String? _labsError;
+  SharedPreferences? _preferences;
+  String? _preferredLabId;
+  Position? _userPosition;
   String _displayName = '';
-  String _locationLabel = 'Locatie bepalen...';
   _WeatherInfo _weather = _WeatherInfo.loading();
   bool _isLoadingLocation = true;
   bool _showLoading = false;
   String? _weatherNote;
   Timer? _loadingTimer;
+  int _weatherRequest = 0;
 
   @override
   void initState() {
     super.initState();
-    _loadingTimer = Timer(const Duration(milliseconds: 600), () {
-      if (mounted && _weather.isLoading) {
-        setState(() => _showLoading = true);
-      }
-    });
     _loadProfileName();
-    _loadLocation();
+    _initializeLivingLab();
   }
 
   Future<void> _loadProfileName() async {
@@ -77,7 +81,52 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
     super.dispose();
   }
 
-  Future<void> _loadLocation() async {
+  Future<void> _initializeLivingLab() async {
+    if (_isLoadingLabs) return;
+    setState(() {
+      _isLoadingLabs = true;
+      _labsError = null;
+    });
+    final api = LivingLabsApi(context.read<ApiClient>());
+    final preferences = await SharedPreferences.getInstance();
+    List<WeatherLivingLab> labs;
+    String? error;
+    try {
+      labs = await api.getAll();
+    } catch (_) {
+      labs = await api.readCache();
+      error =
+          labs.isEmpty
+              ? 'Living labs konden niet worden geladen.'
+              : 'Opgeslagen living labs; bijwerken mislukt.';
+    }
+    if (!mounted) return;
+    // Migrate the two old local IDs once; the selectable list is backend-owned.
+    final savedId = switch (preferences.getString(_preferredLabKey)) {
+      'np-zuid-kennemerland' => 'e376995e-5a79-413c-8906-4640dfc2f472',
+      'grenspark-kempenbroek' => '72797cde-25d9-4a36-8b77-7f8d50691ac7',
+      final id => id,
+    };
+    setState(() {
+      _preferences = preferences;
+      _labs = labs;
+      _isLoadingLabs = false;
+      _labsError = error;
+      _preferredLabId = _labs.any((lab) => lab.id == savedId) ? savedId : null;
+      _selectedLab =
+          _labs.isEmpty
+              ? null
+              : _labs.firstWhere(
+                (lab) => lab.id == _preferredLabId,
+                orElse: () => _labs.first,
+              );
+    });
+    if (_preferredLabId != null) {
+      await preferences.setString(_preferredLabKey, _preferredLabId!);
+    }
+    if (!mounted || _labs.isEmpty) return;
+    // A saved choice can show weather while distance is being determined.
+    if (_preferredLabId != null) unawaited(_loadWeather(_selectedLab!));
     final mapProvider = context.read<MapProvider>();
     try {
       final permission = await Geolocator.checkPermission().timeout(
@@ -88,70 +137,222 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
         throw Exception('Locatietoegang niet toegestaan');
       }
       Position? position = mapProvider.currentPosition;
-      position ??= await Geolocator.getLastKnownPosition().timeout(
-        const Duration(seconds: 3),
-      );
-      position ??= await _locationManager.determinePosition().timeout(
-        const Duration(seconds: 6),
-      );
+      if (!_isRecentPosition(position)) {
+        position = await Geolocator.getLastKnownPosition().timeout(
+          const Duration(seconds: 3),
+        );
+      }
+      if (!_isRecentPosition(position)) {
+        position = await _locationManager.determinePosition().timeout(
+          const Duration(seconds: 6),
+        );
+      }
       if (position == null) {
         throw Exception('Geen locatie beschikbaar');
       }
 
-      final latitude = position.latitude;
-      final longitude = position.longitude;
-      var label =
-          '${position.latitude.toStringAsFixed(4)}, '
-          '${position.longitude.toStringAsFixed(4)}';
-      try {
-        final address = await _locationManager
-            .getAddressFromPosition(position)
-            .timeout(const Duration(seconds: 3));
-        if (address.trim().isNotEmpty &&
-            address != 'Adres niet beschikbaar' &&
-            address != 'Address not found') {
-          label = _shortLocation(address);
-          await mapProvider.updatePosition(position, address);
-        }
-      } catch (_) {
-        await mapProvider.updatePosition(position, label);
-      }
-
       if (!mounted) return;
       setState(() {
-        _locationLabel = label;
+        _userPosition = position;
         _isLoadingLocation = false;
+        if (_preferredLabId == null) _selectedLab = _nearestLab();
       });
-      await _loadWeather(latitude, longitude);
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _locationLabel = 'Eindhoven (standaardlocatie)';
         _isLoadingLocation = false;
       });
-      await _loadWeather(_eindhovenLatitude, _eindhovenLongitude);
+    }
+    if (_preferredLabId == null && mounted) await _loadWeather(_selectedLab!);
+  }
+
+  bool _isRecentPosition(Position? position) {
+    if (position == null) return false;
+    final age = DateTime.now().difference(position.timestamp);
+    return age >= Duration.zero && age < const Duration(minutes: 10);
+  }
+
+  double _distanceTo(WeatherLivingLab lab) => Geolocator.distanceBetween(
+    _userPosition!.latitude,
+    _userPosition!.longitude,
+    lab.center!.latitude,
+    lab.center!.longitude,
+  );
+
+  WeatherLivingLab _nearestLab() {
+    if (_userPosition == null) return _labs.first;
+    final located = _labs.where((lab) => lab.center != null);
+    if (located.isEmpty) return _labs.first;
+    return located.reduce((a, b) => _distanceTo(a) <= _distanceTo(b) ? a : b);
+  }
+
+  String _distanceLabel(WeatherLivingLab lab, {bool compact = false}) {
+    if (lab.center == null) return 'Gebiedslocatie niet beschikbaar';
+    if (_isLoadingLocation) return 'Afstand bepalen...';
+    if (_userPosition == null) {
+      return compact
+          ? 'Locatie niet beschikbaar'
+          : 'Afstand onbekend · locatie niet beschikbaar';
+    }
+    final km = _distanceTo(lab) / 1000;
+    final amount = km < 1 ? '< 1' : '± ${km.round()}';
+    return compact
+        ? '$amount km hemelsbreed'
+        : '$amount km hemelsbreed tot het gebiedscentrum';
+  }
+
+  String get _selectionLabel {
+    if (_preferredLabId != null) return 'Jouw living lab';
+    if (_isLoadingLocation) return 'Living lab bepalen...';
+    return _userPosition == null
+        ? 'Living lab · standaardkeuze'
+        : 'Dichtstbijzijnde living lab';
+  }
+
+  Future<void> _chooseLab(String? id) async {
+    setState(() {
+      _preferredLabId = id;
+      _selectedLab =
+          id == null ? _nearestLab() : _labs.firstWhere((lab) => lab.id == id);
+    });
+    unawaited(_loadWeather(_selectedLab!));
+    if (id == null) {
+      await _preferences?.remove(_preferredLabKey);
+    } else {
+      await _preferences?.setString(_preferredLabKey, id);
     }
   }
 
-  Future<void> _loadWeather(double latitude, double longitude) async {
-    final locationKey =
-        '${latitude.toStringAsFixed(2)},${longitude.toStringAsFixed(2)}';
-    final cached = _cachedWeather;
+  void _showLabPicker() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder:
+          (sheetContext) => SafeArea(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      child: Text(
+                        'Kies je living lab',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Text(
+                        _selectionLabel,
+                        style: const TextStyle(
+                          color: ChallengeScreen.mutedText,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    for (final lab in _labs)
+                      ListTile(
+                        key: ValueKey('choose-${lab.id}'),
+                        leading: const Icon(Icons.park_outlined),
+                        title: Text(lab.name),
+                        subtitle: Text(_distanceLabel(lab)),
+                        trailing:
+                            lab.id == _selectedLab?.id
+                                ? const Icon(
+                                  Icons.check,
+                                  color: ChallengeScreen.deepGreen,
+                                )
+                                : null,
+                        onTap: () {
+                          Navigator.pop(sheetContext);
+                          unawaited(_chooseLab(lab.id));
+                        },
+                      ),
+                    const Divider(),
+                    ListTile(
+                      key: const ValueKey('choose-nearest-lab'),
+                      leading: const Icon(Icons.near_me_outlined),
+                      title: const Text('Dichtstbijzijnde gebruiken'),
+                      subtitle:
+                          _userPosition == null
+                              ? const Text(
+                                'Locatie nodig voor automatische keuze',
+                              )
+                              : null,
+                      enabled: _userPosition != null,
+                      onTap: () {
+                        Navigator.pop(sheetContext);
+                        unawaited(_chooseLab(null));
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+    );
+  }
+
+  _WeatherCache? _readWeatherCache(WeatherLivingLab lab) {
+    try {
+      final raw = _preferences?.getString('home_lab_weather_${lab.id}');
+      if (raw == null) return null;
+      final data = jsonDecode(raw) as Map<String, dynamic>;
+      return _WeatherCache(
+        _WeatherInfo.fromCode(
+          temperature: (data['temperature'] as num).round(),
+          code: data['code'] as int,
+          isDay: data['isDay'] as bool,
+        ),
+        DateTime.parse(data['fetchedAt'] as String),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _loadWeather(WeatherLivingLab lab) async {
+    final request = ++_weatherRequest;
+    _loadingTimer?.cancel();
+    if (lab.center == null) {
+      setState(() {
+        _weather = _WeatherInfo.unavailable();
+        _weatherNote = 'Deze living lab heeft nog geen gebiedslocatie.';
+        _showLoading = false;
+      });
+      return;
+    }
+    final cached = _readWeatherCache(lab);
     final age =
         cached == null ? null : DateTime.now().difference(cached.fetchedAt);
     final usableCache =
         cached != null &&
-        cached.locationKey == locationKey &&
         age! >= Duration.zero &&
         age < const Duration(hours: 1);
-    if (usableCache && mounted) {
-      setState(() => _weather = cached.weather);
-      if (age < const Duration(minutes: 10)) return;
+    if (!mounted) return;
+    setState(() {
+      _weather = usableCache ? cached.weather : _WeatherInfo.loading();
+      _weatherNote = null;
+      _showLoading = false;
+    });
+    if (usableCache && age < const Duration(minutes: 10)) return;
+    if (!usableCache) {
+      _loadingTimer = Timer(const Duration(milliseconds: 600), () {
+        if (mounted && request == _weatherRequest && _weather.isLoading) {
+          setState(() => _showLoading = true);
+        }
+      });
     }
     try {
       final uri = Uri.https('api.open-meteo.com', '/v1/forecast', {
-        'latitude': latitude.toStringAsFixed(4),
-        'longitude': longitude.toStringAsFixed(4),
+        'latitude': lab.center!.latitude.toStringAsFixed(4),
+        'longitude': lab.center!.longitude.toStringAsFixed(4),
         'current': 'temperature_2m,weather_code,is_day',
       });
       final response = await http.get(uri).timeout(const Duration(seconds: 8));
@@ -166,14 +367,27 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
         code: weatherCode,
         isDay: isDay,
       );
-      _cachedWeather = _WeatherCache(locationKey, nextWeather, DateTime.now());
-      if (!mounted) return;
+      if (!mounted || request != _weatherRequest) return;
       setState(() {
         _weather = nextWeather;
         _weatherNote = null;
       });
+      // Cache each lab independently, including across app restarts.
+      try {
+        await _preferences?.setString(
+          'home_lab_weather_${lab.id}',
+          jsonEncode({
+            'temperature': temperature,
+            'code': weatherCode,
+            'isDay': isDay,
+            'fetchedAt': DateTime.now().toIso8601String(),
+          }),
+        );
+      } catch (_) {
+        // A storage failure must not hide a successful weather response.
+      }
     } catch (_) {
-      if (!mounted) return;
+      if (!mounted || request != _weatherRequest) return;
       setState(() {
         if (usableCache) {
           _weatherNote = 'Laatst opgehaald; bijwerken mislukt';
@@ -182,17 +396,6 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
         }
       });
     }
-  }
-
-  String _shortLocation(String address) {
-    final parts =
-        address
-            .split(',')
-            .map((part) => part.trim())
-            .where((part) => part.isNotEmpty)
-            .toList();
-    if (parts.length >= 2) return parts[parts.length - 2];
-    return address;
   }
 
   String get _greeting {
@@ -269,15 +472,41 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const _HomeBrand(),
+              const SizedBox(height: 24),
               _HomeHeader(greeting: _greeting, name: _displayName),
               const SizedBox(height: 18),
-              _WeatherLocationPanel(
-                weather: _weather,
-                locationLabel: _locationLabel,
-                isLoadingLocation: _isLoadingLocation,
-                showLoading: _showLoading,
-                note: _weatherNote,
-              ),
+              if (_selectedLab != null)
+                _WeatherLocationPanel(
+                  weather: _weather,
+                  lab: _selectedLab!,
+                  selectionLabel: _selectionLabel,
+                  distanceLabel: _distanceLabel(_selectedLab!, compact: true),
+                  onChooseLab: _isLoadingLabs ? null : _showLabPicker,
+                  showLoading: _showLoading,
+                  note: _weatherNote,
+                ),
+              if (_selectedLab == null || _labsError != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _labsError ??
+                            (_isLoadingLabs
+                                ? 'Living labs laden...'
+                                : 'Geen living labs beschikbaar.'),
+                      ),
+                      if (!_isLoadingLabs)
+                        TextButton.icon(
+                          onPressed: _initializeLivingLab,
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Opnieuw proberen'),
+                        ),
+                    ],
+                  ),
+                ),
               const SizedBox(height: 12),
               const _AttentionCard(),
               const SizedBox(height: 18),
@@ -338,6 +567,40 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
   }
 }
 
+class _HomeBrand extends StatelessWidget {
+  const _HomeBrand();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        SvgPicture.asset(
+          'assets/logo-wildlife.svg',
+          width: 40,
+          height: 40,
+          excludeFromSemantics: true,
+          colorFilter: const ColorFilter.mode(
+            ChallengeScreen.deepGreen,
+            BlendMode.srcIn,
+          ),
+        ),
+        const SizedBox(width: 10),
+        const Expanded(
+          child: Text(
+            'Wild Gids',
+            style: TextStyle(
+              color: ChallengeScreen.deepGreen,
+              fontSize: 26,
+              fontWeight: FontWeight.w800,
+              height: 1.15,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _HomeHeader extends StatelessWidget {
   const _HomeHeader({required this.greeting, required this.name});
 
@@ -367,8 +630,8 @@ class _HomeHeader extends StatelessWidget {
                   name,
                   style: const TextStyle(
                     color: ChallengeScreen.deepGreen,
-                    fontSize: 38,
-                    height: 1.05,
+                    fontSize: 32,
+                    height: 1.12,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0,
                   ),
@@ -382,9 +645,7 @@ class _HomeHeader extends StatelessWidget {
 }
 
 class _WeatherCache {
-  const _WeatherCache(this.locationKey, this.weather, this.fetchedAt);
-
-  final String locationKey;
+  const _WeatherCache(this.weather, this.fetchedAt);
   final _WeatherInfo weather;
   final DateTime fetchedAt;
 }
@@ -494,331 +755,305 @@ enum _WeatherCondition { sun, cloud, rain, fog, snow, storm }
 class _WeatherLocationPanel extends StatelessWidget {
   const _WeatherLocationPanel({
     required this.weather,
-    required this.locationLabel,
-    required this.isLoadingLocation,
+    required this.lab,
+    required this.selectionLabel,
+    required this.distanceLabel,
+    required this.onChooseLab,
     required this.showLoading,
     this.note,
   });
 
   final _WeatherInfo weather;
-  final String locationLabel;
-  final bool isLoadingLocation;
+  final WeatherLivingLab lab;
+  final String selectionLabel;
+  final String distanceLabel;
+  final VoidCallback? onChooseLab;
   final bool showLoading;
   final String? note;
 
+  String get _shortName => lab.name;
+
+  Color get _iconColor {
+    if (weather.isLoading || weather.description == 'Weer niet beschikbaar') {
+      return ChallengeScreen.mutedText;
+    }
+    return switch (weather.condition) {
+      _WeatherCondition.sun =>
+        weather.icon == Icons.nightlight_round
+            ? const Color(0xFF536381)
+            : const Color(0xFFAA7011),
+      _WeatherCondition.rain => const Color(0xFF396B86),
+      _WeatherCondition.snow => const Color(0xFF467888),
+      _WeatherCondition.storm => const Color(0xFF655778),
+      _WeatherCondition.cloud ||
+      _WeatherCondition.fog => const Color(0xFF65747A),
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
-    final palette = _weatherPalette(weather.condition);
     return Container(
+      key: const ValueKey('home-weather-card'),
       width: double.infinity,
-      constraints: const BoxConstraints(minHeight: 132),
-      clipBehavior: Clip.antiAlias,
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
       decoration: BoxDecoration(
-        color: palette.base,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: palette.shadow.withValues(alpha: 0.18),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        border: Border.all(color: ChallengeScreen.fieldBorder),
       ),
-      child: Stack(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(gradient: palette.gradient),
-            ),
-          ),
-          Positioned.fill(
-            child: CustomPaint(painter: _WeatherSceneryPainter(palette.accent)),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(18),
-            child: Row(
-              children: [
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.22),
-                    borderRadius: BorderRadius.circular(32),
-                  ),
-                  child:
-                      weather.isLoading && showLoading
-                          ? const Padding(
-                            padding: EdgeInsets.all(20),
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.5,
-                              color: Colors.white,
-                            ),
-                          )
-                          : Icon(weather.icon, color: Colors.white, size: 34),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
+          Tooltip(
+            message: 'Living lab wijzigen',
+            child: Semantics(
+              button: true,
+              label: '$selectionLabel: ${lab.name}. Living lab wijzigen',
+              excludeSemantics: true,
+              child: InkWell(
+                key: const ValueKey('living-lab-selector'),
+                onTap: onChooseLab,
+                borderRadius: BorderRadius.circular(4),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 48),
+                  child: Row(
                     children: [
-                      Wrap(
-                        spacing: 8,
-                        crossAxisAlignment: WrapCrossAlignment.end,
-                        children: [
-                          Text(
-                            weather.temperatureLabel,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 38,
-                              height: 0.95,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          Text(
-                            weather.isLoading && !showLoading
-                                ? 'Weer'
-                                : weather.description,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 17,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ],
+                      const Icon(
+                        Icons.location_on_outlined,
+                        size: 20,
+                        color: ChallengeScreen.deepGreen,
                       ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          if (isLoadingLocation && showLoading)
-                            const SizedBox(
-                              width: 12,
-                              height: 12,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          else
-                            const Icon(
-                              Icons.location_on_outlined,
-                              color: Colors.white70,
-                              size: 16,
-                            ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              locationLabel,
-                              style: const TextStyle(
-                                color: Colors.white70,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (note != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 6),
-                          child: Text(
-                            note!,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                            ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _shortName,
+                          style: const TextStyle(
+                            color: ChallengeScreen.deepGreen,
+                            fontSize: 16,
+                            height: 1.25,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(
+                        Icons.expand_more,
+                        color: ChallengeScreen.deepGreen,
+                      ),
                     ],
                   ),
                 ),
-              ],
+              ),
             ),
           ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Expanded(
+                child: Wrap(
+                  spacing: 10,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text(
+                      weather.temperatureLabel,
+                      style: const TextStyle(
+                        color: ChallengeScreen.deepGreen,
+                        fontSize: 38,
+                        height: 1.1,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    Text(
+                      weather.isLoading && !showLoading
+                          ? 'Weer'
+                          : weather.description,
+                      style: const TextStyle(
+                        color: ChallengeScreen.mutedText,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              SizedBox(
+                width: 48,
+                height: 48,
+                child:
+                    weather.isLoading && showLoading
+                        ? const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: ChallengeScreen.deepGreen,
+                          ),
+                        )
+                        : Icon(
+                          weather.icon,
+                          key: const ValueKey('home-weather-icon'),
+                          color: _iconColor,
+                          size: 40,
+                        ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            distanceLabel,
+            style: const TextStyle(
+              color: ChallengeScreen.mutedText,
+              fontSize: 13,
+              height: 1.3,
+            ),
+          ),
+          if (note != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              note!,
+              style: const TextStyle(
+                color: ChallengeScreen.mutedText,
+                fontSize: 13,
+                height: 1.3,
+              ),
+            ),
+          ],
         ],
       ),
     );
-  }
-
-  _WeatherPalette _weatherPalette(_WeatherCondition condition) {
-    switch (condition) {
-      case _WeatherCondition.sun:
-        return const _WeatherPalette(
-          gradient: LinearGradient(
-            colors: [Color(0xFF3C82B7), Color(0xFF5D8FA0), Color(0xFFDDA961)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          base: Color(0xFF3C82B7),
-          accent: Color(0xFFDDA961),
-          shadow: Color(0xFF5D8FA0),
-        );
-      case _WeatherCondition.rain:
-      case _WeatherCondition.storm:
-        return const _WeatherPalette(
-          gradient: LinearGradient(
-            colors: [Color(0xFF465D68), Color(0xFF24343D)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          base: Color(0xFF465D68),
-          accent: Color(0xFF8AA0A8),
-          shadow: Color(0xFF516A78),
-        );
-      case _WeatherCondition.snow:
-      case _WeatherCondition.fog:
-        return const _WeatherPalette(
-          gradient: LinearGradient(
-            colors: [Color(0xFF8BA1A7), Color(0xFF516A70)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          base: Color(0xFF8BA1A7),
-          accent: Color(0xFFC4D1D3),
-          shadow: Color(0xFF8FA6AD),
-        );
-      case _WeatherCondition.cloud:
-        return const _WeatherPalette(
-          gradient: LinearGradient(
-            colors: [Color(0xFF6D8794), Color(0xFF36525C)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          base: Color(0xFF6D8794),
-          accent: Color(0xFFAFC1C6),
-          shadow: Color(0xFF7D97A5),
-        );
-    }
-  }
-}
-
-class _WeatherPalette {
-  const _WeatherPalette({
-    required this.gradient,
-    required this.base,
-    required this.accent,
-    required this.shadow,
-  });
-
-  final LinearGradient gradient;
-  final Color base;
-  final Color accent;
-  final Color shadow;
-}
-
-class _WeatherSceneryPainter extends CustomPainter {
-  const _WeatherSceneryPainter(this.accent);
-
-  final Color accent;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final sunPaint =
-        Paint()
-          ..shader = RadialGradient(
-            colors: [
-              accent.withValues(alpha: 0.36),
-              accent.withValues(alpha: 0.0),
-            ],
-          ).createShader(
-            Rect.fromCircle(
-              center: Offset(size.width * 0.78, size.height * 0.36),
-              radius: size.width * 0.35,
-            ),
-          );
-    canvas.drawCircle(
-      Offset(size.width * 0.78, size.height * 0.36),
-      size.width * 0.35,
-      sunPaint,
-    );
-
-    final horizonPaint =
-        Paint()..color = const Color(0xFF123B31).withValues(alpha: 0.22);
-    final horizon =
-        Path()
-          ..moveTo(0, size.height)
-          ..lineTo(0, size.height * 0.82)
-          ..cubicTo(
-            size.width * 0.18,
-            size.height * 0.70,
-            size.width * 0.35,
-            size.height * 0.86,
-            size.width * 0.52,
-            size.height * 0.76,
-          )
-          ..cubicTo(
-            size.width * 0.72,
-            size.height * 0.64,
-            size.width * 0.86,
-            size.height * 0.80,
-            size.width,
-            size.height * 0.70,
-          )
-          ..lineTo(size.width, size.height)
-          ..close();
-    canvas.drawPath(horizon, horizonPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _WeatherSceneryPainter oldDelegate) {
-    return oldDelegate.accent != accent;
   }
 }
 
 class _AttentionCard extends StatelessWidget {
   const _AttentionCard();
 
+  void _showDetails(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: ChallengeScreen.pageBackground,
+      builder:
+          (sheetContext) => SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(22, 12, 22, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Expanded(
+                        child: Text(
+                          'Voorbeeldmelding',
+                          style: TextStyle(
+                            color: Color(0xFF8B5A00),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: 'Sluiten',
+                        onPressed: () => Navigator.pop(sheetContext),
+                        icon: const Icon(
+                          Icons.close,
+                          color: ChallengeScreen.deepGreen,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Text(
+                    'Wandelpad afgesloten',
+                    style: TextStyle(
+                      color: ChallengeScreen.deepGreen,
+                      fontSize: 24,
+                      height: 1.2,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Het wandelpad bij Genneper Parken is tijdelijk afgesloten.',
+                    style: TextStyle(
+                      color: ChallengeScreen.deepGreen,
+                      fontSize: 16,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Dit is een voorbeeld om te laten zien hoe meldingen eruitzien. '
+                    'De afsluiting is niet bevestigd en deze melding hoort niet '
+                    'bij het geselecteerde living lab.',
+                    style: TextStyle(
+                      color: ChallengeScreen.mutedText,
+                      fontSize: 14,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF6E4),
+    return Material(
+      color: const Color(0xFFFFFAF1),
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFF1D8A8)),
+        side: const BorderSide(color: Color(0xFFF1D8A8)),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFE7B7),
-              borderRadius: BorderRadius.circular(21),
-            ),
-            child: const Icon(
-              Icons.warning_amber_rounded,
-              color: Color(0xFF8B5A00),
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Let op',
-                  style: TextStyle(
-                    color: ChallengeScreen.deepGreen,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                  ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        key: const ValueKey('home-announcement'),
+        onTap: () => _showDetails(context),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.warning_amber_rounded,
+                color: Color(0xFF8B5A00),
+                size: 24,
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Wandelpad afgesloten',
+                      style: TextStyle(
+                        color: ChallengeScreen.deepGreen,
+                        fontSize: 15,
+                        height: 1.25,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Voorbeeld',
+                      style: TextStyle(
+                        color: Color(0xFF8B5A00),
+                        fontSize: 12,
+                        height: 1.25,
+                      ),
+                    ),
+                  ],
                 ),
-                SizedBox(height: 3),
-                Text(
-                  'Het wandelpad bij Genneper Parken is tijdelijk afgesloten.',
-                  style: TextStyle(
-                    color: ChallengeScreen.mutedText,
-                    fontSize: 13,
-                    height: 1.25,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 8),
+              const Icon(
+                Icons.chevron_right,
+                color: ChallengeScreen.deepGreen,
+                size: 22,
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -887,6 +1122,7 @@ class _QuickActionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const foreground = ChallengeScreen.deepGreen;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
@@ -900,12 +1136,12 @@ class _QuickActionTile extends StatelessWidget {
                 2.1,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Colors.white, Color(0xFFFBFCF8)],
+            colors: [Color(0xFFF0F5E9), Color(0xFFE1EDD7)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: ChallengeScreen.fieldBorder),
+          border: Border.all(color: const Color(0xFFC9DABA)),
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(8),
@@ -922,13 +1158,13 @@ class _QuickActionTile extends StatelessWidget {
                 child: _SoftLeaves(size: 92, opacity: 0.22, mirror: true),
               ),
               Positioned(
-                right: -10,
-                bottom: -4,
+                right: 0,
+                bottom: 0,
                 child: Image.asset(
                   assetPath,
-                  height: 78,
+                  height: 70,
                   fit: BoxFit.contain,
-                  opacity: const AlwaysStoppedAnimation(0.72),
+                  opacity: const AlwaysStoppedAnimation(1.0),
                   errorBuilder: (_, _, _) => const SizedBox.shrink(),
                 ),
               ),
@@ -940,33 +1176,29 @@ class _QuickActionTile extends StatelessWidget {
                     Row(
                       children: [
                         Container(
-                          width: 42,
-                          height: 42,
+                          width: 24,
+                          height: 24,
                           decoration: BoxDecoration(
                             color: ChallengeScreen.softGreen,
                             borderRadius: BorderRadius.circular(21),
                           ),
-                          child: Icon(
-                            icon,
-                            color: ChallengeScreen.deepGreen,
-                            size: 26,
-                          ),
+                          child: Icon(icon, color: foreground, size: 24),
                         ),
                         const Spacer(),
-                        const Icon(
+                        Icon(
                           Icons.chevron_right_rounded,
-                          color: ChallengeScreen.deepGreen,
-                          size: 28,
+                          color: foreground,
+                          size: 24,
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
                     Text(
                       title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: ChallengeScreen.deepGreen,
+                      style: TextStyle(
+                        color: foreground,
                         fontSize: 18,
                         height: 1.05,
                         fontWeight: FontWeight.w800,
@@ -1251,10 +1483,30 @@ class _BadgeRow extends StatelessWidget {
         spacing: 12,
         runSpacing: 12,
         children: [
-          _BadgeItem(icon: Icons.forest_outlined, label: 'Bos'),
-          _BadgeItem(icon: Icons.pets_outlined, label: 'Dieren'),
-          _BadgeItem(icon: Icons.camera_alt_outlined, label: 'Foto'),
-          _BadgeItem(icon: Icons.lock_outline, label: 'Locked', locked: true),
+          _BadgeItem(
+            icon: Icons.forest_rounded,
+            label: 'Bos',
+            background: Color(0xFFE1EFDD),
+            accent: Color(0xFF326343),
+          ),
+          _BadgeItem(
+            icon: Icons.pets_rounded,
+            label: 'Dieren',
+            background: Color(0xFFFFEDC6),
+            accent: Color(0xFF8A570D),
+          ),
+          _BadgeItem(
+            icon: Icons.photo_camera_rounded,
+            label: 'Foto',
+            background: Color(0xFFE0EDF8),
+            accent: Color(0xFF336387),
+          ),
+          _BadgeItem(
+            icon: Icons.lock_outline_rounded,
+            label: 'Vergrendeld',
+            background: Color(0xFFEEEEEC),
+            accent: Color(0xFF667064),
+          ),
         ],
       ),
     );
@@ -1265,32 +1517,33 @@ class _BadgeItem extends StatelessWidget {
   const _BadgeItem({
     required this.icon,
     required this.label,
-    this.locked = false,
+    required this.background,
+    required this.accent,
   });
 
   final IconData icon;
   final String label;
-  final bool locked;
+  final Color background;
+  final Color accent;
 
   @override
   Widget build(BuildContext context) {
-    return Opacity(
-      opacity: locked ? 0.42 : 1,
+    return Semantics(
+      label: label,
+      excludeSemantics: true,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
+            key: ValueKey('home-badge-$label'),
             width: 54,
             height: 54,
             decoration: BoxDecoration(
-              color:
-                  locked ? const Color(0xFFF1F1EF) : ChallengeScreen.softGreen,
-              borderRadius: BorderRadius.circular(8),
+              color: background,
+              shape: BoxShape.circle,
+              border: Border.all(color: accent.withValues(alpha: 0.35)),
             ),
-            child: Icon(
-              icon,
-              color: locked ? Colors.grey.shade500 : ChallengeScreen.deepGreen,
-              size: 28,
-            ),
+            child: Icon(icon, color: accent, size: 28),
           ),
           const SizedBox(height: 7),
           Text(

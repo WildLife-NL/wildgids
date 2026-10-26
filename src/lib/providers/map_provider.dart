@@ -30,7 +30,7 @@ class MapProvider extends ChangeNotifier {
   String currentAddress = '';
   MapController? _mapController;
   bool _isLoading = false;
-  final bool _isDisposed = false;
+  bool _isDisposed = false;
 
   Timer? _trackingTimer;
   bool _isTracking = false;
@@ -639,6 +639,7 @@ class MapProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    _isDisposed = true;
     _trackingTimer?.cancel();
     super.dispose();
   }
