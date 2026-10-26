@@ -192,14 +192,15 @@ void main() {
       expect(mapProvider.isLoading, isFalse);
     });
 
-    test('should handle dispose correctly', () {
-      // Arrange
-      mapProvider.initialize();
+    test('should handle dispose correctly', () async {
+      await mapProvider.initialize();
+      // Let the initialize microtask run before dispose.
+      await Future<void>.delayed(Duration.zero);
 
-      // Act
       mapProvider.dispose();
 
-      // Assert - no exceptions should be thrown
+      // Another tick: late notifyListeners from initialize must not fire.
+      await Future<void>.delayed(Duration.zero);
       expect(true, isTrue);
     });
   });
