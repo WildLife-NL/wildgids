@@ -1,6 +1,5 @@
-﻿import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,12 +18,8 @@ import 'package:wildgids/screens/profile/bluetooth_contact_settings_screen.dart'
 import 'package:wildgids/screens/profile/edit_profile_screen.dart';
 import 'package:wildgids/services/contact_tracing_coordinator.dart';
 import 'package:wildgids/utils/notification_service.dart';
-import 'package:wildgids/utils/responsive_utils.dart';
 import 'package:wildgids/constants/app_colors.dart';
-import 'package:wildgids/utils/text_display_utils.dart';
 
-/// Profielscherm: witte kaart, voorkeuren (locatie + meldingen), uitloggen, account verwijderen.
-/// Geen aparte titelbalk bovenaan — alleen inhoud + eventueel systeem safe area.
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({
     super.key,
@@ -40,13 +35,18 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  String _userName = 'Loading...';
+  String _userName = 'Laden...';
   Profile? _profile;
   bool _loadingProfile = true;
   String _version = '';
   bool _bluetoothActivating = false;
+  String? _expandedSection;
 
-  static const _pageBg = Color(0xFFEFF2EF);
+  static const _green = Color(0xFF003B2B);
+  static const _muted = Color(0xFF667064);
+  static const _border = Color(0xFFE7E2D8);
+  static const _softGreen = Color(0xFFEAF0E3);
+  static const _danger = Color(0xFFA33636);
 
   @override
   void initState() {
@@ -84,7 +84,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
     setState(() {
-      _userName = prefs.getString('userName') ?? 'User';
+      _userName = prefs.getString('userName') ?? 'Gebruiker';
     });
     try {
       final profileApi = context.read<ProfileApiInterface>();
@@ -118,471 +118,343 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return 'Scant collars en start contact automatisch';
   }
 
+  Future<void> _changeNotifications(bool enabled) async {
+    final app = context.read<AppStateProvider>();
+    await app.setNotificationsEnabled(enabled);
+    if (!mounted) return;
+    if (enabled) {
+      await NotificationService.instance.requestAndroidNotificationPermission();
+    }
+    if (!mounted) return;
+    final state = context.read<AppStateProvider>();
+    context.read<MapProvider>().setVicinityNotificationsEnabled(
+      state.isLocationTrackingEnabled && state.notificationsEnabled,
+    );
+  }
+
+  Future<void> _changeBluetooth(bool enabled) async {
+    final contactTracing = context.read<ContactTracingCoordinator>();
+    if (enabled) {
+      setState(() => _bluetoothActivating = true);
+      await NotificationService.instance.requestAndroidNotificationPermission();
+    }
+    if (!mounted) return;
+    final contactEnded = await contactTracing.setBackgroundEnabled(enabled);
+    if (!mounted) return;
+    if (enabled) {
+      await contactTracing.triggerBackgroundScanNow(force: true);
+    }
+    if (!mounted) return;
+    setState(() => _bluetoothActivating = false);
+    if (!enabled && contactEnded) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Bluetooth uit — contact beëindigd'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final responsive = context.responsive;
     final app = context.watch<AppStateProvider>();
-    final contactTracing = context.watch<ContactTracingCoordinator>();
-
+    final tracing = context.watch<ContactTracingCoordinator>();
+    final scanning = _bluetoothActivating || tracing.backgroundScanning;
     final email = _profile?.email ?? '—';
 
-    final fs = responsive.fontSize;
-
     return Scaffold(
-      backgroundColor: _pageBg,
+      backgroundColor: AppColors.offWhite,
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final horizontalPad = responsive.wp(3.5).clamp(10.0, 18.0);
-            final cardW = math.min(540.0, constraints.maxWidth - horizontalPad * 2);
-
-            return Padding(
-              padding: EdgeInsets.symmetric(horizontal: horizontalPad, vertical: 4),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: cardW),
-                  child: Card(
-                      color: Colors.white,
-                      elevation: 2,
-                      shadowColor: Colors.black26,
+        bottom: false,
+        child: SingleChildScrollView(
+          key: const ValueKey('profile-scroll'),
+          padding: const EdgeInsets.fromLTRB(22, 18, 22, 40),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 600),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      SvgPicture.asset(
+                        'assets/logo-wildlife.svg',
+                        width: 40,
+                        height: 40,
+                        excludeFromSemantics: true,
+                        colorFilter: const ColorFilter.mode(
+                          _green,
+                          BlendMode.srcIn,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      const Expanded(
+                        child: Text(
+                          'Mijn profiel',
+                          style: TextStyle(
+                            color: _green,
+                            fontSize: 26,
+                            fontWeight: FontWeight.w800,
+                            height: 1.15,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 28),
+                  Column(
+                    children: [
+                      const CircleAvatar(
+                        radius: 32,
+                        backgroundColor: _softGreen,
+                        child: Icon(
+                          Icons.person_outline_rounded,
+                          color: _green,
+                          size: 34,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Text(
+                        _userName,
+                        key: const ValueKey('profile-name'),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: _green,
+                          fontSize: 22,
+                          height: 1.25,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        _loadingProfile ? 'Profiel laden...' : email,
+                        key: const ValueKey('profile-email'),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: _muted,
+                          fontSize: 14,
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  FilledButton.icon(
+                    key: const ValueKey('profile-edit'),
+                    onPressed: _loadingProfile ? null : _handleEditProfile,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: _green,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size.fromHeight(48),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 14,
+                      ),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        side: BorderSide(
-                          color: AppColors.borderDefault,
-                          width: 1,
-                        ),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      child: SingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const SizedBox(height: 14),
-                          // Profile Card
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 18),
-                            child: Card(
-                              color: const Color(0xFFF5F6F4),
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                side: BorderSide(
-                                  color: AppColors.borderDefault,
-                                  width: 1,
-                                ),
-                              ),
-                              child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      CircleAvatar(
-                                        radius: 36,
-                                        backgroundColor: Colors.grey.shade200,
-                                        child: Icon(
-                                          Icons.person,
-                                          size: 40,
-                                          color: AppColors.darkCharcoal,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Expanded(
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            const SizedBox(height: 1),
-                                            Text(
-                                              _userName,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: TextStyle(
-                                                fontSize: fs(18),
-                                                fontWeight: FontWeight.w700,
-                                                color: AppColors.textPrimary,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Tooltip(
-                                              message: email,
-                                              waitDuration:
-                                                  const Duration(milliseconds: 400),
-                                              child: Text(
-                                                _loadingProfile
-                                                    ? '…'
-                                                    : truncateEmail(email),
-                                                maxLines: 1,
-                                                softWrap: false,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: TextStyle(
-                                                  fontSize: fs(11),
-                                                  color: Colors.grey.shade600,
-                                                  height: 1.25,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 15),
-                                  FilledButton(
-                                    onPressed: _loadingProfile ? null : _handleEditProfile,
-                                    style: FilledButton.styleFrom(
-                                      backgroundColor: AppColors.cardBackground,
-                                      foregroundColor: Colors.grey.shade900,
-                                      padding: const EdgeInsets.symmetric(vertical: 8),
-                                      minimumSize: const Size.fromHeight(48),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(26),
-                                        side: BorderSide(
-                                          color: AppColors.borderDefault,
-                                          width: 1.5,
-                                        ),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      'Profiel Bewerken',
-                                      style: TextStyle(fontSize: fs(15)),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                          const SizedBox(height: 10),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 18),
-                            child: Text(
-                              'Voorkeuren',
-                              style: TextStyle(
-                                fontSize: fs(12),
-                                color: Colors.grey.shade600,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 18),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Colors.grey.shade300),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                            child: Column(
-                                children: [
-                                  ListTile(
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 14,
-                                      vertical: 4,
-                                    ),
-                                    title: Text(
-                                      'Locatie delen',
-                                      style: TextStyle(
-                                        fontSize: fs(15),
-                                        color: Colors.grey.shade900,
-                                      ),
-                                    ),
-                                    subtitle: Text(
-                                      'Altijd ingeschakeld',
-                                      style: TextStyle(
-                                        fontSize: fs(13),
-                                        color: Colors.grey.shade600,
-                                      ),
-                                    ),
-                                    trailing: Icon(
-                                      Icons.check_circle,
-                                      color: AppColors.primaryGreen,
-                                      size: fs(22),
-                                    ),
-                                  ),
-                                  Divider(height: 1, color: Colors.grey.shade300),
-                                  SwitchListTile(
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 14,
-                                      vertical: 4,
-                                    ),
-                                    title: Text(
-                                      'Meldingen',
-                                      style: TextStyle(
-                                        fontSize: fs(15),
-                                        color: AppColors.textPrimary,
-                                      ),
-                                    ),
-                                    value: app.notificationsEnabled,
-                                    activeThumbColor: Colors.white,
-                                    activeTrackColor: AppColors.primaryGreen,
-                                    onChanged: (enabled) async {
-                                      await app.setNotificationsEnabled(enabled);
-                                      if (!context.mounted) return;
-                                      if (enabled) {
-                                        await NotificationService.instance
-                                            .requestAndroidNotificationPermission();
-                                      }
-                                      if (!context.mounted) return;
-                                      final state =
-                                          context.read<AppStateProvider>();
-                                      context
-                                          .read<MapProvider>()
-                                          .setVicinityNotificationsEnabled(
-                                            state.isLocationTrackingEnabled &&
-                                                state.notificationsEnabled,
-                                          );
-                                    },
-                                  ),
-                                  Divider(height: 1, color: Colors.grey.shade300),
-                                  SwitchListTile(
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 14,
-                                      vertical: 4,
-                                    ),
-                                    secondary: Icon(
-                                      Icons.bluetooth_rounded,
-                                      color: AppColors.primaryGreen,
-                                    ),
-                                    title: Text(
-                                      'Bluetooth contacttracing',
-                                      style: TextStyle(
-                                        fontSize: fs(15),
-                                        color: Colors.grey.shade900,
-                                      ),
-                                    ),
-                                    subtitle: Row(
-                                      children: [
-                                        if (_bluetoothActivating ||
-                                            contactTracing.backgroundScanning) ...[
-                                          SizedBox(
-                                            width: 14,
-                                            height: 14,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                              color: AppColors.primaryGreen,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                        ],
-                                        Expanded(
-                                          child: Text(
-                                            _bluetoothContactSubtitle(
-                                              contactTracing,
-                                            ),
-                                            style: TextStyle(
-                                              fontSize: fs(12),
-                                              color: (_bluetoothActivating ||
-                                                      contactTracing
-                                                          .backgroundScanning)
-                                                  ? AppColors.primaryGreen
-                                                  : Colors.grey.shade600,
-                                              fontWeight:
-                                                  (_bluetoothActivating ||
-                                                          contactTracing
-                                                              .backgroundScanning)
-                                                      ? FontWeight.w600
-                                                      : FontWeight.normal,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    value: contactTracing.backgroundEnabled,
-                                    activeThumbColor: Colors.white,
-                                    activeTrackColor: AppColors.primaryGreen,
-                                    onChanged: (_bluetoothActivating ||
-                                            contactTracing.backgroundScanning)
-                                        ? null
-                                        : (enabled) async {
-                                      if (enabled) {
-                                        setState(() => _bluetoothActivating = true);
-                                        await NotificationService.instance
-                                            .requestAndroidNotificationPermission();
-                                      }
-                                      if (!context.mounted) return;
-                                      final contactEnded =
-                                          await contactTracing.setBackgroundEnabled(
-                                        enabled,
-                                      );
-                                      if (!context.mounted) return;
-                                      if (enabled) {
-                                        await contactTracing
-                                            .triggerBackgroundScanNow(
-                                          force: true,
-                                        );
-                                      }
-                                      if (!context.mounted) return;
-                                      setState(() => _bluetoothActivating = false);
-                                      if (!enabled && contactEnded) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                            content: Text(
-                                              'Bluetooth uit — contact beëindigd',
-                                            ),
-                                            behavior: SnackBarBehavior.floating,
-                                          ),
-                                        );
-                                      }
-                                    },
-                                  ),
-                                  if (contactTracing.backgroundEnabled)
-                                    ListTile(
-                                      contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 14,
-                                        vertical: 0,
-                                      ),
-                                      title: Text(
-                                        'Interval & status',
-                                        style: TextStyle(
-                                          fontSize: fs(14),
-                                          color: Colors.grey.shade800,
-                                        ),
-                                      ),
-                                      trailing: Icon(
-                                        Icons.chevron_right,
-                                        color: Colors.grey.shade500,
-                                      ),
-                                      onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) =>
-                                                const BluetoothContactSettingsScreen(),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 18),
-                            child: Card(
-                              color: const Color(0xFFF5F6F4),
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                side: BorderSide(
-                                  color: Colors.grey.shade300,
-                                  width: 1,
-                                ),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                                  children: [
-                                    Text(
-                                      _version.isEmpty ? '' : 'App Version: V$_version',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontSize: fs(11),
-                                        color: Colors.grey.shade600,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    FilledButton(
-                                      onPressed: _confirmLogout,
-                                      style: FilledButton.styleFrom(
-                                        backgroundColor: Colors.white,
-                                        foregroundColor: Colors.grey.shade900,
-                                        padding: const EdgeInsets.symmetric(vertical: 12),
-                                        minimumSize: const Size.fromHeight(48),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(26),
-                                          side: BorderSide(
-                                            color: AppColors.borderDefault,
-                                            width: 1.5,
-                                          ),
-                                        ),
-                                      ),
-                                      child: Text(
-                                        'Uitloggen',
-                                        style: TextStyle(fontSize: fs(15)),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 18),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Text(
-                                  'Account verwijderen',
-                                  style: TextStyle(
-                                    fontSize: fs(16),
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.grey.shade900,
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  'Je gegevens gaan permanent verloren; dit kan niet ongedaan worden.',
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: fs(12),
-                                    color: Colors.grey.shade600,
-                                    height: 1.25,
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                                FilledButton(
-                                  onPressed: _confirmDelete,
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: const Color.fromARGB(136, 255, 230, 232),
-                                    foregroundColor: const Color.fromARGB(255, 209, 118, 118),
-                                    padding: const EdgeInsets.symmetric(vertical: 12),
-                                    minimumSize: const Size.fromHeight(44),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(26),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    'Account verwijderen',
-                                    style: TextStyle(
-                                      fontSize: fs(14),
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                        ],
-                      ),
+                      textStyle: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
+                    icon: const Icon(Icons.edit_outlined, size: 20),
+                    label: const Text('Profiel bewerken'),
                   ),
-                ),
-              );
-          },
+                  const SizedBox(height: 28),
+                  _ProfileSectionToggle(
+                    key: const ValueKey('profile-preferences-section'),
+                    title: 'Voorkeuren',
+                    icon: Icons.tune_rounded,
+                    expanded: _expandedSection == 'preferences',
+                    onTap:
+                        () => setState(
+                          () =>
+                              _expandedSection =
+                                  _expandedSection == 'preferences'
+                                      ? null
+                                      : 'preferences',
+                        ),
+                  ),
+                  if (_expandedSection == 'preferences') ...[
+                    const SizedBox(height: 8),
+                    const _ProfileSettingRow(
+                      icon: Icons.location_on_outlined,
+                      title: 'Locatie delen',
+                      subtitle: Text('Altijd ingeschakeld'),
+                      trailing: Icon(
+                        Icons.check_circle_outline,
+                        color: _green,
+                        size: 24,
+                      ),
+                    ),
+                    const Divider(height: 1, color: _border),
+                    _ProfileSettingRow(
+                      icon: Icons.notifications_outlined,
+                      title: 'Meldingen',
+                      trailing: Switch(
+                        key: const ValueKey('profile-notifications'),
+                        value: app.notificationsEnabled,
+                        activeThumbColor: Colors.white,
+                        activeTrackColor: _green,
+                        onChanged: _changeNotifications,
+                      ),
+                    ),
+                    const Divider(height: 1, color: _border),
+                    _ProfileSettingRow(
+                      icon: Icons.bluetooth_rounded,
+                      title: 'Bluetooth contacttracing',
+                      subtitle: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (scanning) ...[
+                            const Padding(
+                              padding: EdgeInsets.only(top: 3),
+                              child: SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: _green,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                          Expanded(
+                            child: Text(_bluetoothContactSubtitle(tracing)),
+                          ),
+                        ],
+                      ),
+                      trailing: Switch(
+                        key: const ValueKey('profile-bluetooth'),
+                        value: tracing.backgroundEnabled,
+                        activeThumbColor: Colors.white,
+                        activeTrackColor: _green,
+                        onChanged: scanning ? null : _changeBluetooth,
+                      ),
+                    ),
+                    if (tracing.backgroundEnabled)
+                      ListTile(
+                        key: const ValueKey('profile-bluetooth-settings'),
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.tune_rounded, color: _green),
+                        title: const Text(
+                          'Interval & status',
+                          style: TextStyle(
+                            color: _green,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        trailing: const Icon(
+                          Icons.chevron_right,
+                          color: _green,
+                        ),
+                        onTap:
+                            () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (_) =>
+                                        const BluetoothContactSettingsScreen(),
+                              ),
+                            ),
+                      ),
+                    const Divider(height: 1, color: _border),
+                  ],
+                  const SizedBox(height: 12),
+                  _ProfileSectionToggle(
+                    key: const ValueKey('profile-account-section'),
+                    title: 'Account',
+                    icon: Icons.manage_accounts_outlined,
+                    expanded: _expandedSection == 'account',
+                    onTap:
+                        () => setState(
+                          () =>
+                              _expandedSection =
+                                  _expandedSection == 'account'
+                                      ? null
+                                      : 'account',
+                        ),
+                  ),
+                  if (_expandedSection == 'account') ...[
+                    const SizedBox(height: 16),
+                    OutlinedButton.icon(
+                      key: const ValueKey('profile-logout'),
+                      onPressed: _confirmLogout,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: _green,
+                        side: const BorderSide(color: Color(0xFFC9DABA)),
+                        minimumSize: const Size.fromHeight(48),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 14,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      icon: const Icon(Icons.logout_rounded, size: 20),
+                      label: const Text('Uitloggen'),
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton.icon(
+                      key: const ValueKey('profile-delete'),
+                      onPressed: _confirmDelete,
+                      style: TextButton.styleFrom(
+                        foregroundColor: _danger,
+                        backgroundColor: const Color(0xFFFFF0ED),
+                        minimumSize: const Size.fromHeight(48),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      icon: const Icon(Icons.delete_outline_rounded, size: 20),
+                      label: const Text('Account verwijderen'),
+                    ),
+                  ],
+                  if (_version.isNotEmpty) ...[
+                    const SizedBox(height: 24),
+                    Text(
+                      'Appversie: V$_version',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: _muted,
+                        fontSize: 12,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
         ),
       ),
-      bottomNavigationBar: widget.showBottomNav
-          ? SafeArea(
-              top: false,
-              child: CustomNavBar(
-                currentTab: NavTab.profile,
-                onTabSelected: _onTabSelected,
-              ),
-            )
-          : null,
+      bottomNavigationBar:
+          widget.showBottomNav
+              ? SafeArea(
+                top: false,
+                child: CustomNavBar(
+                  currentTab: NavTab.profile,
+                  onTabSelected: _onTabSelected,
+                ),
+              )
+              : null,
     );
   }
 
@@ -591,7 +463,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     switch (tab) {
       case NavTab.ontdekken:
       case NavTab.zones:
-        navigationManager.pushReplacementForward(context, const ChallengeScreen());
+        navigationManager.pushReplacementForward(
+          context,
+          const ChallengeScreen(),
+        );
         break;
       case NavTab.waarneming:
         navigationManager.pushReplacementForward(
@@ -606,7 +481,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         );
         break;
       case NavTab.logboek:
-        navigationManager.pushReplacementForward(context, const LogbookScreen());
+        navigationManager.pushReplacementForward(
+          context,
+          const LogbookScreen(),
+        );
         break;
       case NavTab.instellingen:
       case NavTab.profile:
@@ -621,9 +499,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (!mounted) return;
       final updatedProfile = await Navigator.of(context).push<Profile>(
         MaterialPageRoute(
-          builder: (context) => EditProfileScreen(
-            initialProfile: currentProfile,
-          ),
+          builder:
+              (context) => EditProfileScreen(initialProfile: currentProfile),
         ),
       );
       if (!mounted) return;
@@ -651,247 +528,220 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _confirmLogout() {
-    final responsive = context.responsive;
-    showDialog(
+    showDialog<void>(
       context: context,
-      builder: (ctx) => Dialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFD4AF37).withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.info_outline,
-                  color: Color(0xFFD4AF37),
-                  size: 32,
-                ),
+      builder:
+          (ctx) => AlertDialog(
+            backgroundColor: AppColors.offWhite,
+            scrollable: true,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            icon: const Icon(Icons.logout_rounded, color: _green, size: 28),
+            title: const Text(
+              'Weet je het zeker?',
+              style: TextStyle(
+                color: _green,
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
               ),
-              const SizedBox(height: 20),
-              Text(
-                'Weet je het zeker?',
-                style: TextStyle(
-                  fontSize: responsive.fontSize(18),
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
+            ),
+            content: const Text(
+              'Je wordt uitgelogd en moet opnieuw inloggen.',
+              style: TextStyle(color: _muted, fontSize: 16, height: 1.4),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('Annuleren', style: TextStyle(color: _green)),
               ),
-              const SizedBox(height: 12),
-              Text(
-                'Je wordt uitgelogd en moet opnieuw inloggen.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: responsive.fontSize(13),
-                  color: Colors.grey.shade600,
-                  height: 1.4,
+              FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: _green,
+                  foregroundColor: Colors.white,
                 ),
-              ),
-              const SizedBox(height: 28),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        side: BorderSide(
-                          color: Colors.grey.shade300,
-                          width: 1.5,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      onPressed: () => Navigator.of(ctx).pop(),
-                      child: Text(
-                        'Annuleren',
-                        style: TextStyle(
-                          fontSize: responsive.fontSize(14),
-                          color: const Color.fromARGB(255, 0, 0, 0),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        side: BorderSide(
-                          color: Colors.grey.shade300,
-                          width: 1.5,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      onPressed: () async {
-                        Navigator.of(ctx).pop();
-                        if (!mounted) return;
-                        final appStateProvider = context.read<AppStateProvider>();
-                        await appStateProvider.logout();
-                      },
-                      child: Text(
-                        'Ja, Uitloggen',
-                        style: TextStyle(
-                          fontSize: responsive.fontSize(14),
-                          color: const Color.fromARGB(255, 0, 0, 0),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                onPressed: () async {
+                  Navigator.of(ctx).pop();
+                  if (!mounted) return;
+                  final appStateProvider = context.read<AppStateProvider>();
+                  await appStateProvider.logout();
+                },
+                child: const Text('Ja, Uitloggen'),
               ),
             ],
           ),
-        ),
-      ),
     );
   }
 
   void _confirmDelete() {
-    final responsive = context.responsive;
-    showDialog(
+    showDialog<void>(
       context: context,
-      builder: (ctx) => Dialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: Colors.red.shade100,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.error_outline,
-                  color: Colors.red.shade600,
-                  size: 32,
-                ),
+      builder:
+          (ctx) => AlertDialog(
+            backgroundColor: AppColors.offWhite,
+            scrollable: true,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            icon: const Icon(
+              Icons.delete_outline_rounded,
+              color: _danger,
+              size: 28,
+            ),
+            title: const Text(
+              'Weet je het zeker?',
+              style: TextStyle(
+                color: _green,
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
               ),
-              const SizedBox(height: 20),
-              Text(
-                'Weet je het zeker?',
-                style: TextStyle(
-                  fontSize: responsive.fontSize(18),
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
+            ),
+            content: const Text(
+              'Je gegevens gaan permanent verloren; dit kan niet ongedaan worden.',
+              style: TextStyle(color: _muted, fontSize: 16, height: 1.4),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('Annuleren', style: TextStyle(color: _green)),
               ),
-              const SizedBox(height: 12),
-              Text(
-                'Je gegevens gaan permanent verloren; dit kan niet ongedaan worden.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: responsive.fontSize(13),
-                  color: Colors.grey.shade600,
-                  height: 1.4,
+              FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: _danger,
+                  foregroundColor: Colors.white,
                 ),
-              ),
-              const SizedBox(height: 28),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        side: BorderSide(
-                          color: Colors.grey.shade300,
-                          width: 1.5,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      onPressed: () => Navigator.of(ctx).pop(),
-                      child: Text(
-                        'Annuleren',
-                        style: TextStyle(
-                          fontSize: responsive.fontSize(14),
-                          color: Colors.grey.shade600,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
+                onPressed: () async {
+                  Navigator.of(ctx).pop();
+                  if (!mounted) return;
+                  final messenger = ScaffoldMessenger.of(context);
+                  final profileApi = context.read<ProfileApiInterface>();
+                  final appStateProvider = context.read<AppStateProvider>();
+                  messenger.showSnackBar(
+                    const SnackBar(
+                      content: Text('Account wordt verwijderd...'),
+                      duration: Duration(seconds: 2),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        side: BorderSide(
-                          color: Colors.red.shade300,
-                          width: 1.5,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                  );
+                  try {
+                    await profileApi.deleteMyProfile();
+                    await appStateProvider.deleteProfile();
+                  } catch (e) {
+                    if (!mounted) return;
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text('Fout bij verwijderen: $e'),
+                        backgroundColor: Colors.red,
                       ),
-                      onPressed: () async {
-                        Navigator.of(ctx).pop();
-                        if (!mounted) return;
-                        final messenger = ScaffoldMessenger.of(context);
-                        final profileApi = context.read<ProfileApiInterface>();
-                        final appStateProvider = context.read<AppStateProvider>();
-                        messenger.showSnackBar(
-                          const SnackBar(
-                            content: Text('Account wordt verwijderd...'),
-                            duration: Duration(seconds: 2),
-                          ),
-                        );
-                        try {
-                          await profileApi.deleteMyProfile();
-                          await appStateProvider.deleteProfile();
-                        } catch (e) {
-                          if (!mounted) return;
-                          messenger.showSnackBar(
-                            SnackBar(
-                              content: Text('Fout bij verwijderen: $e'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
-                      },
-                      child: Text(
-                        'Ja, Verwijderen',
-                        style: TextStyle(
-                          fontSize: responsive.fontSize(14),
-                          color: Colors.red.shade600,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                    );
+                  }
+                },
+                child: const Text('Ja, Verwijderen'),
               ),
             ],
           ),
-        ),
-      ),
     );
   }
-
 }
 
+class _ProfileSectionToggle extends StatelessWidget {
+  const _ProfileSectionToggle({
+    super.key,
+    required this.title,
+    required this.icon,
+    required this.expanded,
+    required this.onTap,
+  });
+  final String title;
+  final IconData icon;
+  final bool expanded;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    expanded: expanded,
+    child: Material(
+      color: const Color(0xFFEAF0E3),
+      borderRadius: BorderRadius.circular(8),
+      clipBehavior: Clip.antiAlias,
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        leading: Icon(icon, color: _ProfileScreenState._green),
+        title: Text(
+          title,
+          style: const TextStyle(
+            color: _ProfileScreenState._green,
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        trailing: Icon(
+          expanded ? Icons.expand_less : Icons.expand_more,
+          color: _ProfileScreenState._green,
+        ),
+        onTap: onTap,
+      ),
+    ),
+  );
+}
+
+class _ProfileSettingRow extends StatelessWidget {
+  const _ProfileSettingRow({
+    required this.icon,
+    required this.title,
+    required this.trailing,
+    this.subtitle,
+  });
+  final IconData icon;
+  final String title;
+  final Widget trailing;
+  final Widget? subtitle;
+
+  @override
+  Widget build(BuildContext context) => MergeSemantics(
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 5),
+            child: Icon(icon, color: _ProfileScreenState._green, size: 24),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 5),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: _ProfileScreenState._green,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      height: 1.3,
+                    ),
+                  ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 5),
+                    DefaultTextStyle(
+                      style: const TextStyle(
+                        color: _ProfileScreenState._muted,
+                        fontSize: 13,
+                        height: 1.4,
+                      ),
+                      child: subtitle!,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          trailing,
+        ],
+      ),
+    ),
+  );
+}

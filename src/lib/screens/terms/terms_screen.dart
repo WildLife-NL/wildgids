@@ -6,7 +6,7 @@ import 'package:wildgids/interfaces/data_apis/profile_api_interface.dart';
 import 'package:wildgids/models/beta_models/profile_model.dart';
 import 'package:wildgids/constants/app_colors.dart';
 import 'package:wildgids/screens/gate/location_gate_screen.dart';
-import 'package:wildgids/screens/location/kaart_overview_screen.dart';
+import 'package:wildgids/screens/main/main_tab_shell.dart';
 import 'package:wildgids/utils/responsive_utils.dart';
 
 class TermsScreen extends StatefulWidget {
@@ -45,12 +45,9 @@ class _TermsScreenState extends State<TermsScreen> {
 
       // Prefer existing display name, otherwise derive from email prefix
       final email = profile.email;
-      final derived = (email.contains('@'))
-          ? email.split('@').first
-          : email;
-      final initialName = (profile.userName.isNotEmpty)
-          ? profile.userName
-          : derived;
+      final derived = (email.contains('@')) ? email.split('@').first : email;
+      final initialName =
+          (profile.userName.isNotEmpty) ? profile.userName : derived;
       _displayNameController.text = initialName;
     } catch (_) {
       // Fallback: leave empty; user must fill manually
@@ -98,7 +95,7 @@ class _TermsScreenState extends State<TermsScreen> {
       // 3) Navigate to the home screen (no local flags involved)
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(
-          builder: (_) => const LocationGateScreen(next: KaartOverviewScreen()),
+          builder: (_) => const LocationGateScreen(next: MainTabShell()),
         ),
         (_) => false,
       );
@@ -218,7 +215,9 @@ class _TermsScreenState extends State<TermsScreen> {
                     fontWeight: FontWeight.w600,
                   ),
                   onPressed:
-                      (_checked && !_submitting && !_loadingProfile) ? _onAcceptPressed : null,
+                      (_checked && !_submitting && !_loadingProfile)
+                          ? _onAcceptPressed
+                          : null,
                   showShadow: false,
                 ),
               ),
@@ -229,4 +228,3 @@ class _TermsScreenState extends State<TermsScreen> {
     );
   }
 }
-

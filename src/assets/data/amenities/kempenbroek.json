@@ -1,0 +1,32 @@
+[
+  {
+    "type": "toilet",
+    "name": "Voorbeeldtoilet 1",
+    "latitude": 51.193,
+    "longitude": 5.68
+  },
+  {
+    "type": "toilet",
+    "name": "Voorbeeldtoilet 2",
+    "latitude": 51.198,
+    "longitude": 5.69
+  },
+  {
+    "type": "toilet",
+    "name": "Voorbeeldtoilet 3",
+    "latitude": 51.203,
+    "longitude": 5.7
+  },
+  {
+    "type": "toilet",
+    "name": "Voorbeeldtoilet 4",
+    "latitude": 51.208,
+    "longitude": 5.71
+  },
+  {
+    "type": "toilet",
+    "name": "Voorbeeldtoilet 5",
+    "latitude": 51.213,
+    "longitude": 5.72
+  }
+]

@@ -235,9 +235,10 @@ class MapProvider extends ChangeNotifier {
       return;
     }
     _mapController = MapController();
-    if (!_isDisposed) {
-      notifyListeners();
-    }
+    // Map screens can initialize the provider during their build.
+    Future.microtask(() {
+      if (!_isDisposed) notifyListeners();
+    });
   }
 
   void setMapController(MapController controller) {
