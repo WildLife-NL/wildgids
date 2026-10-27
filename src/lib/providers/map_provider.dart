@@ -235,6 +235,7 @@ class MapProvider extends ChangeNotifier {
       return;
     }
     _mapController = MapController();
+    // Map screens can initialize the provider during their build.
     Future.microtask(() {
       if (!_isDisposed) notifyListeners();
     });
@@ -641,6 +642,8 @@ class MapProvider extends ChangeNotifier {
   void dispose() {
     _isDisposed = true;
     _trackingTimer?.cancel();
+    _mapController?.dispose();
+    _mapController = null;
     super.dispose();
   }
 }

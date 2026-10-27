@@ -15,6 +15,19 @@ import 'package:wildgids/screens/location/kaart_overview_screen.dart';
 import 'package:wildgids/widgets/map/amenity_map_widgets.dart';
 
 void main() {
+  test('map initialization does not notify after disposal', () async {
+    final map = MapProvider();
+    var notifications = 0;
+    map.addListener(() => notifications++);
+
+    final initialization = map.initialize();
+    expect(notifications, 0);
+    map.dispose();
+    await initialization;
+
+    expect(notifications, 0);
+  });
+
   testWidgets('map and bundled amenities remain usable with location denied', (
     tester,
   ) async {
@@ -98,7 +111,6 @@ void main() {
     expect(map.currentPosition, isNull);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
-    map.mapController.dispose();
     map.dispose();
     app.dispose();
   });
