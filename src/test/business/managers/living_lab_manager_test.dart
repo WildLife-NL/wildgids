@@ -36,7 +36,7 @@ void main() {
       expect(zuidKennemerland, isNotNull);
       expect(zuidKennemerland?.name, 'Nationaal Park Zuid-Kennemerland');
       expect(kempenBroek, isNotNull);
-      expect(kempenBroek?.name, 'Grenspark Kempen~Broek');
+      expect(kempenBroek?.name, 'Grenspark KempenBroek');
       expect(nonExistent, isNull);
     });
 
@@ -46,7 +46,7 @@ void main() {
         52.41,
         4.55,
       ); // Inside Zuid-Kennemerland
-      final insideKempenBroek = LatLng(51.19, 5.72); // Inside Kempen~Broek
+      final insideKempenBroek = LatLng(51.19, 5.72); // Inside KempenBroek
       final outsideAnyLab = LatLng(53.0, 6.0); // Outside any living lab
 
       // Act

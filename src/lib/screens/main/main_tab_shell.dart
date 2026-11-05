@@ -12,7 +12,6 @@ import 'package:wildgids/screens/logbook/logbook_screen.dart';
 import 'package:wildgids/screens/profile/profile_screen.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/custom_nav_bar.dart';
 
-
 class MainTabShell extends StatefulWidget {
   const MainTabShell({super.key});
 
@@ -21,8 +20,8 @@ class MainTabShell extends StatefulWidget {
 }
 
 class _MainTabShellState extends State<MainTabShell> {
-  NavTab _currentTab = NavTab.kaart;
-  NavTab _previousTab = NavTab.kaart;
+  NavTab _currentTab = NavTab.ontdekken;
+  NavTab _previousTab = NavTab.ontdekken;
 
   Widget _pageForTab(NavTab tab) {
     switch (tab) {
@@ -72,19 +71,13 @@ class _MainTabShellState extends State<MainTabShell> {
           final isIncoming = child.key == ValueKey(_currentTab);
 
           final offset = Tween<Offset>(
-            begin: Offset(
-              isIncoming ? (goingRight ? 1 : -1) : 0,
-              0,
-            ),
+            begin: Offset(isIncoming ? (goingRight ? 1 : -1) : 0, 0),
             end: Offset.zero,
           ).animate(animation);
 
           return FadeTransition(
             opacity: animation,
-            child: SlideTransition(
-              position: offset,
-              child: child,
-            ),
+            child: SlideTransition(position: offset, child: child),
           );
         },
         child: KeyedSubtree(

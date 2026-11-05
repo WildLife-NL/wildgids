@@ -20,6 +20,9 @@ import 'package:wildlifenl_map_logic_components/wildlifenl_map_logic_components.
     show MapStateInterface;
 import 'package:wildgids/screens/profile/profile_screen.dart';
 import 'package:wildgids/widgets/map/animal_detail_card.dart';
+import 'package:wildgids/widgets/map/amenity_map_widgets.dart';
+import 'package:wildgids/widgets/map/carto_attribution.dart';
+import 'package:wildgids/managers/map/amenity_map_controller.dart';
 import 'package:wildgids/models/animal_waarneming_models/animal_pin.dart';
 import 'package:wildgids/models/api_models/detection_pin.dart';
 import 'package:wildgids/models/animal_waarneming_models/interaction_to_animal_pin.dart';
@@ -60,6 +63,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
   static const double _maxMapZoom = 17.5;
   fm.MapOptions? _mapOptions;
   final _location = LocationMapManager();
+  final _amenities = AmenityMapController();
 
   bool _mapReady = false;
   LatLng? _pendingCenter;
@@ -82,6 +86,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
 
   static const double _initialZoom = 15.0;
   bool _followUser = false;
+  bool _hasChosenLab = false;
 
   AnimalPin? _selectedAnimalDetail;
   String? _selectedAnimalIconPath;
@@ -245,6 +250,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
   @override
   void initState() {
     super.initState();
+    _amenities.load();
     _bootstrap();
     _startFollowingMe();
   }
@@ -252,6 +258,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
 
   @override
   void dispose() {
+    _amenities.dispose();
     _posSub?.cancel();
     _pinsRefreshDebounce?.cancel();
     if (_listenerAttached && _mpListener != null) {
@@ -317,7 +324,6 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
       accuracy: LocationAccuracy.best,
       distanceFilter: 5,
     );
-
     _posSub = Geolocator.getPositionStream(locationSettings: settings).listen((
       pos,
     ) async {
@@ -365,6 +371,8 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
       }
 
       _schedulePinsRefresh();
+    }, onError: (Object error) {
+      debugPrint('[Map] Location stream unavailable: $error');
     });
   }
 
@@ -388,14 +396,18 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
         address = await mgr.getAddressFromPosition(pos);
       }
       await map.resetToCurrentLocation(pos, address);
-      _pendingCenter = LatLng(pos.latitude, pos.longitude);
-      _pendingZoom = _initialZoom;
+      if (!_hasChosenLab) {
+        _pendingCenter = LatLng(pos.latitude, pos.longitude);
+        _pendingZoom = _initialZoom;
+      }
     } else {
       debugPrint(
         '[Loc] No GPS fix yet; map centered on NL overview (not device location)',
       );
-      _pendingCenter = MapStateInterface.defaultCenter;
-      _pendingZoom = 8.0;
+      if (!_hasChosenLab) {
+        _pendingCenter = MapStateInterface.defaultCenter;
+        _pendingZoom = 8.0;
+      }
     }
     _applyPendingCamera();
 
@@ -447,7 +459,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       try {
         final gps = pos;
-        if (hasGps && gps != null) {
+        if (hasGps && gps != null && !_hasChosenLab) {
           _pendingCenter = LatLng(gps.latitude, gps.longitude);
           _pendingZoom = _initialZoom;
           _applyPendingCamera();
@@ -1230,9 +1242,7 @@ Widget _legendRow(
         backgroundColor: Colors.white,
         extendBody: false,
         body:
-            pos == null
-                ? const Center(child: CircularProgressIndicator())
-                : _mapOptions == null
+            _mapOptions == null
                 ? const Center(child: CircularProgressIndicator())
                 : Center(
                   child: ConstrainedBox(
@@ -1245,11 +1255,16 @@ Widget _legendRow(
                           children: [
                             fm.TileLayer(
                               urlTemplate: LocationMapManager.standardTileUrl,
+                              tileProvider: fm.NetworkTileProvider(
+                                headers: LocationMapManager.standardTileHeaders,
+                              ),
                               subdomains: LocationMapManager.standardTileSubdomains,
                               userAgentPackageName: 'com.wildgids.app',
                               retinaMode: LocationMapManager.tileRetinaMode(context),
                               keepBuffer: 1,
                             ),
+
+                            AmenityMapLayer(controller: _amenities),
 
                             _useClusters
                                 ? cl.MarkerClusterLayerWidget(
@@ -1474,7 +1489,7 @@ Widget _legendRow(
                                           .toList(),
                                 ),
 
-                            if (context
+                            if (pos != null && context
                                 .watch<AppStateProvider>()
                                 .isLocationTrackingEnabled)
                               Builder(
@@ -1665,6 +1680,22 @@ Widget _legendRow(
                         ),
 
                         Positioned(
+                          left: 14,
+                          top: 14,
+                          child: SafeArea(
+                            child: AmenityMapControl(
+                              controller: _amenities,
+                              onViewLab: (lab) {
+                                _hasChosenLab = true;
+                                _followUser = false;
+                                _pendingCenter = lab.center;
+                                _pendingZoom = 12;
+                                _applyPendingCamera();
+                              },
+                            ),
+                          ),
+                        ),
+                        Positioned(
                           left: 12,
                           bottom: 44,
                           child: Container(
@@ -1808,32 +1839,7 @@ bottom: 45,
                             ),
                           ),
                         ),
-                        Positioned(
-                          right: 6,
-                          bottom: 6,
-                          child: IgnorePointer(
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  '© OpenTopoMap',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.black.withValues(alpha: 0.55),
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '© OpenStreetMap contributors',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.black.withValues(alpha: 0.55),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+                        const CartoAttribution(),
                         if (_showLegend)
                           Positioned.fill(
                             child: GestureDetector(
