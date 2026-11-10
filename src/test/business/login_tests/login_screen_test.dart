@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
@@ -7,8 +7,7 @@ import 'package:wildgids/interfaces/other/login_interface.dart';
 import 'package:wildgids/interfaces/other/permission_interface.dart';
 import 'package:wildgids/providers/app_state_provider.dart';
 import 'package:wildgids/screens/login/login_screen.dart';
-import 'package:wildgids/widgets/overlay/error_overlay.dart'
-    show ErrorOverlay;
+import 'package:wildgids/widgets/overlay/error_overlay.dart' show ErrorOverlay;
 import '../mock_generator.mocks.dart';
 
 void main() {
@@ -68,7 +67,7 @@ void main() {
 
     // Verify email field and login button are rendered
     expect(find.byType(TextField), findsOneWidget);
-    expect(find.text('Aanmelden'), findsOneWidget);
+    expect(find.text('Code versturen'), findsOneWidget);
   });
 
   testWidgets('should validate email and show error for invalid email', (
@@ -85,7 +84,7 @@ void main() {
 
     // Enter invalid email and tap login button
     await tester.enterText(find.byType(TextField), 'invalid-email');
-    await tester.tap(find.text('Aanmelden'));
+    await tester.tap(find.text('Code versturen'));
     await tester.pump();
     await tester.pumpAndSettle(); // Wait for dialog
 
@@ -108,7 +107,7 @@ void main() {
 
     // Enter valid email and tap login button
     await tester.enterText(find.byType(TextField), 'test@example.com');
-    await tester.tap(find.text('Aanmelden'));
+    await tester.tap(find.text('Code versturen'));
     await tester.pump();
 
     // Verify sendLoginCode was called
@@ -132,12 +131,12 @@ void main() {
 
       // Enter valid email and tap login button
       await tester.enterText(find.byType(TextField), 'test@example.com');
-      await tester.tap(find.text('Aanmelden'));
+      await tester.tap(find.text('Code versturen'));
 
       await tester.pump();
       await tester.pumpAndSettle(); // Wait for verification screen
 
-      expect(find.text('Voer verificatiecode in'), findsOneWidget);
+      expect(find.text('Controleer uw e-mail'), findsOneWidget);
     },
   );
 
@@ -156,7 +155,7 @@ void main() {
 
     // Enter valid email and tap login button
     await tester.enterText(find.byType(TextField), 'test@example.com');
-    await tester.tap(find.text('Aanmelden'));
+    await tester.tap(find.text('Code versturen'));
 
     await tester.pump();
     await tester.pumpAndSettle(); // Wait for API call to complete
@@ -190,12 +189,12 @@ void main() {
 
       // Enter valid email and tap login button
       await tester.enterText(find.byType(TextField), 'test@example.com');
-      await tester.tap(find.text('Aanmelden'));
+      await tester.tap(find.text('Code versturen'));
 
       // First pump to handle the initial state change (showVerification = true)
       await tester.pump();
 
-      expect(find.text('Voer verificatiecode in'), findsOneWidget);
+      expect(find.text('Controleer uw e-mail'), findsOneWidget);
 
       // Pump again to process the exception and UI update
       await tester.pumpAndSettle();
@@ -203,7 +202,7 @@ void main() {
       // After the exception, we should be back to the login screen
       expect(find.byType(TextField), findsOneWidget);
 
-      expect(find.text('Voer verificatiecode in'), findsNothing);
+      expect(find.text('Controleer uw e-mail'), findsNothing);
     },
   );
 
@@ -228,12 +227,12 @@ void main() {
 
     // Enter valid email and tap login button
     await tester.enterText(find.byType(TextField), 'test@example.com');
-    await tester.tap(find.text('Aanmelden'));
+    await tester.tap(find.text('Code versturen'));
 
     // First pump to handle the initial state change (showVerification = true)
     await tester.pump();
 
-    expect(find.text('Voer verificatiecode in'), findsOneWidget);
+    expect(find.text('Controleer uw e-mail'), findsOneWidget);
 
     // Pump again to process the exception
     await tester.pumpAndSettle();
@@ -243,7 +242,7 @@ void main() {
     // 2. We're still on the verification screen (if error isn't properly caught)
     bool foundLoginField = find.byType(TextField).evaluate().isNotEmpty;
     bool foundVerificationScreen =
-        find.text('Voer verificatiecode in').evaluate().isNotEmpty;
+        find.text('Controleer uw e-mail').evaluate().isNotEmpty;
 
     // At least one of these should be true for the app to be in a valid state
     expect(
@@ -259,4 +258,3 @@ void main() {
     }
   });
 }
-

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wildgids/interfaces/data_apis/auth_api_interface.dart';
 import 'package:wildgids/interfaces/data_apis/profile_api_interface.dart';
@@ -7,6 +7,7 @@ import 'package:wildgids/models/ui_models/brown_button_model.dart';
 import 'package:wildgids/constants/app_colors.dart';
 import 'package:wildgids/models/api_models/user.dart';
 import 'package:wildgids/exceptions/validation_exception.dart';
+import 'package:wildgids/exceptions/login_code_delivery_uncertain_exception.dart';
 import 'package:wildgids/utils/reviewer_auth.dart';
 
 class LoginManager implements LoginInterface {
@@ -82,6 +83,8 @@ class LoginManager implements LoginInterface {
       }
       await authApi.authenticate("Wild Gids", email.trim());
       return true;
+    } on LoginCodeDeliveryUncertainException {
+      rethrow;
     } catch (e) {
       throw Exception("Login failed: $e");
     }
@@ -133,6 +136,7 @@ class LoginManager implements LoginInterface {
       await authApi.authenticate("Wild Gids", email.trim());
       return true;
     } catch (e) {
+      if (e is LoginCodeDeliveryUncertainException) rethrow;
       throw Exception("Resend code failed: $e");
     }
   }
@@ -146,11 +150,7 @@ class LoginManager implements LoginInterface {
     await prefs.setString('bearer_token', ReviewerAuth.token);
     await profileApi.setProfileDataInDeviceStorage();
 
-    return User(
-      id: 'reviewer',
-      email: email.trim(),
-      name: 'App Reviewer',
-    );
+    return User(id: 'reviewer', email: email.trim(), name: 'App Reviewer');
   }
 
   /// Sets the visibility state of the verification screen
@@ -199,4 +199,3 @@ class LoginManager implements LoginInterface {
     }
   }
 }
-
