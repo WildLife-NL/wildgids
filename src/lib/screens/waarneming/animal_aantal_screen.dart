@@ -1,503 +1,508 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:wildgids/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
-import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
+import 'package:wildgids/models/enums/animal_count_mode.dart';
+import 'package:wildgids/models/enums/location_source.dart';
 import 'package:wildgids/screens/waarneming/animal_activity_screen.dart';
+import 'package:wildgids/screens/waarneming/location_selection_screen.dart';
 import 'package:wildgids/utils/species_image_resolver.dart';
+import 'package:wildgids/widgets/guide/animal_artwork.dart';
+import 'package:wildgids/widgets/guide/animal_name.dart';
+import 'package:wildgids/widgets/guide/guide_style.dart';
+import 'package:wildgids/widgets/reporting/report_layout.dart';
 
 class AnimalAantalScreen extends StatefulWidget {
   const AnimalAantalScreen({super.key});
-
   @override
   State<AnimalAantalScreen> createState() => _AnimalAantalScreenState();
 }
 
 class _AnimalAantalScreenState extends State<AnimalAantalScreen> {
   late int currentCount;
+  late AnimalCountMode _mode;
+  late TextEditingController _countController;
+  bool get _validCount =>
+      int.tryParse(_countController.text) != null && currentCount > 0;
+  AnimalSightingReportingInterface get _manager =>
+      context.read<AnimalSightingReportingInterface>();
 
   @override
   void initState() {
     super.initState();
-    // Load saved animal count from sighting if it exists
-    final sightingManager =
-        context.read<AnimalSightingReportingInterface>();
-    final sighting = sightingManager.getCurrentanimalSighting();
-    
-    currentCount = sighting?.animalCount ?? 1;
+    final sighting = _manager.getCurrentanimalSighting();
+    currentCount =
+        (sighting?.animalCount ?? 1) > 0 ? (sighting?.animalCount ?? 1) : 1;
+    _mode = sighting?.countMode ?? AnimalCountMode.exact;
+    _countController = TextEditingController(text: '$currentCount');
   }
 
+  @override
+  void dispose() {
+    _countController.dispose();
+    super.dispose();
+  }
+
+  void _setCount(int value) => setState(() {
+    currentCount = value;
+    _countController.text = '$value';
+  });
+
   void _saveAnimalCount() {
-    final sightingManager =
-        context.read<AnimalSightingReportingInterface>();
-    final sighting = sightingManager.getCurrentanimalSighting();
-    
-    if (sighting != null) {
-      sightingManager.updateCurrentanimalSighting(
-        sighting.copyWith(animalCount: currentCount),
-      );
-    }
+    final sighting = _manager.getCurrentanimalSighting();
+    if (sighting == null) return;
+    _manager.updateCurrentanimalSighting(
+      sighting.copyWith(
+        animalCount: _mode == AnimalCountMode.exact ? currentCount : 0,
+        countMode: _mode,
+        animals:
+            _mode == AnimalCountMode.exact &&
+                    sighting.countMode == AnimalCountMode.exact &&
+                    sighting.animalCount == currentCount
+                ? sighting.animals
+                : [],
+      ),
+    );
   }
 
   void _handleBackNavigation() {
     _saveAnimalCount();
-    if (Navigator.of(context).canPop()) {
-      Navigator.pop(context);
-    }
+    if (Navigator.of(context).canPop()) Navigator.pop(context);
+  }
+
+  void _continue({bool details = false}) {
+    if (_mode == AnimalCountMode.exact && !_validCount) return;
+    FocusScope.of(context).unfocus();
+    _saveAnimalCount();
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (_) => AnimalActivityScreen(
+              totalCount: _mode == AnimalCountMode.exact ? currentCount : 0,
+              proceedToDetails: details && _mode == AnimalCountMode.exact,
+            ),
+      ),
+    );
+  }
+
+  DateTime get _moment =>
+      _manager.getCurrentanimalSighting()?.dateTime?.dateTime ?? DateTime.now();
+
+  Future<void> _pickDate() async {
+    final moment = _moment;
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: moment,
+      firstDate: DateTime(moment.year - 5),
+      lastDate: DateTime(moment.year + 5),
+    );
+    if (picked == null || !mounted) return;
+    _manager.updateDateTime(
+      DateTime(
+        picked.year,
+        picked.month,
+        picked.day,
+        moment.hour,
+        moment.minute,
+      ),
+    );
+    setState(() {});
+  }
+
+  Future<void> _pickTime() async {
+    final moment = _moment;
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(moment),
+      builder:
+          (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+            child: child!,
+          ),
+    );
+    if (picked == null || !mounted) return;
+    _manager.updateDateTime(
+      DateTime(
+        moment.year,
+        moment.month,
+        moment.day,
+        picked.hour,
+        picked.minute,
+      ),
+    );
+    setState(() {});
+  }
+
+  Future<void> _changeLocation() async {
+    _saveAnimalCount();
+    final locations = _manager.getCurrentanimalSighting()?.locations ?? [];
+    final place =
+        locations.isEmpty
+            ? null
+            : locations.lastWhere(
+              (location) => location.source == LocationSource.manual,
+              orElse: () => locations.first,
+            );
+    final initial =
+        place?.latitude != null && place?.longitude != null
+            ? LatLng(place!.latitude!, place.longitude!)
+            : null;
+    await Navigator.push<LatLng>(
+      context,
+      MaterialPageRoute(
+        builder:
+            (_) => LocationSelectionScreen(
+              initialLocation: initial,
+              returnSelection: true,
+            ),
+      ),
+    );
+    if (mounted) setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    final sightingManager =
-        context.read<AnimalSightingReportingInterface>();
-    final sighting = sightingManager.getCurrentanimalSighting();
-    final selectedAnimal = sighting?.animalSelected;
-    final selectedAnimalImagePath =
-        SpeciesImageResolver.drawingForCommonName(selectedAnimal?.animalName) ??
-        selectedAnimal?.animalImagePath;
-
-    if (selectedAnimal == null) {
-      return Scaffold(
-        backgroundColor: const Color(0xFFF5F6F4),
-        body: const Center(
-          child: Text('No animal selected'),
-        ),
-      );
-    }
-
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F6F4),
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            // App Bar
-            CustomAppBar(
-              
-              centerText: 'Waarneming',
-              rightIcon: null,
-              showUserIcon: false,
-              useFixedText: true,
-              onLeftIconPressed: _handleBackNavigation,
-              textColor: Colors.black,
-              fontScale: 1.4,
-              iconScale: 1.15,
-              userIconScale: 1.15,
-            ),
-          
-            // Main card container
-            SizedBox(
-              height: MediaQuery.of(context).size.height * 0.75,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 2, 16, 16),
-                child: Card(
-                  elevation: 0,
-                  color: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    side: BorderSide(
-                      color: const Color(0xFF999999),
-                      width: 1,
+    final sighting = _manager.getCurrentanimalSighting();
+    final animal = sighting?.animalSelected;
+    final moment = _moment;
+    final locations = sighting?.locations ?? [];
+    final place =
+        locations.isEmpty
+            ? null
+            : locations.lastWhere(
+              (location) => location.source == LocationSource.manual,
+              orElse: () => locations.first,
+            );
+    final locationLabel =
+        place?.cityName?.isNotEmpty == true
+            ? place!.cityName!
+            : place?.streetName?.isNotEmpty == true
+            ? place!.streetName!
+            : place?.latitude != null && place?.longitude != null
+            ? '${place!.latitude!.toStringAsFixed(2)}, ${place.longitude!.toStringAsFixed(2)}'
+            : 'Kies een locatie';
+    return ReportLayout(
+      title: 'Wat zag je?',
+      stage: 'Je ontmoeting',
+      onBack: _handleBackNavigation,
+      footer:
+          animal == null
+              ? null
+              : ReportAction(
+                label: 'Verder',
+                onPressed:
+                    _mode != AnimalCountMode.exact || _validCount
+                        ? () => _continue()
+                        : null,
+              ),
+      child:
+          animal == null
+              ? const Text('Kies eerst een dier.')
+              : Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ReportSurface(
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 90,
+                          height: 85,
+                          child: AnimalArtwork(
+                            imagePath:
+                                SpeciesImageResolver.drawingForCommonName(
+                                  animal.animalName,
+                                ) ??
+                                animal.animalImagePath,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: AnimalName(
+                            animal.animalName,
+                            style: const TextStyle(
+                              color: GuideStyle.ink,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed:
+                              Navigator.of(context).canPop()
+                                  ? _handleBackNavigation
+                                  : null,
+                          style: TextButton.styleFrom(
+                            foregroundColor: GuideStyle.ink,
+                          ),
+                          child: const Text('Wijzig'),
+                        ),
+                      ],
                     ),
                   ),
-                  child: SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Column(
-                        children: [
-                          // Question text
-                          Text(
-                            'Hoeveel van deze dieren\nheb je gezien?',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w400,
-                              color: Colors.black87,
-                            ),
+                  const SizedBox(height: 16),
+                  ReportSurface(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Text(
+                          'Hoeveel?',
+                          style: TextStyle(
+                            color: GuideStyle.ink,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        if (_mode == AnimalCountMode.exact) ...[
+                          Row(
+                            children: [
+                              IconButton.filledTonal(
+                                tooltip: 'Minder dieren',
+                                onPressed:
+                                    currentCount > 0
+                                        ? () => _setCount(currentCount - 1)
+                                        : null,
+                                style: IconButton.styleFrom(
+                                  minimumSize: const Size(52, 52),
+                                  backgroundColor: GuideStyle.surface,
+                                  foregroundColor: GuideStyle.ink,
+                                ),
+                                icon: const Icon(Icons.remove, size: 28),
+                              ),
+                              Expanded(
+                                child: TextField(
+                                  controller: _countController,
+                                  textAlign: TextAlign.center,
+                                  keyboardType: TextInputType.number,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                  ],
+                                  style: const TextStyle(
+                                    fontSize: 56,
+                                    fontWeight: FontWeight.w800,
+                                    color: GuideStyle.ink,
+                                  ),
+                                  decoration: const InputDecoration(
+                                    isDense: true,
+                                    contentPadding: EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                    border: InputBorder.none,
+                                    semanticCounterText: 'Exact aantal dieren',
+                                  ),
+                                  onChanged:
+                                      (value) => setState(
+                                        () =>
+                                            currentCount =
+                                                int.tryParse(value) ?? 0,
+                                      ),
+                                ),
+                              ),
+                              IconButton.filledTonal(
+                                tooltip: 'Meer dieren',
+                                onPressed: () => _setCount(currentCount + 1),
+                                style: IconButton.styleFrom(
+                                  minimumSize: const Size(52, 52),
+                                  backgroundColor: GuideStyle.surface,
+                                  foregroundColor: GuideStyle.ink,
+                                ),
+                                icon: const Icon(Icons.add, size: 28),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 10),
-                          // Animal card with image
-                          Center(
-                            child: SizedBox(
-                              width: 180,
-                          
-                              child: Card(
-                                
-                                shadowColor: const Color.fromARGB(133, 0, 0, 0).withValues(alpha: 0.1),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                  side: BorderSide(
-                                    color: const Color(0xFF999999),
-                                    width: 1,
-                                  ),
-                                ),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    // Image area
-                                    Center(
-                                      child: SizedBox(
-                                        width: 180,
-                                        height: 150,
-                                        child: AspectRatio(
-                                          aspectRatio: 1.0,
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              borderRadius: const BorderRadius.only(
-                                                topLeft: Radius.circular(14),
-                                                topRight: Radius.circular(14),
-                                              ),
-                                              color: Colors.white,
-                                              
+                          Wrap(
+                            alignment: WrapAlignment.center,
+                            spacing: 12,
+                            runSpacing: 8,
+                            children:
+                                [10, 20, 50]
+                                    .map(
+                                      (amount) => ActionChip(
+                                        label: Text('+ $amount'),
+                                        side: const BorderSide(
+                                          color: GuideStyle.border,
+                                        ),
+                                        backgroundColor: GuideStyle.surface,
+                                        onPressed:
+                                            () => _setCount(
+                                              currentCount + amount,
                                             ),
-                                            child: ClipRRect(
-                                              borderRadius: const BorderRadius.only(
-                                                topLeft: Radius.circular(14),
-                                                topRight: Radius.circular(14),
-                                              ),
-                                              child: SizedBox.expand(
-                                                child: selectedAnimalImagePath !=
-                                                        null
-                                                    ? Image(
-                                                        image: AssetImage(
-                                                          selectedAnimalImagePath,
-                                                        ),
-                                                        fit: BoxFit.cover,
-                                                      )
-                                                    : Center(
-                                                        child: Icon(
-                                                          Icons
-                                                              .image_not_supported_outlined,
-                                                          size: 50,
-                                                          color: Colors.grey[400],
-                                                        ),
-                                                      ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
                                       ),
-                                    ),
-                                    // Divider line
-                                    Container(
-                                      height: 1,
-                                      color: const Color(0xFF999999),
-                                      width: 180,
-                                    ),
-                                    // Name area
-                                    Container(
-                                      width: 180,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: const BorderRadius.only(
-                                          bottomLeft: Radius.circular(14),
-                                          bottomRight: Radius.circular(14),
-                                        ),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 8,
-                                        horizontal: 12,
-                                      ),
-                                      child: Text(
-                                        selectedAnimal.animalName,
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w400,
-                                          color: Colors.black,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
+                                    )
+                                    .toList(),
                           ),
-                          const SizedBox(height: 20),
-                          // Aantal label
-                          const Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              'Aantal:',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w400,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          // Stepper with - and + buttons
-                          Container(
-                            height: 80,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(40),
-                              border: Border.all(
-                                color: const Color(0xFF999999),
-                                width: 1,
-                              ),
-                            ),
-                            child: Row(
+                        ] else
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: Column(
                               children: [
-                                // Minus button
-                                Expanded(
-                                  child: ClipRRect(
-                                    borderRadius: const BorderRadius.only(
-                                      topLeft: Radius.circular(40),
-                                      bottomLeft: Radius.circular(40),
-                                    ),
-                                    child: Material(
-                                      color: Colors.transparent,
-                                      child: InkWell(
-                                        onTap: currentCount > 0
-                                            ? () {
-                                                setState(() {
-                                                  currentCount--;
-                                                });
-                                              }
-                                            : null,
-                                        splashColor:
-                                            Colors.black.withValues(alpha: 0.1),
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            color: Colors.black87,
-                                            borderRadius: const BorderRadius.only(
-                                              topLeft: Radius.circular(40),
-                                              bottomLeft: Radius.circular(40),
-                                            ),
-                                          ),
-                                          child: SizedBox.expand(
-                                            child: Icon(
-                                              Icons.remove,
-                                              color: Colors.white,
-                                              size: 32,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
+                                Icon(
+                                  _mode == AnimalCountMode.group
+                                      ? Icons.groups_outlined
+                                      : Icons.help_outline,
+                                  size: 36,
+                                  color: GuideStyle.ink,
                                 ),
-                                // Number display
-                                Expanded(
-                                  flex: 2,
-                                  child: Center(
-                                    child: Text(
-                                      '$currentCount',
-                                      style: const TextStyle(
-                                        fontSize: 30,
-                                        fontWeight: FontWeight.w400,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                // Plus button
-                                Expanded(
-                                  child: ClipRRect(
-                                    borderRadius: const BorderRadius.only(
-                                      topRight: Radius.circular(40),
-                                      bottomRight: Radius.circular(40),
-                                    ),
-                                    child: Material(
-                                      color: Colors.transparent,
-                                      child: InkWell(
-                                        onTap: () {
-                                          setState(() {
-                                            currentCount++;
-                                          });
-                                        },
-                                        splashColor:
-                                            Colors.black.withValues(alpha: 0.1),
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            color: Colors.black87,
-                                            borderRadius: const BorderRadius.only(
-                                              topRight: Radius.circular(25),
-                                              bottomRight: Radius.circular(25),
-                                            ),
-                                          ),
-                                          child: SizedBox.expand(
-                                            child: Icon(
-                                              Icons.add,
-                                              color: Colors.white,
-                                              size: 32,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  _mode == AnimalCountMode.group
+                                      ? 'Groep gezien, niet geteld'
+                                      : 'Aantal onbekend',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: GuideStyle.muted,
+                                    fontSize: 16,
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(height: 12),
-                          // Quick add buttons
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              _buildQuickAddButton('+ 10', 10),
-                              const SizedBox(width: 15),
-                              _buildQuickAddButton('+ 20', 20),
-                              const SizedBox(width: 15),
-                              _buildQuickAddButton('+ 50', 50),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          // More details button
-                          SizedBox(
-                            width: double.infinity,
-                            child: OutlinedButton(
-                              style: OutlinedButton.styleFrom(
-                                side: BorderSide(
-                                  color: const Color(0xFF999999),
-                                  width: 1.5,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 12),
-                              ),
-                              onPressed: () {
-                                if (currentCount > 0) {
-                                  _saveAnimalCount();
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => AnimalActivityScreen(
-                                        totalCount: currentCount,
-                                        proceedToDetails: true,
+                        const SizedBox(height: 18),
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            const labelStyle = TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                            );
+                            final stacked =
+                                constraints.maxWidth < 220 ||
+                                MediaQuery.textScalerOf(context).scale(1) > 1.3;
+                            final choices =
+                                AnimalCountMode.values
+                                    .map(
+                                      (mode) => ConstrainedBox(
+                                        constraints: const BoxConstraints(
+                                          minHeight: 48,
+                                        ),
+                                        child: ChoiceChip(
+                                          key: ValueKey(
+                                            'count-mode-${mode.name}',
+                                          ),
+                                          label: Center(
+                                            child: FittedBox(
+                                              fit: BoxFit.scaleDown,
+                                              child: Text(
+                                                mode.label,
+                                                textAlign: TextAlign.center,
+                                                softWrap: false,
+                                              ),
+                                            ),
+                                          ),
+                                          showCheckmark: false,
+                                          materialTapTargetSize:
+                                              MaterialTapTargetSize.shrinkWrap,
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 12,
+                                            horizontal: 4,
+                                          ),
+                                          labelPadding: EdgeInsets.zero,
+                                          selected: _mode == mode,
+                                          selectedColor: GuideStyle.ink,
+                                          backgroundColor: GuideStyle.surface,
+                                          checkmarkColor: Colors.white,
+                                          labelStyle: labelStyle.copyWith(
+                                            color:
+                                                _mode == mode
+                                                    ? Colors.white
+                                                    : GuideStyle.ink,
+                                          ),
+                                          side: const BorderSide(
+                                            color: GuideStyle.border,
+                                          ),
+                                          onSelected:
+                                              (_) =>
+                                                  setState(() => _mode = mode),
+                                        ),
                                       ),
-                                    ),
-                                  );
-                                }
-                              },
-                              child: const Text(
-                                '+ Meer details toevoegen?',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                                    )
+                                    .toList();
+                            if (stacked) {
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  for (var i = 0; i < choices.length; i++) ...[
+                                    if (i > 0) const SizedBox(height: 8),
+                                    choices[i],
+                                  ],
+                                ],
+                              );
+                            }
+                            return Row(
+                              children: [
+                                for (var i = 0; i < choices.length; i++) ...[
+                                  if (i > 0) const SizedBox(width: 8),
+                                  Expanded(child: choices[i]),
+                                ],
+                              ],
+                            );
+                          },
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              ),
-            ),
-            // Bottom buttons
-            SafeArea(
-              top: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          side: const BorderSide(
-                            color: Color(0xFF999999),
-                            width: 1.5,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(25),
-                          ),
-                          foregroundColor: const Color.fromARGB(255, 0, 0, 0),
-                          backgroundColor: Colors.white,
-                        ),
-                        child: const Text(
-                          'Vorige',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          if (currentCount > 0) {
-                            _saveAnimalCount();
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => AnimalActivityScreen(
-                                  totalCount: currentCount,
-                                ),
-                              ),
-                            );
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          backgroundColor: const Color(0xFF37A904),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(25),
-                          ),
-                          foregroundColor: Colors.white,
-                        ),
-                        child: const Text(
-                          'Volgende',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
+                  const SizedBox(height: 16),
+                  _field(
+                    Icons.calendar_today_outlined,
+                    'Datum',
+                    '${moment.day}-${moment.month}-${moment.year}',
+                    _pickDate,
+                  ),
+                  const SizedBox(height: 10),
+                  _field(
+                    Icons.schedule_outlined,
+                    'Tijd',
+                    '${moment.hour.toString().padLeft(2, '0')}:${moment.minute.toString().padLeft(2, '0')}',
+                    _pickTime,
+                  ),
+                  const SizedBox(height: 10),
+                  _field(
+                    Icons.place_outlined,
+                    'Locatie',
+                    locationLabel,
+                    _changeLocation,
+                  ),
+                  if (_mode == AnimalCountMode.exact) ...[
+                    const SizedBox(height: 16),
+                    ReportAction(
+                      label: 'Details per dier toevoegen',
+                      secondary: true,
+                      onPressed:
+                          _validCount ? () => _continue(details: true) : null,
                     ),
                   ],
-                ),
+                ],
               ),
-            ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: SizedBox.shrink(),
     );
   }
 
-  Widget _buildQuickAddButton(String label, int amount) {
-    return OutlinedButton(
-      style: OutlinedButton.styleFrom(
-        side: const BorderSide(
-          color: Color(0xFF999999),
-          width: 1.5,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        padding: const EdgeInsets.symmetric(
-          horizontal: 12.0,
-          vertical: 8.0,
-        ),
-      ),
-      onPressed: () {
-        setState(() {
-          currentCount += amount;
-        });
-      },
-      child: Text(
-        label,
+  Widget _field(
+    IconData icon,
+    String title,
+    String value,
+    VoidCallback onTap,
+  ) => Material(
+    color: Colors.white,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8),
+      side: const BorderSide(color: GuideStyle.border),
+    ),
+    clipBehavior: Clip.antiAlias,
+    child: ListTile(
+      onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      leading: Icon(icon, color: GuideStyle.ink),
+      title: Text(
+        title,
         style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: Colors.black87,
+          color: GuideStyle.ink,
+          fontWeight: FontWeight.w700,
         ),
       ),
-    );
-  }
+      subtitle: Text(value, style: const TextStyle(color: GuideStyle.muted)),
+      trailing: const Icon(Icons.chevron_right_rounded, color: GuideStyle.ink),
+    ),
+  );
 }

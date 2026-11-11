@@ -52,6 +52,7 @@ import 'package:wildgids/config/app_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wildgids/providers/app_state_provider.dart';
 import 'package:wildgids/providers/map_provider.dart';
+import 'package:wildgids/providers/walk_recorder.dart';
 import 'package:wildgids/providers/response_provider.dart';
 import 'package:wildgids/providers/submitted_sightings_provider.dart';
 import 'package:wildgids/screens/login/login_screen.dart';
@@ -142,7 +143,6 @@ void main() async {
   );
   responseManager.init();
 
-
   final questionnaireManager = QuestionnaireManager(questionnaireAPI);
 
   final animalSightingReportingManager = AnimalSightingReportingManager();
@@ -153,15 +153,16 @@ void main() async {
 
   final bool hasValidToken = await TokenValidator.hasValidToken();
   final Widget initialScreen =
-    hasValidToken
-        ? const LocationGateScreen(next: MainTabShell())
-        : const LoginScreen();
+      hasValidToken
+          ? const LocationGateScreen(next: MainTabShell())
+          : const LoginScreen();
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider<AppStateProvider>.value(value: appStateProvider),
         ChangeNotifierProvider<MapProvider>.value(value: mapProvider),
+        ChangeNotifierProvider<WalkRecorder>(create: (_) => WalkRecorder()),
         ChangeNotifierProvider<ResponseProvider>.value(value: responseProvider),
         ChangeNotifierProvider<SubmittedSightingsProvider>.value(
           value: submittedSightingsProvider,
@@ -286,4 +287,3 @@ class _MediaQueryWrapper extends StatelessWidget {
     );
   }
 }
-

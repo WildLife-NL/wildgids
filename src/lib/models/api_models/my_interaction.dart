@@ -376,7 +376,7 @@ class MyInteraction {
   factory MyInteraction.fromJson(Map<String, dynamic> json) {
     return MyInteraction(
       id: json['ID'] ?? '',
-      description: json['description'] ?? '',
+      description: json['notes'] ?? json['description'] ?? '',
       location: MyInteractionLocation.fromJson(json['location'] ?? {}),
       moment: ApiDateTime.parse(json['moment']?.toString()),
       place: MyInteractionLocation.fromJson(json['place'] ?? {}),

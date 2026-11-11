@@ -16,6 +16,7 @@ import 'package:wildgids/screens/shared/rapporteren.dart';
 // Removed collision details screen import (flow deprecated)
 import 'package:wildgids/utils/sighting_api_transformer.dart';
 import 'package:wildgids/utils/sighting_submit_navigation.dart';
+import 'package:wildgids/screens/waarneming/walk_sighting_flow.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/bottom_app_bar.dart';
 import 'package:wildgids/widgets/location/location_screen_ui_widget.dart';
@@ -74,7 +75,8 @@ class _LocationScreenState extends State<LocationScreen> {
       final hasUserSelection = locationInfo['selectedLocation'] != null;
       final hasCurrentGps = locationInfo['currentGpsLocation'] != null;
       if (!hasUserSelection && !hasCurrentGps) {
-        _pendingSnackBarMessage = 'Locatie niet beschikbaar. Schakel locatie in.';
+        _pendingSnackBarMessage =
+            'Locatie niet beschikbaar. Schakel locatie in.';
         WidgetsBinding.instance.addPostFrameCallback(
           (_) => _handlePendingActions(),
         );
@@ -237,10 +239,7 @@ class _LocationScreenState extends State<LocationScreen> {
           if (Navigator.of(context).canPop()) {
             Navigator.of(context).pop();
           } else {
-            navigationManager.pushReplacementBack(
-              context,
-              const Rapporteren(),
-            );
+            navigationManager.pushReplacementBack(context, const Rapporteren());
           }
         },
         onNextPressed: _handleNextPressed,
@@ -275,9 +274,11 @@ Future<InteractionResponse?> submitReport(
       '\x1B[36m[LocationScreen] Built AnimalSightingReportWrapper for waarneming\x1B[0m',
     );
 
+    final walkSession = context.read<WalkSightingSession?>();
     final InteractionResponse? response = await interactionManager
         .postInteraction(reportWrapper, interactionType);
     if (response != null) {
+      await walkSession?.submitted(currentSighting, response);
       if (response.questionnaire.questions != null &&
           response.questionnaire.questions!.isNotEmpty) {
         debugPrint(
@@ -296,4 +297,3 @@ Future<InteractionResponse?> submitReport(
 }
 
 // Collision flow removed; only waarneming reporting is supported.
-

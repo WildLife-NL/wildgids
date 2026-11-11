@@ -1,6 +1,9 @@
-﻿import 'dart:async';
+import 'package:wildgids/widgets/reporting/report_layout.dart';
+import 'package:wildgids/widgets/guide/guide_style.dart';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:wildgids/widgets/map/carto_attribution.dart';
 import 'package:flutter_map/flutter_map.dart' as fm;
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
@@ -12,14 +15,26 @@ import 'package:wildgids/models/beta_models/location_model.dart';
 import 'package:wildgids/models/enums/location_source.dart';
 import 'package:wildgids/providers/app_state_provider.dart';
 import 'package:wildgids/providers/map_provider.dart';
-import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
 import 'package:wildgids/screens/waarneming/location_datetime_screen.dart';
 
 class LocationSelectionScreen extends StatefulWidget {
-  const LocationSelectionScreen({super.key});
+  const LocationSelectionScreen({
+    super.key,
+    this.initialLocation,
+    this.initialDateTime,
+    this.onCancel,
+    this.freezeInitialLocation = false,
+    this.returnSelection = false,
+  });
+  final LatLng? initialLocation;
+  final DateTime? initialDateTime;
+  final VoidCallback? onCancel;
+  final bool freezeInitialLocation;
+  final bool returnSelection;
 
   @override
-  State<LocationSelectionScreen> createState() => _LocationSelectionScreenState();
+  State<LocationSelectionScreen> createState() =>
+      _LocationSelectionScreenState();
 }
 
 class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
@@ -51,6 +66,12 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     return context.read<MapProvider>().currentPosition;
   }
 
+  @override
+  void dispose() {
+    _mapController.dispose();
+    super.dispose();
+  }
+
   void _applyGpsPoint(LatLng point) {
     setState(() {
       _currentLocation = point;
@@ -67,6 +88,18 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
 
   Future<void> _bootstrapLocation() async {
     if (!mounted) return;
+    if (widget.initialLocation != null) {
+      _applyGpsPoint(widget.initialLocation!);
+      setState(() {
+        _userPickedLocation = true;
+        _locating = false;
+      });
+      return;
+    }
+    if (widget.freezeInitialLocation) {
+      setState(() => _locating = false);
+      return;
+    }
 
     final cached = _cachedPositionFromApp();
     if (cached != null) {
@@ -113,14 +146,19 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       // Save location to app state
       final sightingManager = context.read<AnimalSightingReportingInterface>();
       final navigationManager = context.read<NavigationStateInterface>();
-      
+
       final location = LocationModel(
         latitude: _selectedLocation!.latitude,
         longitude: _selectedLocation!.longitude,
         source: LocationSource.manual,
       );
-      
+
       sightingManager.updateLocation(location);
+
+      if (widget.returnSelection) {
+        Navigator.of(context).pop(_selectedLocation);
+        return;
+      }
 
       // API expects a system location; use GPS when available, else mirror manual.
       if (_currentLocation != null) {
@@ -148,7 +186,10 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       // Navigate to the date/time selection screen
       navigationManager.pushForward(
         context,
-        LocationDateTimeScreen(selectedLocation: _selectedLocation!),
+        LocationDateTimeScreen(
+          selectedLocation: _selectedLocation!,
+          initialDateTime: widget.initialDateTime,
+        ),
       );
     }
   }
@@ -157,6 +198,8 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     debugPrint('[LocationSelectionScreen] Back button pressed');
     if (Navigator.of(context).canPop()) {
       Navigator.pop(context);
+    } else if (widget.onCancel != null) {
+      widget.onCancel!();
     } else {
       final navigationManager = context.read<NavigationStateInterface>();
       navigationManager.resetToHome(context);
@@ -164,6 +207,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
   }
 
   LatLng _mapInitialCenter() {
+    if (widget.initialLocation != null) return widget.initialLocation!;
     if (_currentLocation != null) return _currentLocation!;
     final cached = _cachedPositionFromApp();
     if (cached != null) {
@@ -173,232 +217,123 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F6F4),
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-        children: [
-          CustomAppBar(
-            leftIcon: Icons.arrow_back_ios,
-            centerText: 'Waarneming',
-            rightIcon: null,
-            showUserIcon: false,
-            useFixedText: true,
-            onLeftIconPressed: _handleBackNavigation,
-            iconColor: Colors.black,
-            textColor: Colors.black,
-            fontScale: 1.4,
-            iconScale: 1.15,
-            userIconScale: 1.15,
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(25, 12, 0, 4),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Identificeer locatie:',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.black87,
+  Widget build(BuildContext context) => ReportLayout(
+    title: 'Waar zag je het dier?',
+    stage: 'Locatie',
+    onBack: _handleBackNavigation,
+    scroll: false,
+    footer: ReportAction(
+      label: 'Verder',
+      onPressed: _selectedLocation != null ? _onSelectPressed : null,
+    ),
+    child: Column(
+      children: [
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Stack(
+              children: [
+                fm.FlutterMap(
+                  mapController: _mapController,
+                  options: fm.MapOptions(
+                    initialCenter: _mapInitialCenter(),
+                    initialZoom: 15.0,
+                    interactionOptions: const fm.InteractionOptions(
+                      flags:
+                          fm.InteractiveFlag.pinchZoom |
+                          fm.InteractiveFlag.drag,
                     ),
-              ),
-            ),
-          ),
-          // Card container with map + instructions
-          SizedBox(
-            height: MediaQuery.of(context).size.height * 0.68, // percentage of screen height
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 2, 16, 16),
-              child: Card(
-                elevation: 0,
-                color: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  side: BorderSide(
-                    color: const Color(0xFF999999),
-                    width: 1,
+                    onTap: (tapPosition, point) => _onMapTap(point),
                   ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Map area with rounded top corners
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(20),
-                          topRight: Radius.circular(20),
-                        ),
-                        child: Stack(
-                          children: [
-                            // Flutter Map
-                            fm.FlutterMap(
-                              mapController: _mapController,
-                              options: fm.MapOptions(
-                                initialCenter: _mapInitialCenter(),
-                                initialZoom: 15.0,
-                                interactionOptions: const fm.InteractionOptions(
-                                  flags: fm.InteractiveFlag.pinchZoom |
-                                      fm.InteractiveFlag.drag,
-                                ),
-                                onTap: (tapPosition, point) => _onMapTap(point),
-                              ),
-                              children: [
-                                fm.TileLayer(
-                                  urlTemplate: LocationMapManager.standardTileUrl,
-                                  subdomains: LocationMapManager.standardTileSubdomains,
-                                  userAgentPackageName: 'com.wildgids.app',
-                                  retinaMode: LocationMapManager.tileRetinaMode(context),
-                                  keepBuffer: 1,
-                                ),
-                                fm.MarkerLayer(
-                                  markers: [
-                                    // Current location (blue dot)
-                                    if (_currentLocation != null)
-                                      fm.Marker(
-                                        point: _currentLocation!,
-                                        width: 30,
-                                        height: 30,
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            color: Color(0xFF0D53FF),
-                                            shape: BoxShape.circle,
-                                            border: Border.all(
-                                              color: Colors.white,
-                                              width: 4,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    // Selected location (red pin)
-                                    if (_selectedLocation != null)
-                                      fm.Marker(
-                                        point: _selectedLocation!,
-                                        width: 40,
-                                        height: 40,
-                                        child: const Icon(
-                                          Icons.location_on,
-                                          color: Color(0xFfDB5E5A),
-                                          size: 40,
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ],
-                            ),
-
-                            if (_locating && _currentLocation == null)
-                              const Positioned.fill(
-                                child: ColoredBox(
-                                  color: Color(0x33FFFFFF),
-                                  child: Center(
-                                    child: CircularProgressIndicator(),
-                                  ),
-                                ),
-                              ),
-
-                            // Crosshair button (bottom right)
-                            Positioned(
-                              bottom: 16,
-                              right: 16,
-                              child: GestureDetector(
-                                onTap: _centerOnCurrentLocation,
-                                child: Container(
-                                  width: 50,
-                                  height: 50,
-                                  decoration: BoxDecoration(
-                                    color: Color(0xFF333333),
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.2),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: const Icon(
-                                    Icons.my_location,
-                                    color: Colors.white,
-                                    size: 24,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                    fm.TileLayer(
+                      urlTemplate: LocationMapManager.standardTileUrl,
+                      tileProvider: fm.NetworkTileProvider(
+                        headers: LocationMapManager.standardTileHeaders,
                       ),
+                      subdomains: LocationMapManager.standardTileSubdomains,
+                      userAgentPackageName: 'com.wildgids.app',
+                      retinaMode: LocationMapManager.tileRetinaMode(context),
+                      keepBuffer: 1,
                     ),
-
-                    // Instruction text with top border (acts as bottom border for map)
-                    Container(
-                      decoration: BoxDecoration(
-                        border: Border(
-                          top: BorderSide(
-                            color: Colors.black.withValues(alpha: 0.4),
-                            width: 1,
-                          ),
-                        ),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Text(
-                          _currentLocation != null
-                              ? 'Je locatie staat op de kaart. Pas aan door ergens anders te tikken.'
-                              : 'Tik op de kaart om de locatie van\nde dierwaarneming te bepalen.',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium
-                              ?.copyWith(
-                                fontSize: 14,
-                                color: Colors.black87,
+                    fm.MarkerLayer(
+                      markers: [
+                        // Current location (blue dot)
+                        if (_currentLocation != null)
+                          fm.Marker(
+                            point: _currentLocation!,
+                            width: 30,
+                            height: 30,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Color(0xFF0D53FF),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 4,
+                                ),
                               ),
-                        ),
-                      ),
+                            ),
+                          ),
+                        // Selected location (red pin)
+                        if (_selectedLocation != null)
+                          fm.Marker(
+                            point: _selectedLocation!,
+                            width: 40,
+                            height: 40,
+                            child: const Icon(
+                              Icons.location_on,
+                              color: Color(0xFfDB5E5A),
+                              size: 40,
+                            ),
+                          ),
+                      ],
                     ),
                   ],
                 ),
-              ),
-            ),
-          ),
-
-          // Select button
-          SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _selectedLocation != null ? _onSelectPressed : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF37A904),
-                    disabledBackgroundColor: const Color(0xFFEFEFEF),
-                    foregroundColor: Colors.white,
-                    disabledForegroundColor: const Color(0xFFACACAC),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
+                const CartoAttribution(alignment: Alignment.bottomLeft),
+                if (_locating && _currentLocation == null)
+                  const Positioned.fill(
+                    child: ColoredBox(
+                      color: Color(0x33FFFFFF),
+                      child: Center(
+                        child: CircularProgressIndicator(color: GuideStyle.ink),
+                      ),
                     ),
                   ),
-                  child: Text(
-                    'Selecteer',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                Positioned(
+                  bottom: 18,
+                  right: 12,
+                  child: FloatingActionButton.small(
+                    heroTag: 'report-location',
+                    onPressed:
+                        _currentLocation == null
+                            ? null
+                            : _centerOnCurrentLocation,
+                    tooltip: 'Mijn locatie',
+                    backgroundColor: GuideStyle.ink,
+                    foregroundColor: Colors.white,
+                    child: const Icon(Icons.my_location),
                   ),
                 ),
-              ),
+              ],
             ),
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 12),
+        const Row(
+          children: [
+            Icon(Icons.touch_app_outlined, color: GuideStyle.ink),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Tik om de plek aan te passen.',
+                style: TextStyle(color: GuideStyle.muted, fontSize: 15),
+              ),
+            ),
+          ],
+        ),
+      ],
     ),
   );
-  }
 }

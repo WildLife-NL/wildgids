@@ -31,9 +31,9 @@
 	<key>NSBluetoothPeripheralUsageDescription</key>
 	<string>Bluetooth is nodig om collars te scannen voor contacttracing.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>We use your location to show nearby wildlife and relevant map features.</string>
+	<string>WildGids gebruikt je locatie voor de kaart, waarnemingen en het opnemen van je wandeling.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>We use your location to show nearby wildlife and relevant map features.</string>
+	<string>WildGids houdt je gestarte wandeling bij, ook wanneer je telefoon vergrendeld is, totdat je pauzeert of stopt.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -59,6 +59,7 @@
 	<true/>
 	<key>UIBackgroundModes</key>
 	<array>
+		<string>location</string>
 		<string>bluetooth-central</string>
 	</array>
 	<key>UILaunchStoryboardName</key>

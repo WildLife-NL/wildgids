@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
@@ -26,7 +26,9 @@ void main() {
     reset(mockAnimalSightingManager);
     reset(mockAppStateProvider);
 
-    when(mockAppStateProvider.currentReportType).thenReturn(ReportType.waarneming);
+    when(
+      mockAppStateProvider.currentReportType,
+    ).thenReturn(ReportType.waarneming);
 
     final testAnimalSighting = AnimalSightingModel(
       animals: [],
@@ -38,13 +40,14 @@ void main() {
       ),
     );
 
-    when(mockAnimalSightingManager.getCurrentanimalSighting()).thenReturn(
-      testAnimalSighting,
-    );
+    when(
+      mockAnimalSightingManager.getCurrentanimalSighting(),
+    ).thenReturn(testAnimalSighting);
 
     when(mockNavigationManager.pushForward(any, any)).thenAnswer((_) async {});
-    when(mockNavigationManager.pushReplacementForward(any, any))
-        .thenAnswer((_) async {});
+    when(
+      mockNavigationManager.pushReplacementForward(any, any),
+    ).thenAnswer((_) async {});
   });
 
   Widget createAnimalAantalScreen() {
@@ -74,9 +77,9 @@ void main() {
       await tester.pumpWidget(createAnimalAantalScreen());
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Hoeveel van deze dieren'), findsOneWidget);
-      expect(find.text('Aantal:'), findsOneWidget);
-      expect(find.text('Volgende'), findsOneWidget);
+      expect(find.text('Hoeveel?'), findsOneWidget);
+      expect(find.text('Wat zag je?'), findsOneWidget);
+      expect(find.text('Verder'), findsOneWidget);
 
       addTearDown(() => tester.view.resetPhysicalSize());
     });

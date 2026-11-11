@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:wildgids/managers/map/location_map_manager.dart';
+import 'package:provider/provider.dart';
+import 'package:wildgids/providers/walk_recorder.dart';
 import 'package:wildgids/models/beta_models/sighting_report_model.dart';
 import 'package:wildgids/models/enums/report_type.dart';
 import 'package:geolocator/geolocator.dart';
@@ -87,10 +89,7 @@ class AppStateProvider with ChangeNotifier {
       '\x1B[36m[AppStateProvider] ðŸ”· Initializing report with type: $reportType\x1B[0m',
     );
     _currentReportType = reportType;
-    final report = SightingReport(
-      animals: [],
-      systemDateTime: DateTime.now(),
-    );
+    final report = SightingReport(animals: [], systemDateTime: DateTime.now());
 
     _activeReports['currentReport'] = report;
     debugPrint(
@@ -169,9 +168,7 @@ class AppStateProvider with ChangeNotifier {
       );
       notifyListeners();
     } catch (e) {
-      debugPrint(
-        '[AppStateProvider] Failed to load preferences: $e',
-      );
+      debugPrint('[AppStateProvider] Failed to load preferences: $e');
       _notificationsEnabled = true;
     }
   }
@@ -209,6 +206,7 @@ class AppStateProvider with ChangeNotifier {
   }
 
   Future<void> logout() async {
+    await navigatorKey.currentContext?.read<WalkRecorder?>()?.closeAccount();
     // Remove persisted auth/session
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -234,6 +232,7 @@ class AppStateProvider with ChangeNotifier {
   }
 
   Future<void> deleteProfile() async {
+    await navigatorKey.currentContext?.read<WalkRecorder?>()?.closeAccount();
     // This method is called from ProfileScreen after user confirms deletion.
     // Reset in-memory app state first
     _screenStates.clear();
@@ -249,7 +248,9 @@ class AppStateProvider with ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('bearer_token');
     } catch (e, st) {
-      debugPrint('[AppStateProvider] deleteProfile(): failed to clear token: $e\n$st');
+      debugPrint(
+        '[AppStateProvider] deleteProfile(): failed to clear token: $e\n$st',
+      );
     }
 
     // Navigate to LoginScreen & clear back stack
@@ -259,4 +260,3 @@ class AppStateProvider with ChangeNotifier {
     );
   }
 }
-

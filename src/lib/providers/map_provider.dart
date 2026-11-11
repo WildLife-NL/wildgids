@@ -41,7 +41,10 @@ class MapProvider extends ChangeNotifier {
   bool get vicinityNotificationsEnabled => _vicinityNotificationsEnabled;
   Duration get trackingInterval => _trackingInterval;
 
-  void _maybeShowMapNotification({required String title, required String body}) {
+  void _maybeShowMapNotification({
+    required String title,
+    required String body,
+  }) {
     if (!_vicinityNotificationsEnabled) return;
     NotificationService.instance.show(title: title, body: body);
   }
@@ -339,10 +342,10 @@ class MapProvider extends ChangeNotifier {
   int _pinsLoadEpoch = 0;
 
   Vicinity _currentVicinity() => Vicinity(
-        animals: List<AnimalPin>.from(_animalPins),
-        detections: List<DetectionPin>.from(_detectionPins),
-        interactions: List<InteractionQueryResult>.from(_interactions),
-      );
+    animals: List<AnimalPin>.from(_animalPins),
+    detections: List<DetectionPin>.from(_detectionPins),
+    interactions: List<InteractionQueryResult>.from(_interactions),
+  );
 
   void _applyVicinity(Vicinity vicinity) {
     _animalPins
@@ -393,9 +396,7 @@ class MapProvider extends ChangeNotifier {
   /// Periodic background pings are separate ([startTracking]) and follow
   /// the profile "Locatie delen" setting.
   Future<void> loadAllPinsFromVicinity() async {
-    debugPrint(
-      '[MapProvider] Loading map pins via tracking-reading API',
-    );
+    debugPrint('[MapProvider] Loading map pins via tracking-reading API');
 
     final loadEpoch = ++_pinsLoadEpoch;
 
@@ -481,19 +482,22 @@ class MapProvider extends ChangeNotifier {
           final count = newAnimalIds.length;
           final sample = _animalPins.firstWhere(
             (a) => newAnimalIds.contains(a.id),
-            orElse: () => _animalPins.isNotEmpty
-                ? _animalPins.first
-                : AnimalPin(
-                    id: 'sample',
-                    lat: 0,
-                    lon: 0,
-                    seenAt: DateTime.now().toUtc(),
-                  ),
+            orElse:
+                () =>
+                    _animalPins.isNotEmpty
+                        ? _animalPins.first
+                        : AnimalPin(
+                          id: 'sample',
+                          lat: 0,
+                          lon: 0,
+                          seenAt: DateTime.now().toUtc(),
+                        ),
           );
           final species = sample.speciesName ?? 'Dier';
-          final title = count == 1
-              ? 'Nieuw dier in de buurt'
-              : '$count nieuwe dieren in de buurt';
+          final title =
+              count == 1
+                  ? 'Nieuw dier in de buurt'
+                  : '$count nieuwe dieren in de buurt';
           final body = count == 1 ? species : 'Bijv. $species en meer';
           _maybeShowMapNotification(title: title, body: body);
         }
@@ -510,19 +514,22 @@ class MapProvider extends ChangeNotifier {
           final count = newDetIds.length;
           final sample = _detectionPins.firstWhere(
             (d) => newDetIds.contains(d.id),
-            orElse: () => _detectionPins.isNotEmpty
-                ? _detectionPins.first
-                : DetectionPin(
-                    id: 'sample',
-                    lat: 0,
-                    lon: 0,
-                    detectedAt: DateTime.now().toUtc(),
-                  ),
+            orElse:
+                () =>
+                    _detectionPins.isNotEmpty
+                        ? _detectionPins.first
+                        : DetectionPin(
+                          id: 'sample',
+                          lat: 0,
+                          lon: 0,
+                          detectedAt: DateTime.now().toUtc(),
+                        ),
           );
           final label = sample.label ?? sample.deviceType ?? 'Detectie';
-          final title = count == 1
-              ? 'Nieuwe detectie in de buurt'
-              : '$count nieuwe detecties in de buurt';
+          final title =
+              count == 1
+                  ? 'Nieuwe detectie in de buurt'
+                  : '$count nieuwe detecties in de buurt';
           final body = count == 1 ? label : 'Bijv. $label en meer';
           _maybeShowMapNotification(title: title, body: body);
         }
@@ -539,22 +546,26 @@ class MapProvider extends ChangeNotifier {
           final count = newIds.length;
           final sample = _interactions.firstWhere(
             (i) => newIds.contains(i.id),
-            orElse: () => _interactions.isNotEmpty
-                ? _interactions.first
-                : InteractionQueryResult(
-                    id: 'sample',
-                    lat: 0,
-                    lon: 0,
-                    moment: DateTime.now().toUtc(),
-                  ),
+            orElse:
+                () =>
+                    _interactions.isNotEmpty
+                        ? _interactions.first
+                        : InteractionQueryResult(
+                          id: 'sample',
+                          lat: 0,
+                          lon: 0,
+                          moment: DateTime.now().toUtc(),
+                        ),
           );
           final species = sample.speciesName ?? 'Dier';
-          final title = count == 1
-              ? 'Nieuwe interactie in de buurt'
-              : '$count nieuwe interacties in de buurt';
-          final body = count == 1
-              ? 'Interactie gezien: $species'
-              : 'Bijv. $species en meer';
+          final title =
+              count == 1
+                  ? 'Nieuwe interactie in de buurt'
+                  : '$count nieuwe interacties in de buurt';
+          final body =
+              count == 1
+                  ? 'Interactie gezien: $species'
+                  : 'Bijv. $species en meer';
           _maybeShowMapNotification(title: title, body: body);
         }
         _prevInteractionIds = currentIds;
@@ -576,8 +587,13 @@ class MapProvider extends ChangeNotifier {
   }
 
   Future<void> _sendTrackingNow() async {
+    // A local walk can keep the app alive; do not extend server sharing into that background time.
+    if (WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
+      return;
+    }
     try {
-      final pos = currentPosition ??
+      final pos =
+          currentPosition ??
           await Geolocator.getCurrentPosition(
             locationSettings: const LocationSettings(
               accuracy: LocationAccuracy.medium,
@@ -647,4 +663,3 @@ class MapProvider extends ChangeNotifier {
     super.dispose();
   }
 }
-

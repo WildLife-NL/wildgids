@@ -1,4 +1,4 @@
-﻿import 'package:wildgids/data_managers/api_client.dart';
+import 'package:wildgids/data_managers/api_client.dart';
 import 'package:wildgids/data_managers/sighting_report_schema_loader.dart';
 
 class SightingReportActivityOption {
@@ -12,9 +12,10 @@ class SightingReportActivityCatalog {
   SightingReportActivityCatalog._({
     required List<String> humanActivityValues,
     required List<String> perceivedAnimalActivityValues,
-  })  : _humanActivityValues = List.unmodifiable(humanActivityValues),
-        _perceivedAnimalActivityValues =
-            List.unmodifiable(perceivedAnimalActivityValues);
+  }) : _humanActivityValues = List.unmodifiable(humanActivityValues),
+       _perceivedAnimalActivityValues = List.unmodifiable(
+         perceivedAnimalActivityValues,
+       );
 
   static SightingReportActivityCatalog? _cached;
 
@@ -90,10 +91,8 @@ class SightingReportActivityCatalog {
   List<SightingReportActivityOption> get humanActivities =>
       _humanActivityValues
           .map(
-            (value) => SightingReportActivityOption(
-              value,
-              labelNlForHuman(value),
-            ),
+            (value) =>
+                SightingReportActivityOption(value, labelNlForHuman(value)),
           )
           .toList();
 
@@ -111,11 +110,16 @@ class SightingReportActivityCatalog {
       _humanActivityLabelsNl[apiValue] ?? _titleCase(apiValue);
 
   static String labelNlForPerceivedAnimal(String apiValue) =>
-      _perceivedAnimalLabelsNl[apiValue] ?? _titleCase(apiValue);
+      switch (apiValue) {
+        'eating/drinking' => 'Eten of drinken',
+        'standing still' => 'Stilstaan',
+        _ => _perceivedAnimalLabelsNl[apiValue] ?? _titleCase(apiValue),
+      };
 
   static bool isOtherHuman(String apiValue) => apiValue == otherApiValue;
 
-  static bool isOtherPerceivedAnimal(String apiValue) => apiValue == otherApiValue;
+  static bool isOtherPerceivedAnimal(String apiValue) =>
+      apiValue == otherApiValue;
 
   static String normalizeHuman(String? value) {
     final catalog = _cached;
@@ -135,8 +139,9 @@ class SightingReportActivityCatalog {
       return defaultPerceivedAnimalActivity;
     }
     if (catalog._perceivedAnimalActivityValues.contains(value)) return value;
-    if (catalog._perceivedAnimalActivityValues
-        .contains(defaultPerceivedAnimalActivity)) {
+    if (catalog._perceivedAnimalActivityValues.contains(
+      defaultPerceivedAnimalActivity,
+    )) {
       return defaultPerceivedAnimalActivity;
     }
     return catalog._perceivedAnimalActivityValues.first;
@@ -147,4 +152,3 @@ class SightingReportActivityCatalog {
     return value[0].toUpperCase() + value.substring(1);
   }
 }
-
