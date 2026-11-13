@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -9,7 +9,6 @@ import 'package:wildgids/models/api_models/interaction_type.dart' as api_models;
 import 'package:wildgids/models/api_models/question.dart';
 import 'package:wildgids/models/api_models/questionaire.dart';
 import 'package:wildgids/models/api_models/user.dart';
-import 'package:wildgids/models/beta_models/animal_sighting_report_wrapper.dart';
 import 'package:wildgids/models/beta_models/interaction_model.dart';
 import 'package:wildgids/models/beta_models/interaction_response_model.dart';
 import 'package:wildgids/models/enums/interaction_type.dart';
@@ -30,20 +29,11 @@ class InteractionApi implements InteractionApiInterface {
       switch (interaction.interactionType) {
         case InteractionType.waarneming:
           debugPrint("$yellowLog[InteractionAPI]: Report is waarneming");
-          if (interaction.report is AnimalSightingReportWrapper) {
-            final apiPayload =
-                interaction.report
-                    .toJson(); // Use the wrapper's toJson directly
-            response = await client.post(
-              'interaction/',
-              apiPayload,
-              authenticated: true,
-            );
-          } else {
-            throw Exception(
-              "Invalid report type for waarnemning: ${interaction.report.runtimeType}",
-            );
-          }
+          response = await client.post(
+            'interaction/',
+            interaction.report.toJson(),
+            authenticated: true,
+          );
           break;
       }
 
@@ -61,7 +51,8 @@ class InteractionApi implements InteractionApiInterface {
         debugPrint("$yellowLog========================================");
         debugPrint("$yellowLog[InteractionAPI]: CHECKING FOR QUESTIONNAIRE");
         final questionnaireJson = json['questionnaire'];
-        final String interactionID = (json['ID'] ?? json['id'] ?? '').toString();
+        final String interactionID =
+            (json['ID'] ?? json['id'] ?? '').toString();
 
         debugPrint(
           "$yellowLog[InteractionAPI]: InteractionID from backend: $interactionID",
@@ -73,35 +64,51 @@ class InteractionApi implements InteractionApiInterface {
         if (questionnaireJson != null) {
           debugPrint("$yellowLog[InteractionAPI]: Questionnaire data:");
           debugPrint("$yellowLog${jsonEncode(questionnaireJson)}");
-          
+
           // Detailed breakdown of questions and answers
-          debugPrint("$yellowLogâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•");
+          debugPrint(
+            "$yellowLogâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•",
+          );
           debugPrint("$yellowLog[InteractionAPI]: DETAILED QUESTION ANALYSIS");
-          debugPrint("$yellowLogâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•");
+          debugPrint(
+            "$yellowLogâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•",
+          );
           final questionsArray = questionnaireJson['questions'];
           if (questionsArray != null && questionsArray is List) {
-            debugPrint("$yellowLogðŸ“‹ Total questions: ${questionsArray.length}");
+            debugPrint(
+              "$yellowLogðŸ“‹ Total questions: ${questionsArray.length}",
+            );
             for (int i = 0; i < questionsArray.length; i++) {
               final q = questionsArray[i];
-              debugPrint("$yellowLogâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€");
+              debugPrint(
+                "$yellowLogâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€",
+              );
               debugPrint("$yellowLog[Q${i + 1}] ${q['text']}");
               debugPrint("$yellowLog    ID: ${q['ID']}");
-              debugPrint("$yellowLog    allowMultipleResponse: ${q['allowMultipleResponse']}");
-              debugPrint("$yellowLog    allowOpenResponse: ${q['allowOpenResponse']}");
-              
+              debugPrint(
+                "$yellowLog    allowMultipleResponse: ${q['allowMultipleResponse']}",
+              );
+              debugPrint(
+                "$yellowLog    allowOpenResponse: ${q['allowOpenResponse']}",
+              );
+
               final answers = q['answers'];
               if (answers != null && answers is List) {
                 debugPrint("$yellowLog    âœ… Has ${answers.length} answers:");
                 for (int j = 0; j < answers.length; j++) {
                   final a = answers[j];
-                  debugPrint("$yellowLog       [A${j + 1}] ${a['text']} (ID: ${a['ID']})");
+                  debugPrint(
+                    "$yellowLog       [A${j + 1}] ${a['text']} (ID: ${a['ID']})",
+                  );
                 }
               } else {
                 debugPrint("$yellowLog    âŒ NO ANSWERS PROVIDED by backend!");
               }
             }
           }
-          debugPrint("$yellowLogâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•");
+          debugPrint(
+            "$yellowLogâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•",
+          );
         }
         debugPrint("$yellowLog========================================");
 
@@ -114,9 +121,10 @@ class InteractionApi implements InteractionApiInterface {
         }
 
         try {
-          final questionnaireMap = questionnaireJson is Map<String, dynamic>
-              ? questionnaireJson
-              : Map<String, dynamic>.from(questionnaireJson as Map);
+          final questionnaireMap =
+              questionnaireJson is Map<String, dynamic>
+                  ? questionnaireJson
+                  : Map<String, dynamic>.from(questionnaireJson as Map);
           return InteractionResponse(
             questionnaire: Questionnaire.fromJson(questionnaireMap),
             interactionID: interactionID,
@@ -142,7 +150,7 @@ class InteractionApi implements InteractionApiInterface {
       }
     } catch (e) {
       debugPrint("$redLog[InteractionAPI] Error: $e");
-      throw Exception("Failed to send interaction: $e");
+      rethrow;
     }
   }
 
@@ -176,9 +184,7 @@ class InteractionApi implements InteractionApiInterface {
           .join('; ');
     }
     if (errors is Map) {
-      return errors.entries
-          .map((e) => '${e.key}: ${e.value}')
-          .join('; ');
+      return errors.entries.map((e) => '${e.key}: ${e.value}').join('; ');
     }
 
     return errorBody.toString();
@@ -190,9 +196,10 @@ class InteractionApi implements InteractionApiInterface {
   ) {
     if (questionnaireJson == null || questionnaireJson is! Map) return null;
 
-    final map = questionnaireJson is Map<String, dynamic>
-        ? questionnaireJson
-        : Map<String, dynamic>.from(questionnaireJson);
+    final map =
+        questionnaireJson is Map<String, dynamic>
+            ? questionnaireJson
+            : Map<String, dynamic>.from(questionnaireJson);
     final rawQuestions = map['questions'] ?? map['Questions'];
     if (rawQuestions == null || rawQuestions is! List || rawQuestions.isEmpty) {
       return null;
@@ -234,4 +241,3 @@ class InteractionApi implements InteractionApiInterface {
     );
   }
 }
-
