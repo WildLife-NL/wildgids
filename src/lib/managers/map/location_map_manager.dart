@@ -19,7 +19,18 @@ class LocationMapManager extends NetherlandsMapManager
             ? dotenv.env['CARTO_BASEMAP_API_KEY']?.trim() ?? ''
             : '';
     final base = NetherlandsMapManager.standardTileUrl;
-    return key.isEmpty ? base : '$base?key=${Uri.encodeQueryComponent(key)}';
+    if (key.isEmpty) return base;
+
+    final keyParameter = RegExp(r'([?&])key=[^&]*');
+    if (keyParameter.hasMatch(base)) {
+      return base.replaceFirstMapped(
+        keyParameter,
+        (match) => '${match[1]}key=${Uri.encodeQueryComponent(key)}',
+      );
+    }
+
+    final separator = base.contains('?') ? '&' : '?';
+    return '$base${separator}key=${Uri.encodeQueryComponent(key)}';
   }
 
   static Map<String, String> get standardTileHeaders => {
