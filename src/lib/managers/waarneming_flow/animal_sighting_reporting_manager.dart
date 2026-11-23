@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:wildgids/interfaces/waarneming_flow/animal_interface.dart';
 import 'package:wildgids/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
 import 'package:wildgids/models/animal_waarneming_models/animal_gender_view_count_model.dart';
@@ -53,13 +53,15 @@ class AnimalSightingReportingManager
       dateTime: dateTime ?? _currentanimalSighting!.dateTime,
       images: images ?? _currentanimalSighting!.images,
       animalCount: animalCount ?? _currentanimalSighting!.animalCount,
-      humanActivity:
-          humanActivity ?? _currentanimalSighting!.humanActivity,
+      countMode: _currentanimalSighting!.countMode,
+      humanActivity: humanActivity ?? _currentanimalSighting!.humanActivity,
       humanActivityOther:
           humanActivityOther ?? _currentanimalSighting!.humanActivityOther,
-      perceivedAnimalActivity: perceivedAnimalActivity ??
+      perceivedAnimalActivity:
+          perceivedAnimalActivity ??
           _currentanimalSighting!.perceivedAnimalActivity,
-      perceivedAnimalActivityOther: perceivedAnimalActivityOther ??
+      perceivedAnimalActivityOther:
+          perceivedAnimalActivityOther ??
           _currentanimalSighting!.perceivedAnimalActivityOther,
     );
 
@@ -227,7 +229,9 @@ class AnimalSightingReportingManager
   AnimalSightingModel? getCurrentanimalSighting() => _currentanimalSighting;
 
   @override
-  AnimalSightingModel updateCurrentanimalSighting(AnimalSightingModel sighting) {
+  AnimalSightingModel updateCurrentanimalSighting(
+    AnimalSightingModel sighting,
+  ) {
     _currentanimalSighting = sighting;
     _notifyListeners();
     return sighting;
@@ -480,4 +484,3 @@ class AnimalSightingReportingManager
     _notifyListeners();
   }
 }
-

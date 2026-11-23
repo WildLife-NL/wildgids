@@ -3,6 +3,7 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
+
 import 'dart:async' as _i20;
 import 'dart:ui' as _i41;
 
@@ -83,14 +84,14 @@ import 'package:wildgids/models/animal_waarneming_models/observed_animal_entry.d
     as _i44;
 import 'package:wildgids/models/animal_waarneming_models/view_count_model.dart'
     as _i39;
-import 'package:wildgids/models/api_models/answer.dart' as _i80;
+import 'package:wildgids/models/api_models/answer.dart' as _i81;
 import 'package:wildgids/models/api_models/detection_pin.dart' as _i69;
 import 'package:wildgids/models/api_models/experiment.dart' as _i15;
 import 'package:wildgids/models/api_models/interaction_query_result.dart'
     as _i70;
 import 'package:wildgids/models/api_models/interaction_type.dart' as _i16;
-import 'package:wildgids/models/api_models/living_labs.dart' as _i81;
-import 'package:wildgids/models/api_models/question.dart' as _i79;
+import 'package:wildgids/models/api_models/living_labs.dart' as _i82;
+import 'package:wildgids/models/api_models/question.dart' as _i80;
 import 'package:wildgids/models/api_models/questionaire.dart' as _i5;
 import 'package:wildgids/models/api_models/species.dart' as _i7;
 import 'package:wildgids/models/api_models/user.dart' as _i2;
@@ -105,14 +106,15 @@ import 'package:wildgids/models/beta_models/report_location_model.dart' as _i46;
 import 'package:wildgids/models/beta_models/response_model.dart' as _i18;
 import 'package:wildgids/models/enums/animal_age.dart' as _i38;
 import 'package:wildgids/models/enums/animal_category.dart' as _i40;
+import 'package:wildgids/models/enums/animal_count_mode.dart' as _i78;
 import 'package:wildgids/models/enums/animal_gender.dart' as _i37;
 import 'package:wildgids/models/enums/dropdown_type.dart' as _i49;
 import 'package:wildgids/models/enums/interaction_type.dart' as _i54;
-import 'package:wildgids/models/enums/location_source.dart' as _i82;
+import 'package:wildgids/models/enums/location_source.dart' as _i83;
 import 'package:wildgids/models/enums/report_type.dart' as _i66;
 import 'package:wildgids/models/ui_models/brown_button_model.dart' as _i52;
 import 'package:wildgids/models/ui_models/date_time_model.dart' as _i43;
-import 'package:wildgids/models/ui_models/image_list_model.dart' as _i78;
+import 'package:wildgids/models/ui_models/image_list_model.dart' as _i79;
 import 'package:wildgids/models/ui_models/living_lab_area.dart' as _i56;
 import 'package:wildgids/providers/app_state_provider.dart' as _i65;
 import 'package:wildgids/providers/map_provider.dart' as _i67;
@@ -1980,6 +1982,14 @@ class MockMapProvider extends _i1.Mock implements _i67.MapProvider {
           as bool);
 
   @override
+  bool get vicinityNotificationsEnabled =>
+      (super.noSuchMethod(
+            Invocation.getter(#vicinityNotificationsEnabled),
+            returnValue: false,
+          )
+          as bool);
+
+  @override
   Duration get trackingInterval =>
       (super.noSuchMethod(
             Invocation.getter(#trackingInterval),
@@ -2125,10 +2135,18 @@ class MockMapProvider extends _i1.Mock implements _i67.MapProvider {
           as _i20.Future<_i71.TrackingNotice?>);
 
   @override
-  void setVicinityApi(_i73.VicinityApiInterface? api) => super.noSuchMethod(
-    Invocation.method(#setVicinityApi, [api]),
-    returnValueForMissingStub: null,
-  );
+  void setTrackingReadingsApi(_i73.TrackingReadingsApiInterface? api) =>
+      super.noSuchMethod(
+        Invocation.method(#setTrackingReadingsApi, [api]),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void setVicinityApi(_i73.TrackingReadingsApiInterface? api) =>
+      super.noSuchMethod(
+        Invocation.method(#setVicinityApi, [api]),
+        returnValueForMissingStub: null,
+      );
 
   @override
   _i20.Future<void> initialize() =>
@@ -2697,6 +2715,14 @@ class MockAnimalSightingModel extends _i1.Mock
   }
 
   @override
+  _i78.AnimalCountMode get countMode =>
+      (super.noSuchMethod(
+            Invocation.getter(#countMode),
+            returnValue: _i78.AnimalCountMode.exact,
+          )
+          as _i78.AnimalCountMode);
+
+  @override
   _i10.AnimalSightingModel copyWith({
     List<_i13.AnimalModel>? animals,
     _i13.AnimalModel? animalSelected,
@@ -2704,8 +2730,9 @@ class MockAnimalSightingModel extends _i1.Mock
     String? description,
     List<_i42.LocationModel>? locations,
     _i43.DateTimeModel? dateTime,
-    _i78.ImageListModel? images,
+    _i79.ImageListModel? images,
     int? animalCount,
+    _i78.AnimalCountMode? countMode,
     String? humanActivity,
     String? humanActivityOther,
     String? perceivedAnimalActivity,
@@ -2721,6 +2748,7 @@ class MockAnimalSightingModel extends _i1.Mock
               #dateTime: dateTime,
               #images: images,
               #animalCount: animalCount,
+              #countMode: countMode,
               #humanActivity: humanActivity,
               #humanActivityOther: humanActivityOther,
               #perceivedAnimalActivity: perceivedAnimalActivity,
@@ -2737,6 +2765,7 @@ class MockAnimalSightingModel extends _i1.Mock
                 #dateTime: dateTime,
                 #images: images,
                 #animalCount: animalCount,
+                #countMode: countMode,
                 #humanActivity: humanActivity,
                 #humanActivityOther: humanActivityOther,
                 #perceivedAnimalActivity: perceivedAnimalActivity,
@@ -2835,7 +2864,7 @@ class MockQuestionnaire extends _i1.Mock implements _i5.Questionnaire {
   );
 
   @override
-  set questions(List<_i79.Question>? value) => super.noSuchMethod(
+  set questions(List<_i80.Question>? value) => super.noSuchMethod(
     Invocation.setter(#questions, value),
     returnValueForMissingStub: null,
   );
@@ -3205,7 +3234,7 @@ class MockInteractionType extends _i1.Mock implements _i16.InteractionType {
 /// A class which mocks [Question].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockQuestion extends _i1.Mock implements _i79.Question {
+class MockQuestion extends _i1.Mock implements _i80.Question {
   MockQuestion() {
     _i1.throwOnMissingStub(this);
   }
@@ -3279,7 +3308,7 @@ class MockQuestion extends _i1.Mock implements _i79.Question {
   );
 
   @override
-  set answers(List<_i80.Answer>? value) => super.noSuchMethod(
+  set answers(List<_i81.Answer>? value) => super.noSuchMethod(
     Invocation.setter(#answers, value),
     returnValueForMissingStub: null,
   );
@@ -3390,7 +3419,7 @@ class MockExperiment extends _i1.Mock implements _i15.Experiment {
   );
 
   @override
-  set livingLab(_i81.LivingLabs? value) => super.noSuchMethod(
+  set livingLab(_i82.LivingLabs? value) => super.noSuchMethod(
     Invocation.setter(#livingLab, value),
     returnValueForMissingStub: null,
   );
@@ -3524,12 +3553,12 @@ class MockLocationModel extends _i1.Mock implements _i42.LocationModel {
   }
 
   @override
-  _i82.LocationSource get source =>
+  _i83.LocationSource get source =>
       (super.noSuchMethod(
             Invocation.getter(#source),
-            returnValue: _i82.LocationSource.manual,
+            returnValue: _i83.LocationSource.manual,
           )
-          as _i82.LocationSource);
+          as _i83.LocationSource);
 
   @override
   Map<String, dynamic> toJson() =>

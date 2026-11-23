@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_map/flutter_map.dart' as fm;
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:wildgids/services/live_location_service.dart';
 import 'package:wildgids/models/beta_models/polygon_area_model.dart';
 import 'package:provider/provider.dart';
 import 'package:wildgids/providers/belonging_damage_report_provider.dart';
@@ -41,6 +42,7 @@ class _AreaSelectionMapState extends State<AreaSelectionMap> {
   late LatLng _centerPoint;
   LatLng? _currentLocation;
   StreamSubscription<Position>? _liveLocationSub;
+  StreamSubscription<Position>? _areaRecordingSub;
   double? _unitPricePerM2;
   int? _selectedPointIndex;
   bool _editPinsMode = false;
@@ -62,6 +64,7 @@ class _AreaSelectionMapState extends State<AreaSelectionMap> {
   @override
   void dispose() {
     _liveLocationSub?.cancel();
+    _areaRecordingSub?.cancel();
     _mapController.dispose();
     super.dispose();
   }
@@ -93,6 +96,7 @@ class _AreaSelectionMapState extends State<AreaSelectionMap> {
 
   void _startGpsRecording() async {
     if (_isGpsRecording) {
+      await _areaRecordingSub?.cancel();
       // Stop recording
       setState(() {
         _isGpsRecording = false;
@@ -113,15 +117,10 @@ class _AreaSelectionMapState extends State<AreaSelectionMap> {
     });
 
     try {
-      final positionStream = Geolocator.getPositionStream(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.best,
-          distanceFilter: 1, // Update roughly every 1 meter
-        ),
-      );
+      final positionStream = LiveLocationService.instance.watch();
 
-      positionStream.listen((Position position) {
-        if (!_isGpsRecording) return;
+      _areaRecordingSub = positionStream.listen((Position position) {
+        if (!mounted || !_isGpsRecording) return;
         // Accuracy filter
         if (position.accuracy > _accuracyThresholdM) return;
 
@@ -210,7 +209,9 @@ class _AreaSelectionMapState extends State<AreaSelectionMap> {
       }
 
       final pos = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(accuracy: LocationAccuracy.best),
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.best,
+        ),
       );
       final here = LatLng(pos.latitude, pos.longitude);
       if (!mounted) return;
@@ -244,12 +245,7 @@ class _AreaSelectionMapState extends State<AreaSelectionMap> {
       }
 
       _liveLocationSub?.cancel();
-      final stream = Geolocator.getPositionStream(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.best,
-          distanceFilter: 1,
-        ),
-      );
+      final stream = LiveLocationService.instance.watch();
       _liveLocationSub = stream.listen((pos) {
         // Ignore low-accuracy points (> threshold)
         if (pos.accuracy > _accuracyThresholdM) {
@@ -776,4 +772,3 @@ class _AreaSelectionMapState extends State<AreaSelectionMap> {
         : formattedInt;
   }
 }
-

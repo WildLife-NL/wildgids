@@ -1,4 +1,5 @@
-﻿import 'package:wildgids/models/enums/animal_condition.dart';
+import 'package:wildgids/models/enums/animal_count_mode.dart';
+import 'package:wildgids/models/enums/animal_condition.dart';
 import 'package:wildgids/models/enums/animal_category.dart';
 import 'package:wildgids/models/beta_models/location_model.dart';
 import 'package:wildgids/models/ui_models/image_list_model.dart';
@@ -14,8 +15,10 @@ class AnimalSightingModel {
   final List<LocationModel>? locations; // Changed to List
   final DateTimeModel? dateTime;
   final ImageListModel? images;
+
   /// Count from the "aantal" step (waarneming 2.0).
   final int? animalCount;
+  final AnimalCountMode countMode;
   final String? humanActivity;
   final String? humanActivityOther;
   final String? perceivedAnimalActivity;
@@ -30,6 +33,7 @@ class AnimalSightingModel {
     this.images,
     this.animalSelected,
     this.animalCount,
+    this.countMode = AnimalCountMode.exact,
     this.humanActivity,
     this.humanActivityOther,
     this.perceivedAnimalActivity,
@@ -45,6 +49,7 @@ class AnimalSightingModel {
     DateTimeModel? dateTime,
     ImageListModel? images,
     int? animalCount,
+    AnimalCountMode? countMode,
     String? humanActivity,
     String? humanActivityOther,
     String? perceivedAnimalActivity,
@@ -59,12 +64,13 @@ class AnimalSightingModel {
       dateTime: dateTime ?? this.dateTime,
       images: images ?? this.images,
       animalCount: animalCount ?? this.animalCount,
+      countMode: countMode ?? this.countMode,
       humanActivity: humanActivity ?? this.humanActivity,
       humanActivityOther: humanActivityOther ?? this.humanActivityOther,
       perceivedAnimalActivity:
           perceivedAnimalActivity ?? this.perceivedAnimalActivity,
-      perceivedAnimalActivityOther: perceivedAnimalActivityOther ??
-          this.perceivedAnimalActivityOther,
+      perceivedAnimalActivityOther:
+          perceivedAnimalActivityOther ?? this.perceivedAnimalActivityOther,
     );
   }
 
@@ -91,6 +97,7 @@ class AnimalSightingModel {
       'dateTime': dateTime?.toJson(),
       'images': images?.toJson(),
       'animalCount': animalCount,
+      'countMode': countMode.name,
       'humanActivity': humanActivity,
       'humanActivityOther': humanActivityOther,
       'perceivedAnimalActivity': perceivedAnimalActivity,
@@ -174,6 +181,7 @@ class AnimalSightingModel {
     images:
         json['images'] != null ? ImageListModel.fromJson(json['images']) : null,
     animalCount: json['animalCount'] as int?,
+    countMode: AnimalCountMode.fromJson(json['countMode']),
     humanActivity: json['humanActivity'] as String?,
     humanActivityOther: json['humanActivityOther'] as String?,
     perceivedAnimalActivity: json['perceivedAnimalActivity'] as String?,
@@ -181,4 +189,3 @@ class AnimalSightingModel {
         json['perceivedAnimalActivityOther'] as String?,
   );
 }
-

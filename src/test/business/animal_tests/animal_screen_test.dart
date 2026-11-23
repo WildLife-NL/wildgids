@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
@@ -36,21 +36,30 @@ void main() {
     mockNavigationManager = MockNavigationStateInterface();
     mockAnimalSightingManager = MockAnimalSightingReportingInterface();
 
-    when(mockAnimalSightingManager.validateActiveAnimalSighting()).thenReturn(true);
+    when(
+      mockAnimalSightingManager.validateActiveAnimalSighting(),
+    ).thenReturn(true);
 
-    when(mockAnimalManager.getBackendCategories())
-        .thenAnswer((_) async => ['Roofdieren']);
-    when(mockAnimalManager.getAnimalsByBackendCategory(category: anyNamed('category')))
-        .thenAnswer((_) async => sampleAnimals);
-    when(mockNavigationManager.pushForward(any, any))
-        .thenAnswer((_) async => true);
+    when(
+      mockAnimalManager.getBackendCategories(),
+    ).thenAnswer((_) async => ['Roofdieren']);
+    when(
+      mockAnimalManager.getAnimalsByBackendCategory(
+        category: anyNamed('category'),
+      ),
+    ).thenAnswer((_) async => sampleAnimals);
+    when(
+      mockNavigationManager.pushForward(any, any),
+    ).thenAnswer((_) async => true);
   });
 
   Widget createAnimalScreen() {
     return MaterialApp(
       home: MultiProvider(
         providers: [
-          Provider<NavigationStateInterface>.value(value: mockNavigationManager),
+          Provider<NavigationStateInterface>.value(
+            value: mockNavigationManager,
+          ),
           Provider<AnimalManagerInterface>.value(value: mockAnimalManager),
           Provider<AnimalSightingReportingInterface>.value(
             value: mockAnimalSightingManager,
@@ -79,21 +88,30 @@ void main() {
       expect(find.text('Fox'), findsOneWidget);
     });
 
-    testWidgets('shows category dropdown and options', (WidgetTester tester) async {
+    testWidgets('category sheet filters the backend list', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(createAnimalScreen());
       await tester.pumpAndSettle();
 
-      expect(find.text('Categorie'), findsOneWidget);
-      expect(find.byType(DropdownButton<String>), findsOneWidget);
-
-      await tester.tap(find.byType(DropdownButton<String>));
+      expect(find.text('Roofdieren'), findsNothing);
+      await tester.tap(find.text('Categorie'));
       await tester.pumpAndSettle();
-      expect(find.text('Roofdieren'), findsWidgets);
+      await tester.tap(find.widgetWithText(ListTile, 'Roofdieren'));
+      await tester.pumpAndSettle();
+      verify(
+        mockAnimalManager.getAnimalsByBackendCategory(category: 'Roofdieren'),
+      ).called(1);
     });
 
-    testWidgets('selects an animal and navigates forward', (WidgetTester tester) async {
+    testWidgets('selects an animal and navigates forward', (
+      WidgetTester tester,
+    ) async {
       when(
-        mockAnimalSightingManager.processAnimalSelection(any, mockAnimalManager),
+        mockAnimalSightingManager.processAnimalSelection(
+          any,
+          mockAnimalManager,
+        ),
       ).thenReturn(AnimalSightingModel(animals: []));
 
       await tester.pumpWidget(createAnimalScreen());
@@ -111,15 +129,19 @@ void main() {
       verify(mockNavigationManager.pushForward(any, any)).called(1);
     });
 
-    testWidgets('shows empty message for empty animal list', (WidgetTester tester) async {
-      when(mockAnimalManager.getAnimalsByBackendCategory(category: anyNamed('category')))
-          .thenAnswer((_) async => []);
+    testWidgets('shows empty message for empty animal list', (
+      WidgetTester tester,
+    ) async {
+      when(
+        mockAnimalManager.getAnimalsByBackendCategory(
+          category: anyNamed('category'),
+        ),
+      ).thenAnswer((_) async => []);
 
       await tester.pumpWidget(createAnimalScreen());
       await tester.pumpAndSettle();
 
-      expect(find.text('Geen dieren gevonden'), findsOneWidget);
+      expect(find.text('Geen dieren in deze categorie.'), findsOneWidget);
     });
   });
 }
-

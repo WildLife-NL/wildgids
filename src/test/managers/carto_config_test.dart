@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:wildlifenl_map_logic_components/wildlifenl_map_logic_components.dart'
+    show NetherlandsMapManager;
 import 'package:wildgids/managers/map/location_map_manager.dart';
 
 void main() {
@@ -22,14 +24,25 @@ void main() {
     },
   );
 
-  test('does not invent a key when configuration is missing or empty', () {
-    dotenv.loadFromString(envString: 'CARTO_BASEMAP_API_KEY=');
-    expect(LocationMapManager.standardTileUrl, isNot(contains('?key=')));
-  });
+  test(
+    'preserves the component URL when configuration is missing or empty',
+    () {
+      dotenv.loadFromString(envString: 'CARTO_BASEMAP_API_KEY=');
+      expect(
+        LocationMapManager.standardTileUrl,
+        NetherlandsMapManager.standardTileUrl,
+      );
+    },
+  );
 
   test('encodes special characters in configured keys', () {
     dotenv.loadFromString(envString: 'CARTO_BASEMAP_API_KEY=a+b&c');
-    expect(LocationMapManager.standardTileUrl, endsWith('?key=a%2Bb%26c'));
+    final keys =
+        RegExp(r'[?&]key=([^&]*)')
+            .allMatches(LocationMapManager.standardTileUrl)
+            .map((match) => match.group(1))
+            .toList();
+    expect(keys, ['a%2Bb%26c']);
   });
 
   test(

@@ -1,11 +1,14 @@
-﻿import 'package:flutter/material.dart';
+import 'package:wildgids/models/enums/animal_count_mode.dart';
+import 'package:wildgids/widgets/reporting/report_layout.dart';
+import 'package:wildgids/widgets/guide/guide_style.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wildgids/interfaces/reporting/interaction_interface.dart';
 import 'package:wildgids/interfaces/waarneming_flow/animal_sighting_reporting_interface.dart';
 import 'package:wildgids/constants/sighting_report_activities.dart';
 import 'package:wildgids/screens/location/location_screen.dart';
-import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
 import 'package:wildgids/utils/sighting_submit_navigation.dart';
+import 'package:wildgids/screens/waarneming/walk_sighting_flow.dart';
 import 'package:wildgids/models/enums/animal_gender.dart';
 import 'package:wildgids/models/animal_waarneming_models/animal_model.dart';
 import 'package:wildgids/models/animal_waarneming_models/animal_gender_view_count_model.dart';
@@ -13,15 +16,11 @@ import 'package:wildgids/models/animal_waarneming_models/view_count_model.dart';
 import 'package:wildgids/screens/waarneming/waarneming_start_screen.dart';
 import 'package:wildgids/providers/submitted_sightings_provider.dart';
 import 'package:wildgids/utils/api_datetime.dart';
-import 'package:wildgids/utils/species_image_resolver.dart';
 
 class AnimalWaarnemingSummaryScreen extends StatefulWidget {
   final int totalCount;
 
-  const AnimalWaarnemingSummaryScreen({
-    super.key,
-    required this.totalCount,
-  });
+  const AnimalWaarnemingSummaryScreen({super.key, required this.totalCount});
 
   @override
   State<AnimalWaarnemingSummaryScreen> createState() =>
@@ -32,18 +31,18 @@ class _AnimalWaarnemingSummaryScreenState
     extends State<AnimalWaarnemingSummaryScreen> {
   bool _isSubmitting = false;
 
-
   Future<void> _handleSubmit() async {
     if (_isSubmitting) return;
     setState(() => _isSubmitting = true);
     debugPrint('[AnimalWaarnemingSummaryScreen] _handleSubmit called');
     try {
-      final sightingManager =
-          context.read<AnimalSightingReportingInterface>();
+      final sightingManager = context.read<AnimalSightingReportingInterface>();
       final interactionManager = context.read<InteractionInterface>();
       var sighting = sightingManager.getCurrentanimalSighting();
 
-      debugPrint('[AnimalWaarnemingSummaryScreen] Submitting sighting: $sighting');
+      debugPrint(
+        '[AnimalWaarnemingSummaryScreen] Submitting sighting: $sighting',
+      );
 
       if (sighting != null) {
         if (sighting.locations == null || sighting.locations!.isEmpty) {
@@ -54,11 +53,14 @@ class _AnimalWaarnemingSummaryScreenState
         }
 
         // If animals list is empty (skipped details), populate with selected animal N times
-        if ((sighting.animals?.isEmpty ?? true) && sighting.animalSelected != null && widget.totalCount > 0) {
-          debugPrint('[AnimalWaarnemingSummaryScreen] Animals list was empty, populating with selected animal x${widget.totalCount}');
-          final animalsToAdd = List<AnimalModel>.from(
-            sighting.animals ?? [],
+        if (sighting.countMode == AnimalCountMode.exact &&
+            (sighting.animals?.isEmpty ?? true) &&
+            sighting.animalSelected != null &&
+            widget.totalCount > 0) {
+          debugPrint(
+            '[AnimalWaarnemingSummaryScreen] Animals list was empty, populating with selected animal x${widget.totalCount}',
           );
+          final animalsToAdd = List<AnimalModel>.from(sighting.animals ?? []);
           final placeholder = AnimalModel(
             animalId: sighting.animalSelected!.animalId,
             animalImagePath: sighting.animalSelected!.animalImagePath,
@@ -91,9 +93,15 @@ class _AnimalWaarnemingSummaryScreenState
         );
         if (!mounted) return;
         if (response == null) {
-          throw Exception(
-            'Geen verbinding of verzenden mislukt. Controleer internet en probeer opnieuw.',
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Je waarneming is op dit apparaat opgeslagen. '
+                'Probeer opnieuw zodra je verbinding hebt.',
+              ),
+            ),
           );
+          return;
         }
 
         final submittedProvider = context.read<SubmittedSightingsProvider>();
@@ -106,15 +114,17 @@ class _AnimalWaarnemingSummaryScreenState
         );
         navigateAfterSightingSubmit(context, response);
       } else {
-        debugPrint('[AnimalWaarnemingSummaryScreen] No sighting found to submit');
+        debugPrint(
+          '[AnimalWaarnemingSummaryScreen] No sighting found to submit',
+        );
       }
     } catch (e, stackTrace) {
       debugPrint('[AnimalWaarnemingSummaryScreen] Error submitting: $e');
       debugPrint('[AnimalWaarnemingSummaryScreen] Stack trace: $stackTrace');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Versturen mislukt: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Versturen mislukt: $e')));
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -122,13 +132,15 @@ class _AnimalWaarnemingSummaryScreenState
   }
 
   void _handleExit() {
-    final sightingManager =
-        context.read<AnimalSightingReportingInterface>();
+    final walkSession = context.read<WalkSightingSession?>();
+    if (walkSession != null) {
+      walkSession.close();
+      return;
+    }
+    final sightingManager = context.read<AnimalSightingReportingInterface>();
     sightingManager.clearCurrentanimalSighting();
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(
-        builder: (context) => const WaarnemmingStartScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const WaarnemmingStartScreen()),
       (route) => false,
     );
   }
@@ -141,339 +153,92 @@ class _AnimalWaarnemingSummaryScreenState
 
   @override
   Widget build(BuildContext context) {
-    final sightingManager =
-        context.read<AnimalSightingReportingInterface>();
-    final sighting = sightingManager.getCurrentanimalSighting();
-    final selectedAnimal = sighting?.animalSelected;
-    final selectedAnimalImagePath =
-        SpeciesImageResolver.drawingForCommonName(selectedAnimal?.animalName) ??
-        selectedAnimal?.animalImagePath;
-
-    if (selectedAnimal == null) {
-      return Scaffold(
-        backgroundColor: const Color(0xFFF5F6F4),
-        body: const Center(
-          child: Text('No animal selected'),
-        ),
-      );
-    }
-
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F6F4),
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            // App Bar
-            CustomAppBar(
-              centerText: 'Waarneming',
-              rightIcon: null,
-              showUserIcon: false,
-              useFixedText: true,
-              onLeftIconPressed: _handleBackNavigation,
-              textColor: Colors.black,
-              fontScale: 1.4,
-              iconScale: 1.15,
-              userIconScale: 1.15,
-            ),
-            // Main card container
-            SizedBox(
-              height: MediaQuery.of(context).size.height * 0.75,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 2, 16, 16),
-                child: Card(
-                  elevation: 0,
-                  color: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    side: BorderSide(
-                      color: const Color(0xFF999999),
-                      width: 1,
-                    ),
+    final sighting =
+        context
+            .read<AnimalSightingReportingInterface>()
+            .getCurrentanimalSighting();
+    final animal = sighting?.animalSelected;
+    return ReportLayout(
+      title: 'Klopt alles?',
+      stage: 'Controle',
+      onBack: _handleBackNavigation,
+      footer:
+          animal == null
+              ? null
+              : Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ReportAction(
+                    label: 'Verstuur waarneming',
+                    busy: _isSubmitting,
+                    onPressed: _isSubmitting ? null : _handleSubmit,
                   ),
-                  child: SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          // Heading
-                          const Text(
-                            'Overzicht',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          // Animal info card (compact)
-                          Center(
-                            child: SizedBox(
-                              width: 140,
-                              child: Card(
-                                shadowColor: const Color.fromARGB(133, 0, 0, 0)
-                                    .withValues(alpha: 0.1),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                  side: BorderSide(
-                                    color: const Color(0xFF999999),
-                                    width: 1,
-                                  ),
-                                ),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    // Image area
-                                    Center(
-                                      child: SizedBox(
-                                        width: 140,
-                                        height: 120,
-                                        child: AspectRatio(
-                                          aspectRatio: 1.0,
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  const BorderRadius.only(
-                                                topLeft: Radius.circular(14),
-                                                topRight: Radius.circular(14),
-                                              ),
-                                              color: Colors.white,
-                                            ),
-                                            child: ClipRRect(
-                                              borderRadius:
-                                                  const BorderRadius.only(
-                                                topLeft: Radius.circular(14),
-                                                topRight: Radius.circular(14),
-                                              ),
-                                              child: SizedBox.expand(
-                                                child: selectedAnimalImagePath !=
-                                                        null
-                                                    ? Image(
-                                                        image: AssetImage(
-                                                          selectedAnimalImagePath,
-                                                        ),
-                                                        fit: BoxFit.cover,
-                                                      )
-                                                    : Center(
-                                                        child: Icon(
-                                                          Icons
-                                                              .image_not_supported_outlined,
-                                                          size: 50,
-                                                          color:
-                                                              Colors.grey[400],
-                                                        ),
-                                                      ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    // Divider line
-                                    Container(
-                                      height: 1,
-                                      color: const Color(0xFF999999),
-                                      width: 140,
-                                    ),
-                                    // Name area
-                                    Container(
-                                      width: 140,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: const BorderRadius.only(
-                                          bottomLeft: Radius.circular(14),
-                                          bottomRight: Radius.circular(14),
-                                        ),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 8,
-                                        horizontal: 12,
-                                      ),
-                                      child: Text(
-                                        selectedAnimal.animalName,
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w400,
-                                          color: Colors.black,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          // Total aantal
-                          Text(
-                            'Aantal: ${widget.totalCount}',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          // Divider line
-                          Container(
-                            height: 1,
-                            color: const Color(0xFF999999),
-                          ),
-                          const SizedBox(height: 16),
-                          _buildActivitySection(sighting),
-                          const SizedBox(height: 16),
-                          Container(
-                            height: 1,
-                            color: const Color(0xFF999999),
-                          ),
-                          const SizedBox(height: 16),
-                          // Individual animal details
-                          ..._buildAnimalDetailsList(sighting?.animals ?? []),
-                          const SizedBox(height: 16),
-                          // Divider line
-                          Container(
-                            height: 1,
-                            color: const Color(0xFF999999),
-                          ),
-                          const SizedBox(height: 16),
-                          // Location and DateTime info
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Location
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      'Locatie:',
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(
-                                      _getLocationDisplay(sighting?.locations),
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              // Date/Time
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      'Datum & Tijd:',
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(
-                                      _getDateTimeDisplay(sighting?.dateTime),
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+                  TextButton(
+                    onPressed: _isSubmitting ? null : _handleExit,
+                    style: TextButton.styleFrom(
+                      foregroundColor: GuideStyle.muted,
                     ),
+                    child: const Text('Begin opnieuw'),
                   ),
-                ),
+                ],
               ),
-            ),
-            // Bottom buttons
-            SafeArea(
-              top: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: _handleExit,
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          side: const BorderSide(
-                            color: Color(0xFF999999),
-                            width: 1.5,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(25),
-                          ),
-                          foregroundColor: const Color.fromARGB(255, 0, 0, 0),
-                          backgroundColor: Colors.white,
+      child:
+          animal == null
+              ? const Text('Geen dier geselecteerd.')
+              : Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ReportAnimal(animal: animal, height: 160),
+                  const SizedBox(height: 12),
+                  Center(
+                    child: Chip(
+                      backgroundColor: GuideStyle.surface,
+                      side: BorderSide.none,
+                      avatar: const Icon(
+                        Icons.pets_outlined,
+                        size: 18,
+                        color: GuideStyle.ink,
+                      ),
+                      label: Text(
+                        (sighting?.countMode ?? AnimalCountMode.exact).summary(
+                          sighting?.animalCount ?? widget.totalCount,
                         ),
-                        child: const Text(
-                          'Begin Opnieuw',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        style: const TextStyle(
+                          color: GuideStyle.ink,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: _isSubmitting ? null : _handleSubmit,
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          backgroundColor: const Color(0xFF37A904),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(25),
-                          ),
-                          foregroundColor: Colors.white,
+                  ),
+                  const SizedBox(height: 20),
+                  ReportSurface(
+                    child: Column(
+                      children: [
+                        _summaryRow(
+                          'Locatie',
+                          _getLocationDisplay(sighting?.locations),
                         ),
-                        child: _isSubmitting
-                            ? const SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Text(
-                                'Versturen',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
+                        const Divider(height: 28, color: GuideStyle.border),
+                        _summaryRow(
+                          'Datum en tijd',
+                          _getDateTimeDisplay(sighting?.dateTime),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  ReportSurface(child: _buildActivitySection(sighting)),
+                  if (sighting?.animals?.isNotEmpty ?? false) ...[
+                    const SizedBox(height: 14),
+                    ReportSurface(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: _buildAnimalDetailsList(sighting!.animals!),
                       ),
                     ),
                   ],
-                ),
+                ],
               ),
-            ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: SizedBox.shrink(),
     );
   }
 
@@ -524,10 +289,7 @@ class _AnimalWaarnemingSummaryScreenState
           flex: 2,
           child: Text(
             value,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.black87,
-            ),
+            style: const TextStyle(fontSize: 14, color: Colors.black87),
           ),
         ),
       ],
@@ -551,8 +313,9 @@ class _AnimalWaarnemingSummaryScreenState
     if (apiValue == null || apiValue.isEmpty) {
       return 'Niet ingevuld';
     }
-    final label =
-        SightingReportActivityCatalog.labelNlForPerceivedAnimal(apiValue);
+    final label = SightingReportActivityCatalog.labelNlForPerceivedAnimal(
+      apiValue,
+    );
     if (SightingReportActivityCatalog.isOtherPerceivedAnimal(apiValue) &&
         other != null &&
         other.trim().isNotEmpty) {
@@ -561,18 +324,15 @@ class _AnimalWaarnemingSummaryScreenState
     return label;
   }
 
-List<Widget> _buildAnimalDetailsList(List animals) {
+  List<Widget> _buildAnimalDetailsList(List animals) {
     final details = <Widget>[];
-    
+
     if (animals.isEmpty) {
       return [
         const Center(
           child: Text(
             'Geen dier details beschikbaar',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey),
           ),
         ),
       ];
@@ -615,7 +375,7 @@ List<Widget> _buildAnimalDetailsList(List animals) {
       for (final genderViewCount in animal.genderViewCounts) {
         final gender = _getGenderDisplay(genderViewCount.gender);
         final viewCount = genderViewCount.viewCount;
-        
+
         // Determine the age
         String age = 'Onbekend';
         if (viewCount.pasGeborenAmount > 0) {
@@ -646,17 +406,14 @@ List<Widget> _buildAnimalDetailsList(List animals) {
                   flex: 2,
                   child: Text(
                     '$gender, $age',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.black87,
-                    ),
+                    style: const TextStyle(fontSize: 14, color: Colors.black87),
                   ),
                 ),
               ],
             ),
           ),
         );
-        
+
         animalIndex++;
       }
     }
@@ -666,10 +423,7 @@ List<Widget> _buildAnimalDetailsList(List animals) {
         const Center(
           child: Text(
             'Geen dier details beschikbaar',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey),
           ),
         ),
       ];

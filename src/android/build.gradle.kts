@@ -14,6 +14,18 @@ subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
+// geocoding_android still declares API 33, but its AndroidX dependencies need 34+.
+// Finalize its compile SDK after the plugin's own DSL without changing runtime targets.
+subprojects {
+    if (name == "geocoding_android") {
+        plugins.withId("com.android.library") {
+            extensions.configure<com.android.build.api.variant.LibraryAndroidComponentsExtension> {
+                finalizeDsl { library -> library.compileSdk = 37 }
+            }
+        }
+    }
+}
+
 subprojects {
     project.evaluationDependsOn(":app")
 }

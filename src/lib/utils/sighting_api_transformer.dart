@@ -1,4 +1,6 @@
-﻿import 'package:flutter/material.dart';
+import 'package:wildgids/models/enums/animal_count_mode.dart';
+import 'package:flutter/material.dart';
+import 'package:wildgids/models/animal_waarneming_models/animal_model.dart';
 import 'package:wildgids/models/animal_waarneming_models/animal_sighting_model.dart';
 import 'package:wildgids/models/beta_models/sighted_animal_model.dart';
 import 'package:wildgids/models/enums/location_source.dart';
@@ -18,7 +20,8 @@ class SightingApiTransformer {
     if (sighting.dateTime == null || sighting.dateTime!.dateTime == null) {
       throw StateError('DateTime is required for API submission');
     }
-    if (sighting.animals == null || sighting.animals!.isEmpty) {
+    if (sighting.countMode == AnimalCountMode.exact &&
+        (sighting.animals == null || sighting.animals!.isEmpty)) {
       throw StateError('At least one animal is required for API submission');
     }
     if (sighting.animalSelected?.animalId == null) {
@@ -33,9 +36,15 @@ class SightingApiTransformer {
         // GPS wasn't acquired - try to use manual location as fallback
         final manual = sighting.locations!.firstWhere(
           (loc) => loc.source == LocationSource.manual,
-          orElse: () => throw StateError('At least one location (system or manual) is required'),
+          orElse:
+              () =>
+                  throw StateError(
+                    'At least one location (system or manual) is required',
+                  ),
         );
-        debugPrint('âš ï¸ System location not available, using manual location as fallback');
+        debugPrint(
+          'âš ï¸ System location not available, using manual location as fallback',
+        );
         return manual;
       },
     );
@@ -50,7 +59,10 @@ class SightingApiTransformer {
 
     // Transform animals to SightedAnimal format
     final List<SightedAnimal> sightedAnimals = [];
-    for (final animal in sighting.animals!) {
+    for (final animal
+        in sighting.countMode == AnimalCountMode.exact
+            ? (sighting.animals ?? const <AnimalModel>[])
+            : const <AnimalModel>[]) {
       final condition =
           animal.condition?.toString().split('.').last ?? 'unknown';
       final mappedCondition = _mapCondition(condition);
@@ -82,7 +94,7 @@ class SightingApiTransformer {
       }
     }
 
-    if (sightedAnimals.isEmpty) {
+    if (sightedAnimals.isEmpty && sighting.countMode == AnimalCountMode.exact) {
       final count = sighting.animalCount ?? 1;
       for (var i = 0; i < count; i++) {
         sightedAnimals.add(
@@ -114,6 +126,14 @@ class SightingApiTransformer {
       "typeID": 1,
     };
 
+    // Unknown counts must not become an invented array of individual animals.
+    // The API has no count-mode field; its supported notes field retains that distinction.
+    final notes = [
+      sighting.description?.trim() ?? '',
+      sighting.countMode.note,
+    ].where((part) => part.isNotEmpty).join('\n');
+    if (notes.isNotEmpty) apiPayload['notes'] = notes;
+
     final reportOfSighting =
         apiPayload['reportOfSighting'] as Map<String, dynamic>;
     _ensureInvolvedAnimalsList(reportOfSighting);
@@ -128,31 +148,37 @@ class SightingApiTransformer {
   }
 
   /// API expects a JSON array; guard against accidental string/other types.
-  static void _ensureInvolvedAnimalsList(Map<String, dynamic> reportOfSighting) {
+  static void _ensureInvolvedAnimalsList(
+    Map<String, dynamic> reportOfSighting,
+  ) {
     final raw = reportOfSighting['involvedAnimals'];
     if (raw is List) {
-      reportOfSighting['involvedAnimals'] = raw
-          .whereType<Map>()
-          .map(
-            (e) => e is Map<String, dynamic>
-                ? e
-                : Map<String, dynamic>.from(e),
-          )
-          .toList();
+      reportOfSighting['involvedAnimals'] =
+          raw
+              .whereType<Map>()
+              .map(
+                (e) =>
+                    e is Map<String, dynamic>
+                        ? e
+                        : Map<String, dynamic>.from(e),
+              )
+              .toList();
       return;
     }
     if (raw is String && raw.trim().isNotEmpty) {
       try {
         final decoded = jsonDecode(raw);
         if (decoded is List) {
-          reportOfSighting['involvedAnimals'] = decoded
-              .whereType<Map>()
-              .map(
-                (e) => e is Map<String, dynamic>
-                    ? e
-                    : Map<String, dynamic>.from(e),
-              )
-              .toList();
+          reportOfSighting['involvedAnimals'] =
+              decoded
+                  .whereType<Map>()
+                  .map(
+                    (e) =>
+                        e is Map<String, dynamic>
+                            ? e
+                            : Map<String, dynamic>.from(e),
+                  )
+                  .toList();
           return;
         }
       } catch (_) {
@@ -222,4 +248,3 @@ class SightingApiTransformer {
     }
   }
 }
-

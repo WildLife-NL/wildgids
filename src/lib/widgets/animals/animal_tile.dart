@@ -1,3 +1,4 @@
+import 'package:wildgids/widgets/guide/animal_name.dart';
 import 'package:flutter/material.dart';
 import 'package:wildgids/models/animal_waarneming_models/animal_model.dart';
 import 'package:wildgids/utils/species_image_resolver.dart';
@@ -44,9 +45,10 @@ class _AnimalTileState extends State<AnimalTile> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
                 side: BorderSide(
-                  color: widget.isSelected
-                      ? const Color(0xFF4CAF50)
-                      : const Color.fromARGB(64, 0, 0, 0),
+                  color:
+                      widget.isSelected
+                          ? const Color(0xFF4CAF50)
+                          : const Color.fromARGB(64, 0, 0, 0),
                   width: widget.isSelected ? 3 : 1,
                 ),
               ),
@@ -68,42 +70,48 @@ class _AnimalTileState extends State<AnimalTile> {
                           topRight: Radius.circular(14),
                         ),
                         child: SizedBox.expand(
-                          child: _resolvedImagePath != null
-                              ? _buildImageWithFallback()
-                              : Center(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.image_not_supported_outlined,
-                                        size: 50,
-                                        color: Colors.grey[400],
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        'Geen afbeelding',
-                                        style: TextStyle(
-                                          color: Colors.grey[500],
-                                          fontSize: 12,
+                          child:
+                              _resolvedImagePath != null
+                                  ? _buildImageWithFallback()
+                                  : Center(
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.image_not_supported_outlined,
+                                          size: 50,
+                                          color: Colors.grey[400],
                                         ),
-                                      ),
-                                    ],
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          'Geen afbeelding',
+                                          style: TextStyle(
+                                            color: Colors.grey[500],
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
                         ),
                       ),
                     ),
                   ),
                   Container(
                     height: 1,
-                    color: widget.isSelected
-                        ? const Color(0xFF4CAF50)
-                        : const Color.fromARGB(84, 0, 0, 0),
+                    color:
+                        widget.isSelected
+                            ? const Color(0xFF4CAF50)
+                            : const Color.fromARGB(84, 0, 0, 0),
                   ),
                   Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: widget.isSelected ? const Color(0xFFF0F4ED) : Colors.white,
+                      color:
+                          widget.isSelected
+                              ? const Color(0xFFF0F4ED)
+                              : Colors.white,
                       borderRadius: const BorderRadius.only(
                         bottomLeft: Radius.circular(14),
                         bottomRight: Radius.circular(14),
@@ -113,19 +121,20 @@ class _AnimalTileState extends State<AnimalTile> {
                       vertical: 6,
                       horizontal: 12,
                     ),
-                    child: Text(
+                    child: AnimalName(
                       widget.animal.animalName,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight:
-                            widget.isSelected ? FontWeight.w600 : FontWeight.w400,
-                        color: widget.isSelected
-                            ? const Color(0xFF2E7D32)
-                            : Colors.black,
+                            widget.isSelected
+                                ? FontWeight.w600
+                                : FontWeight.w400,
+                        color:
+                            widget.isSelected
+                                ? const Color(0xFF2E7D32)
+                                : Colors.black,
                       ),
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      alignment: Alignment.center,
                     ),
                   ),
                 ],
@@ -178,9 +187,7 @@ class _AnimalTileState extends State<AnimalTile> {
         );
       },
       errorBuilder: (context, error, stackTrace) {
-        debugPrint(
-          '[AnimalTile] Error loading image: $imagePath',
-        );
+        debugPrint('[AnimalTile] Error loading image: $imagePath');
 
         return Center(
           child: Column(
@@ -194,10 +201,7 @@ class _AnimalTileState extends State<AnimalTile> {
               const SizedBox(height: 8),
               Text(
                 'Failed to load',
-                style: TextStyle(
-                  color: Colors.grey[500],
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: Colors.grey[500], fontSize: 12),
               ),
             ],
           ),

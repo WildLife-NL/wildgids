@@ -107,7 +107,11 @@ void main() {
       () => client,
     );
     await tester.pumpAndSettle();
-    expect(map.mapController.camera.center.latitude, closeTo(52.4114, 0.001));
+    final visibleMap = tester.widget<FlutterMap>(find.byType(FlutterMap));
+    expect(
+      visibleMap.mapController!.camera.center.latitude,
+      closeTo(52.4114, 0.001),
+    );
     expect(map.currentPosition, isNull);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());

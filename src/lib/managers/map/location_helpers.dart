@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:geolocator/geolocator.dart';
+import 'package:wildgids/services/live_location_service.dart';
 
 class FreshPositionResult {
   final Position? provisional; // last known (may be null)
@@ -35,12 +36,6 @@ class LocationHelpers {
     } catch (_) {}
 
     // 3) Fresh fix via stream (more reliable than a single getCurrentPosition on some devices)
-    final settings = const LocationSettings(
-      accuracy: LocationAccuracy.bestForNavigation,
-      distanceFilter: 0, // give us the first one that comes
-      timeLimit: Duration(seconds: 10),
-    );
-
     final c = Completer<Position?>();
     StreamSubscription<Position>? sub;
 
@@ -50,9 +45,7 @@ class LocationHelpers {
     }
 
     try {
-      sub = Geolocator.getPositionStream(locationSettings: settings).listen((
-        pos,
-      ) {
+      sub = LiveLocationService.instance.watch().listen((pos) {
         // Accept the first "good enough" fix
         final acc = pos.accuracy.isFinite ? pos.accuracy : 9999;
         if (acc <= goodEnoughAccuracyMeters) {

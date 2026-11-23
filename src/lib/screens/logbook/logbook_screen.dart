@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:wildgids/widgets/guide/animal_artwork.dart';
+import 'package:wildgids/utils/species_image_resolver.dart';
+import 'package:wildgids/screens/logbook/wildlife_diary_screen.dart';
+import 'package:wildgids/widgets/guide/guide_style.dart';
 import 'package:provider/provider.dart';
-import 'package:wildgids/constants/app_colors.dart';
 import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
 import 'package:wildgids/models/enums/nav_tab.dart';
 import 'package:wildgids/screens/game/challenge_screen.dart';
@@ -9,7 +12,6 @@ import 'package:wildgids/screens/profile/profile_screen.dart';
 import 'package:wildgids/screens/logbook/saved_questionnaires_screen.dart';
 import 'package:wildgids/screens/logbook/my_responses_screen.dart';
 import 'package:wildgids/screens/logbook/my_contacts_screen.dart';
-import 'package:wildgids/screens/logbook/recent_sightings_screen.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/custom_nav_bar.dart';
 import 'package:wildgids/screens/waarneming/waarneming_start_screen.dart';
 
@@ -47,9 +49,19 @@ class _LogbookScreenState extends State<LogbookScreen> {
   }
 
   void _openRecentSightings(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const RecentSightingsScreen()),
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder:
+            (_) => WildlifeDiaryScreen(
+              showReportFilters: true,
+              onTabSelected: (tab) {
+                Navigator.of(context).pop();
+                if (tab != NavTab.logboek) {
+                  _onTabSelected(tab);
+                }
+              },
+            ),
+      ),
     );
   }
 
@@ -65,7 +77,10 @@ class _LogbookScreenState extends State<LogbookScreen> {
     switch (tab) {
       case NavTab.ontdekken:
       case NavTab.zones:
-        navigationManager.pushReplacementForward(context, const ChallengeScreen());
+        navigationManager.pushReplacementForward(
+          context,
+          const ChallengeScreen(),
+        );
         break;
       case NavTab.waarneming:
         navigationManager.pushReplacementForward(
@@ -83,7 +98,10 @@ class _LogbookScreenState extends State<LogbookScreen> {
         return;
       case NavTab.instellingen:
       case NavTab.profile:
-        navigationManager.pushReplacementForward(context, const ProfileScreen());
+        navigationManager.pushReplacementForward(
+          context,
+          const ProfileScreen(),
+        );
         break;
     }
   }
@@ -94,158 +112,168 @@ class _LogbookScreenState extends State<LogbookScreen> {
       _hasNavigated = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const RecentSightingsScreen()),
-          );
+          _openRecentSightings(context);
         }
       });
     }
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: ChallengeScreen.pageBackground,
       body: SafeArea(
         bottom: false,
-        child: Column(
-          children: [
-            Expanded(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 420),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _ReportButton(
-                          label: 'Recente meldingen',
-                          subtitle:
-                              'Waarnemingen, schademeldingen en dieraanrijdingen',
-                          icon: Icons.visibility_outlined,
-                          onTap: () => _openRecentSightings(context),
-                        ),
-                        const SizedBox(height: 12),
-                        _ReportButton(
-                          label: 'Contactmomenten',
-                          subtitle:
-                              'Bluetooth-contacten met collars (Smart Parks)',
-                          icon: Icons.bluetooth_connected,
-                          onTap: () => _openContactMoments(context),
-                        ),
-                        const SizedBox(height: 12),
-                        _ReportButton(
-                          label: 'Mijn antwoorden',
-                          subtitle: 'Ingevulde vragenlijsten en formulieren',
-                          icon: Icons.assignment_turned_in_outlined,
-                          onTap: () => _openMyResponses(context),
-                        ),
-                        const SizedBox(height: 12),
-                        _ReportButton(
-                          label: 'Vragenlijsten opgeslagen voor later',
-                          subtitle:
-                              'Ga verder met half ingevulde vragenlijsten',
-                          icon: Icons.bookmark_border,
-                          onTap: () => _openSavedQuestionnaires(context),
-                        ),
-                      ],
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 560),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const GuideBrand(),
+                  const SizedBox(height: 28),
+                  const Text(
+                    'Logboek',
+                    style: TextStyle(
+                      fontSize: 36,
+                      height: 1.1,
+                      fontWeight: FontWeight.w800,
+                      color: ChallengeScreen.deepGreen,
                     ),
                   ),
-                ),
+                  const SizedBox(height: 24),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final largeText =
+                          constraints.maxWidth < 340 &&
+                          MediaQuery.textScalerOf(context).scale(1) > 1.3;
+                      final tileWidth =
+                          largeText
+                              ? constraints.maxWidth
+                              : (constraints.maxWidth - 14) / 2;
+                      return Wrap(
+                        spacing: 14,
+                        runSpacing: 14,
+                        children: [
+                          _LogbookTile(
+                            width: tileWidth,
+                            label: 'Recente meldingen',
+                            icon: Icons.auto_stories_outlined,
+                            animalImage: true,
+                            onTap: () => _openRecentSightings(context),
+                          ),
+                          _LogbookTile(
+                            width: tileWidth,
+                            label: 'Contacten',
+                            icon: Icons.bluetooth_connected,
+                            onTap: () => _openContactMoments(context),
+                          ),
+                          _LogbookTile(
+                            width: tileWidth,
+                            label: 'Mijn antwoorden',
+                            icon: Icons.assignment_turned_in_outlined,
+                            onTap: () => _openMyResponses(context),
+                          ),
+                          _LogbookTile(
+                            width: tileWidth,
+                            label: 'Opgeslagen',
+                            icon: Icons.bookmark_border,
+                            onTap: () => _openSavedQuestionnaires(context),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
       ),
-      bottomNavigationBar: widget.showBottomNav
-          ? SafeArea(
-              top: false,
-              child: CustomNavBar(
-                currentTab: NavTab.logboek,
-                onTabSelected: _onTabSelected,
-              ),
-            )
-          : null,
+      bottomNavigationBar:
+          widget.showBottomNav
+              ? SafeArea(
+                top: false,
+                child: CustomNavBar(
+                  currentTab: NavTab.logboek,
+                  onTabSelected: _onTabSelected,
+                ),
+              )
+              : null,
     );
   }
 }
 
-class _ReportButton extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-  final String? subtitle;
-  final IconData icon;
-
-  const _ReportButton({
+class _LogbookTile extends StatelessWidget {
+  const _LogbookTile({
+    required this.width,
     required this.label,
+    required this.icon,
     required this.onTap,
-    this.subtitle,
-    this.icon = Icons.description_outlined,
+    this.animalImage = false,
   });
+  final double width;
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+  final bool animalImage;
 
   @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      shadowColor: Colors.transparent,
-      color: Colors.white,
+  Widget build(BuildContext context) => SizedBox(
+    width: width,
+    child: Material(
+      color: animalImage ? GuideStyle.background : const Color(0xFFF0F5E9),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: Colors.grey.shade300,
-          width: 1.5,
-        ),
+        borderRadius: BorderRadius.circular(12),
+        side: const BorderSide(color: Color(0xFFD8E3CE)),
       ),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.primaryGreen.withValues(alpha: 0.08),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  icon,
-                  color: AppColors.primaryGreen,
-                  size: 22,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      label,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    if (subtitle != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        subtitle!,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.black.withValues(alpha: 0.6),
+              SizedBox(
+                height: 110,
+                width: double.infinity,
+                child:
+                    animalImage
+                        ? AnimalArtwork(
+                          imagePath: SpeciesImageResolver.drawingForCommonName(
+                            'damhert',
+                          ),
+                        )
+                        : Center(
+                          child: Container(
+                            padding: const EdgeInsets.all(18),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFE1EDD7),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(icon, color: GuideStyle.ink, size: 38),
+                          ),
                         ),
-                      ),
-                    ],
-                  ],
+              ),
+              const SizedBox(height: 12),
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: 43 * MediaQuery.textScalerOf(context).scale(1),
+                ),
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    color: GuideStyle.ink,
+                    fontSize: 17,
+                    height: 1.25,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
             ],
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
 }
