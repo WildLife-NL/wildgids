@@ -24,6 +24,15 @@ import 'package:wildlifenl_map_logic_components/wildlifenl_map_logic_components.
 import 'package:wildgids/screens/profile/profile_screen.dart';
 import 'package:wildgids/widgets/map/animal_detail_card.dart';
 import 'package:wildgids/widgets/map/amenity_map_widgets.dart';
+import 'package:wildgids/widgets/map/park_walking_routes.dart';
+import 'package:wildgids/services/park_walking_routes_controller.dart';
+import 'package:wildgids/models/park_walking_route.dart';
+import 'package:wildgids/models/park_boundary.dart';
+import 'package:wildgids/models/ui_models/living_lab_area.dart';
+import 'package:wildgids/managers/map/living_lab_manager.dart';
+import 'package:wildgids/utils/trail_geometry.dart';
+import 'package:wildgids/widgets/map/trail_detail_sheet.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wildgids/widgets/map/carto_attribution.dart';
 import 'package:wildgids/managers/map/amenity_map_controller.dart';
 import 'package:wildgids/models/animal_waarneming_models/animal_pin.dart';
@@ -51,8 +60,13 @@ class _IconStyle {
 
 class KaartOverviewScreen extends StatefulWidget {
   final bool showBottomNav;
+  final ParkWalkingRoutesController? walkingRoutesController;
 
-  const KaartOverviewScreen({super.key, this.showBottomNav = true});
+  const KaartOverviewScreen({
+    super.key,
+    this.showBottomNav = true,
+    this.walkingRoutesController,
+  });
   @override
   State<KaartOverviewScreen> createState() => _KaartOverviewScreenState();
 }
@@ -66,6 +80,11 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
   fm.MapOptions? _mapOptions;
   final _location = LocationMapManager();
   final _amenities = AmenityMapController();
+  late final _walkingRoutes =
+      widget.walkingRoutesController ?? ParkWalkingRoutesController();
+  fm.LatLngBounds? _pendingParkBounds;
+  int _cameraIntent = 0;
+  bool _trailOverlayOpen = false;
 
   bool _mapReady = false;
   LatLng? _pendingCenter;
@@ -132,6 +151,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
         debugPrint('[Map] ready');
         _mapReady = true;
         _applyPendingCamera();
+        _followCurrentGps();
         _updateScaleBar();
       },
       interactionOptions: const fm.InteractionOptions(
@@ -143,14 +163,15 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
             fm.InteractiveFlag.flingAnimation |
             fm.InteractiveFlag.pinchMove,
       ),
+      onTap: (_, point) => _tapTrail(point),
       onMapEvent: (evt) {
         if (!mounted || !_mapReady) return;
-        final mp = context.read<MapProvider>();
         final currentZoom = _mapController.camera.zoom;
         final isProgrammatic = evt.source == fm.MapEventSource.mapController;
 
         if (!isProgrammatic &&
             (evt is fm.MapEventMoveStart || evt is fm.MapEventMove)) {
+          _cameraIntent++;
           if (_followUser) _followUser = false;
         }
 
@@ -165,13 +186,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
             setState(() => _useClusters = next);
           }
           _updateScaleBar();
-          final p = mp.currentPosition ?? mp.selectedPosition;
-          final appStateProvider = context.read<AppStateProvider>();
-          if (_followUser &&
-              appStateProvider.isLocationTrackingEnabled &&
-              p != null) {
-            _mapController.move(LatLng(p.latitude, p.longitude), currentZoom);
-          }
+          _followCurrentGps();
         }
 
         if (!isProgrammatic && evt is fm.MapEventMoveEnd) {
@@ -181,6 +196,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     );
 
     _mpListener ??= () {
+      _followCurrentGps();
       debugPrint('[Kaart] 📨 Listener triggered');
       final n = _mp.lastTrackingNotice;
 
@@ -253,14 +269,199 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
   void initState() {
     super.initState();
     _amenities.load();
+    unawaited(_walkingRoutes.loadBoundary());
+    unawaited(_restorePreferredLab());
     _bootstrap();
     _startFollowingMe();
+  }
+
+  Future<void> _restorePreferredLab() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (!mounted || _hasChosenLab) return;
+      final id = switch (prefs.getString('home_preferred_living_lab')) {
+        'e376995e-5a79-413c-8906-4640dfc2f472' => 'np-zuid-kennemerland',
+        '72797cde-25d9-4a36-8b77-7f8d50691ac7' => 'grenspark-kempenbroek',
+        final id => id,
+      };
+      if (id == null) return;
+      final lab = LivingLabManager().getLivingLabById(id);
+      if (lab != null) await _viewLivingLab(lab);
+    } catch (_) {
+      // A missing preference must leave manual living-lab selection usable.
+    }
+  }
+
+  Future<void> _viewLivingLab(LivingLabArea lab) async {
+    if (!mounted) return;
+    final intent = ++_cameraIntent;
+    setState(() {
+      _hasChosenLab = true;
+      _followUser = false;
+    });
+    _pendingParkBounds = null;
+    _pendingCenter = lab.center;
+    _pendingZoom = 12;
+    _applyPendingCamera();
+    await _walkingRoutes.selectLivingLab(lab.id);
+    if (!mounted ||
+        _cameraIntent != intent ||
+        _walkingRoutes.activeLabId != lab.id) {
+      return;
+    }
+    if (lab.id == ParkWalkingRoutesController.zuidKennemerlandId &&
+        _walkingRoutes.boundary != null) {
+      _showParkBoundary(_walkingRoutes.boundary!);
+    }
+  }
+
+  Future<void> _tapTrail(LatLng point) async {
+    if (_trailOverlayOpen || !_mapReady || !_walkingRoutes.enabled) return;
+    final hits = trailsAtMapPoint(
+      point: point,
+      routes: _walkingRoutes.visibleRoutes,
+      project: (coordinate) {
+        final pixel = _mapController.camera.project(coordinate);
+        return Offset(pixel.x, pixel.y);
+      },
+    );
+    if (hits.isEmpty) return;
+    ParkWalkingRoute? route = hits.first;
+    if (hits.length > 1) {
+      _trailOverlayOpen = true;
+      try {
+        route = await showModalBottomSheet<ParkWalkingRoute>(
+          context: context,
+          useSafeArea: true,
+          isScrollControlled: true,
+          builder:
+              (sheet) => SafeArea(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.sizeOf(sheet).height * 0.65,
+                  ),
+                  child: ListView(
+                    shrinkWrap: true,
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      Row(
+                        children: [
+                          const Expanded(
+                            child: Text(
+                              'Welke wandelroute?',
+                              style: TextStyle(
+                                fontSize: 21,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: 'Sluiten',
+                            onPressed: () => Navigator.pop(sheet),
+                            icon: const Icon(Icons.close),
+                          ),
+                        ],
+                      ),
+                      for (final hit in hits)
+                        ListTile(
+                          title: Text(hit.name),
+                          subtitle: Text(
+                            'Circa ${hit.distanceLabel}${hit.colorName == null ? '' : ' · ${hit.colorName}'}',
+                          ),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () => Navigator.pop(sheet, hit),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+        );
+      } finally {
+        _trailOverlayOpen = false;
+      }
+    }
+    if (mounted && route != null) await _openTrailDetails(route);
+  }
+
+  Future<void> _openTrailDetails(ParkWalkingRoute route) async {
+    if (!mounted || _trailOverlayOpen) return;
+    _trailOverlayOpen = true;
+    _walkingRoutes.showRoute(route);
+    unawaited(_walkingRoutes.loadEntrances());
+    try {
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        showDragHandle: true,
+        builder:
+            (_) => DraggableScrollableSheet(
+              expand: false,
+              initialChildSize: 0.72,
+              minChildSize: 0.3,
+              maxChildSize: 0.92,
+              builder: (sheet, scroll) {
+                final position = sheet.watch<MapProvider>().currentPosition;
+                final valid =
+                    position != null &&
+                    position.latitude.isFinite &&
+                    position.longitude.isFinite &&
+                    position.latitude.abs() <= 90 &&
+                    position.longitude.abs() <= 180;
+                final walk = sheet.watch<WalkRecorder?>();
+                return TrailDetailSheet(
+                  route: route,
+                  controller: _walkingRoutes,
+                  scrollController: scroll,
+                  userLocation:
+                      valid
+                          ? LatLng(position.latitude, position.longitude)
+                          : null,
+                  locationIsOld:
+                      valid &&
+                      DateTime.now().difference(position.timestamp) >
+                          const Duration(minutes: 2),
+                  onClose: () => Navigator.of(sheet).pop(),
+                  walkRecording: walk?.recording ?? false,
+                  walkBusy: walk?.busy ?? false,
+                  walkActionLabel:
+                      walk?.current == null
+                          ? 'Start wandeling'
+                          : 'Hervat wandeling',
+                  walkError: walk?.error,
+                  onStartWalk:
+                      walk == null
+                          ? null
+                          : () async {
+                            final started = await requestWalkRecording(
+                              sheet,
+                              walk,
+                            );
+                            if (!started || !mounted) return false;
+                            _cameraIntent++;
+                            _pendingParkBounds = null;
+                            _pendingCenter = null;
+                            _pendingZoom = null;
+                            setState(() {
+                              _followUser = true;
+                            });
+                            _followCurrentGps();
+                            return true;
+                          },
+                );
+              },
+            ),
+      );
+    } finally {
+      _trailOverlayOpen = false;
+    }
   }
 
   @override
   void dispose() {
     _mapReady = false;
     _amenities.dispose();
+    _walkingRoutes.dispose();
     _posSub?.cancel();
     _pinsRefreshDebounce?.cancel();
     if (_listenerAttached && _mpListener != null) {
@@ -376,12 +577,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
         }
 
         if (!mounted) return;
-        if (_followUser &&
-            appStateProvider.isLocationTrackingEnabled &&
-            _mapReady) {
-          final z = _mapController.camera.zoom;
-          _mapController.move(LatLng(pos.latitude, pos.longitude), z);
-        }
+        _followCurrentGps();
 
         _schedulePinsRefresh();
       },
@@ -553,12 +749,26 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     }
   }
 
+  void _followCurrentGps() {
+    if (!mounted || !_mapReady || !_followUser) return;
+    final pos = _mp.currentPosition;
+    if (pos == null ||
+        !pos.latitude.isFinite ||
+        !pos.longitude.isFinite ||
+        pos.latitude.abs() > 90 ||
+        pos.longitude.abs() > 180) {
+      return;
+    }
+    final zoom = _mapController.camera.zoom;
+    _mapController.move(LatLng(pos.latitude, pos.longitude), zoom);
+  }
+
   Future<void> _centerOnMyLocation() async {
     final mp = context.read<MapProvider>();
     if (!mp.isInitialized) return;
 
     final app = context.read<AppStateProvider>();
-    Position? pos = mp.currentPosition ?? mp.selectedPosition;
+    Position? pos = mp.currentPosition;
     pos ??= app.isLocationCacheValid ? app.cachedPosition : null;
     pos ??= await Geolocator.getLastKnownPosition();
     pos ??= await _location.determinePosition();
@@ -836,6 +1046,25 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
   }
 
   void _applyPendingCamera() {
+    if (!mounted || !_mapReady) return;
+    if (_pendingParkBounds != null) {
+      final size = _mapController.camera.nonRotatedSize;
+      _mapController.fitCamera(
+        fm.CameraFit.bounds(
+          bounds: _pendingParkBounds!,
+          padding: EdgeInsets.fromLTRB(
+            math.min(28, size.x * 0.08),
+            math.min(110, size.y * 0.2),
+            math.min(80, size.x * 0.2),
+            math.min(90, size.y * 0.2),
+          ),
+          maxZoom: 16,
+        ),
+      );
+      _pendingParkBounds = null;
+      _updateScaleBar();
+      return;
+    }
     if (!mounted ||
         !_mapReady ||
         _pendingCenter == null ||
@@ -848,6 +1077,30 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
     } catch (e) {
       debugPrint('[Map] Failed to apply pending camera: $e');
     }
+  }
+
+  void _showWalkingRoutes(List<ParkWalkingRoute> routes) {
+    if (routes.isEmpty) return;
+    _fitParkGeometry(routes.expand((route) => route.points));
+  }
+
+  void _showParkBoundary(ParkBoundary boundary) =>
+      _fitParkGeometry(boundary.rings.expand((ring) => ring));
+
+  void _fitParkGeometry(Iterable<LatLng> points) {
+    if (!mounted) return;
+    final coordinates = points.toList();
+    if (coordinates.isEmpty) return;
+    _cameraIntent++;
+    // Browsing park data changes only the camera, never the GPS/report location.
+    setState(() {
+      _hasChosenLab = true;
+      _followUser = false;
+    });
+    _pendingCenter = null;
+    _pendingZoom = null;
+    _pendingParkBounds = fm.LatLngBounds.fromPoints(coordinates);
+    _applyPendingCamera();
   }
 
   void _nudgeMapToTriggerTiles() {
@@ -1229,7 +1482,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
   @override
   Widget build(BuildContext context) {
     final map = context.watch<MapProvider>();
-    final pos = map.selectedPosition ?? map.currentPosition;
+    final pos = map.currentPosition;
 
     return PopScope(
       canPop: false,
@@ -1269,6 +1522,10 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                               keepBuffer: 1,
                             ),
 
+                            ZuidKennemerlandBoundaryLayer(
+                              controller: _walkingRoutes,
+                            ),
+                            ParkWalkingRoutesLayer(controller: _walkingRoutes),
                             AmenityMapLayer(controller: _amenities),
                             if (context.read<WalkRecorder?>() != null)
                               const ActiveWalkMapLayer(showMarkers: false),
@@ -1689,17 +1946,58 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
 
                         Positioned(
                           left: 14,
+                          right: 84,
                           top: 14,
                           child: SafeArea(
-                            child: AmenityMapControl(
-                              controller: _amenities,
-                              onViewLab: (lab) {
-                                _hasChosenLab = true;
-                                _followUser = false;
-                                _pendingCenter = lab.center;
-                                _pendingZoom = 12;
-                                _applyPendingCamera();
-                              },
+                            child: ListenableBuilder(
+                              listenable: _walkingRoutes,
+                              builder:
+                                  (context, _) => Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      AmenityMapControl(
+                                        controller: _amenities,
+                                        onViewLab: _viewLivingLab,
+                                      ),
+                                      if (_walkingRoutes.activeLabId ==
+                                          ParkWalkingRoutesController
+                                              .zuidKennemerlandId) ...[
+                                        const SizedBox(width: 8),
+                                        Flexible(
+                                          child: ParkWalkingRoutesButton(
+                                            controller: _walkingRoutes,
+                                            onShowRoutes: _showWalkingRoutes,
+                                            onShowBoundary: _showParkBoundary,
+                                            onSelectRoute: _openTrailDetails,
+                                            showEnabledState: false,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Semantics(
+                                          toggled: _walkingRoutes.enabled,
+                                          child: IconButton.filledTonal(
+                                            key: const ValueKey(
+                                              'toggle-park-trails',
+                                            ),
+                                            tooltip:
+                                                _walkingRoutes.enabled
+                                                    ? 'Wandelroutes verbergen'
+                                                    : 'Wandelroutes tonen',
+                                            onPressed:
+                                                () => _walkingRoutes.setEnabled(
+                                                  !_walkingRoutes.enabled,
+                                                ),
+                                            icon: Icon(
+                                              _walkingRoutes.enabled
+                                                  ? Icons.visibility
+                                                  : Icons.visibility_off,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
                             ),
                           ),
                         ),
@@ -1893,6 +2191,7 @@ class _KaartOverviewScreenState extends State<KaartOverviewScreen>
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
+                                    const ParkBoundaryLegend(),
                                     _legendRow(
                                       const Color(0xFF8613A8),
                                       'Waarneming',
