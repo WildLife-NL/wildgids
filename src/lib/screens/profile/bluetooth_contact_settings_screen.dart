@@ -1,13 +1,15 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:wildgids/constants/app_colors.dart';
+import 'package:wildgids/services/collar_identity_store.dart';
 import 'package:wildgids/services/contact_tracing_ble.dart';
 import 'package:wildgids/services/contact_tracing_coordinator.dart';
 import 'package:wildgids/services/contact_tracing_monitor.dart';
 import 'package:wildgids/services/contact_tracing_preferences.dart';
-import 'package:wildgids/utils/ble_mac_format.dart';
 import 'package:wildgids/utils/snack_bar_utils.dart';
 import 'package:wildgids/widgets/contact/contact_info_panel.dart';
 
@@ -22,6 +24,7 @@ class BluetoothContactSettingsScreen extends StatefulWidget {
 
 class _BluetoothContactSettingsScreenState
     extends State<BluetoothContactSettingsScreen> {
+  late final ContactTracingMonitor _listenedMonitor;
   ContactTracingCoordinator get _coordinator =>
       context.read<ContactTracingCoordinator>();
 
@@ -30,12 +33,13 @@ class _BluetoothContactSettingsScreenState
   @override
   void initState() {
     super.initState();
-    _monitor.addListener(_onMonitorChanged);
+    _listenedMonitor = _monitor;
+    _listenedMonitor.addListener(_onMonitorChanged);
   }
 
   @override
   void dispose() {
-    _monitor.removeListener(_onMonitorChanged);
+    _listenedMonitor.removeListener(_onMonitorChanged);
     super.dispose();
   }
 
@@ -74,9 +78,7 @@ class _BluetoothContactSettingsScreenState
         final contact = _monitor.lastEndedContact;
         final label = contact?.animalDisplayLabel;
         _showSnack(
-          label != null
-              ? 'Contact met $label beëindigd'
-              : 'Contact beëindigd',
+          label != null ? 'Contact met $label beëindigd' : 'Contact beëindigd',
         );
       }
       setState(() {});
@@ -94,6 +96,26 @@ class _BluetoothContactSettingsScreenState
         behavior: SnackBarBehavior.floating,
       ),
     );
+  }
+
+  Future<void> _registerTracker(ScanResult result) async {
+    final coordinator = _coordinator;
+    String? address;
+    if (coordinator.hardwareAddressFor(result) == null) {
+      address = await showDialog<String>(
+        context: context,
+        builder:
+            (_) => _TrackerAddressDialog(
+              label: ContactTracingBle.deviceLabel(result),
+            ),
+      );
+      if (address == null || !mounted) return;
+    }
+    try {
+      await coordinator.registerDevice(result, hardwareAddress: address);
+    } catch (_) {
+      if (mounted) _showSnack('Tracker koppelen mislukt. Probeer opnieuw.');
+    }
   }
 
   Widget _settingsSectionTitle(String title) {
@@ -130,7 +152,11 @@ class _BluetoothContactSettingsScreenState
         const SizedBox(height: 2),
         Text(
           hint,
-          style: TextStyle(fontSize: 12, color: Colors.grey.shade600, height: 1.3),
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey.shade600,
+            height: 1.3,
+          ),
         ),
         Slider(
           min: min,
@@ -180,16 +206,39 @@ class _BluetoothContactSettingsScreenState
                     ),
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    hasActive ? _buildActiveStatus() : coordinator.statusMessage,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 15,
-                      color: coordinator.backgroundScanning
-                          ? AppColors.primaryGreen
-                          : Colors.black87,
+                  Semantics(
+                    liveRegion: true,
+                    child: Text(
+                      hasActive
+                          ? _buildActiveStatus()
+                          : coordinator.statusMessage,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                        color:
+                            coordinator.backgroundScanning
+                                ? AppColors.primaryGreen
+                                : Colors.black87,
+                      ),
                     ),
                   ),
+                  if (coordinator.needsBluetoothPermission && !hasActive) ...[
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(48, 48),
+                      ),
+                      icon: const Icon(Icons.settings_outlined),
+                      label: const Text('Open telefooninstellingen'),
+                      onPressed: () async {
+                        if (!await openAppSettings() && mounted) {
+                          _showSnack(
+                            'Open Instellingen op je telefoon en geef WildGids toegang tot Bluetooth.',
+                          );
+                        }
+                      },
+                    ),
+                  ],
                   if (coordinator.backgroundScanning && !hasActive) ...[
                     const SizedBox(height: 10),
                     const LinearProgressIndicator(
@@ -258,18 +307,26 @@ class _BluetoothContactSettingsScreenState
                   ] else if (coordinator.backgroundEnabled) ...[
                     const SizedBox(height: 12),
                     FilledButton.tonalIcon(
-                      onPressed: coordinator.backgroundScanning
-                          ? null
-                          : () => coordinator.triggerBackgroundScanNow(
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size(48, 48),
+                      ),
+                      onPressed:
+                          coordinator.backgroundScanning ||
+                                  coordinator.registeringContact
+                              ? null
+                              : () => coordinator.triggerBackgroundScanNow(
                                 force: true,
                               ),
                       icon: Icon(
-                        coordinator.backgroundScanning
+                        coordinator.backgroundScanning ||
+                                coordinator.registeringContact
                             ? Icons.hourglass_top
                             : Icons.radar,
                       ),
                       label: Text(
-                        coordinator.backgroundScanning
+                        coordinator.registeringContact
+                            ? 'Contact starten…'
+                            : coordinator.backgroundScanning
                             ? 'Scannen…'
                             : 'Nu scannen',
                       ),
@@ -279,6 +336,59 @@ class _BluetoothContactSettingsScreenState
               ),
             ),
           ),
+          if (coordinator.backgroundEnabled && !hasActive) ...[
+            const SizedBox(height: 8),
+            _settingsSectionTitle('Laatst gezien in buurt'),
+            const SizedBox(height: 8),
+            if (devices.isEmpty)
+              Text(
+                'Nog geen collar in de laatste scan.',
+                style: TextStyle(color: Colors.grey.shade600, height: 1.4),
+              ),
+            ...devices.map((result) {
+              final label = ContactTracingBle.deviceLabel(result);
+              final mac = coordinator.hardwareAddressFor(result);
+              final separateAction =
+                  MediaQuery.textScalerOf(context).scale(1) > 1.2;
+              final action = TextButton(
+                style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+                onPressed:
+                    coordinator.backgroundScanning ||
+                            coordinator.registeringContact
+                        ? null
+                        : () => _registerTracker(result),
+                child: Text(mac == null ? 'Koppel tracker' : 'Start contact'),
+              );
+              return Card(
+                margin: const EdgeInsets.only(bottom: 8),
+                child: Column(
+                  children: [
+                    ListTile(
+                      leading: Icon(
+                        Icons.sensors,
+                        color: AppColors.primaryGreen,
+                      ),
+                      title: Text(label),
+                      subtitle: Text(
+                        mac == null
+                            ? 'Koppelen nodig · ${result.rssi} dBm'
+                            : '$mac · ${result.rssi} dBm',
+                      ),
+                      trailing: separateAction ? null : action,
+                    ),
+                    if (separateAction)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 16, bottom: 8),
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: action,
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            }),
+          ],
           Card(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
@@ -291,10 +401,12 @@ class _BluetoothContactSettingsScreenState
                         'Achtergrondscan: ${coordinator.backgroundIntervalSeconds} s',
                     hint:
                         'Hoe vaak op de achtergrond naar collars wordt gezocht (ook buiten dit scherm).',
-                    min: ContactTracingPreferences.minBackgroundIntervalSeconds
-                        .toDouble(),
-                    max: ContactTracingPreferences.maxBackgroundIntervalSeconds
-                        .toDouble(),
+                    min:
+                        ContactTracingPreferences.minBackgroundIntervalSeconds
+                            .toDouble(),
+                    max:
+                        ContactTracingPreferences.maxBackgroundIntervalSeconds
+                            .toDouble(),
                     divisions: 4,
                     value: coordinator.backgroundIntervalSeconds,
                     onChanged: (v) {
@@ -307,10 +419,12 @@ class _BluetoothContactSettingsScreenState
                         'Scan tijdens contact: ${coordinator.activeScanIntervalSeconds} s',
                     hint:
                         'Hoe vaak opnieuw wordt gescand zolang een contact actief is.',
-                    min: ContactTracingPreferences.minActiveScanIntervalSeconds
-                        .toDouble(),
-                    max: ContactTracingPreferences.maxActiveScanIntervalSeconds
-                        .toDouble(),
+                    min:
+                        ContactTracingPreferences.minActiveScanIntervalSeconds
+                            .toDouble(),
+                    max:
+                        ContactTracingPreferences.maxActiveScanIntervalSeconds
+                            .toDouble(),
                     divisions: 7,
                     value: coordinator.activeScanIntervalSeconds,
                     onChanged: (v) {
@@ -322,10 +436,12 @@ class _BluetoothContactSettingsScreenState
                     label: 'Signaal weg na: ${coordinator.signalLossSeconds} s',
                     hint:
                         'Geen advertentie meer van de collar → contact automatisch beëindigen.',
-                    min: ContactTracingPreferences.minSignalLossSeconds
-                        .toDouble(),
-                    max: ContactTracingPreferences.maxSignalLossSeconds
-                        .toDouble(),
+                    min:
+                        ContactTracingPreferences.minSignalLossSeconds
+                            .toDouble(),
+                    max:
+                        ContactTracingPreferences.maxSignalLossSeconds
+                            .toDouble(),
                     divisions: 7,
                     value: coordinator.signalLossSeconds,
                     onChanged: (v) {
@@ -363,31 +479,80 @@ class _BluetoothContactSettingsScreenState
               ),
             ),
           ),
-          if (coordinator.backgroundEnabled && !hasActive) ...[
-            const SizedBox(height: 8),
-            _settingsSectionTitle('Laatst gezien in buurt'),
-            const SizedBox(height: 8),
-            if (devices.isEmpty)
-              Text(
-                'Nog geen collar in de laatste scan.',
-                style: TextStyle(color: Colors.grey.shade600, height: 1.4),
-              ),
-            ...devices.map((result) {
-              final label = ContactTracingBle.deviceLabel(result);
-              final mac = formatBleHardwareAddress(result.device.remoteId.str);
-              return Card(
-                margin: const EdgeInsets.only(bottom: 8),
-                child: ListTile(
-                  leading: Icon(Icons.sensors, color: AppColors.primaryGreen),
-                  title: Text(label),
-                  subtitle: Text('$mac · ${result.rssi} dBm'),
-                ),
-              );
-            }),
-          ],
         ],
       ),
     );
   }
 }
 
+class _TrackerAddressDialog extends StatefulWidget {
+  const _TrackerAddressDialog({required this.label});
+  final String label;
+
+  @override
+  State<_TrackerAddressDialog> createState() => _TrackerAddressDialogState();
+}
+
+class _TrackerAddressDialogState extends State<_TrackerAddressDialog> {
+  final _controller = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: Text('Koppel ${widget.label}'),
+    scrollable: true,
+    content: Form(
+      key: _formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Je iPhone toont het Bluetooth-adres van de tracker niet. '
+            'Vul het volledige adres van deze tracker in. '
+            'Vraag dit zo nodig aan de beheerder van de tracker.',
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _controller,
+            autofocus: true,
+            autocorrect: false,
+            enableSuggestions: false,
+            textCapitalization: TextCapitalization.characters,
+            decoration: const InputDecoration(
+              labelText: 'Bluetooth-MAC-adres',
+              hintText: 'AA:BB:CC:DD:EE:FF',
+              border: OutlineInputBorder(),
+            ),
+            validator:
+                (value) => CollarIdentityStore.validate(
+                  value ?? '',
+                  advertisedName: widget.label,
+                ),
+          ),
+        ],
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.of(context).pop(),
+        child: const Text('Annuleren'),
+      ),
+      FilledButton(
+        style: FilledButton.styleFrom(minimumSize: const Size(48, 48)),
+        onPressed: () {
+          if (_formKey.currentState!.validate()) {
+            Navigator.of(context).pop(_controller.text.trim());
+          }
+        },
+        child: const Text('Koppelen'),
+      ),
+    ],
+  );
+}

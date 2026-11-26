@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -8,10 +8,8 @@ import 'package:wildgids/models/api_models/contact_model.dart';
 import 'package:wildgids/services/contact_tracing_ble.dart';
 import 'package:wildgids/utils/ble_mac_format.dart';
 
-typedef ContactEndedCallback = void Function(
-  Contact contact, {
-  required bool automatic,
-});
+typedef ContactEndedCallback =
+    void Function(Contact contact, {required bool automatic});
 
 /// Volgt een actief contact via BLE-advertenties (geen GATT-verbinding).
 class ContactTracingMonitor extends ChangeNotifier {
@@ -29,6 +27,7 @@ class ContactTracingMonitor extends ChangeNotifier {
 
   String? _activeContactId;
   String? _activeContactMac;
+  String? _activeDeviceId;
   Contact? _activeContact;
   DateTime? _sessionStartedAt;
   DateTime? _lastSeenAt;
@@ -50,6 +49,7 @@ class ContactTracingMonitor extends ChangeNotifier {
   int get activeScanIntervalSeconds => _rescanInterval.inSeconds;
   String? get activeContactId => _activeContactId;
   String? get activeContactMac => _activeContactMac;
+  String? get activeDeviceId => _activeDeviceId;
   Contact? get activeContact => _activeContact;
   Contact? get lastEndedContact => _lastEndedContact;
   DateTime? get lastSeenAt => _lastSeenAt;
@@ -97,10 +97,13 @@ class ContactTracingMonitor extends ChangeNotifier {
     required String contactId,
     required String mac,
     required Contact contact,
+    String? deviceId,
   }) async {
     final formattedMac = formatBleHardwareAddress(mac);
+    final scanId = (deviceId ?? formattedMac).trim().toUpperCase();
     if (_activeContactId == contactId &&
         _activeContactMac == formattedMac &&
+        _activeDeviceId == scanId &&
         _rescanTimer != null) {
       return;
     }
@@ -109,6 +112,7 @@ class ContactTracingMonitor extends ChangeNotifier {
 
     _activeContactId = contactId;
     _activeContactMac = formattedMac;
+    _activeDeviceId = scanId;
     _activeContact = contact;
     _sessionStartedAt = DateTime.now();
     _lastSeenAt = null;
@@ -144,13 +148,18 @@ class ContactTracingMonitor extends ChangeNotifier {
       debugPrint('[ContactTracingMonitor] Ended contact $id');
       onContactEnded?.call(result, automatic: automatic);
     } catch (e) {
-      _lastAutoEndMessage = automatic
-          ? 'Automatisch beëindigen mislukt: $e'
-          : null;
+      _lastAutoEndMessage =
+          automatic ? 'Automatisch beëindigen mislukt: $e' : null;
       rethrow;
     } finally {
       _busyEnding = false;
-      await stop();
+      if (result != null) {
+        await stop();
+      } else {
+        // Keep the active contact and timers when GPS or the request fails.
+        // The next presence check (or a manual retry) can still close it.
+        notifyListeners();
+      }
     }
     return result;
   }
@@ -170,6 +179,7 @@ class ContactTracingMonitor extends ChangeNotifier {
     _isScanning = false;
     _activeContactId = null;
     _activeContactMac = null;
+    _activeDeviceId = null;
     _activeContact = null;
     _sessionStartedAt = null;
     _lastSeenAt = null;
@@ -190,22 +200,24 @@ class ContactTracingMonitor extends ChangeNotifier {
   }
 
   void _onScanResults(List<ScanResult> results) {
-    final targetMac = _activeContactMac;
-    if (targetMac == null) return;
+    final targetId = _activeDeviceId;
+    if (targetId == null) return;
 
     for (final result in results) {
       if (!ContactTracingBle.isSmartParksAdvertisement(result)) continue;
-      final mac = formatBleHardwareAddress(result.device.remoteId.str);
-      if (mac != targetMac) continue;
-      _markSeen(result.rssi);
+      final scanId = result.device.remoteId.str.trim().toUpperCase();
+      if (scanId != targetId) continue;
+      // scanResults replays the previous scan and includes other devices.
+      // Only a new advertisement from this tracker extends its presence.
+      if (result.timeStamp.isBefore(_sessionStartedAt!)) continue;
+      if (_lastSeenAt != null && !result.timeStamp.isAfter(_lastSeenAt!)) {
+        continue;
+      }
+      _lastSeenAt = result.timeStamp;
+      _lastAdvertisementRssi = result.rssi;
+      notifyListeners();
       return;
     }
-  }
-
-  void _markSeen(int rssi) {
-    _lastSeenAt = DateTime.now();
-    _lastAdvertisementRssi = rssi;
-    notifyListeners();
   }
 
   Future<bool> _ensureBleReady() async {
@@ -220,6 +232,7 @@ class ContactTracingMonitor extends ChangeNotifier {
     try {
       await FlutterBluePlus.startScan(
         timeout: scanDuration,
+        continuousUpdates: true,
         androidUsesFineLocation: true,
       );
     } catch (e, st) {
@@ -232,17 +245,15 @@ class ContactTracingMonitor extends ChangeNotifier {
     final started = _sessionStartedAt;
     if (started == null) return;
 
-    final last = _lastSeenAt;
-    if (last == null) {
-      // Geen enkele BLE-advertentie gezien — na grace toch beëindigen (anders blijft
-      // het contact op de server actief, bv. na herstart zonder collar in bereik).
-      if (DateTime.now().difference(started) <= _signalLossAfter) return;
-      await endActiveContact(automatic: true);
-      return;
-    }
-
+    // If no advertisement was seen, allow the same grace period after startup.
+    final last = _lastSeenAt ?? started;
     if (DateTime.now().difference(last) <= _signalLossAfter) return;
-    await endActiveContact(automatic: true);
+    try {
+      await endActiveContact(automatic: true);
+    } catch (e) {
+      // A timer-triggered failure must not become an unhandled async error.
+      debugPrint('[ContactTracingMonitor] Automatic end will retry: $e');
+    }
   }
 
   void clearAutoEndMessage() {
@@ -256,4 +267,3 @@ class ContactTracingMonitor extends ChangeNotifier {
     super.dispose();
   }
 }
-

@@ -1,9 +1,11 @@
-﻿import 'dart:async';
+import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:wildgids/data_managers/contact_api.dart';
+import 'package:wildgids/services/collar_identity_store.dart';
 import 'package:wildgids/utils/ble_permissions.dart';
 import 'package:wildgids/models/api_models/contact_model.dart';
 import 'package:wildgids/services/contact_tracing_ble.dart';
@@ -21,16 +23,30 @@ class ContactTracingCoordinator extends ChangeNotifier {
     required ContactApi contactApi,
     required ContactTracingMonitor monitor,
     GlobalKey<NavigatorState>? navigatorKey,
-  })  : _contactApi = contactApi,
-        _monitor = monitor,
-        _navigatorKey = navigatorKey;
+  }) : _contactApi = contactApi,
+       _monitor = monitor,
+       _navigatorKey = navigatorKey;
 
   final ContactApi _contactApi;
   final ContactTracingMonitor _monitor;
   final GlobalKey<NavigatorState>? _navigatorKey;
 
   bool _initialized = false;
-  late ContactTracingSettings _settings;
+  ContactTracingSettings _settings = const ContactTracingSettings(
+    backgroundEnabled: false,
+    backgroundIntervalSeconds:
+        ContactTracingPreferences.defaultBackgroundIntervalSeconds,
+    activeScanIntervalSeconds:
+        ContactTracingPreferences.defaultActiveScanIntervalSeconds,
+    signalLossSeconds: ContactTracingPreferences.defaultSignalLossSeconds,
+    notifyOnAnimalFound: true,
+    onlySmartParks: true,
+  );
+  final Map<String, String> _hardwareAddresses = {};
+  bool _scanInFlight = false;
+  bool _disposed = false;
+  bool _needsBluetoothPermission = false;
+  int _scanEpoch = 0;
   bool _backgroundScanning = false;
   bool _registerInFlight = false;
   int _registrationEpoch = 0;
@@ -48,7 +64,6 @@ class ContactTracingCoordinator extends ChangeNotifier {
   final Map<String, ScanResult> _discoveryDevicesRaw = {};
   Timer? _backgroundTimer;
   StreamSubscription<List<ScanResult>>? _discoveryScanSub;
-  StreamSubscription<bool>? _discoveryScanningSub;
 
   bool get backgroundEnabled => _settings.backgroundEnabled;
   int get backgroundIntervalSeconds => _settings.backgroundIntervalSeconds;
@@ -57,12 +72,42 @@ class ContactTracingCoordinator extends ChangeNotifier {
   bool get notifyOnAnimalFound => _settings.notifyOnAnimalFound;
   bool get onlySmartParks => _settings.onlySmartParks;
   bool get backgroundScanning => _backgroundScanning;
+  bool get registeringContact => _registerInFlight;
+  bool get needsBluetoothPermission => _needsBluetoothPermission;
   String get statusMessage => _statusMessage;
   ContactTracingMonitor get monitor => _monitor;
 
+  String? hardwareAddressFor(ScanResult result) {
+    final id = CollarIdentityStore.deviceKey(result.device.remoteId.str);
+    final mac = formatBleHardwareAddress(id);
+    return isValidBleHardwareAddress(mac) ? mac : _hardwareAddresses[id];
+  }
+
+  Future<void> registerDevice(
+    ScanResult result, {
+    String? hardwareAddress,
+  }) async {
+    if (_disposed || _registerInFlight || _monitor.hasActiveSession) return;
+    if (hardwareAddress != null) {
+      final error = CollarIdentityStore.validate(
+        hardwareAddress,
+        advertisedName: ContactTracingBle.deviceLabel(result),
+      );
+      if (error != null) throw ArgumentError(error);
+      final mac = formatBleHardwareAddress(hardwareAddress);
+      await CollarIdentityStore.save(result.device.remoteId.str, mac);
+      _hardwareAddresses[CollarIdentityStore.deviceKey(
+            result.device.remoteId.str,
+          )] =
+          mac;
+    }
+    await _registerStrongest(result);
+  }
+
   List<ScanResult> get discoveryDevicesSorted {
-    final list = _discoveryDevices.values.where(_acceptScanResult).toList()
-      ..sort((a, b) => b.rssi.compareTo(a.rssi));
+    final list =
+        _discoveryDevices.values.where(_acceptScanResult).toList()
+          ..sort((a, b) => b.rssi.compareTo(a.rssi));
     return list;
   }
 
@@ -70,6 +115,7 @@ class ContactTracingCoordinator extends ChangeNotifier {
     if (_initialized) return;
     _initialized = true;
     _settings = await ContactTracingPreferences.loadAll();
+    _hardwareAddresses.addAll(await CollarIdentityStore.load());
     _applySettingsToMonitor();
     _monitor.onContactEnded = (contact, {required automatic}) {
       unawaited(_onContactEnded(contact, automatic: automatic));
@@ -155,8 +201,7 @@ class ContactTracingCoordinator extends ChangeNotifier {
 
   /// Beëindigt elk actief contact (lokaal + server). Retourneert true als er iets gesloten is.
   Future<bool> endAllActiveContacts() async {
-    final endedMac =
-        _monitor.activeContactMac ?? _inFlightRegistrationMac;
+    final endedMac = _monitor.activeContactMac ?? _inFlightRegistrationMac;
     await _cancelInFlightRegistration();
     if (endedMac != null && endedMac.isNotEmpty) {
       _blockMacAfterManualEnd(endedMac);
@@ -171,7 +216,8 @@ class ContactTracingCoordinator extends ChangeNotifier {
         ended = true;
       } catch (e) {
         debugPrint('[ContactTracingCoordinator] monitor end: $e');
-        await _monitor.stop(notify: false);
+        // A failed GPS/API request must not hide an active server contact.
+        rethrow;
       }
     } else {
       await _monitor.stop(notify: false);
@@ -215,13 +261,13 @@ class ContactTracingCoordinator extends ChangeNotifier {
   /// Retourneert `true` als bij uitzetten een contact is gesloten.
   Future<bool> setBackgroundEnabled(bool enabled) async {
     var contactEnded = false;
+    // Disable before ending: closing the contact must not start another scan.
+    await _persist(_settings.copyWith(backgroundEnabled: enabled));
     if (!enabled) {
       contactEnded = await endAllActiveContacts();
-      _statusMessage = contactEnded
-          ? 'Bluetooth uit — contact beëindigd'
-          : 'Bluetooth uit';
+      _statusMessage =
+          contactEnded ? 'Bluetooth uit — contact beëindigd' : 'Bluetooth uit';
     }
-    await _persist(_settings.copyWith(backgroundEnabled: enabled));
     await _applyBackgroundState();
     return contactEnded;
   }
@@ -311,10 +357,23 @@ class ContactTracingCoordinator extends ChangeNotifier {
         if (_isStaleServerContact(c)) continue;
         final mac = c.contactHardwareAddress;
         if (mac == null || mac.isEmpty) continue;
+        final deviceId =
+            _hardwareAddresses.entries
+                .where((entry) => entry.value == formatBleHardwareAddress(mac))
+                .map((entry) => entry.key)
+                .firstOrNull;
+        if ((defaultTargetPlatform == TargetPlatform.iOS ||
+                defaultTargetPlatform == TargetPlatform.macOS) &&
+            deviceId == null) {
+          // An existing server contact does not reveal Apple's peripheral UUID.
+          // Discover/pair it first; registration then resumes it on HTTP 409.
+          continue;
+        }
         await _monitor.start(
           contactId: c.id,
           mac: formatBleHardwareAddress(mac),
           contact: c,
+          deviceId: deviceId,
         );
         _statusMessage = 'Actief contact: ${_monitor.activeAnimalLabel ?? mac}';
         return;
@@ -325,11 +384,13 @@ class ContactTracingCoordinator extends ChangeNotifier {
   }
 
   void _onMonitorChanged() {
+    if (_disposed) return;
     if (_monitor.hasActiveSession) {
       _stopBackgroundLoop();
-      _statusMessage = _monitor.activeAnimalLabel != null
-          ? 'Contact: ${_monitor.activeAnimalLabel}'
-          : 'Contact actief';
+      _statusMessage =
+          _monitor.activeAnimalLabel != null
+              ? 'Contact: ${_monitor.activeAnimalLabel}'
+              : 'Contact actief';
     } else if (_settings.backgroundEnabled) {
       _statusMessage =
           'Achtergrondscan elke ${_settings.backgroundIntervalSeconds} s';
@@ -353,11 +414,15 @@ class ContactTracingCoordinator extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _scheduleBackgroundLoop() async {
+  Future<void> _scheduleBackgroundLoop({bool scanNow = true}) async {
     _backgroundTimer?.cancel();
-    if (!_settings.backgroundEnabled || _monitor.hasActiveSession) return;
+    if (_disposed ||
+        !_settings.backgroundEnabled ||
+        _monitor.hasActiveSession) {
+      return;
+    }
 
-    unawaited(_runBackgroundDiscoveryScan());
+    if (scanNow) unawaited(_runBackgroundDiscoveryScan());
 
     _backgroundTimer = Timer.periodic(
       Duration(seconds: _settings.backgroundIntervalSeconds),
@@ -373,22 +438,21 @@ class ContactTracingCoordinator extends ChangeNotifier {
   }
 
   Future<void> _stopBackgroundLoop() async {
+    _scanEpoch++;
     _backgroundTimer?.cancel();
     _backgroundTimer = null;
     await _discoveryScanSub?.cancel();
     _discoveryScanSub = null;
-    await _discoveryScanningSub?.cancel();
-    _discoveryScanningSub = null;
     if (!_monitor.hasActiveSession && _backgroundScanning) {
       await FlutterBluePlus.stopScan();
     }
     _backgroundScanning = false;
-    _discoveryDevices.clear();
-    _discoveryDevicesRaw.clear();
+    // Keep the last results available for a manual retry if registration fails.
   }
 
   Future<bool> _ensureBleReady() async {
     final error = await BlePermissions.ensureReady();
+    _needsBluetoothPermission = BlePermissions.isPermissionError(error);
     if (error != null) {
       _statusMessage = error;
       notifyListeners();
@@ -398,6 +462,9 @@ class ContactTracingCoordinator extends ChangeNotifier {
   }
 
   String _emptyScanStatusMessage() {
+    if (_discoveryDevices.isNotEmpty) {
+      return 'Tracker gevonden. Koppel de tracker hieronder om contact te starten.';
+    }
     if (_discoveryDevicesRaw.isNotEmpty && _settings.onlySmartParks) {
       return '${_discoveryDevicesRaw.length} BLE-apparaat(en), geen Smart Parks collar — '
           'volgende scan over ${_settings.backgroundIntervalSeconds} s';
@@ -406,68 +473,100 @@ class ContactTracingCoordinator extends ChangeNotifier {
   }
 
   Future<void> _runBackgroundDiscoveryScan() async {
-    if (_registerInFlight || _monitor.hasActiveSession) return;
+    if (_disposed ||
+        _scanInFlight ||
+        _registerInFlight ||
+        _monitor.hasActiveSession) {
+      return;
+    }
     if (!_settings.backgroundEnabled) return;
-    if (!await _ensureBleReady()) return;
-
+    final epoch = _scanEpoch;
+    _scanInFlight = true;
     _backgroundScanning = true;
-    _statusMessage = 'Scannen naar collars…';
+    _statusMessage = 'Bluetooth controleren…';
     _discoveryDevices.clear();
     _discoveryDevicesRaw.clear();
     notifyListeners();
 
-    await _discoveryScanSub?.cancel();
-    _discoveryScanSub = FlutterBluePlus.scanResults.listen((results) {
-      for (final r in results) {
-        _discoveryDevicesRaw[r.device.remoteId.str] = r;
-        if (!_acceptScanResult(r)) continue;
-        _discoveryDevices[r.device.remoteId.str] = r;
-      }
-      notifyListeners();
-      final strongest = discoveryDevicesSorted;
-      if (strongest.isNotEmpty &&
-          !_registerInFlight &&
-          !_monitor.hasActiveSession) {
-        unawaited(_registerStrongest(strongest.first));
-      }
-    });
-
-    await _discoveryScanningSub?.cancel();
-    _discoveryScanningSub = FlutterBluePlus.isScanning.listen((v) {
-      _backgroundScanning = v;
-      notifyListeners();
-    });
-
     try {
+      if (!await _ensureBleReady()) return;
+      if (_disposed || epoch != _scanEpoch || !_settings.backgroundEnabled) {
+        return;
+      }
+      _statusMessage = 'Scannen naar collars…';
+      final startedAt = DateTime.now();
+      Object? scanError;
+      await _discoveryScanSub?.cancel();
+      _discoveryScanSub = FlutterBluePlus.scanResults.listen(
+        (results) {
+          if (_disposed || epoch != _scanEpoch) return;
+          for (final result in results) {
+            if (result.timeStamp.isBefore(startedAt)) continue;
+            _discoveryDevicesRaw[result.device.remoteId.str] = result;
+            if (_acceptScanResult(result)) {
+              _discoveryDevices[result.device.remoteId.str] = result;
+            }
+          }
+          notifyListeners();
+        },
+        onError: (Object error) {
+          scanError = error;
+        },
+      );
       await FlutterBluePlus.startScan(
         timeout: ContactTracingMonitor.scanDuration,
+        continuousUpdates: true,
         androidUsesFineLocation: true,
       );
+      // startScan completes when scanning STARTS, not after its timeout.
+      // Keep the button busy and collect results for the full scan window.
+      await FlutterBluePlus.isScanning
+          .where((scanning) => !scanning)
+          .first
+          .timeout(
+            ContactTracingMonitor.scanDuration + const Duration(seconds: 2),
+          );
+      if (_disposed || epoch != _scanEpoch || !_settings.backgroundEnabled) {
+        return;
+      }
+      if (scanError != null) throw scanError!;
+      _backgroundScanning = false;
+      _statusMessage = _emptyScanStatusMessage();
+      notifyListeners();
+      for (final result in discoveryDevicesSorted) {
+        final mac = hardwareAddressFor(result);
+        if (mac == null || _isMacBlockedFromReconnect(mac)) continue;
+        await _registerStrongest(result);
+        break;
+      }
     } catch (e, st) {
       debugPrint('[ContactTracingCoordinator] scan error: $e\n$st');
-      _statusMessage = 'Scan mislukt: $e';
-    }
-
-    if (!_monitor.hasActiveSession && _settings.backgroundEnabled) {
-      _statusMessage = discoveryDevicesSorted.isEmpty
-          ? _emptyScanStatusMessage()
-          : '${discoveryDevicesSorted.length} collar(s) in de buurt';
-    }
-    _backgroundScanning = false;
-    notifyListeners();
-
-    if (!_monitor.hasActiveSession &&
-        discoveryDevicesSorted.isNotEmpty &&
-        !_registerInFlight) {
-      await _registerStrongest(discoveryDevicesSorted.first);
+      if (!_disposed && epoch == _scanEpoch) {
+        _statusMessage =
+            'Scannen mislukt. Controleer Bluetooth en probeer opnieuw.';
+      }
+    } finally {
+      _scanInFlight = false;
+      if (epoch == _scanEpoch) _backgroundScanning = false;
+      notifyListeners();
     }
   }
 
   Future<void> _registerStrongest(ScanResult result) async {
-    if (_registerInFlight || _monitor.hasActiveSession) return;
+    if (_disposed ||
+        !_settings.backgroundEnabled ||
+        _registerInFlight ||
+        _monitor.hasActiveSession) {
+      return;
+    }
 
-    final mac = formatBleHardwareAddress(result.device.remoteId.str);
-    if (!isValidBleHardwareAddress(mac)) return;
+    final mac = hardwareAddressFor(result);
+    if (mac == null) {
+      _statusMessage =
+          'Tracker gevonden. Koppel de tracker hieronder om contact te starten.';
+      notifyListeners();
+      return;
+    }
     if (_isMacBlockedFromReconnect(mac)) return;
 
     final epoch = _registrationEpoch;
@@ -479,7 +578,25 @@ class ContactTracingCoordinator extends ChangeNotifier {
     await _stopBackgroundLoop();
 
     try {
-      final contact = await _contactApi.startContact(mac);
+      Contact contact;
+      try {
+        contact = await _contactApi.startContact(mac);
+      } on ContactRequestException catch (error) {
+        if (error.statusCode != 409) rethrow;
+        final active =
+            (await _contactApi.getMyContacts())
+                .where(
+                  (candidate) =>
+                      candidate.isActive &&
+                      formatBleHardwareAddress(
+                            candidate.contactHardwareAddress ?? '',
+                          ) ==
+                          mac,
+                )
+                .firstOrNull;
+        if (active == null) rethrow;
+        contact = active;
+      }
       if (epoch != _registrationEpoch) {
         await _safeEndContact(contact.id);
         return;
@@ -504,6 +621,7 @@ class ContactTracingCoordinator extends ChangeNotifier {
         contactId: contact.id,
         mac: mac,
         contact: contact,
+        deviceId: result.device.remoteId.str,
       );
       if (epoch != _registrationEpoch) {
         if (_monitor.hasActiveSession) {
@@ -523,7 +641,7 @@ class ContactTracingCoordinator extends ChangeNotifier {
       _statusMessage = 'Registreren mislukt: $e';
       debugPrint('[ContactTracingCoordinator] register failed: $e');
       if (_settings.backgroundEnabled) {
-        await _scheduleBackgroundLoop();
+        await _scheduleBackgroundLoop(scanNow: false);
       }
     } finally {
       if (epoch == _registrationEpoch) {
@@ -546,21 +664,40 @@ class ContactTracingCoordinator extends ChangeNotifier {
       }
       return;
     }
-    await _notifyContactStarted(contact);
+    try {
+      await _notifyContactStarted(contact);
+    } catch (error) {
+      debugPrint(
+        '[ContactTracingCoordinator] Contact notification unavailable: $error',
+      );
+    }
     _showContactStartedSheet(contact);
   }
 
-  Future<void> _onContactEnded(Contact contact, {required bool automatic}) async {
-    await _notifyContactEnded(contact, automatic: automatic);
+  Future<void> _onContactEnded(
+    Contact contact, {
+    required bool automatic,
+  }) async {
+    try {
+      await _notifyContactEnded(contact, automatic: automatic);
+    } catch (error) {
+      debugPrint(
+        '[ContactTracingCoordinator] End notification unavailable: $error',
+      );
+    }
   }
 
-  Future<void> _notifyContactEnded(Contact contact, {required bool automatic}) async {
+  Future<void> _notifyContactEnded(
+    Contact contact, {
+    required bool automatic,
+  }) async {
     if (!_settings.notifyOnAnimalFound) return;
 
     final label = contact.animalDisplayLabel;
-    final body = automatic
-        ? 'Signaal weg — contact met $label beëindigd.'
-        : 'Contact met $label beëindigd.';
+    final body =
+        automatic
+            ? 'Signaal weg — contact met $label beëindigd.'
+            : 'Contact met $label beëindigd.';
 
     await NotificationService.instance.show(
       title: 'Contact beëindigd',
@@ -574,10 +711,11 @@ class ContactTracingCoordinator extends ChangeNotifier {
     if (!_settings.notifyOnAnimalFound) return;
     if (_shouldSuppressContactStarted(contact)) return;
 
-    final messages = contact.conveyances
-        .map((c) => c.displayText)
-        .where((t) => t.isNotEmpty)
-        .toList();
+    final messages =
+        contact.conveyances
+            .map((c) => c.displayText)
+            .where((t) => t.isNotEmpty)
+            .toList();
 
     if (messages.isNotEmpty) {
       await NotificationService.instance.show(
@@ -605,10 +743,15 @@ class ContactTracingCoordinator extends ChangeNotifier {
   }
 
   @override
+  void notifyListeners() {
+    if (!_disposed) super.notifyListeners();
+  }
+
+  @override
   void dispose() {
+    _disposed = true;
     _monitor.removeListener(_onMonitorChanged);
     unawaited(_stopBackgroundLoop());
     super.dispose();
   }
 }
-
