@@ -1,4 +1,4 @@
-﻿import 'package:wildgids/models/api_models/experiment.dart';
+import 'package:wildgids/models/api_models/experiment.dart';
 import 'package:wildgids/models/api_models/interaction_type.dart';
 import 'package:wildgids/models/api_models/question.dart';
 import 'package:wildgids/models/api_models/user.dart';
@@ -7,6 +7,7 @@ class Questionnaire {
   String id;
   Experiment experiment;
   String? identifier;
+  String? notifyAfter;
   InteractionType interactionType;
   String name;
   List<Question>? questions;
@@ -17,6 +18,7 @@ class Questionnaire {
     required this.interactionType,
     required this.name,
     this.identifier,
+    this.notifyAfter,
     this.questions,
   });
 
@@ -29,39 +31,43 @@ class Questionnaire {
 
     return Questionnaire(
       id: rawId?.toString() ?? 'N/A',
-      experiment: rawExperiment != null
-          ? Experiment.fromJson(
-              rawExperiment is Map<String, dynamic>
-                  ? rawExperiment
-                  : Map<String, dynamic>.from(rawExperiment as Map),
-            )
-          : Experiment(
-              id: 'N/A',
-              description: '',
-              name: 'N/A',
-              start: DateTime.now(),
-              user: User(id: 'N/A', email: null),
-            ),
-      identifier: json['identifier']?.toString(),
-      interactionType: rawInteractionType != null
-          ? InteractionType.fromJson(
-              rawInteractionType is Map<String, dynamic>
-                  ? rawInteractionType
-                  : Map<String, dynamic>.from(rawInteractionType as Map),
-            )
-          : InteractionType(id: 0, name: 'N/A', description: ''),
-      name: rawName?.toString() ?? 'Vragenlijst',
-      questions: rawQuestions != null && rawQuestions is List
-          ? List<Question>.from(
-              rawQuestions.map(
-                (x) => Question.fromJson(
-                  x is Map<String, dynamic>
-                      ? x
-                      : Map<String, dynamic>.from(x as Map),
-                ),
+      experiment:
+          rawExperiment != null
+              ? Experiment.fromJson(
+                rawExperiment is Map<String, dynamic>
+                    ? rawExperiment
+                    : Map<String, dynamic>.from(rawExperiment as Map),
+              )
+              : Experiment(
+                id: 'N/A',
+                description: '',
+                name: 'N/A',
+                start: DateTime.now(),
+                user: User(id: 'N/A', email: null),
               ),
-            )
-          : null,
+      identifier: json['identifier']?.toString(),
+      notifyAfter: json['notifyAfter']?.toString(),
+      interactionType:
+          rawInteractionType != null
+              ? InteractionType.fromJson(
+                rawInteractionType is Map<String, dynamic>
+                    ? rawInteractionType
+                    : Map<String, dynamic>.from(rawInteractionType as Map),
+              )
+              : InteractionType(id: 0, name: 'N/A', description: ''),
+      name: rawName?.toString() ?? 'Vragenlijst',
+      questions:
+          rawQuestions != null && rawQuestions is List
+              ? List<Question>.from(
+                rawQuestions.map(
+                  (x) => Question.fromJson(
+                    x is Map<String, dynamic>
+                        ? x
+                        : Map<String, dynamic>.from(x as Map),
+                  ),
+                ),
+              )
+              : null,
     );
   }
 
@@ -76,6 +82,7 @@ class Questionnaire {
       'ID': id,
       'experiment': experiment.toJson(),
       'identifier': identifier,
+      if (notifyAfter != null) 'notifyAfter': notifyAfter,
       'interactionType': interactionType.toJson(),
       'name': name,
       'questions': listQuestions,

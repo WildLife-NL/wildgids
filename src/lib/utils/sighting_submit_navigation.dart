@@ -5,18 +5,27 @@ import 'package:wildgids/models/beta_models/interaction_response_model.dart';
 import 'package:wildgids/screens/location/kaart_overview_screen.dart';
 import 'package:wildgids/screens/questionnaire/questionnaire_screen.dart';
 import 'package:wildgids/utils/toast_notification_handler.dart';
+import 'package:wildgids/services/questionnaire_notifications.dart';
 
 /// Na succesvol versturen van een waarneming: enquête tonen indien aanwezig, anders kaart.
-void navigateAfterSightingSubmit(
+Future<void> navigateAfterSightingSubmit(
   BuildContext context,
   InteractionResponse response, {
   bool showSuccessToast = true,
-}) {
+}) async {
   final nav = context.read<NavigationStateInterface>();
   final questions = response.questionnaire.questions;
   final hasQuestionnaire = questions != null && questions.isNotEmpty;
 
-  if (hasQuestionnaire) {
+  final showImmediately =
+      hasQuestionnaire &&
+      await QuestionnaireNotifications.instance.receive(
+        response.questionnaire,
+        response.interactionID,
+      );
+  if (!context.mounted) return;
+
+  if (showImmediately) {
     nav.pushAndRemoveUntil(
       context,
       QuestionnaireScreen(

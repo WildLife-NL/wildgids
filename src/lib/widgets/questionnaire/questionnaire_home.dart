@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wildgids/constants/app_colors.dart';
 import 'package:wildgids/constants/app_text_theme.dart';
 import 'package:wildgids/screens/location/kaart_overview_screen.dart';
 import 'package:wildgids/utils/responsive_utils.dart';
 import 'package:wildgids/models/api_models/questionaire.dart';
+import 'package:wildgids/services/questionnaire_drafts_store.dart';
+
+export 'package:wildgids/services/questionnaire_drafts_store.dart';
 
 class QuestionnaireHome extends StatelessWidget {
   final VoidCallback nextScreen;
@@ -131,7 +132,9 @@ class QuestionnaireHome extends StatelessWidget {
                     );
                     if (!context.mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Vragenlijst opgeslagen voor later')),
+                      const SnackBar(
+                        content: Text('Vragenlijst opgeslagen voor later'),
+                      ),
                     );
                     Navigator.push(
                       context,
@@ -190,73 +193,3 @@ class QuestionnaireHome extends StatelessWidget {
     );
   }
 }
-
-// Local drafts storage
-class DraftQuestionnaire {
-  final String interactionID;
-  final DateTime savedAt;
-  final Map<String, dynamic> questionnaireJson;
-  DraftQuestionnaire({
-    required this.interactionID,
-    required this.savedAt,
-    required this.questionnaireJson,
-  });
-
-  Map<String, dynamic> toJson() => {
-        'interactionID': interactionID,
-        'savedAt': savedAt.toIso8601String(),
-        'questionnaire': questionnaireJson,
-      };
-
-  static DraftQuestionnaire fromJson(Map<String, dynamic> json) => DraftQuestionnaire(
-        interactionID: json['interactionID'] as String,
-        savedAt: DateTime.parse(json['savedAt'] as String),
-        questionnaireJson: json['questionnaire'] as Map<String, dynamic>,
-      );
-
-  Questionnaire toQuestionnaire() => Questionnaire.fromJson(questionnaireJson);
-}
-
-class DraftsStore {
-  static const _key = 'questionnaire_drafts';
-
-  static Future<void> saveDraft(DraftQuestionnaire draft) async {
-    final prefs = await SharedPreferences.getInstance();
-    final existing = prefs.getStringList(_key) ?? <String>[];
-    // replace any existing draft for same interactionID
-    final filtered = existing.where((s) {
-      try {
-        final m = Map<String, dynamic>.from(jsonDecode(s) as Map);
-        return m['interactionID'] != draft.interactionID;
-      } catch (_) {
-        return true;
-      }
-    }).toList();
-    filtered.add(jsonEncode(draft.toJson()));
-    await prefs.setStringList(_key, filtered);
-  }
-
-  static Future<List<DraftQuestionnaire>> getDrafts() async {
-    final prefs = await SharedPreferences.getInstance();
-    final list = prefs.getStringList(_key) ?? <String>[];
-    return list.map((s) {
-      final m = Map<String, dynamic>.from(jsonDecode(s));
-      return DraftQuestionnaire.fromJson(m);
-    }).toList();
-  }
-
-  static Future<void> removeDraft(String interactionID) async {
-    final prefs = await SharedPreferences.getInstance();
-    final existing = prefs.getStringList(_key) ?? <String>[];
-    final filtered = existing.where((s) {
-      try {
-        final m = Map<String, dynamic>.from(jsonDecode(s) as Map);
-        return m['interactionID'] != interactionID;
-      } catch (_) {
-        return true;
-      }
-    }).toList();
-    await prefs.setStringList(_key, filtered);
-  }
-}
-

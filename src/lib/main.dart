@@ -69,6 +69,8 @@ import 'package:wildgids/data_managers/conveyance_api.dart';
 import 'package:wildgids/utils/token_validator.dart';
 import 'package:wildgids/utils/notification_service.dart';
 import 'package:wildgids/screens/main/main_tab_shell.dart';
+import 'package:wildgids/screens/logbook/saved_questionnaires_screen.dart';
+import 'package:wildgids/services/questionnaire_notifications.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -222,7 +224,37 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    NotificationService.instance.onNotificationTap = _openQuestionnaires;
+  }
+
+  void _openQuestionnaires(String payload) async {
+    if (!payload.startsWith(QuestionnaireNotifications.payloadPrefix)) return;
+    if (!await TokenValidator.hasValidToken() || !mounted) return;
+    context.read<AppStateProvider>().navigatorKey.currentState?.push(
+      MaterialPageRoute(builder: (_) => const SavedQuestionnairesScreen()),
+    );
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
+    if (state == AppLifecycleState.resumed &&
+        await TokenValidator.hasValidToken()) {
+      await QuestionnaireNotifications.instance.restorePending();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    NotificationService.instance.onNotificationTap = null;
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return _MediaQueryWrapper(

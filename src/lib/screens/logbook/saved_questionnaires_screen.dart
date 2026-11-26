@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:wildgids/constants/app_colors.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
-import 'package:wildgids/widgets/questionnaire/questionnaire_home.dart';
+import 'package:wildgids/services/questionnaire_drafts_store.dart';
+import 'package:wildgids/services/questionnaire_notifications.dart';
 import 'package:wildgids/screens/questionnaire/questionnaire_screen.dart';
 
 class SavedQuestionnairesScreen extends StatelessWidget {
@@ -44,12 +45,19 @@ class SavedQuestionnairesScreen extends StatelessWidget {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: const [
-                            Icon(Icons.inventory_2_outlined, size: 48, color: Colors.black45),
+                            Icon(
+                              Icons.inventory_2_outlined,
+                              size: 48,
+                              color: Colors.black45,
+                            ),
                             SizedBox(height: 12),
                             Text(
                               'Nog geen opgeslagen vragenlijsten',
                               textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: 16, color: Colors.black87),
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.black87,
+                              ),
                             ),
                           ],
                         ),
@@ -63,25 +71,36 @@ class SavedQuestionnairesScreen extends StatelessWidget {
                     itemBuilder: (context, i) {
                       final d = drafts[i];
                       final q = d.toQuestionnaire();
-                      final saved = DateFormat('dd-MM-yyyy HH:mm').format(d.savedAt.toLocal());
+                      final saved = DateFormat(
+                        'dd-MM-yyyy HH:mm',
+                      ).format(d.savedAt.toLocal());
                       return Card(
                         color: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         child: ListTile(
-                          title: Text(q.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                          title: Text(
+                            q.name,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
                           subtitle: Text('Opgeslagen: $saved'),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               IconButton(
                                 icon: const Icon(Icons.delete_outline),
+                                tooltip: 'Vragenlijst verwijderen',
                                 onPressed: () async {
-                                  await DraftsStore.removeDraft(d.interactionID);
+                                  await QuestionnaireNotifications.instance
+                                      .remove(d.interactionID);
                                   // refresh by replacing route
                                   if (!context.mounted) return;
                                   Navigator.of(context).pushReplacement(
                                     MaterialPageRoute(
-                                      builder: (_) => const SavedQuestionnairesScreen(),
+                                      builder:
+                                          (_) =>
+                                              const SavedQuestionnairesScreen(),
                                     ),
                                   );
                                 },
@@ -91,10 +110,11 @@ class SavedQuestionnairesScreen extends StatelessWidget {
                                 onPressed: () {
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
-                                      builder: (_) => QuestionnaireScreen(
-                                        questionnaire: q,
-                                        interactionID: d.interactionID,
-                                      ),
+                                      builder:
+                                          (_) => QuestionnaireScreen(
+                                            questionnaire: q,
+                                            interactionID: d.interactionID,
+                                          ),
                                     ),
                                   );
                                 },
@@ -119,4 +139,3 @@ class SavedQuestionnairesScreen extends StatelessWidget {
     );
   }
 }
-

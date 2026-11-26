@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wildgids/interfaces/state/navigation_state_interface.dart';
 import 'package:wildgids/interfaces/reporting/questionnaire_interface.dart';
@@ -7,6 +7,7 @@ import 'package:wildgids/models/api_models/questionaire.dart';
 import 'package:wildgids/providers/response_provider.dart';
 import 'package:wildgids/screens/questionnaire/questionnaire_completion_screen.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
+import 'package:wildgids/services/questionnaire_notifications.dart';
 
 class QuestionnaireScreen extends StatefulWidget {
   final Questionnaire questionnaire;
@@ -100,6 +101,11 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
     debugPrint("[QuestionnaireScreen] Submitting all responses to backend...");
     await _responseManager.submitResponses();
 
+    // All answers have been accepted into the existing submission/offline queue.
+    // Stop the reminder for this interaction, including completion before due.
+    await QuestionnaireNotifications.instance.remove(widget.interactionID);
+    if (!mounted) return;
+
     setState(() {
       _shouldNavigate = true;
     });
@@ -182,4 +188,3 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
     );
   }
 }
-

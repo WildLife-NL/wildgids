@@ -9,6 +9,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wildgids/screens/login/login_screen.dart';
 import 'package:wildgids/utils/notification_service.dart';
+import 'package:wildgids/services/questionnaire_notifications.dart';
 
 class AppStateProvider with ChangeNotifier {
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -197,6 +198,11 @@ class AppStateProvider with ChangeNotifier {
       await prefs.setBool('notifications_enabled', enabled);
       _notificationsEnabled = enabled;
       NotificationService.instance.setPushEnabled(enabled);
+      if (enabled) {
+        await QuestionnaireNotifications.instance.restorePending();
+      } else {
+        await QuestionnaireNotifications.instance.cancelPending();
+      }
       notifyListeners();
     } catch (e) {
       debugPrint(
@@ -207,6 +213,7 @@ class AppStateProvider with ChangeNotifier {
 
   Future<void> logout() async {
     await navigatorKey.currentContext?.read<WalkRecorder?>()?.closeAccount();
+    await QuestionnaireNotifications.instance.cancelPending();
     // Remove persisted auth/session
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -233,6 +240,7 @@ class AppStateProvider with ChangeNotifier {
 
   Future<void> deleteProfile() async {
     await navigatorKey.currentContext?.read<WalkRecorder?>()?.closeAccount();
+    await QuestionnaireNotifications.instance.cancelPending();
     // This method is called from ProfileScreen after user confirms deletion.
     // Reset in-memory app state first
     _screenStates.clear();

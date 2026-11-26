@@ -112,7 +112,7 @@ class _AnimalWaarnemingSummaryScreenState
           '[AnimalWaarnemingSummaryScreen] Submit OK — '
           'questionnaire: ${response.questionnaire.questions?.length ?? 0} questions',
         );
-        navigateAfterSightingSubmit(context, response);
+        await navigateAfterSightingSubmit(context, response);
       } else {
         debugPrint(
           '[AnimalWaarnemingSummaryScreen] No sighting found to submit',
