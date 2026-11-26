@@ -1,4 +1,4 @@
-﻿import 'package:collection/collection.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wildgids/constants/app_colors.dart';
@@ -117,8 +117,11 @@ class _QuestionnaireOpenResponseState extends State<QuestionnaireOpenResponse> {
   }
 
   void _initializeController() {
-    responseProvider.setInteractionID(widget.interactionID);
-    responseProvider.setQuestionID(widget.question.id);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      responseProvider.setInteractionID(widget.interactionID);
+      responseProvider.setQuestionID(widget.question.id);
+    });
     existingResponse = responseProvider.responses.firstWhereOrNull(
       (response) => response.questionID == widget.question.id,
     );
@@ -434,4 +437,3 @@ class _QuestionnaireOpenResponseState extends State<QuestionnaireOpenResponse> {
     );
   }
 }
-

@@ -113,7 +113,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (msg.startsWith('Contact:') || msg.startsWith('Actief contact:')) {
         return msg;
       }
-      return 'Achtergrond elke ${tracing.backgroundIntervalSeconds} s · melding bij dier';
+      return msg.isNotEmpty && msg != 'Uit'
+          ? msg
+          : 'Achtergrond elke ${tracing.backgroundIntervalSeconds} s · melding bij dier';
     }
     return 'Scant collars en start contact automatisch';
   }
@@ -139,20 +141,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await NotificationService.instance.requestAndroidNotificationPermission();
     }
     if (!mounted) return;
-    final contactEnded = await contactTracing.setBackgroundEnabled(enabled);
-    if (!mounted) return;
-    if (enabled) {
-      await contactTracing.triggerBackgroundScanNow(force: true);
-    }
-    if (!mounted) return;
-    setState(() => _bluetoothActivating = false);
-    if (!enabled && contactEnded) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Bluetooth uit — contact beëindigd'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+    try {
+      final contactEnded = await contactTracing.setBackgroundEnabled(enabled);
+      if (!mounted) return;
+      if (enabled) await contactTracing.triggerBackgroundScanNow(force: true);
+      if (!mounted) return;
+      if (!enabled && contactEnded) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Bluetooth uit — contact beëindigd'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Contact bijwerken mislukt. Controleer je locatie en internetverbinding.',
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _bluetoothActivating = false);
     }
   }
 

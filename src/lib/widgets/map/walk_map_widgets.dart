@@ -296,6 +296,42 @@ class _WalkAnimalImage extends StatelessWidget {
   }
 }
 
+/// The trail card and map controls share the same consent and recorder.
+Future<bool> requestWalkRecording(
+  BuildContext context,
+  WalkRecorder recorder,
+) async {
+  if (recorder.busy) return false;
+  if (recorder.current == null) {
+    final consent = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            scrollable: true,
+            title: const Text('Wandeling opnemen?'),
+            content: const Text(
+              'WildGids neemt je route op, ook met een vergrendeld scherm. Je wandeling wordt alleen op deze telefoon bewaard. '
+              'Pauzeer of stop om de opname te onderbreken. Als je de app volledig afsluit, stopt de opname. '
+              'De bestaande locatiedeling van WildGids blijft ongewijzigd.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Annuleren'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Start wandeling'),
+              ),
+            ],
+          ),
+    );
+    if (consent != true || !context.mounted) return false;
+  }
+  await recorder.start();
+  return context.mounted && recorder.recording;
+}
+
 class WalkControls extends StatefulWidget {
   const WalkControls({super.key, required this.onStarted});
   final VoidCallback onStarted;
@@ -317,39 +353,10 @@ class _WalkControlsState extends State<WalkControls> {
   Future<void> _start(WalkRecorder recorder) async {
     if (_starting) return;
     setState(() => _starting = true);
-    if (recorder.current == null) {
-      final consent = await showDialog<bool>(
-        context: context,
-        builder:
-            (context) => AlertDialog(
-              scrollable: true,
-              title: const Text('Wandeling opnemen?'),
-              content: const Text(
-                'WildGids neemt je route op, ook met een vergrendeld scherm. Je wandeling wordt alleen op deze telefoon bewaard. '
-                'Pauzeer of stop om de opname te onderbreken. Als je de app volledig afsluit, stopt de opname. '
-                'De bestaande locatiedeling van WildGids blijft ongewijzigd.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Annuleren'),
-                ),
-                FilledButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: const Text('Start wandeling'),
-                ),
-              ],
-            ),
-      );
-      if (consent != true || !mounted) {
-        if (mounted) setState(() => _starting = false);
-        return;
-      }
-    }
-    await recorder.start();
+    final started = await requestWalkRecording(context, recorder);
     if (!mounted) return;
     setState(() => _starting = false);
-    if (recorder.recording) widget.onStarted();
+    if (started) widget.onStarted();
   }
 
   Future<void> _stop(WalkRecorder recorder) async {

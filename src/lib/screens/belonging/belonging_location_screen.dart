@@ -9,6 +9,7 @@ import 'package:wildgids/providers/map_provider.dart';
 import 'package:wildgids/providers/belonging_damage_report_provider.dart';
 import 'package:wildgids/screens/location/kaart_overview_screen.dart';
 import 'package:wildgids/screens/questionnaire/questionnaire_screen.dart';
+import 'package:wildgids/services/questionnaire_notifications.dart';
 import 'package:wildgids/screens/belonging/belonging_damages_screen.dart';
 import 'package:wildgids/utils/toast_notification_handler.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/app_bar.dart';
@@ -250,10 +251,14 @@ class _BelongingLocationScreenState extends State<BelongingLocationScreen> {
             ? "Geen toegang tot internet, interactie opgeslagen in opslag van uw toestel"
             : "interactie succesvol verstuurd";
 
-    // Only show questionnaire screen if there are actually questions
-    if (interactionResponseModel != null &&
-        interactionResponseModel.questionnaire.questions != null &&
-        interactionResponseModel.questionnaire.questions!.isNotEmpty) {
+    final showImmediately =
+        interactionResponseModel != null &&
+        await QuestionnaireNotifications.instance.receive(
+          interactionResponseModel.questionnaire,
+          interactionResponseModel.interactionID,
+        );
+    if (!mounted) return;
+    if (showImmediately) {
       _pendingNavigationScreen = QuestionnaireScreen(
         questionnaire: interactionResponseModel.questionnaire,
         interactionID: interactionResponseModel.interactionID,
@@ -317,4 +322,3 @@ class _BelongingLocationScreenState extends State<BelongingLocationScreen> {
     super.dispose();
   }
 }
-

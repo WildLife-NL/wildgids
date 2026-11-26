@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "verification": "Coordinates checked against the entrance layer of the map embedded on the official national-park website. Trail links are explicit from the supplied naamingang field; Parnassia/Parnassiaweg and Elswout/Buitenplaats Elswout are confirmed by the official entrance list.",
+  "mapUrl": "https://www.google.com/maps/d/viewer?mid=1yhMuEPiDde25OETu9NBjBm6LQzxy3U8",
+  "entranceNamesSource": "https://www.np-zuidkennemerland.nl/gebiedsinformatie/ingangen/",
+  "sourceKmlSha256": "0f6b7bb53a47af95e167a96fa6e6becca821bab7e690b0e39c12a80f5592bad2",
+  "entrances": [
+    {
+      "id": "bleek-en-berg",
+      "name": "NP ingang Bleek en Berg",
+      "latitude": 52.4165882,
+      "longitude": 4.615041,
+      "routeIds": [
+        "39",
+        "40",
+        "44"
+      ],
+      "confirmed": true,
+      "source": "https://www.np-zuidkennemerland.nl/gebiedsinformatie/overzichtskaart/",
+      "verifiedOn": "2026-11-19"
+    },
+    {
+      "id": "duin-en-kruidberg",
+      "name": "NP ingang Duin en Kruidberg",
+      "latitude": 52.4310277,
+      "longitude": 4.6269715,
+      "routeIds": [
+        "41"
+      ],
+      "confirmed": true,
+      "source": "https://www.np-zuidkennemerland.nl/gebiedsinformatie/overzichtskaart/",
+      "verifiedOn": "2026-11-19"
+    },
+    {
+      "id": "koevlak",
+      "name": "NP ingang Koevlak",
+      "latitude": 52.3948644,
+      "longitude": 4.5941305,
+      "routeIds": [
+        "44",
+        "45",
+        "46"
+      ],
+      "confirmed": true,
+      "source": "https://www.np-zuidkennemerland.nl/gebiedsinformatie/overzichtskaart/",
+      "verifiedOn": "2026-11-19"
+    },
+    {
+      "id": "parnassia",
+      "name": "NP ingang Parnassiaweg",
+      "latitude": 52.4169154,
+      "longitude": 4.5556354,
+      "routeIds": [
+        "46",
+        "50"
+      ],
+      "confirmed": true,
+      "source": "https://www.np-zuidkennemerland.nl/gebiedsinformatie/overzichtskaart/",
+      "verifiedOn": "2026-11-19"
+    },
+    {
+      "id": "koningshof",
+      "name": "NP ingang Koningshof",
+      "latitude": 52.3765751,
+      "longitude": 4.5906329,
+      "routeIds": [
+        "67",
+        "74",
+        "80"
+      ],
+      "confirmed": true,
+      "source": "https://www.np-zuidkennemerland.nl/gebiedsinformatie/overzichtskaart/",
+      "verifiedOn": "2026-11-19"
+    },
+    {
+      "id": "elswout",
+      "name": "NP ingang Buitenplaats Elswout",
+      "latitude": 52.3769615,
+      "longitude": 4.5989799,
+      "routeIds": [
+        "102",
+        "103"
+      ],
+      "confirmed": true,
+      "source": "https://www.np-zuidkennemerland.nl/gebiedsinformatie/overzichtskaart/",
+      "verifiedOn": "2026-11-19"
+    }
+  ]
+}

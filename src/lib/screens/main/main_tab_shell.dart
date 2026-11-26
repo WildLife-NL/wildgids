@@ -11,6 +11,9 @@ import 'package:wildgids/screens/waarneming/waarneming_start_screen.dart';
 import 'package:wildgids/screens/logbook/logbook_screen.dart';
 import 'package:wildgids/screens/profile/profile_screen.dart';
 import 'package:wildgids/widgets/shared_ui_widgets/custom_nav_bar.dart';
+import 'package:wildgids/services/questionnaire_notifications.dart';
+import 'package:wildgids/screens/logbook/saved_questionnaires_screen.dart';
+import 'package:wildgids/utils/notification_service.dart';
 
 class MainTabShell extends StatefulWidget {
   const MainTabShell({super.key});
@@ -46,6 +49,15 @@ class _MainTabShellState extends State<MainTabShell> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       unawaited(context.read<ContactTracingCoordinator>().initialize());
+      unawaited(QuestionnaireNotifications.instance.restorePending());
+      final payload = NotificationService.instance.launchPayload;
+      NotificationService.instance.launchPayload = null;
+      if (payload?.startsWith(QuestionnaireNotifications.payloadPrefix) ==
+          true) {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const SavedQuestionnairesScreen()),
+        );
+      }
     });
   }
 
